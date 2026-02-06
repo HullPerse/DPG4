@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  --color-background: #191724;
+  --color-card: #232136;
+
+  --color-primary: #f6c177;
+  --color-iris: #c4a7e7;
+  --color-love: #eb6f92;
+
+  --color-text: #e0def4;
+  --color-muted: #6e6a86;
+
+  --color-highlight-high: #524f67;
+  --color-highlight-medium: #403d52;
+  --color-highlight-low: #21202e;
+}
+
+@theme {
+  --color-background: var(--color-background);
+  --color-card: var(--color-card);
+
+  --color-primary: var(--color-primary);
+  --color-iris: var(--color-iris);
+  --color-love: var(--color-love);
+
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+
+  --color-highlight-high: var(--color-high);
+  --color-highlight-medium: var(--color-medium);
+  --color-highlight-low: var(--color-low);
+}
+
+@layer base {
+  body {
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+
+    scroll-behavior: smooth;
+  }
+}
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+input[type="search"]::-ms-clear {
+  display: none;
+  width: 0;
+  height: 0;
+}
+input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+}
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 6px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track:horizontal {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb:horizontal {
+  background: var(--color-primary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background: color-mix(in srgb, var(--color-primary) 80%, black);
+}
