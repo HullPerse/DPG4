@@ -1,12 +1,29 @@
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
+import { startTransition, StrictMode } from "react";
 import "./index.css";
 
 import { router } from "@/routes/__root";
 import { RouterProvider } from "@tanstack/react-router";
+import { initializeAuthStore } from "./store/user.store";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { QueryConfig } from "@/config/query.config";
+
+const queryClient = new QueryClient(QueryConfig);
+
+await import("react-dom/client").then(async ({ createRoot }) => {
+  const rootElement = document.getElementById("root");
+  if (!rootElement) throw new Error("Root element not found");
+
+  await initializeAuthStore();
+
+  startTransition(() => {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </StrictMode>,
+    );
+  });
+});

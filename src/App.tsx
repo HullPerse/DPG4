@@ -4,6 +4,7 @@ import { useUserStore } from "./store/user.store";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import Desktop from "./routes/desktop/desktop.root";
 
 function App() {
   const network = useNetworkState();
@@ -11,6 +12,7 @@ function App() {
 
   const isAuth = useUserStore((state) => state.isAuth);
 
+  //navigate to auth if user not logged in
   useEffect(() => {
     if (!isAuth) {
       navigate({
@@ -32,8 +34,9 @@ function App() {
 
   return (
     <main className="w-screen h-screen text-text bg-background p-2">
-      {/* auth */}
-      {!isAuth && <main>AAAAA</main>}
+      {/* WINDOWS */}
+      {/* DESKTOP */}
+      <Desktop />
     </main>
   );
 }

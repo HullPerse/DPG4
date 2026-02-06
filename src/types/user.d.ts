@@ -1,6 +1,9 @@
 export interface User {
-  id: string;
+  id?: string;
   username: string;
   password: string;
-  avatar: File;
+  passwordConfirm?: string;
+  email?: string;
+  avatar: string;
+  color: string;
 }

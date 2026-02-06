@@ -1,19 +1,17 @@
 import { WindowProps, WindowPosition } from "@/types/window";
 import { Button } from "../ui/button.component";
 import { Maximize, Minus, X } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 
-// isActive?: boolean;
-// isMinimized: boolean;
-// isMaximized: boolean;
-
-export default function Window(props: WindowProps) {
+function WindowComponent(props: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState<WindowPosition>({ x: 0, y: 0 });
-  const [windowSize, setWindowSize] = useState({
-    width: props.size.width,
-    height: props.size.height,
+
+  const [windowSize, setWindowSize] = useState(() => {
+    const initialWidth = Math.min(props.size.width, window.innerWidth);
+    const initialHeight = Math.min(props.size.height, window.innerHeight);
+    return { width: initialWidth, height: initialHeight };
   });
 
   const windowRef = useRef<HTMLDivElement>(null);
@@ -22,16 +20,54 @@ export default function Window(props: WindowProps) {
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartSize = useRef({ width: 0, height: 0 });
 
-  // Center window on mount
+  // handle mount centering and maximizing
   useEffect(() => {
-    if (windowRef.current && !isDragging && !isResizing) {
+    if (props.isMaximized) {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    if (windowRef.current && !isDragging && !isResizing && !props.isMaximized) {
       const rect = windowRef.current.getBoundingClientRect();
       setPosition({
-        x: (window.innerWidth - rect.width) / 2,
-        y: (window.innerHeight - rect.height) / 2,
+        x: Math.max(0, (window.innerWidth - rect.width) / 2),
+        y: Math.max(0, (window.innerHeight - rect.height) / 2),
       });
     }
   }, []);
+
+  // handle window resize to prevent overflow
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setWindowSize((prevSize) => {
+        const clampedWidth = Math.min(prevSize.width, window.innerWidth);
+        const clampedHeight = Math.min(prevSize.height, window.innerHeight);
+
+        if (
+          clampedWidth !== prevSize.width ||
+          clampedHeight !== prevSize.height
+        ) {
+          return { width: clampedWidth, height: clampedHeight };
+        }
+        return prevSize;
+      });
+
+      // prevent window overflow
+      setPosition((prevPos) => {
+        const maxX = Math.max(0, window.innerWidth - windowSize.width);
+        const maxY = Math.max(0, window.innerHeight - windowSize.height);
+        return {
+          x: Math.min(Math.max(0, prevPos.x), maxX),
+          y: Math.min(Math.max(0, prevPos.y), maxY),
+        };
+      });
+    };
+
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, [windowSize.width, windowSize.height]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -59,7 +95,7 @@ export default function Window(props: WindowProps) {
         let newX = windowStartPos.current.x + deltaX;
         let newY = windowStartPos.current.y + deltaY;
 
-        // Apply screen boundaries for dragging
+        // handle boundaries for dragging
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
 
@@ -79,13 +115,13 @@ export default function Window(props: WindowProps) {
         let newWidth = Math.max(200, resizeStartSize.current.width + deltaX);
         let newHeight = Math.max(150, resizeStartSize.current.height + deltaY);
 
-        // Apply screen boundaries for resizing
+        // handle boundaries for resizing
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const maxWidth = props.size.maxWidth ?? screenWidth;
-        const maxHeight = props.size.maxHeight ?? screenHeight;
+        const maxWidth = screenWidth;
+        const maxHeight = screenHeight;
 
-        // Ensure window doesn't exceed screen boundaries
+        // ensure window boundaries
         const availableWidth = screenWidth - position.x;
         const availableHeight = screenHeight - position.y;
 
@@ -115,13 +151,32 @@ export default function Window(props: WindowProps) {
   }, [
     isDragging,
     isResizing,
-    props.size.maxWidth,
-    props.size.maxHeight,
+    window.innerWidth,
+    window.innerHeight,
     windowSize.width,
     windowSize.height,
     position.x,
     position.y,
   ]);
+
+  const handleMaximize = () => {
+    const fullScreen =
+      windowSize.width === window.innerWidth &&
+      windowSize.height === window.innerHeight;
+
+    if (fullScreen) {
+      return setWindowSize({
+        width: props.size?.width,
+        height: props.size?.height,
+      });
+    }
+
+    setPosition({ x: 0, y: 0 });
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+  };
 
   return (
     <main
@@ -133,14 +188,14 @@ export default function Window(props: WindowProps) {
         width: `${windowSize.width}px`,
         height: `${windowSize.height}px`,
         zIndex: props.isActive ? 999 : 50,
-        boxShadow: props.isActive ? "4px 4px 14px 0 black" : "none",
+        boxShadow: props.isActive ? "8px 8px 25px 0 black" : "none",
         cursor: isDragging ? "grabbing" : "default",
       }}
       className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
     >
       {/* Head */}
       <section
-        className="flex flex-row w-full py-2 rounded-t border-b-2 border-x-0 border-t-0 border-highlight-high px-1 items-center justify-between select-none"
+        className="flex flex-row w-full h-12 px-1 items-center justify-between select-none bg-highlight-high"
         onMouseDown={handleMouseDown}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >
@@ -157,29 +212,7 @@ export default function Window(props: WindowProps) {
           <Button
             variant="ghost"
             disabled={props.disabled?.maximize}
-            onClick={() => {
-              if (
-                windowSize.width === window.innerWidth &&
-                windowSize.height === window.innerHeight &&
-                windowRef.current
-              ) {
-                const rect = windowRef.current.getBoundingClientRect();
-                setPosition({
-                  x: (window.innerWidth - rect.width) / 2,
-                  y: (window.innerHeight - rect.height) / 2,
-                });
-                return setWindowSize(props.size);
-              }
-
-              setPosition({
-                x: 0,
-                y: 0,
-              });
-              setWindowSize({
-                width: window.innerWidth,
-                height: window.innerHeight,
-              });
-            }}
+            onClick={handleMaximize}
             title="Развернуть"
           >
             <Maximize />
@@ -193,8 +226,14 @@ export default function Window(props: WindowProps) {
           </Button>
         </div>
       </section>
+
       {/* Body */}
-      <section className="overflow-y-auto h-full">{props.children}</section>
+      <section
+        className="flex w-full overflow-y-auto p-2"
+        style={{ height: "calc(100% - 3rem)" }}
+      >
+        {props.children}
+      </section>
 
       {/* Resize handle */}
       <div
@@ -208,3 +247,7 @@ export default function Window(props: WindowProps) {
     </main>
   );
 }
+
+const Window = memo(WindowComponent);
+
+export default Window;

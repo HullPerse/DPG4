@@ -1,41 +1,28 @@
 import Window from "@/components/shared/window.component";
-import { AUTH } from "@/config/apps.config";
+import { WINDOWS } from "@/config/apps.config";
+import { lazy, Suspense, useState } from "react";
 
-// const authError = [
-//   {
-//     type: "username",
-//     message: "Username is required",
-//   },
-//   {
-//     type: "password",
-//     message: "Password is required",
-//   },
-//   {
-//     type: "both",
-//     message: "Username already exists",
-//   },
-// ];
+const Signup = lazy(() => import("./components/signup.auth"));
+const Signin = lazy(() => import("./components/signin.auth"));
+import { WindowLoader } from "@/components/shared/loader.component";
+import { WindowProps } from "@/types/window";
 
 export default function Auth() {
+  const [register, setRegister] = useState<boolean>(false);
+
   return (
-    <main>
-      <Window {...AUTH} isActive>
-        {/*ALSJHDA KJSDHAKJSDHKAHDKJA HD KJ AHDKADKJAHSDKJASHDKJASHDKAJSHDKJASHDK
-        JASHD KJASHDKJASHDKASJHD AKJ SHD AKJSHDAKJSHD
-        KAJSDHKJASDDDDDDDDDDDDDAKJDHAKJHDAKJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA
-        KJHDA KJHDA KJHDA KJHDA KJHDA KJHDA KJ*/}
-        <iframe
-          src="https://gamegauntlets.com/"
-          title="YouTube video player"
-          className="w-full h-full"
-          allow="link *; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        />
+    <main onContextMenu={(e) => e.preventDefault()}>
+      <Window
+        {...(WINDOWS.find((w) => w.id === "auth") as WindowProps)}
+        isActive
+      >
+        <Suspense fallback={<WindowLoader />}>
+          {register ? (
+            <Signup setRegister={setRegister} />
+          ) : (
+            <Signin setRegister={setRegister} />
+          )}
+        </Suspense>
       </Window>
     </main>
   );

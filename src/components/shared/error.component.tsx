@@ -34,3 +34,27 @@ export function BigError({
     </main>
   );
 }
+
+export function WindowError({
+  error,
+  icon,
+  button,
+  refresh,
+}: {
+  error: Error;
+  icon: ReactNode;
+  button?: boolean;
+  refresh?: () => void;
+}) {
+  return (
+    <main className="absolute flex flex-col items-center justify-center h-full w-full bg-card text-text font-extrabold gap-4 px-2">
+      {icon}
+      <span className="text-xl text-text text-center">{error.message}</span>
+      {button && (
+        <Button variant="default" className="w-md max-w-full" onClick={refresh}>
+          Повторить
+        </Button>
+      )}
+    </main>
+  );
+}

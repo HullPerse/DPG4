@@ -8,6 +8,14 @@ export function BigLoader() {
   );
 }
 
+export function WindowLoader() {
+  return (
+    <main className="absolute flex flex-col items-center justify-center w-full h-full bg-card text-text font-extrabold pb-12">
+      <Box className="animate-spin size-28" />
+    </main>
+  );
+}
+
 export function SmallLoader({ size }: { size?: number }) {
   return <Box className={`animate-spin size-${size || 4}`} />;
 }
