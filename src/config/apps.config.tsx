@@ -29,4 +29,12 @@ export const WINDOWS = [
       height: 480,
     },
   },
+  {
+    id: "wallpaper",
+    title: "Обои",
+    size: {
+      width: 840,
+      height: 680,
+    },
+  },
 ];
