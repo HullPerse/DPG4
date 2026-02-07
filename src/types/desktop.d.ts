@@ -3,3 +3,8 @@ export type AppProps = {
   label: string;
   icon: ReactNode;
 };
+
+export type WallpaperProps = {
+  name: string;
+  path: string;
+};
