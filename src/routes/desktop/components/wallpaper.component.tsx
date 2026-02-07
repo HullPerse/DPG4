@@ -10,11 +10,13 @@ function Wallpaper({
   wallUrls,
   deleting,
   handleDelete,
+  setData,
 }: {
   wallpaper: WallpaperProps;
   setWallpaper: (path: string) => void;
   wallUrls: { [key: string]: string };
   deleting: boolean;
+  setData: (name: string) => void;
   handleDelete: ({
     wallpaper,
     e,
@@ -29,7 +31,10 @@ function Wallpaper({
     <div
       key={wallpaper.path}
       className="relative h-36 w-48 bg-background border-2 rounded overflow-hidden"
-      onClick={() => setWallpaper(wallUrls[wallpaper.path])}
+      onClick={() => {
+        setWallpaper(wallUrls[wallpaper.path]);
+        setData(wallpaper.name);
+      }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >

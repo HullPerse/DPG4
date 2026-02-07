@@ -10,6 +10,60 @@ struct Wallpaper {
 }
 
 #[tauri::command]
+async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<String, String> {
+    // First check default wallpapers
+    let default_wallpapers_dir = Path::new("assets/wallpapers");
+
+    if default_wallpapers_dir.exists() {
+        let entries = fs::read_dir(default_wallpapers_dir)
+            .map_err(|e| format!("Failed to read default wallpapers directory: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(file_name) = path.file_name() {
+                    if let Some(name_str) = file_name.to_str() {
+                        // Check if the name matches (with or without "Default: " prefix)
+                        if name == name_str || name == format!("Default: {}", name_str) {
+                            return Ok(path.to_string_lossy().to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Then check custom wallpapers
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    let custom_wallpapers_dir = app_data_dir.join("wallpapers");
+
+    if custom_wallpapers_dir.exists() {
+        let entries = fs::read_dir(&custom_wallpapers_dir)
+            .map_err(|e| format!("Failed to read custom wallpapers directory: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(file_name) = path.file_name() {
+                    if let Some(name_str) = file_name.to_str() {
+                        if name == name_str {
+                            return Ok(path.to_string_lossy().to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Err(format!("Wallpaper '{}' not found", name))
+}
+
+#[tauri::command]
 async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String> {
     let mut wallpapers = Vec::new();
 
@@ -98,7 +152,7 @@ async fn save_wallpaper(app: tauri::AppHandle, file_name: String, data: String) 
     if file_name.is_empty() {
         return Err("Filename cannot be empty".to_string());
     }
-    
+
     if file_name.contains("..") || file_name.contains('/') || file_name.contains('\\') {
         return Err("Invalid filename characters".to_string());
     }
@@ -178,7 +232,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![get_wallpapers, get_wallpaper_data, save_wallpaper, delete_wallpaper])
+        .invoke_handler(tauri::generate_handler![get_wallpapers, get_wallpaper_data, save_wallpaper, delete_wallpaper, get_wallpaper_by_name])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

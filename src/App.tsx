@@ -10,6 +10,8 @@ import { WINDOWS } from "./config/apps.config";
 import Window from "./components/shared/window.component";
 import { WindowProps } from "./types/window";
 import { WindowLoader } from "./components/shared/loader.component";
+import { useDataStore } from "./store/data.store";
+import { invoke } from "@tauri-apps/api/core";
 
 const WallpaperApp = lazy(() => import("./routes/desktop/apps/wallpaper.app"));
 
@@ -17,9 +19,25 @@ function App() {
   const network = useNetworkState();
   const navigate = useNavigate();
 
+  const wallpaperData = useDataStore((state) => state.wallpaper);
   const isAuth = useUserStore((state) => state.isAuth);
 
   const [wallpaper, setWallpaper] = useState<string | null>(null);
+
+  //initialize wallpaper data
+  const getWallpaper = async () => {
+    const wallpaper = await invoke<string>("get_wallpaper_by_name", {
+      name: wallpaperData,
+    });
+
+    const dataUrl = await invoke<string>("get_wallpaper_data", {
+      path: wallpaper,
+    });
+
+    if (dataUrl) {
+      setWallpaper(dataUrl);
+    }
+  };
 
   //navigate to auth if user not logged in
   useEffect(() => {
@@ -29,6 +47,8 @@ function App() {
         replace: true,
       });
     }
+
+    getWallpaper();
   }, [isAuth, navigate]);
 
   if (!network.online) {

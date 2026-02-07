@@ -5,12 +5,15 @@ import { Plus } from "lucide-react";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { WallpaperProps } from "@/types/desktop";
 import WallpaperComponent from "../components/wallpaper.component";
+import { useDataStore } from "@/store/data.store";
 
 export default function WallpaperApp({
   setWallpaper,
 }: {
   setWallpaper: (path: string) => void;
 }) {
+  const setData = useDataStore((state) => state.setWallpaper);
+
   const [wallpapers, setWallpapers] = useState<WallpaperProps[]>([]);
   const [wallUrls, setWallUrls] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
@@ -175,7 +178,10 @@ export default function WallpaperApp({
         {wallpapers.map((wallpaper) => {
           if (loading)
             return (
-              <div className="relative h-36 w-48 bg-background border-2 rounded overflow-hidden">
+              <div
+                key={wallpaper.path}
+                className="relative h-36 w-48 bg-background border-2 rounded overflow-hidden"
+              >
                 <div className="w-full h-full flex items-center justify-center">
                   <SmallLoader />
                 </div>
@@ -189,6 +195,7 @@ export default function WallpaperApp({
               wallUrls={wallUrls}
               deleting={deleting}
               handleDelete={handleDelete}
+              setData={setData}
             />
           );
         })}

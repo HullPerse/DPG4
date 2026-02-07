@@ -13,3 +13,11 @@ export interface UserStore {
   subscribeToUserUpdates: () => void;
   unsubscribeFromUserUpdates: () => void;
 }
+
+export interface DataStore {
+  // State
+  wallpaper: string;
+
+  // Actions
+  setWallpaper: (wallpaper: string) => void;
+}
