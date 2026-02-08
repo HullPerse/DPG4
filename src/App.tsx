@@ -1,28 +1,103 @@
-import { Edit, GlobeX } from "lucide-react";
+import { GlobeX } from "lucide-react";
 import { BigError } from "./components/shared/error.component";
 import { useUserStore } from "./store/user.store";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Desktop from "./routes/desktop/desktop.root";
-import { Button } from "./components/ui/button.component";
 import { WINDOWS } from "./config/apps.config";
 import Window from "./components/shared/window.component";
 import { WindowProps } from "./types/window";
 import { WindowLoader } from "./components/shared/loader.component";
 import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
+import Selection from "./routes/desktop/components/selection.desktop";
 
 const WallpaperApp = lazy(() => import("./routes/desktop/apps/wallpaper.app"));
 
 function App() {
+  //routing
   const network = useNetworkState();
   const navigate = useNavigate();
 
+  //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
   const isAuth = useUserStore((state) => state.isAuth);
 
+  //app states
   const [wallpaper, setWallpaper] = useState<string | null>(null);
+  const [activeApps, setActiveApps] = useState<WindowProps[]>([]);
+
+  //selection states
+  const desktopRef = useRef<HTMLDivElement>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
+  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 });
+
+  const handleDesktopMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+
+      const rect = desktopRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      //prevent taskbar selection
+      const taskbarHeight = 60;
+      if (y > rect.height - taskbarHeight) return;
+
+      setSelectionStart({ x, y });
+      setSelectionEnd({ x, y });
+      setIsSelecting(true);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!isSelecting) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = desktopRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const taskbarHeight = 56;
+      const maxY = rect.height - taskbarHeight;
+
+      setSelectionEnd({
+        x: Math.max(0, Math.min(x, rect.width)),
+        y: Math.max(0, Math.min(y, maxY)),
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsSelecting(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isSelecting]);
+
+  const selectionRect = {
+    left: Math.min(selectionStart.x, selectionEnd.x),
+    top: Math.min(selectionStart.y, selectionEnd.y),
+    width: Math.abs(selectionEnd.x - selectionStart.x),
+    height: Math.abs(selectionEnd.y - selectionStart.y),
+  };
 
   //initialize wallpaper data
   const getWallpaper = async () => {
@@ -63,27 +138,30 @@ function App() {
 
   return (
     <main
-      className="relative w-screen h-screen text-text bg-background p-2 bg-cover bg-center bg-no-repeat"
+      ref={desktopRef}
+      className="relative w-screen h-screen text-text bg-background bg-cover bg-center bg-no-repeat select-none"
       style={{
         backgroundImage: `url(${wallpaper})`,
       }}
       onContextMenu={(e) => e.preventDefault()}
+      onMouseDown={handleDesktopMouseDown}
     >
+      {/* SELECTION */}
+      {isSelecting && selectionRect.width > 2 && selectionRect.height > 2 && (
+        <Selection selectionRect={selectionRect} />
+      )}
+
       {/* WINDOWS */}
-      <Window
+      {/*<Window
         {...(WINDOWS.find((w) => w.id === "wallpaper") as WindowProps)}
         isActive
       >
         <Suspense fallback={<WindowLoader />}>
           <WallpaperApp setWallpaper={setWallpaper} />
         </Suspense>
-      </Window>
+      </Window>*/}
       {/* DESKTOP */}
-      <Desktop />
-      {/* WALLAPAPER */}
-      <Button variant="ghost" className="absolute right-1 bottom-1 w-14 h-14">
-        <Edit />
-      </Button>
+      <Desktop activeApps={activeApps} />
     </main>
   );
 }
