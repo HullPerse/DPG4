@@ -182,6 +182,7 @@ function WindowComponent(props: WindowProps) {
     <main
       ref={windowRef}
       key={props.id}
+      data-window="true"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,

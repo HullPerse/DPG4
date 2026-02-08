@@ -55,6 +55,11 @@ function App() {
       const taskbarHeight = 60;
       if (y > rect.height - taskbarHeight) return;
 
+      // check if mouse is over any window
+      const target = e.target as HTMLElement;
+      const windowElement = target.closest('[data-window="true"]');
+      if (windowElement) return;
+
       setSelectionStart({ x, y });
       setSelectionEnd({ x, y });
       setIsSelecting(true);
@@ -152,16 +157,18 @@ function App() {
       )}
 
       {/* WINDOWS */}
-      {/*<Window
-        {...(WINDOWS.find((w) => w.id === "wallpaper") as WindowProps)}
-        isActive
-      >
-        <Suspense fallback={<WindowLoader />}>
-          <WallpaperApp setWallpaper={setWallpaper} />
-        </Suspense>
-      </Window>*/}
+      {activeApps.map((app) => (
+        <Window key={app.id} {...app}>
+          <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
+        </Window>
+      ))}
+
       {/* DESKTOP */}
-      <Desktop activeApps={activeApps} />
+      <Desktop
+        activeApps={activeApps}
+        setActiveApps={setActiveApps}
+        setWallpaper={setWallpaper}
+      />
     </main>
   );
 }

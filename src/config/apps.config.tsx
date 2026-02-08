@@ -1,12 +1,4 @@
-import { DoorOpen } from "lucide-react";
-
-export const APPS = [
-  {
-    name: "signout",
-    label: "Выход",
-    icon: <DoorOpen />,
-  },
-];
+export const APPS = [];
 
 export const WINDOWS = [
   {
