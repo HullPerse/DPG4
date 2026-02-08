@@ -11,7 +11,7 @@ import { WindowLoader } from "./components/shared/loader.component";
 import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
 import Selection from "./routes/desktop/components/selection.desktop";
-import { closeWindow, minimizeWindow } from "./lib/utils";
+import { activeWindow, closeWindow, minimizeWindow, refreshWindow } from "./lib/utils";
 
 function App() {
   //routing
@@ -153,6 +153,8 @@ function App() {
           key={app.id}
           onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
           onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
+          onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
+          onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
           {...app}
         >
           <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>

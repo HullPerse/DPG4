@@ -30,6 +30,8 @@ export function createWindow(
     ...newWindow,
     children: children,
     isActive: true,
+    createdAt: new Date(),
+    refreshKey: 0,
   };
 
   return [...prevWindows, newApp];
@@ -74,8 +76,42 @@ export function activeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
 
   if (existingWindow) {
-    existingWindow.isActive = true;
-    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+    // Set all windows to inactive, then set the selected one to active
+    const updatedWindows = prevWindows.map((w) => ({
+      ...w,
+      isActive: w.id === windowId,
+    }));
+
+    // Move the active window to the end of the array (highest z-index)
+    const activeWindow = updatedWindows.find((w) => w.id === windowId);
+    const otherWindows = updatedWindows.filter((w) => w.id !== windowId);
+
+    return [...otherWindows, activeWindow!];
+  }
+
+  return prevWindows;
+}
+
+export function refreshWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (existingWindow) {
+    const refreshedWindow = {
+      ...existingWindow,
+      refreshKey: (existingWindow.refreshKey || 0) + 1,
+      isActive: true,
+    };
+
+    // Set all windows to inactive except the refreshed one
+    const updatedWindows = prevWindows.map((w) => ({
+      ...w,
+      isActive: w.id === windowId,
+    }));
+
+    // Move the refreshed window to the end of the array (highest z-index)
+    const otherWindows = updatedWindows.filter((w) => w.id !== windowId);
+
+    return [...otherWindows, refreshedWindow];
   }
 
   return prevWindows;

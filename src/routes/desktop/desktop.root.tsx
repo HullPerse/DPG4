@@ -44,69 +44,77 @@ export default function Desktop({
               label={app.label}
               name={app.name}
               icon={app.icon}
+              component={app.component}
+              activeApps={activeApps}
+              setActiveApps={setActiveApps}
             />
           ))}
         </div>
       </section>
 
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
-        <div className="flex flex-row items-center h-full px-2">
-          {activeApps.map((app) => (
-            <ContextMenu key={app.id}>
-              <ContextMenuTrigger>
-                <button
-                  className="text-muted hover:text-text cursor-pointer border rounded p-1"
-                  title={app.title}
-                  onClick={() =>
-                    setActiveApps(unminimizeWindow(activeApps, app.id))
-                  }
-                >
-                  {WINDOWS.find((w) => w.id === app.id)?.icon}
-                </button>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuGroup>
-                  <ContextMenuItem
+        <div className="flex flex-row items-center h-full px-2 gap-2">
+          {[...activeApps]
+            .sort(
+              (a, b) =>
+                (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0),
+            )
+            .map((app) => (
+              <ContextMenu key={app.id}>
+                <ContextMenuTrigger>
+                  <button
+                    className="text-muted hover:text-text cursor-pointer border rounded p-1"
+                    title={app.title}
                     onClick={() =>
-                      setActiveApps(activeWindow(activeApps, app.id))
+                      setActiveApps(unminimizeWindow(activeApps, app.id))
                     }
                   >
-                    <Activity /> Сдеать активным
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    onClick={() => {
-                      if (app.isMinimized) {
-                        return setActiveApps(
-                          unminimizeWindow(activeApps, app.id),
-                        );
+                    {WINDOWS.find((w) => w.id === app.id)?.icon}
+                  </button>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuGroup>
+                    <ContextMenuItem
+                      onClick={() =>
+                        setActiveApps(activeWindow(activeApps, app.id))
                       }
+                    >
+                      <Activity /> Сдеать активным
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (app.isMinimized) {
+                          return setActiveApps(
+                            unminimizeWindow(activeApps, app.id),
+                          );
+                        }
 
-                      setActiveApps(minimizeWindow(activeApps, app.id));
-                    }}
-                  >
-                    {app.isMinimized ? (
-                      <>
-                        <Maximize />
-                        Развернуть
-                      </>
-                    ) : (
-                      <>
-                        <Minimize />
-                        Свернуть
-                      </>
-                    )}
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    onClick={() =>
-                      setActiveApps(closeWindow(activeApps, app.id))
-                    }
-                  >
-                    <X /> Закрыть
-                  </ContextMenuItem>
-                </ContextMenuGroup>
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
+                        setActiveApps(minimizeWindow(activeApps, app.id));
+                      }}
+                    >
+                      {app.isMinimized ? (
+                        <>
+                          <Maximize />
+                          Развернуть
+                        </>
+                      ) : (
+                        <>
+                          <Minimize />
+                          Свернуть
+                        </>
+                      )}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() =>
+                        setActiveApps(closeWindow(activeApps, app.id))
+                      }
+                    >
+                      <X /> Закрыть
+                    </ContextMenuItem>
+                  </ContextMenuGroup>
+                </ContextMenuContent>
+              </ContextMenu>
+            ))}
         </div>
         <div className="flex flex-row items-center h-full gap-2">
           {/* WALLAPAPER */}
@@ -129,8 +137,8 @@ export default function Desktop({
           {/* SIGNOUT */}
           <button
             className="text-muted hover:text-text cursor-pointer border rounded p-1"
-            onClick={logout}
             title="Выход"
+            onClick={logout}
           >
             <DoorOpen className="size-7" />
           </button>

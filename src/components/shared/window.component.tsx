@@ -1,13 +1,23 @@
 import { WindowProps, WindowPosition } from "@/types/window";
 import { Button } from "../ui/button.component";
-import { Maximize, Minus, X } from "lucide-react";
-import { useState, useRef, useEffect, memo, Suspense } from "react";
+import { Maximize, Minus, RotateCcw, X } from "lucide-react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  memo,
+  Suspense,
+  cloneElement,
+} from "react";
 import { WindowLoader } from "./loader.component";
+import React from "react";
 
 function WindowComponent(props: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState<WindowPosition>({ x: 0, y: 0 });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isInitialMount = useRef(true);
 
   const [windowSize, setWindowSize] = useState(() => {
     const initialWidth = Math.min(props.size.width, window.innerWidth);
@@ -30,14 +40,22 @@ function WindowComponent(props: WindowProps) {
       });
     }
 
-    if (windowRef.current && !isDragging && !isResizing && !props.isMaximized) {
+    //prevent from centering on active state change
+    if (
+      isInitialMount.current &&
+      windowRef.current &&
+      !isDragging &&
+      !isResizing &&
+      !props.isMaximized
+    ) {
       const rect = windowRef.current.getBoundingClientRect();
       setPosition({
         x: Math.max(0, (window.innerWidth - rect.width) / 2),
         y: Math.max(0, (window.innerHeight - rect.height) / 2),
       });
+      isInitialMount.current = false;
     }
-  }, []);
+  }, [props.isMaximized, isDragging, isResizing]);
 
   // handle window resize to prevent overflow
   useEffect(() => {
@@ -74,6 +92,7 @@ function WindowComponent(props: WindowProps) {
     setIsDragging(true);
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     windowStartPos.current = { ...position };
+    props.onActive?.();
     e.preventDefault();
   };
 
@@ -179,6 +198,16 @@ function WindowComponent(props: WindowProps) {
     });
   };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    props.onRefresh?.();
+
+    // Reset refresh state after a brief moment for visual feedback
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 300);
+  };
+
   return (
     <main
       ref={windowRef}
@@ -195,6 +224,15 @@ function WindowComponent(props: WindowProps) {
       }}
       className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
       hidden={props.isMinimized}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (
+          target.closest('button, a, input, select, textarea, [role="button"]')
+        ) {
+          return;
+        }
+        props.onActive?.();
+      }}
     >
       {/* Head */}
       <section
@@ -202,7 +240,12 @@ function WindowComponent(props: WindowProps) {
         onMouseDown={handleMouseDown}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >
-        <span className="text-md font-bold">{props.title}</span>
+        <div className="flex flex-row items-center justify-center">
+          <Button variant="ghost" title="Перезагрузить" onClick={handleRefresh}>
+            <RotateCcw />
+          </Button>
+          <span className="text-md font-bold">{props.title}</span>
+        </div>
 
         <div className="flex flex-row">
           <Button
@@ -234,13 +277,21 @@ function WindowComponent(props: WindowProps) {
 
       {/* Body */}
       <section
-        className="flex w-full overflow-y-auto p-2"
+        className="flex w-full overflow-y-auto"
         style={{ height: "calc(100% - 3rem)" }}
       >
-        <Suspense fallback={<WindowLoader />}>{props.children}</Suspense>
+        {isRefreshing ? (
+          <WindowLoader />
+        ) : (
+          <Suspense fallback={<WindowLoader />}>
+            {cloneElement(props.children, {
+              key: props.refreshKey,
+            })}
+          </Suspense>
+        )}
       </section>
 
-      {/* Resize handle */}
+      {/* Resize */}
       <div
         className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
         onMouseDown={handleResizeMouseDown}

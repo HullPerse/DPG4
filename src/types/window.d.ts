@@ -9,6 +9,7 @@ export interface WindowProps {
   isActive?: boolean;
   isMinimized?: boolean;
   isMaximized?: boolean;
+  createdAt?: Date;
   disabled?: {
     maximize?: boolean;
     minimize?: boolean;
@@ -17,6 +18,9 @@ export interface WindowProps {
 
   onClose?: () => void;
   onMinimize?: () => void;
+  onActive?: () => void;
+  onRefresh?: () => void;
+  refreshKey?: number;
 }
 
 export interface WindowPosition {

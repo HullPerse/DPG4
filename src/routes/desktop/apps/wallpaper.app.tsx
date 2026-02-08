@@ -174,7 +174,7 @@ export default function WallpaperApp({
         />
       </section>
 
-      <section className="flex flex-row flex-wrap w-full gap-2 cursor-pointer">
+      <section className="flex flex-row flex-wrap w-full gap-2 cursor-pointer items-center justify-center">
         {wallpapers.map((wallpaper) => {
           if (loading)
             return (

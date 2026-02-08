@@ -1,6 +1,16 @@
-import { Image } from "lucide-react";
+import { Dices, Image } from "lucide-react";
+import { lazy } from "react";
 
-export const APPS = [];
+const Tabletop = lazy(() => import("@/routes/tabletop/tabletop.root"));
+
+export const APPS = [
+  {
+    name: "tabletop",
+    label: "Игровое поле",
+    icon: <Dices className="size-7" />,
+    component: <Tabletop />,
+  },
+];
 
 export const WINDOWS = [
   {
@@ -27,6 +37,15 @@ export const WINDOWS = [
     id: "wallpaper",
     title: "Обои",
     icon: <Image className="size-7" />,
+    size: {
+      width: 840,
+      height: 680,
+    },
+  },
+  {
+    id: "tabletop",
+    title: "Игровое поле",
+    icon: <Dices className="size-7" />,
     size: {
       width: 840,
       height: 680,
