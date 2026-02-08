@@ -12,7 +12,6 @@ import {
   minimizeWindow,
   unminimizeWindow,
 } from "@/lib/utils";
-import WallpaperApp from "./apps/wallpaper.app";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -20,6 +19,9 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context.component";
+import { lazy } from "react";
+
+const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
 export default function Desktop({
   activeApps,

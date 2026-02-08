@@ -3,16 +3,8 @@ import { BigError } from "./components/shared/error.component";
 import { useUserStore } from "./store/user.store";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Desktop from "./routes/desktop/desktop.root";
-import { WINDOWS } from "./config/apps.config";
 import Window from "./components/shared/window.component";
 import { WindowProps } from "./types/window";
 import { WindowLoader } from "./components/shared/loader.component";
@@ -20,8 +12,6 @@ import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
 import Selection from "./routes/desktop/components/selection.desktop";
 import { closeWindow, minimizeWindow } from "./lib/utils";
-
-const WallpaperApp = lazy(() => import("./routes/desktop/apps/wallpaper.app"));
 
 function App() {
   //routing

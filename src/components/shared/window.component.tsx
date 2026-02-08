@@ -1,7 +1,8 @@
 import { WindowProps, WindowPosition } from "@/types/window";
 import { Button } from "../ui/button.component";
 import { Maximize, Minus, X } from "lucide-react";
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, memo, Suspense } from "react";
+import { WindowLoader } from "./loader.component";
 
 function WindowComponent(props: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -236,7 +237,7 @@ function WindowComponent(props: WindowProps) {
         className="flex w-full overflow-y-auto p-2"
         style={{ height: "calc(100% - 3rem)" }}
       >
-        {props.children}
+        <Suspense fallback={<WindowLoader />}>{props.children}</Suspense>
       </section>
 
       {/* Resize handle */}
