@@ -1,12 +1,25 @@
 import { APPS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
-import { DoorOpen, Image } from "lucide-react";
+import { Activity, DoorOpen, Image, Maximize, Minimize, X } from "lucide-react";
 import Timer from "./components/timer.desktop";
 import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
 import { AppProps } from "@/types/desktop";
-import { createWindow } from "@/lib/utils";
+import {
+  activeWindow,
+  closeWindow,
+  createWindow,
+  minimizeWindow,
+  unminimizeWindow,
+} from "@/lib/utils";
 import WallpaperApp from "./apps/wallpaper.app";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context.component";
 
 export default function Desktop({
   activeApps,
@@ -35,7 +48,64 @@ export default function Desktop({
       </section>
 
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
-        <div className="flex flex-row items-center h-full px-2"></div>
+        <div className="flex flex-row items-center h-full px-2">
+          {activeApps.map((app) => (
+            <ContextMenu key={app.id}>
+              <ContextMenuTrigger>
+                <button
+                  className="text-muted hover:text-text cursor-pointer border rounded p-1"
+                  title={app.title}
+                  onClick={() =>
+                    setActiveApps(unminimizeWindow(activeApps, app.id))
+                  }
+                >
+                  {WINDOWS.find((w) => w.id === app.id)?.icon}
+                </button>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuGroup>
+                  <ContextMenuItem
+                    onClick={() =>
+                      setActiveApps(activeWindow(activeApps, app.id))
+                    }
+                  >
+                    <Activity /> Сдеать активным
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() => {
+                      if (app.isMinimized) {
+                        return setActiveApps(
+                          unminimizeWindow(activeApps, app.id),
+                        );
+                      }
+
+                      setActiveApps(minimizeWindow(activeApps, app.id));
+                    }}
+                  >
+                    {app.isMinimized ? (
+                      <>
+                        <Maximize />
+                        Развернуть
+                      </>
+                    ) : (
+                      <>
+                        <Minimize />
+                        Свернуть
+                      </>
+                    )}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() =>
+                      setActiveApps(closeWindow(activeApps, app.id))
+                    }
+                  >
+                    <X /> Закрыть
+                  </ContextMenuItem>
+                </ContextMenuGroup>
+              </ContextMenuContent>
+            </ContextMenu>
+          ))}
+        </div>
         <div className="flex flex-row items-center h-full gap-2">
           {/* WALLAPAPER */}
           <button

@@ -193,6 +193,7 @@ function WindowComponent(props: WindowProps) {
         cursor: isDragging ? "grabbing" : "default",
       }}
       className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
+      hidden={props.isMinimized}
     >
       {/* Head */}
       <section
@@ -207,6 +208,7 @@ function WindowComponent(props: WindowProps) {
             variant="ghost"
             disabled={props.disabled?.minimize}
             title="Свернуть"
+            onClick={props.onMinimize}
           >
             <Minus />
           </Button>
@@ -222,6 +224,7 @@ function WindowComponent(props: WindowProps) {
             variant="ghost"
             disabled={props.disabled?.close}
             title="Закрыть"
+            onClick={props.onClose}
           >
             <X />
           </Button>

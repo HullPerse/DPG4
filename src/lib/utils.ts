@@ -17,9 +17,8 @@ export function createWindow(
 
   //if window already exists, set isActive to true or isMinimized to false and update prevWindows
   if (existingWindow) {
-    existingWindow.isMinimized = false;
     existingWindow.isActive = true;
-
+    existingWindow.isMinimized = false;
     return [
       ...prevWindows.filter((w) => w.id !== newWindow.id),
       existingWindow,
@@ -34,4 +33,50 @@ export function createWindow(
   };
 
   return [...prevWindows, newApp];
+}
+
+export function closeWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (existingWindow) {
+    existingWindow.isActive = false;
+    return [...prevWindows.filter((w) => w.id !== windowId)];
+  }
+
+  return prevWindows;
+}
+
+export function minimizeWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (existingWindow) {
+    existingWindow.isActive = false;
+    existingWindow.isMinimized = true;
+    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+  }
+
+  return prevWindows;
+}
+
+export function unminimizeWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (existingWindow) {
+    existingWindow.isActive = true;
+    existingWindow.isMinimized = false;
+    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+  }
+
+  return prevWindows;
+}
+
+export function activeWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (existingWindow) {
+    existingWindow.isActive = true;
+    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+  }
+
+  return prevWindows;
 }

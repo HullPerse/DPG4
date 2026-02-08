@@ -14,6 +14,9 @@ export interface WindowProps {
     minimize?: boolean;
     close?: boolean;
   };
+
+  onClose?: () => void;
+  onMinimize?: () => void;
 }
 
 export interface WindowPosition {

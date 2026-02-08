@@ -1,3 +1,5 @@
+import { Image } from "lucide-react";
+
 export const APPS = [];
 
 export const WINDOWS = [
@@ -24,6 +26,7 @@ export const WINDOWS = [
   {
     id: "wallpaper",
     title: "Обои",
+    icon: <Image className="size-7" />,
     size: {
       width: 840,
       height: 680,

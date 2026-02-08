@@ -19,6 +19,7 @@ import { WindowLoader } from "./components/shared/loader.component";
 import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
 import Selection from "./routes/desktop/components/selection.desktop";
+import { closeWindow, minimizeWindow } from "./lib/utils";
 
 const WallpaperApp = lazy(() => import("./routes/desktop/apps/wallpaper.app"));
 
@@ -158,7 +159,12 @@ function App() {
 
       {/* WINDOWS */}
       {activeApps.map((app) => (
-        <Window key={app.id} {...app}>
+        <Window
+          key={app.id}
+          onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
+          onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
+          {...app}
+        >
           <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
         </Window>
       ))}
