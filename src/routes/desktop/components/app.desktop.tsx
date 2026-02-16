@@ -1,5 +1,5 @@
 import { WINDOWS } from "@/config/apps.config";
-import { createWindow } from "@/lib/utils";
+import { createWindow } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
 import { memo } from "react";

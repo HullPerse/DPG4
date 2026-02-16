@@ -1,6 +1,6 @@
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
-use serde::Serialize;
 use tauri::Manager;
 
 #[derive(Serialize)]
@@ -36,7 +36,9 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
     }
 
     // Then check custom wallpapers
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let custom_wallpapers_dir = app_data_dir.join("wallpapers");
 
@@ -81,11 +83,12 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
             if path.is_file() {
                 if let Some(file_name) = path.file_name() {
                     if let Some(name_str) = file_name.to_str() {
-                        let file_extension = path.extension()
-                            .and_then(|ext| ext.to_str())
-                            .unwrap_or("");
+                        let file_extension =
+                            path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
-                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(&file_extension.to_lowercase().as_str()) {
+                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"]
+                            .contains(&file_extension.to_lowercase().as_str())
+                        {
                             wallpapers.push(Wallpaper {
                                 name: format!("Default: {}", name_str),
                                 path: path.to_string_lossy().to_string(),
@@ -98,7 +101,9 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
     }
 
     // Get custom wallpapers from app data directory
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let custom_wallpapers_dir = app_data_dir.join("wallpapers");
 
@@ -113,11 +118,12 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
             if path.is_file() {
                 if let Some(file_name) = path.file_name() {
                     if let Some(name_str) = file_name.to_str() {
-                        let file_extension = path.extension()
-                            .and_then(|ext| ext.to_str())
-                            .unwrap_or("");
+                        let file_extension =
+                            path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
-                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(&file_extension.to_lowercase().as_str()) {
+                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"]
+                            .contains(&file_extension.to_lowercase().as_str())
+                        {
                             wallpapers.push(Wallpaper {
                                 name: name_str.to_string(),
                                 path: path.to_string_lossy().to_string(),
@@ -134,20 +140,23 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
 
 #[tauri::command]
 async fn get_wallpaper_data(path: String) -> Result<String, String> {
-    let data = fs::read(&path)
-        .map_err(|e| format!("Failed to read wallpaper file: {}", e))?;
+    let data = fs::read(&path).map_err(|e| format!("Failed to read wallpaper file: {}", e))?;
 
     let mime_type = mime_guess::from_path(&path)
         .first_or_octet_stream()
         .to_string();
 
-    use base64::{Engine as _, engine::general_purpose};
+    use base64::{engine::general_purpose, Engine as _};
     let base64_data = general_purpose::STANDARD.encode(&data);
     Ok(format!("data:{};base64,{}", mime_type, base64_data))
 }
 
 #[tauri::command]
-async fn save_wallpaper(app: tauri::AppHandle, file_name: String, data: String) -> Result<String, String> {
+async fn save_wallpaper(
+    app: tauri::AppHandle,
+    file_name: String,
+    data: String,
+) -> Result<String, String> {
     // Validate filename
     if file_name.is_empty() {
         return Err("Filename cannot be empty".to_string());
@@ -157,7 +166,9 @@ async fn save_wallpaper(app: tauri::AppHandle, file_name: String, data: String) 
         return Err("Invalid filename characters".to_string());
     }
 
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let wallpapers_dir = app_data_dir.join("wallpapers");
 
@@ -187,19 +198,33 @@ async fn save_wallpaper(app: tauri::AppHandle, file_name: String, data: String) 
     }
 
     // Decode base64 data with better error handling
-    use base64::{Engine as _, engine::general_purpose};
-    let decoded_data = general_purpose::STANDARD.decode(base64_data)
-        .map_err(|e| format!("Base64 decode failed: {} (data length: {})", e, base64_data.len()))?;
+    use base64::{engine::general_purpose, Engine as _};
+    let decoded_data = general_purpose::STANDARD.decode(base64_data).map_err(|e| {
+        format!(
+            "Base64 decode failed: {} (data length: {})",
+            e,
+            base64_data.len()
+        )
+    })?;
 
     // Validate file size (max 10MB)
     const MAX_FILE_SIZE: usize = 10 * 1024 * 1024;
     if decoded_data.len() > MAX_FILE_SIZE {
-        return Err(format!("File too large: {} bytes (max: {})", decoded_data.len(), MAX_FILE_SIZE));
+        return Err(format!(
+            "File too large: {} bytes (max: {})",
+            decoded_data.len(),
+            MAX_FILE_SIZE
+        ));
     }
 
     // Write file with detailed error message
-    fs::write(&file_path, decoded_data)
-        .map_err(|e| format!("Failed to write wallpaper to {}: {}", file_path.display(), e))?;
+    fs::write(&file_path, decoded_data).map_err(|e| {
+        format!(
+            "Failed to write wallpaper to {}: {}",
+            file_path.display(),
+            e
+        )
+    })?;
 
     Ok(file_path.to_string_lossy().to_string())
 }
@@ -212,7 +237,9 @@ async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), Str
     }
 
     // Verify the file is in the app data directory to prevent deleting arbitrary files
-    let app_data_dir = app.path().app_data_dir()
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))?;
     let wallpapers_dir = app_data_dir.join("wallpapers");
 
@@ -221,8 +248,7 @@ async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), Str
         return Err("Cannot delete files outside the wallpapers directory".to_string());
     }
 
-    fs::remove_file(&path)
-        .map_err(|e| format!("Failed to delete wallpaper file: {}", e))?;
+    fs::remove_file(&path).map_err(|e| format!("Failed to delete wallpaper file: {}", e))?;
 
     Ok(())
 }
@@ -232,7 +258,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![get_wallpapers, get_wallpaper_data, save_wallpaper, delete_wallpaper, get_wallpaper_by_name])
+        .invoke_handler(tauri::generate_handler![
+            get_wallpapers,
+            get_wallpaper_data,
+            save_wallpaper,
+            delete_wallpaper,
+            get_wallpaper_by_name
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

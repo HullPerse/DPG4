@@ -10,8 +10,11 @@ export default class UserApi {
       await this.usersCollection
         .create({
           ...data,
+          isAdmin: false,
           passwordConfirm: data.password,
           email: `${data.username}@gmail.com`,
+          position: 0,
+          currentAction: "MOVE",
         })
         .then((res) => {
           return res;
@@ -26,6 +29,13 @@ export default class UserApi {
   getExisting = async () => {
     return await this.usersCollection.getFullList({
       fields: "username, avatar, color",
+    });
+  };
+
+  //get all user positions
+  getUserPositions = async (): Promise<User[]> => {
+    return await this.usersCollection.getFullList({
+      fields: "id, position, username, avatar, color",
     });
   };
 }

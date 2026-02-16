@@ -14,8 +14,10 @@
     "@raegen/vite-plugin-vitest-cache": "^0.3.7",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-router": "^1.159.5",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-opener": "^2.5.3",
+    "@tauri-apps/plugin-updater": "~2.10.0",
     "@uidotdev/usehooks": "^2.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -36,6 +38,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "oxlint": "^1.43.0",
     "typescript": "~5.8.3",
     "vite": "^7.3.1",
     "vite-plugin-compression": "^0.5.1"

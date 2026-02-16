@@ -13,7 +13,10 @@ const handleUserUpdate = (
   get: () => UserStore,
 ) => {
   if (data.action === "update" && data.record) {
-    set({ user: data.record });
+    set({ 
+      user: data.record,
+      isAdmin: data.record.isAdmin 
+    });
   } else if (data.action === "delete") {
     get().clear();
   }
@@ -24,6 +27,7 @@ export const useUserStore = create<UserStore>()(
     persist(
       (set, get) => ({
         isAuth: false,
+        isAdmin: false,
         user: null,
 
         subscribeToUserUpdates: () => {
@@ -53,6 +57,7 @@ export const useUserStore = create<UserStore>()(
 
           set({
             isAuth: true,
+            isAdmin: authData.record.isAdmin,
             user: authData.record,
           });
 
@@ -69,10 +74,12 @@ export const useUserStore = create<UserStore>()(
           usersCollection.authRefresh();
 
           const isValid = client.authStore.isValid;
+          const isAdmin = client.authStore.record?.isAdmin || false;
           const user = client.authStore.record as User | null;
 
           set({
             isAuth: isValid,
+            isAdmin: isAdmin,
             user,
           });
 
@@ -84,6 +91,7 @@ export const useUserStore = create<UserStore>()(
         clear: () => {
           set({
             isAuth: false,
+            isAdmin: false,
             user: null,
           });
         },
@@ -110,19 +118,23 @@ export const initializeAuthStore = async () => {
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   const isAuth = client.authStore.isValid;
+  const isAdmin = client.authStore.record?.isAdmin || false;
   const user = client.authStore.record as User | null;
 
   useUserStore.setState({
     isAuth,
+    isAdmin,
     user,
   });
 
   client.authStore.onChange(() => {
     const isAuth = client.authStore.isValid;
+    const isAdmin = client.authStore.record?.isAdmin || false;
     const user = client.authStore.record as User | null;
 
     useUserStore.setState({
       isAuth,
+      isAdmin,
       user,
     });
 

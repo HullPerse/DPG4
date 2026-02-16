@@ -7,9 +7,13 @@ export const useDataStore = create<DataStore>()(
     persist(
       (set) => ({
         wallpaper: "",
+        isConnected: false,
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
+        },
+        setConnected: (isConnected: boolean) => {
+          set({ isConnected });
         },
       }),
       {

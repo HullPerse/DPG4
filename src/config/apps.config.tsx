@@ -6,7 +6,7 @@ const Tabletop = lazy(() => import("@/routes/tabletop/tabletop.root"));
 export const APPS = [
   {
     name: "tabletop",
-    label: "Игровое поле",
+    label: "Подвал",
     icon: <Dices className="size-7" />,
     component: <Tabletop />,
   },
@@ -44,7 +44,7 @@ export const WINDOWS = [
   },
   {
     id: "tabletop",
-    title: "Игровое поле",
+    title: "Подвал",
     icon: <Dices className="size-7" />,
     size: {
       width: 840,

@@ -9,19 +9,22 @@ export default function Timer() {
   }, []);
 
   return (
-    <div className="text-sm font-medium text-text border-l-2 border-highlight-high px-2 h-full flex items-center justify-center">
-      <span>
-        {time.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
-      <span className="text-muted ml-2">
-        {time.toLocaleDateString([], {
-          month: "short",
-          day: "numeric",
-        })}
-      </span>
+    <div className="flex items-center justify-center px-4 h-full w-26 bg-card/50 backdrop-blur-sm border-l-2 border-highlight-high">
+      <div className="flex flex-col items-center">
+        <span className="text-sm font-bold text-text tabular-nums">
+          {time.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {time.toLocaleDateString([], {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
+      </div>
     </div>
   );
 }

@@ -9,12 +9,13 @@
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
+
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 640,
+        "title": "DPG",
+        "width": 960,
+        "height": 840,
         "minWidth": 600,
         "minHeight": 400
       }

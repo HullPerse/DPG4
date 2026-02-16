@@ -11,7 +11,12 @@ import { WindowLoader } from "./components/shared/loader.component";
 import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
 import Selection from "./routes/desktop/components/selection.desktop";
-import { activeWindow, closeWindow, minimizeWindow, refreshWindow } from "./lib/utils";
+import {
+  activeWindow,
+  closeWindow,
+  minimizeWindow,
+  refreshWindow,
+} from "./lib/window.utils";
 
 function App() {
   //routing

@@ -11,7 +11,7 @@ import {
   createWindow,
   minimizeWindow,
   unminimizeWindow,
-} from "@/lib/utils";
+} from "@/lib/window.utils";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -20,6 +20,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context.component";
 import { lazy } from "react";
+import NetworkConnection from "@/components/shared/network.component";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -53,7 +54,7 @@ export default function Desktop({
       </section>
 
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
-        <div className="flex flex-row items-center h-full px-2 gap-2">
+        <div className="flex flex-row items-center h-full px-2 gap-2 overflow-x-auto w-full">
           {[...activeApps]
             .sort(
               (a, b) =>
@@ -116,32 +117,28 @@ export default function Desktop({
               </ContextMenu>
             ))}
         </div>
-        <div className="flex flex-row items-center h-full gap-2">
-          {/* WALLAPAPER */}
-          <button
-            className="text-muted hover:text-text cursor-pointer border rounded p-1"
-            title="Сменить обои"
-            onClick={() =>
-              setActiveApps(
-                createWindow(
-                  activeApps,
-                  WINDOWS.find((w) => w.id === "wallpaper") as WindowProps,
-                  <WallpaperApp setWallpaper={setWallpaper} />,
-                ),
-              )
-            }
-          >
-            <Image className="size-7" />
-          </button>
-
-          {/* SIGNOUT */}
-          <button
-            className="text-muted hover:text-text cursor-pointer border rounded p-1"
-            title="Выход"
-            onClick={logout}
-          >
-            <DoorOpen className="size-7" />
-          </button>
+        <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
+          <div className="flex items-center gap-2 text-muted">
+            <NetworkConnection />
+            {/* WALLAPAPER */}
+            <Image
+              className="w-4 h-4 hover:text-text cursor-pointer"
+              onClick={() =>
+                setActiveApps(
+                  createWindow(
+                    activeApps,
+                    WINDOWS.find((w) => w.id === "wallpaper") as WindowProps,
+                    <WallpaperApp setWallpaper={setWallpaper} />,
+                  ),
+                )
+              }
+            />
+            {/* SIGNOUT */}
+            <DoorOpen
+              className="w-4 h-4 hover:text-text cursor-pointer"
+              onClick={logout}
+            />
+          </div>
 
           {/* TIME DATE */}
           <Timer />

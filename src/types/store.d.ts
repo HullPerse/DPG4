@@ -3,6 +3,7 @@ import type { User } from "@/types/user";
 export interface UserStore {
   // State
   isAuth: boolean;
+  isAdmin: boolean;
   user: User | null;
 
   // Actions
@@ -17,7 +18,9 @@ export interface UserStore {
 export interface DataStore {
   // State
   wallpaper: string;
+  isConnected: boolean;
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
+  setConnected: (isConnected: boolean) => void;
 }

@@ -1,6 +1,6 @@
 import { WindowProps, WindowPosition } from "@/types/window";
 import { Button } from "../ui/button.component";
-import { Maximize, Minus, RotateCcw, X } from "lucide-react";
+import { GlobeX, Maximize, Minus, RotateCcw, X } from "lucide-react";
 import {
   useState,
   useRef,
@@ -11,8 +11,12 @@ import {
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
+import { WindowError } from "./error.component";
+import { useDataStore } from "@/store/data.store";
 
 function WindowComponent(props: WindowProps) {
+  const isConnected = useDataStore((state) => state.isConnected);
+
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState<WindowPosition>({ x: 0, y: 0 });
@@ -276,20 +280,27 @@ function WindowComponent(props: WindowProps) {
       </section>
 
       {/* Body */}
-      <section
-        className="flex w-full overflow-y-auto"
-        style={{ height: "calc(100% - 3rem)" }}
-      >
-        {isRefreshing ? (
-          <WindowLoader />
-        ) : (
-          <Suspense fallback={<WindowLoader />}>
-            {cloneElement(props.children, {
-              key: props.refreshKey,
-            })}
-          </Suspense>
-        )}
-      </section>
+      {isConnected ? (
+        <section
+          className="flex w-full overflow-y-auto"
+          style={{ height: "calc(100% - 3rem)" }}
+        >
+          {isRefreshing ? (
+            <WindowLoader />
+          ) : (
+            <Suspense fallback={<WindowLoader />}>
+              {cloneElement(props.children, {
+                key: props.refreshKey,
+              })}
+            </Suspense>
+          )}
+        </section>
+      ) : (
+        <WindowError
+          error={new Error("Соединение с сервером потеряно")}
+          icon={<GlobeX className="size-28 text-red-500" />}
+        />
+      )}
 
       {/* Resize */}
       <div

@@ -6,4 +6,7 @@ export interface User {
   email?: string;
   avatar: string;
   color: string;
+  isAdmin?: boolean;
+  position: number;
+  currentAction: "MOVE" | "GAMEADD" | "GAMEFINISH";
 }
