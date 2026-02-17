@@ -5,17 +5,21 @@ import {
   useState,
   useRef,
   useEffect,
-  memo,
   Suspense,
   cloneElement,
+  memo,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
 import { WindowError } from "./error.component";
 import { useDataStore } from "@/store/data.store";
 
-function WindowComponent(props: WindowProps) {
+function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
+
+  if (!props.size) {
+    return null;
+  }
 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -315,6 +319,4 @@ function WindowComponent(props: WindowProps) {
   );
 }
 
-const Window = memo(WindowComponent);
-
-export default Window;
+export default memo(Window);

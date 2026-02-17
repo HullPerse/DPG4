@@ -4,6 +4,7 @@ import { Loader, Wifi, WifiOff, WifiSync } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "@/store/data.store";
+import { cn, networkClass } from "@/lib/utils";
 
 export default function NetworkConnection() {
   const setConnected = useDataStore((state) => state.setConnected);
@@ -51,7 +52,14 @@ export default function NetworkConnection() {
 
   //connection loading
   if (isLoading || isRefetching)
-    return <Loader className="w-4 h-4 animate-spin" />;
+    return (
+      <Loader
+        className={cn(
+          "w-4 h-4 animate-spin",
+          networkClass(!!data?.isConnected),
+        )}
+      />
+    );
 
   //connection lost
   if (isError || !data?.isConnected || isRefetchError)

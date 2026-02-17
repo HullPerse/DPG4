@@ -36,7 +36,7 @@ export function closeWindow(prevWindows: WindowProps[], windowId: string) {
 
   if (existingWindow) {
     existingWindow.isActive = false;
-    return [prevWindows.filter((w) => w.id !== windowId)];
+    return prevWindows.filter((w) => w.id !== windowId);
   }
 
   return prevWindows;

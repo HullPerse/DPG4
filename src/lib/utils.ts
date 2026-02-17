@@ -15,3 +15,8 @@ export function calculateScore(realTime: number, hltbTime: number) {
   const score = realTime * (1 + 0.2 * (1 - realTime / hltbTime));
   return Math.round(score);
 }
+
+export function networkClass(connection: boolean) {
+  if (connection) return "text-text";
+  return "text-red-700";
+}
