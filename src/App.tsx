@@ -1,7 +1,4 @@
-import { GlobeX } from "lucide-react";
-import { BigError } from "./components/shared/error.component";
 import { useUserStore } from "./store/user.store";
-import { useNetworkState } from "@uidotdev/usehooks";
 import { useNavigate } from "@tanstack/react-router";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Desktop from "./routes/desktop/desktop.root";
@@ -20,7 +17,6 @@ import {
 
 function App() {
   //routing
-  const network = useNetworkState();
   const navigate = useNavigate();
 
   //stores
@@ -30,6 +26,7 @@ function App() {
   //app states
   const [wallpaper, setWallpaper] = useState<string | null>(null);
   const [activeApps, setActiveApps] = useState<WindowProps[]>([]);
+  const [isOpening, setIsOpening] = useState<boolean>(false);
 
   //selection states
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -127,22 +124,13 @@ function App() {
     getWallpaper();
   }, [isAuth, navigate]);
 
-  if (!network.online) {
-    return (
-      <BigError
-        error={new Error("Не удалось подключиться к сети")}
-        icon={<GlobeX className="animate-pulse size-28 text-red-500" />}
-        button
-      />
-    );
-  }
-
   return (
     <main
       ref={desktopRef}
       className="relative w-screen h-screen text-text bg-background bg-cover bg-center bg-no-repeat select-none"
       style={{
         backgroundImage: `url(${wallpaper})`,
+        cursor: isOpening ? "wait" : "default",
       }}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
@@ -160,6 +148,7 @@ function App() {
           onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
           onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
           onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
+          setIsOpening={setIsOpening}
           {...app}
         >
           <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
@@ -171,6 +160,8 @@ function App() {
         activeApps={activeApps}
         setActiveApps={setActiveApps}
         setWallpaper={setWallpaper}
+        isOpening={isOpening}
+        setIsOpening={setIsOpening}
       />
     </main>
   );

@@ -1,6 +1,6 @@
 import { Cell as CellType } from "@/types/cell";
 import { User } from "@/types/user";
-import { useCallback, useEffect } from "react";
+import { RefObject, useCallback, useEffect } from "react";
 import { useControls } from "react-zoom-pan-pinch";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
@@ -8,6 +8,7 @@ import { Cell } from "./cell.tabletop";
 export default function GameArea({
   cells,
   users,
+  initialMount,
 }: {
   cells: {
     start: CellType | undefined;
@@ -15,6 +16,7 @@ export default function GameArea({
     grid: CellType[][];
   };
   users: User[];
+  initialMount: RefObject<boolean>;
 }) {
   const { zoomToElement } = useControls();
   const user = useUserStore((state) => state.user);
@@ -32,7 +34,10 @@ export default function GameArea({
   }, [user?.id, zoomToElement]);
 
   useEffect(() => {
-    zoomToUser();
+    if (initialMount.current) {
+      zoomToUser();
+      initialMount.current = false;
+    }
   }, []);
 
   return (

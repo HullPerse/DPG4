@@ -6,9 +6,15 @@ export interface WindowProps {
     width: number;
     height: number;
   };
+  initialPosition: {
+    x: number;
+    y: number;
+  };
   isActive?: boolean;
   isMinimized?: boolean;
   isMaximized?: boolean;
+  isPinned?: boolean;
+
   createdAt?: Date;
   disabled?: {
     maximize?: boolean;
@@ -20,6 +26,7 @@ export interface WindowProps {
   onMinimize?: () => void;
   onActive?: () => void;
   onRefresh?: () => void;
+  setIsOpening?: (value: boolean) => void;
   refreshKey?: number;
 }
 

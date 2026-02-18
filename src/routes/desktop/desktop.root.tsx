@@ -1,6 +1,16 @@
 import { APPS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
-import { Activity, DoorOpen, Image, Maximize, Minimize, X } from "lucide-react";
+import {
+  Activity,
+  Bell,
+  DoorOpen,
+  Image,
+  Maximize,
+  Minimize,
+  Pin,
+  PinOff,
+  X,
+} from "lucide-react";
 import Timer from "./components/timer.desktop";
 import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
@@ -11,6 +21,7 @@ import {
   createWindow,
   minimizeWindow,
   unminimizeWindow,
+  pinWindow,
 } from "@/lib/window.utils";
 import {
   ContextMenu,
@@ -28,10 +39,14 @@ export default function Desktop({
   activeApps,
   setActiveApps,
   setWallpaper,
+  isOpening,
+  setIsOpening,
 }: {
   activeApps: WindowProps[];
   setActiveApps: (value: WindowProps[]) => void;
   setWallpaper: (value: string | null) => void;
+  isOpening: boolean;
+  setIsOpening: (value: boolean) => void;
 }) {
   const logout = useUserStore((state) => state.logout);
 
@@ -48,6 +63,8 @@ export default function Desktop({
               component={app.component}
               activeApps={activeApps}
               setActiveApps={setActiveApps}
+              isOpening={isOpening}
+              setIsOpening={setIsOpening}
             />
           ))}
         </div>
@@ -56,31 +73,61 @@ export default function Desktop({
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
         <div className="flex flex-row items-center h-full px-2 gap-2 overflow-x-auto w-full">
           {[...activeApps]
-            .sort(
-              (a, b) =>
-                (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0),
-            )
+            .sort((a, b) => {
+              if (Boolean(a.isPinned) !== Boolean(b.isPinned)) {
+                return (
+                  Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned))
+                );
+              }
+              return (
+                (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)
+              );
+            })
             .map((app) => (
               <ContextMenu key={app.id}>
                 <ContextMenuTrigger>
                   <button
-                    className="text-muted hover:text-text cursor-pointer border rounded p-1"
+                    className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} hover:text-text cursor-pointer border rounded p-1`}
                     title={app.title}
                     onClick={() =>
                       setActiveApps(unminimizeWindow(activeApps, app.id))
                     }
                   >
                     {WINDOWS.find((w) => w.id === app.id)?.icon}
+
+                    {/* pinned */}
+                    {app.isPinned && (
+                      <Pin className="absolute -top-1 -left-1 rotate-45 text-primary/60 size-4" />
+                    )}
                   </button>
                 </ContextMenuTrigger>
-                <ContextMenuContent>
+                <ContextMenuContent className="w-42">
                   <ContextMenuGroup>
+                    {!app.isActive && (
+                      <ContextMenuItem
+                        onClick={() =>
+                          setActiveApps(activeWindow(activeApps, app.id))
+                        }
+                      >
+                        <Activity /> Сдеать активным
+                      </ContextMenuItem>
+                    )}
                     <ContextMenuItem
                       onClick={() =>
-                        setActiveApps(activeWindow(activeApps, app.id))
+                        setActiveApps(pinWindow(activeApps, app.id))
                       }
                     >
-                      <Activity /> Сдеать активным
+                      {app.isPinned ? (
+                        <>
+                          <PinOff />
+                          Открепить
+                        </>
+                      ) : (
+                        <>
+                          <Pin />
+                          Закрепить
+                        </>
+                      )}
                     </ContextMenuItem>
                     <ContextMenuItem
                       onClick={() => {
@@ -120,6 +167,8 @@ export default function Desktop({
         <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             <NetworkConnection />
+            {/* NOTIFICATIONS */}
+            <Bell className="w-4 h-4 hover:text-text cursor-pointer" />
             {/* WALLAPAPER */}
             <Image
               className="w-4 h-4 hover:text-text cursor-pointer"

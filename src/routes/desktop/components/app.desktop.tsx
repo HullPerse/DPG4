@@ -11,15 +11,24 @@ function AppDesktop({
   component,
   activeApps,
   setActiveApps,
+  isOpening,
+  setIsOpening,
 }: AppProps & {
   activeApps: WindowProps[];
   setActiveApps: (value: WindowProps[]) => void;
+  isOpening: boolean;
+  setIsOpening: (value: boolean) => void;
 }) {
   return (
     <button
       key={name}
-      className="flex flex-col items-center justify-center hover:bg-primary/20 w-18 h-18 rounded cursor-pointer drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] border-2"
+      className="flex flex-col items-center justify-center hover:bg-primary/20 w-18 h-18 rounded drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] border-2"
+      style={{
+        cursor: isOpening ? "wait" : "pointer",
+      }}
       onDoubleClick={() => {
+        if (!activeApps.find((item) => item.id === name)) setIsOpening(true);
+
         setActiveApps(
           createWindow(
             activeApps,

@@ -17,15 +17,12 @@ import { useDataStore } from "@/store/data.store";
 function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
 
-  if (!props.size) {
-    return null;
-  }
-
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [position, setPosition] = useState<WindowPosition>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<WindowPosition>(
+    props.initialPosition,
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const isInitialMount = useRef(true);
 
   const [windowSize, setWindowSize] = useState(() => {
     const initialWidth = Math.min(props.size.width, window.innerWidth);
@@ -39,33 +36,19 @@ function Window(props: WindowProps) {
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartSize = useRef({ width: 0, height: 0 });
 
-  // handle mount centering and maximizing
+  //handle mount centering and maximizing
   useEffect(() => {
+    setTimeout(() => props.setIsOpening?.(false), 300);
+
     if (props.isMaximized) {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
       });
     }
+  }, [props.isMaximized]);
 
-    //prevent from centering on active state change
-    if (
-      isInitialMount.current &&
-      windowRef.current &&
-      !isDragging &&
-      !isResizing &&
-      !props.isMaximized
-    ) {
-      const rect = windowRef.current.getBoundingClientRect();
-      setPosition({
-        x: Math.max(0, (window.innerWidth - rect.width) / 2),
-        y: Math.max(0, (window.innerHeight - rect.height) / 2),
-      });
-      isInitialMount.current = false;
-    }
-  }, [props.isMaximized, isDragging, isResizing]);
-
-  // handle window resize to prevent overflow
+  //handle window resize to prevent overflow
   useEffect(() => {
     const handleWindowResize = () => {
       setWindowSize((prevSize) => {
@@ -95,24 +78,6 @@ function Window(props: WindowProps) {
     window.addEventListener("resize", handleWindowResize);
     return () => window.removeEventListener("resize", handleWindowResize);
   }, [windowSize.width, windowSize.height]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartPos.current = { ...position };
-    props.onActive?.();
-    e.preventDefault();
-  };
-
-  const handleResizeMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    resizeStartPos.current = { x: e.clientX, y: e.clientY };
-    resizeStartSize.current = {
-      width: windowSize.width,
-      height: windowSize.height,
-    };
-    e.preventDefault();
-  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -149,7 +114,7 @@ function Window(props: WindowProps) {
         const maxWidth = screenWidth;
         const maxHeight = screenHeight;
 
-        // ensure window boundaries
+        //ensure window boundaries
         const availableWidth = screenWidth - position.x;
         const availableHeight = screenHeight - position.y;
 
@@ -210,10 +175,28 @@ function Window(props: WindowProps) {
     setIsRefreshing(true);
     props.onRefresh?.();
 
-    // Reset refresh state after a brief moment for visual feedback
+    //reset refresh state for visual feedback
     setTimeout(() => {
       setIsRefreshing(false);
     }, 300);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    windowStartPos.current = { ...position };
+    props.onActive?.();
+    e.preventDefault();
+  };
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    resizeStartPos.current = { x: e.clientX, y: e.clientY };
+    resizeStartSize.current = {
+      width: windowSize.width,
+      height: windowSize.height,
+    };
+    e.preventDefault();
   };
 
   return (
@@ -226,8 +209,12 @@ function Window(props: WindowProps) {
         top: `${position.y}px`,
         width: `${windowSize.width}px`,
         height: `${windowSize.height}px`,
-        zIndex: props.isActive ? 999 : 50,
-        boxShadow: props.isActive ? "8px 8px 25px 0 black" : "none",
+        zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
+        boxShadow: props.isPinned
+          ? "8px 8px 25px 0 black"
+          : props.isActive
+            ? "8px 8px 25px 0 black"
+            : "none",
         cursor: isDragging ? "grabbing" : "default",
       }}
       className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
@@ -252,7 +239,9 @@ function Window(props: WindowProps) {
           <Button variant="ghost" title="Перезагрузить" onClick={handleRefresh}>
             <RotateCcw />
           </Button>
-          <span className="text-md font-bold">{props.title}</span>
+          <span className="text-md font-bold" onDoubleClick={handleMaximize}>
+            {props.title}
+          </span>
         </div>
 
         <div className="flex flex-row">
@@ -274,7 +263,7 @@ function Window(props: WindowProps) {
           </Button>
           <Button
             variant="ghost"
-            disabled={props.disabled?.close}
+            disabled={props.disabled?.close || props.isPinned}
             title="Закрыть"
             onClick={props.onClose}
           >

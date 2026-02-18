@@ -5,8 +5,10 @@ import { useCallback, useEffect } from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "@/store/data.store";
 import { cn, networkClass } from "@/lib/utils";
+import { useNetworkState } from "@uidotdev/usehooks";
 
 export default function NetworkConnection() {
+  const network = useNetworkState();
   const setConnected = useDataStore((state) => state.setConnected);
 
   //checking for connection
@@ -14,14 +16,15 @@ export default function NetworkConnection() {
     useQuery({
       queryKey: ["connection"],
       queryFn: async () => {
-        let isConnected = false;
+        const isOnline = network.online;
+        let [isConnected, updateAvailable] = [false, false];
+
         try {
           isConnected = await checkConnection();
         } catch {
           isConnected = false;
         }
 
-        let updateAvailable = false;
         try {
           const update = await check();
           updateAvailable = !!update;
@@ -30,7 +33,7 @@ export default function NetworkConnection() {
         }
 
         setConnected(isConnected);
-        return { isConnected, updateAvailable };
+        return { isConnected: isConnected && isOnline, updateAvailable };
       },
     });
 

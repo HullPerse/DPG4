@@ -7,7 +7,7 @@ import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
@@ -19,6 +19,8 @@ export default function Tabletop() {
   const queryClient = useQueryClient();
 
   const [constrol, setControl] = useState<boolean>(false);
+
+  const initialMount = useRef<boolean>(true);
 
   const { data, isLoading, isError, refetch } = useQuery<{
     cells: {
@@ -103,7 +105,7 @@ export default function Tabletop() {
         initialScale={0.4}
         minScale={0.1}
         maxScale={5}
-        centerOnInit={true}
+        centerOnInit={!initialMount.current}
         panning={{
           allowLeftClickPan: false,
           allowMiddleClickPan: false,
@@ -120,6 +122,7 @@ export default function Tabletop() {
               data?.cells || { start: undefined, final: undefined, grid: [] }
             }
             users={data?.users || []}
+            initialMount={initialMount}
           />
         </TransformComponent>
       </TransformWrapper>

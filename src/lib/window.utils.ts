@@ -26,7 +26,11 @@ export function createWindow(
     isActive: true,
     createdAt: new Date(),
     refreshKey: 0,
-  };
+    initialPosition: {
+      x: Math.max(0, (window.innerWidth - newWindow.size.width) / 2),
+      y: Math.max(0, (window.innerHeight - newWindow.size.height) / 2),
+    },
+  } as WindowProps;
 
   return [...prevWindows, newApp];
 }
@@ -57,30 +61,37 @@ export function minimizeWindow(prevWindows: WindowProps[], windowId: string) {
 export function unminimizeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
 
-  if (existingWindow) {
-    existingWindow.isActive = true;
-    existingWindow.isMinimized = false;
-    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
-  }
+  if (!existingWindow) return prevWindows;
 
-  return prevWindows;
+  existingWindow.isActive = true;
+  existingWindow.isMinimized = false;
+  return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
 }
 
 export function activeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
 
+  if (!existingWindow) return prevWindows;
+
+  return prevWindows.map((w) => ({
+    ...w,
+    isActive: w.id === windowId,
+  }));
+}
+
+export function pinWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
   if (existingWindow) {
-    const updatedWindows = prevWindows.map((w) => ({
-      ...w,
-      isActive: w.id === windowId,
-    }));
+    const pinnedWindow = {
+      ...existingWindow,
+      isPinned: !existingWindow.isPinned,
+    };
 
-    const activeWindow = updatedWindows.find((w) => w.id === windowId);
-    const otherWindows = updatedWindows.filter((w) => w.id !== windowId);
+    const otherWindows = prevWindows.filter((w) => w.id !== windowId);
 
-    return [...otherWindows, activeWindow!];
+    return [...otherWindows, pinnedWindow];
   }
-
   return prevWindows;
 }
 
