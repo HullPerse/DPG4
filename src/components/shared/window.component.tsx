@@ -8,6 +8,9 @@ import {
   Suspense,
   cloneElement,
   memo,
+  useCallback,
+  Children,
+  useMemo,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
@@ -35,6 +38,9 @@ function Window(props: WindowProps) {
   const windowStartPos = useRef({ x: 0, y: 0 });
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartSize = useRef({ width: 0, height: 0 });
+
+  const refreshKeyRef = useRef(props.refreshKey);
+  refreshKeyRef.current = props.refreshKey;
 
   //handle mount centering and maximizing
   useEffect(() => {
@@ -152,34 +158,27 @@ function Window(props: WindowProps) {
     position.y,
   ]);
 
-  const handleMaximize = () => {
+  const handleMaximize = useCallback(() => {
     const fullScreen =
       windowSize.width === window.innerWidth &&
       windowSize.height === window.innerHeight;
 
     if (fullScreen) {
-      return setWindowSize({
-        width: props.size?.width,
-        height: props.size?.height,
-      });
+      setWindowSize({ width: props.size?.width, height: props.size?.height });
+      return;
     }
 
     setPosition({ x: 0, y: 0 });
-    setWindowSize({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-  };
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+  }, [windowSize.width, windowSize.height, props.size]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
     props.onRefresh?.();
 
     //reset refresh state for visual feedback
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 300);
-  };
+    setTimeout(() => setIsRefreshing(false), 300);
+  }, [props.onRefresh]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -199,24 +198,51 @@ function Window(props: WindowProps) {
     e.preventDefault();
   };
 
+  const getChildren = useCallback(() => {
+    if (!isConnected)
+      return (
+        <WindowError
+          error={new Error("Соединение с сервером потеряно")}
+          icon={<GlobeX className="size-28 text-red-500" />}
+        />
+      );
+
+    return Children.map(props.children, (child, index) =>
+      React.isValidElement(child)
+        ? cloneElement(child, { key: `${refreshKeyRef.current}-${index}` })
+        : child,
+    );
+  }, [isConnected]);
+
+  const windowStyle = useMemo(
+    () => ({
+      transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+      width: `${windowSize.width}px`,
+      height: `${windowSize.height}px`,
+      zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
+      boxShadow:
+        props.isPinned || props.isActive ? "8px 8px 25px 0 black" : "none",
+      cursor: isDragging ? "grabbing" : "default",
+      willChange: isDragging || isResizing ? "transform" : "auto",
+    }),
+    [
+      position.x,
+      position.y,
+      windowSize.width,
+      windowSize.height,
+      props.isPinned,
+      props.isActive,
+      isDragging,
+      isResizing,
+    ],
+  );
+
   return (
     <main
       ref={windowRef}
       key={props.id}
       data-window="true"
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        width: `${windowSize.width}px`,
-        height: `${windowSize.height}px`,
-        zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
-        boxShadow: props.isPinned
-          ? "8px 8px 25px 0 black"
-          : props.isActive
-            ? "8px 8px 25px 0 black"
-            : "none",
-        cursor: isDragging ? "grabbing" : "default",
-      }}
+      style={windowStyle}
       className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
       hidden={props.isMinimized}
       onClick={(e) => {
@@ -273,27 +299,14 @@ function Window(props: WindowProps) {
       </section>
 
       {/* Body */}
-      {isConnected ? (
-        <section
-          className="flex w-full overflow-y-auto"
-          style={{ height: "calc(100% - 3rem)" }}
-        >
-          {isRefreshing ? (
-            <WindowLoader />
-          ) : (
-            <Suspense fallback={<WindowLoader />}>
-              {cloneElement(props.children, {
-                key: props.refreshKey,
-              })}
-            </Suspense>
-          )}
-        </section>
-      ) : (
-        <WindowError
-          error={new Error("Соединение с сервером потеряно")}
-          icon={<GlobeX className="size-28 text-red-500" />}
-        />
-      )}
+      <section
+        className="flex w-full overflow-y-auto"
+        style={{ height: "calc(100% - 3rem)" }}
+      >
+        <Suspense fallback={<WindowLoader />}>
+          {isRefreshing ? <WindowLoader /> : getChildren()}
+        </Suspense>
+      </section>
 
       {/* Resize */}
       <div

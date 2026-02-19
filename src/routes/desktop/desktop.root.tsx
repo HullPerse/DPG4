@@ -166,9 +166,12 @@ export default function Desktop({
         </div>
         <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
+            {/* NETWORK */}
             <NetworkConnection />
+
             {/* NOTIFICATIONS */}
             <Bell className="w-4 h-4 hover:text-text cursor-pointer" />
+
             {/* WALLAPAPER */}
             <Image
               className="w-4 h-4 hover:text-text cursor-pointer"
@@ -182,6 +185,7 @@ export default function Desktop({
                 )
               }
             />
+
             {/* SIGNOUT */}
             <DoorOpen
               className="w-4 h-4 hover:text-text cursor-pointer"
