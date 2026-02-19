@@ -168,7 +168,6 @@ export default function Desktop({
                             <ContextMenuItem
                               key={direction.direction}
                               onClick={() => {
-                                console.log(direction.direction);
                                 setActiveApps(
                                   moveWindow(
                                     activeApps,
