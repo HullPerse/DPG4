@@ -1,4 +1,4 @@
-import { APPS, WINDOWS } from "@/config/apps.config";
+import { APPS, DIRECTIONS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
 import {
   Activity,
@@ -7,6 +7,7 @@ import {
   Image,
   Maximize,
   Minimize,
+  Move,
   Pin,
   PinOff,
   X,
@@ -22,12 +23,16 @@ import {
   minimizeWindow,
   unminimizeWindow,
   pinWindow,
+  moveWindow,
 } from "@/lib/window.utils";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
   ContextMenuItem,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context.component";
 import { lazy } from "react";
@@ -152,6 +157,33 @@ export default function Desktop({
                         </>
                       )}
                     </ContextMenuItem>
+                    <ContextMenuSub>
+                      <ContextMenuSubTrigger>
+                        <Move />
+                        Переместить
+                      </ContextMenuSubTrigger>
+                      <ContextMenuSubContent className="ml-2">
+                        <ContextMenuGroup>
+                          {DIRECTIONS.map((direction) => (
+                            <ContextMenuItem
+                              key={direction.direction}
+                              onClick={() => {
+                                console.log(direction.direction);
+                                setActiveApps(
+                                  moveWindow(
+                                    activeApps,
+                                    app.id,
+                                    direction.direction,
+                                  ),
+                                );
+                              }}
+                            >
+                              {direction.icon} {direction.label}
+                            </ContextMenuItem>
+                          ))}
+                        </ContextMenuGroup>
+                      </ContextMenuSubContent>
+                    </ContextMenuSub>
                     <ContextMenuItem
                       onClick={() =>
                         setActiveApps(closeWindow(activeApps, app.id))

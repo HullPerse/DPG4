@@ -24,7 +24,7 @@ function Window(props: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState<WindowPosition>(
-    props.initialPosition,
+    props.position ?? props.initialPosition,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -64,6 +64,17 @@ function Window(props: WindowProps) {
       });
     }
   }, [props.isMaximized]);
+
+  //sync position and size from props changes (e.g., moveWindow)
+  useEffect(() => {
+    if (props.position) {
+      setPosition(props.position);
+    }
+    setWindowSize({
+      width: Math.min(props.size.width, window.innerWidth),
+      height: Math.min(props.size.height, window.innerHeight),
+    });
+  }, [props.position, props.size]);
 
   //handle window resize to prevent overflow
   useEffect(() => {

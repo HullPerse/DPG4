@@ -1,4 +1,11 @@
-import { Dices, Image } from "lucide-react";
+import {
+  Dices,
+  Image,
+  MoveDown,
+  MoveLeft,
+  MoveRight,
+  MoveUp,
+} from "lucide-react";
 import { lazy } from "react";
 
 const Tabletop = lazy(() => import("@/routes/tabletop/tabletop.root"));
@@ -50,5 +57,28 @@ export const WINDOWS = [
       width: 840,
       height: 680,
     },
+  },
+];
+
+export const DIRECTIONS = [
+  {
+    direction: "up",
+    label: "Наверх",
+    icon: <MoveUp />,
+  },
+  {
+    direction: "down",
+    label: "Вниз",
+    icon: <MoveDown />,
+  },
+  {
+    direction: "left",
+    label: "Налево",
+    icon: <MoveLeft />,
+  },
+  {
+    direction: "right",
+    label: "Направо",
+    icon: <MoveRight />,
   },
 ];

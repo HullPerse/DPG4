@@ -6,6 +6,10 @@ export interface WindowProps {
     width: number;
     height: number;
   };
+  position: {
+    x: number;
+    y: number;
+  };
   initialPosition: {
     x: number;
     y: number;

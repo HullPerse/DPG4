@@ -37,25 +37,19 @@ export function createWindow(
 
 export function closeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
+  if (!existingWindow) return prevWindows;
 
-  if (existingWindow) {
-    existingWindow.isActive = false;
-    return prevWindows.filter((w) => w.id !== windowId);
-  }
-
-  return prevWindows;
+  existingWindow.isActive = false;
+  return prevWindows.filter((w) => w.id !== windowId);
 }
 
 export function minimizeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
+  if (!existingWindow) return prevWindows;
 
-  if (existingWindow) {
-    existingWindow.isActive = false;
-    existingWindow.isMinimized = true;
-    return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
-  }
-
-  return prevWindows;
+  existingWindow.isActive = false;
+  existingWindow.isMinimized = true;
+  return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
 }
 
 export function unminimizeWindow(prevWindows: WindowProps[], windowId: string) {
@@ -76,44 +70,84 @@ export function activeWindow(prevWindows: WindowProps[], windowId: string) {
   return prevWindows.map((w) => ({
     ...w,
     isActive: w.id === windowId,
+    isMinimized: false,
   }));
 }
 
 export function pinWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
+  if (!existingWindow) return prevWindows;
 
-  if (existingWindow) {
-    const pinnedWindow = {
-      ...existingWindow,
-      isPinned: !existingWindow.isPinned,
-    };
+  const pinnedWindow = {
+    ...existingWindow,
+    isPinned: !existingWindow.isPinned,
+  };
 
-    const otherWindows = prevWindows.filter((w) => w.id !== windowId);
+  const otherWindows = prevWindows.filter((w) => w.id !== windowId);
 
-    return [...otherWindows, pinnedWindow];
-  }
-  return prevWindows;
+  return [...otherWindows, pinnedWindow];
 }
 
 export function refreshWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
+  if (!existingWindow) return prevWindows;
 
-  if (existingWindow) {
-    const refreshedWindow = {
-      ...existingWindow,
-      refreshKey: (existingWindow.refreshKey || 0) + 1,
-      isActive: true,
-    };
+  const refreshedWindow = {
+    ...existingWindow,
+    refreshKey: (existingWindow.refreshKey || 0) + 1,
+    isActive: true,
+  };
 
-    const updatedWindows = prevWindows.map((w) => ({
-      ...w,
-      isActive: w.id === windowId,
-    }));
+  const updatedWindows = prevWindows.map((w) => ({
+    ...w,
+    isActive: w.id === windowId,
+  }));
 
-    const otherWindows = updatedWindows.filter((w) => w.id !== windowId);
+  const otherWindows = updatedWindows.filter((w) => w.id !== windowId);
 
-    return [...otherWindows, refreshedWindow];
-  }
+  return [...otherWindows, refreshedWindow];
+}
 
-  return prevWindows;
+export function moveWindow(
+  prevWindows: WindowProps[],
+  windowId: string,
+  direction: string,
+) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+  if (!existingWindow) return prevWindows;
+
+  const directionMap: Record<
+    string,
+    { position: { x: number; y: number }; size: { width: number; height: number } }
+  > = {
+    up: {
+      position: { x: 0, y: 0 },
+      size: { width: window.innerWidth, height: window.innerHeight / 2 },
+    },
+    down: {
+      position: { x: 0, y: window.innerHeight / 2 },
+      size: { width: window.innerWidth, height: window.innerHeight / 2 },
+    },
+    left: {
+      position: { x: 0, y: 0 },
+      size: { width: window.innerWidth / 2, height: window.innerHeight },
+    },
+    right: {
+      position: { x: window.innerWidth / 2, y: 0 },
+      size: { width: window.innerWidth / 2, height: window.innerHeight },
+    },
+  };
+
+  const config = directionMap[direction];
+  if (!config) return prevWindows;
+
+  const updatedWindow = {
+    ...existingWindow,
+    position: config.position,
+    size: config.size,
+  };
+
+  const otherWindows = prevWindows.filter((w) => w.id !== windowId);
+
+  return [...otherWindows, updatedWindow];
 }
