@@ -16,6 +16,7 @@ import { WindowLoader } from "./loader.component";
 import React from "react";
 import { WindowError } from "./error.component";
 import { useDataStore } from "@/store/data.store";
+import { useWindowResize } from "@/hooks/resize.hook";
 
 function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
@@ -36,11 +37,21 @@ function Window(props: WindowProps) {
   const windowRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const windowStartPos = useRef({ x: 0, y: 0 });
-  const resizeStartPos = useRef({ x: 0, y: 0 });
-  const resizeStartSize = useRef({ width: 0, height: 0 });
 
   const refreshKeyRef = useRef(props.refreshKey);
   refreshKeyRef.current = props.refreshKey;
+
+  const { handleResizeStart, handleResizeMove, resizeHandles } =
+    useWindowResize({
+      windowSize,
+      position,
+      isResizing,
+      onActive: props.onActive,
+      windowRef,
+      setIsResizing,
+      setPosition,
+      setWindowSize,
+    });
 
   //handle mount centering and maximizing
   useEffect(() => {
@@ -94,7 +105,6 @@ function Window(props: WindowProps) {
         let newX = windowStartPos.current.x + deltaX;
         let newY = windowStartPos.current.y + deltaY;
 
-        // handle boundaries for dragging
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
 
@@ -107,31 +117,7 @@ function Window(props: WindowProps) {
         });
       }
 
-      if (isResizing) {
-        const deltaX = e.clientX - resizeStartPos.current.x;
-        const deltaY = e.clientY - resizeStartPos.current.y;
-
-        let newWidth = Math.max(200, resizeStartSize.current.width + deltaX);
-        let newHeight = Math.max(150, resizeStartSize.current.height + deltaY);
-
-        // handle boundaries for resizing
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        const maxWidth = screenWidth;
-        const maxHeight = screenHeight;
-
-        //ensure window boundaries
-        const availableWidth = screenWidth - position.x;
-        const availableHeight = screenHeight - position.y;
-
-        newWidth = Math.min(newWidth, maxWidth, availableWidth);
-        newHeight = Math.min(newHeight, maxHeight, availableHeight);
-
-        setWindowSize({
-          width: newWidth,
-          height: newHeight,
-        });
-      }
+      handleResizeMove(e);
     };
 
     const handleMouseUp = () => {
@@ -147,16 +133,7 @@ function Window(props: WindowProps) {
         document.removeEventListener("mouseup", handleMouseUp);
       };
     }
-  }, [
-    isDragging,
-    isResizing,
-    window.innerWidth,
-    window.innerHeight,
-    windowSize.width,
-    windowSize.height,
-    position.x,
-    position.y,
-  ]);
+  }, [isDragging, isResizing, handleResizeMove, windowSize, setPosition]);
 
   const handleMaximize = useCallback(() => {
     const fullScreen =
@@ -185,16 +162,6 @@ function Window(props: WindowProps) {
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     windowStartPos.current = { ...position };
     props.onActive?.();
-    e.preventDefault();
-  };
-
-  const handleResizeMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    resizeStartPos.current = { x: e.clientX, y: e.clientY };
-    resizeStartSize.current = {
-      width: windowSize.width,
-      height: windowSize.height,
-    };
     e.preventDefault();
   };
 
@@ -309,14 +276,14 @@ function Window(props: WindowProps) {
       </section>
 
       {/* Resize */}
-      <div
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-        onMouseDown={handleResizeMouseDown}
-        style={{
-          background:
-            "linear-gradient(135deg, transparent 50%, var(--color-highlight-high) 50%)",
-        }}
-      />
+      {resizeHandles.map((handle) => (
+        <div
+          key={handle.direction}
+          className={handle.className}
+          style={handle.style}
+          onMouseDown={(e) => handleResizeStart(e, handle.direction)}
+        />
+      ))}
     </main>
   );
 }
