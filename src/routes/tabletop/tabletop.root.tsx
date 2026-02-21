@@ -18,6 +18,7 @@ const userApi = new UserApi();
 export default function Tabletop() {
   const queryClient = useQueryClient();
 
+  const [cell, setCell] = useState<number | null>(null);
   const [constrol, setControl] = useState<boolean>(false);
 
   const initialMount = useRef<boolean>(true);
@@ -88,7 +89,7 @@ export default function Tabletop() {
     <main className="relative flex w-full h-full items-center justify-center overflow-clip bg-background">
       {/* CONTROLS */}
       {constrol ? (
-        <Controls setControls={setControl} />
+        <Controls setControls={setControl} cell={cell} setCell={setCell} />
       ) : (
         <button
           className="absolute left-2 top-2 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
@@ -123,6 +124,8 @@ export default function Tabletop() {
             }
             users={data?.users || []}
             initialMount={initialMount}
+            setCell={setCell}
+            setControl={setControl}
           />
         </TransformComponent>
       </TransformWrapper>

@@ -9,6 +9,8 @@ export default function GameArea({
   cells,
   users,
   initialMount,
+  setCell,
+  setControl,
 }: {
   cells: {
     start: CellType | undefined;
@@ -17,6 +19,8 @@ export default function GameArea({
   };
   users: User[];
   initialMount: RefObject<boolean>;
+  setCell: (value: number | null) => void;
+  setControl: (value: boolean) => void;
 }) {
   const { zoomToElement } = useControls();
   const user = useUserStore((state) => state.user);
@@ -48,6 +52,8 @@ export default function GameArea({
           cell={cells.start}
           users={users}
           isAdmin={isAdmin}
+          setCell={setCell}
+          setControl={setControl}
         />
       )}
 
@@ -60,6 +66,8 @@ export default function GameArea({
                 cell={cell}
                 users={users}
                 isAdmin={isAdmin}
+                setCell={setCell}
+                setControl={setControl}
               />
             ))}
           </div>
@@ -72,6 +80,8 @@ export default function GameArea({
           cell={cells.final}
           users={users}
           isAdmin={isAdmin}
+          setCell={setCell}
+          setControl={setControl}
         />
       )}
     </main>

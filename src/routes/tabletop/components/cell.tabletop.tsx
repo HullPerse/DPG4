@@ -17,16 +17,27 @@ function CellComponent({
   cell,
   users,
   isAdmin,
+  setCell,
+  setControl,
 }: {
   cell: CellType;
   users: User[];
   isAdmin: boolean;
+  setCell: (value: any) => void;
+  setControl: (value: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger disabled={!isAdmin}>
+      <DialogTrigger
+        disabled={!isAdmin}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setCell(cell.id);
+          setControl(true);
+        }}
+      >
         <main className={getCellClass(cell.type)}>
           {/* user */}
           <section className="absolute left-0 top-0 w-full h-full">

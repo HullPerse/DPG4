@@ -8,13 +8,11 @@ export default class CellApi {
     return await this.cellsCollection.getFullList();
   };
 
-  editCell = async (id: string, cell: Cell) => {
-    return await this.cellsCollection.update(id, cell);
+  getCellById = async (id: string) => {
+    return await this.cellsCollection.getOne(id);
   };
 
-  getMGE = async () => {
-    return await fetch("https://mge.family/gameData.json").then((res) =>
-      res.json(),
-    );
+  editCell = async (id: string, cell: Cell) => {
+    return await this.cellsCollection.update(id, cell);
   };
 }

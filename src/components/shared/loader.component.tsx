@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Box } from "lucide-react";
 
 export function BigLoader() {
@@ -8,9 +9,14 @@ export function BigLoader() {
   );
 }
 
-export function WindowLoader() {
+export function WindowLoader({ className }: { className?: string }) {
   return (
-    <main className="absolute flex flex-col items-center justify-center w-full h-full bg-card text-text font-extrabold pb-12">
+    <main
+      className={cn(
+        "absolute flex flex-col items-center justify-center w-full h-full bg-card text-text font-extrabold pb-12",
+        className,
+      )}
+    >
       <Box className="animate-spin size-28" />
     </main>
   );
