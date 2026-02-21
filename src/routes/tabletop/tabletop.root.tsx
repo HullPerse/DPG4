@@ -11,15 +11,20 @@ import { startTransition, useCallback, useRef, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
+import { Switch } from "../../components/ui/switch.component";
+import { useDataStore } from "@/store/data.store";
+import { useUserStore } from "@/store/user.store";
 
 const cellApi = new CellApi();
 const userApi = new UserApi();
 
 export default function Tabletop() {
   const queryClient = useQueryClient();
+  const { isEditing, setEditing } = useDataStore((state) => state);
+  const isAdmin = useUserStore((state) => state.isAdmin);
 
   const [cell, setCell] = useState<number | null>(null);
-  const [constrol, setControl] = useState<boolean>(false);
+  const [control, setControl] = useState<boolean>(false);
 
   const initialMount = useRef<boolean>(true);
 
@@ -61,6 +66,9 @@ export default function Tabletop() {
         users: users,
       };
     },
+
+    staleTime: 60 * 1000 * 5, // 5 minutes
+    gcTime: 60 * 1000 * 5, // 5 minutes
   });
 
   const invalidateQuery = useCallback(() => {
@@ -87,8 +95,20 @@ export default function Tabletop() {
 
   return (
     <main className="relative flex w-full h-full items-center justify-center overflow-clip bg-background">
+      {/* IS EDITING */}
+      {isAdmin && (
+        <section className="absolute top-0 right-0 z-100 flex flex-row items-center gap-2">
+          Режим редактирования:
+          <Switch
+            className="cursor-pointer"
+            checked={isEditing}
+            onCheckedChange={setEditing}
+          />
+        </section>
+      )}
+
       {/* CONTROLS */}
-      {constrol ? (
+      {control ? (
         <Controls setControls={setControl} cell={cell} setCell={setCell} />
       ) : (
         <button

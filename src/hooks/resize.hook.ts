@@ -1,4 +1,3 @@
-// useWindowResize.ts
 import { useRef, useCallback } from "react";
 import { WindowPosition } from "@/types/window";
 

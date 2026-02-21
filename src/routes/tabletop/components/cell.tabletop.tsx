@@ -8,10 +8,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog.component";
 import Settings from "./settings.tabletop";
 import { cellsConfig } from "@/config/cells.config";
+import { useDataStore } from "@/store/data.store";
 
 function CellComponent({
   cell,
@@ -26,19 +26,21 @@ function CellComponent({
   setCell: (value: any) => void;
   setControl: (value: boolean) => void;
 }) {
+  const isEditing = useDataStore((state) => state.isEditing);
+
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        disabled={!isAdmin}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          setCell(cell.id);
+    <Dialog open={isEditing && isAdmin ? open : false} onOpenChange={setOpen}>
+      <button
+        onClick={() => {
+          if (isEditing && isAdmin) return setOpen(true);
           setControl(true);
+          setCell(cell.id);
         }}
       >
         <main className={getCellClass(cell.type)}>
+          <section className="absolute top-0 left-0">{cell.title}</section>
           {/* user */}
           <section className="absolute left-0 top-0 w-full h-full">
             {users
@@ -64,7 +66,8 @@ function CellComponent({
               : cell.number}
           </span>
         </main>
-      </DialogTrigger>
+      </button>
+
       <DialogContent className="min-w-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">

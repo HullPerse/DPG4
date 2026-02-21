@@ -3,6 +3,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import useLoading from "@/hooks/loader.hook";
 import { useUserStore } from "@/store/user.store";
+import { Cell } from "@/types/cell";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleAlert, X } from "lucide-react";
 
@@ -21,22 +22,22 @@ export default function Controls({
   const user = useUserStore((state) => state.user);
 
   const { data, isLoading, isError, refetch, isRefetching, isRefetchError } =
-    useQuery({
+    useQuery<{
+      cell: Cell;
+    }>({
       queryKey: ["cellCard"],
       queryFn: async () => {
-        if (!cell) return;
-
         return {
-          cell: await cellApi.getCellById(String(cell)),
+          cell: (await cellApi.getCellById(String(cell))) as unknown as Cell,
         };
       },
       enabled: !!cell,
     });
 
   const getComponent = () => {
-    if (data?.cell)
+    if (cell)
       return {
-        component: <>Cell Data</>,
+        component: <>Cell Data {data?.cell.number}</>,
       };
 
     const actionMap = {
@@ -54,7 +55,7 @@ export default function Controls({
     return actionMap[user?.currentAction as keyof typeof actionMap];
   };
 
-  const minLoading = useLoading(isLoading || isRefetching, 3000);
+  const minLoading = useLoading(isLoading || isRefetching, 300);
 
   if (minLoading)
     return (

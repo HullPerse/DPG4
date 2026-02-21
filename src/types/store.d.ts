@@ -19,8 +19,10 @@ export interface DataStore {
   // State
   wallpaper: string;
   isConnected: boolean;
+  isEditing: boolean;
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
   setConnected: (isConnected: boolean) => void;
+  setEditing: (isEditing: boolean) => void;
 }

@@ -8,12 +8,16 @@ export const useDataStore = create<DataStore>()(
       (set) => ({
         wallpaper: "",
         isConnected: false,
+        isEditing: false,
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
         },
         setConnected: (isConnected: boolean) => {
           set({ isConnected });
+        },
+        setEditing: (isEditing: boolean) => {
+          set({ isEditing });
         },
       }),
       {

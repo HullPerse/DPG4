@@ -171,7 +171,7 @@ export default function Settings({
           onChange={(e) =>
             setConditions({
               ...conditions,
-              Дополнительнор: e.target.value,
+              Дополнительно: e.target.value,
             })
           }
         />
