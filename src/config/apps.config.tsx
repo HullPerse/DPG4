@@ -1,10 +1,14 @@
 import {
+  ArrowDown,
+  Clock,
   Dices,
+  Globe,
   Image,
   MoveDown,
   MoveLeft,
   MoveRight,
   MoveUp,
+  Signal,
 } from "lucide-react";
 import { lazy } from "react";
 
@@ -80,5 +84,23 @@ export const DIRECTIONS = [
     direction: "right",
     label: "Направо",
     icon: <MoveRight />,
+  },
+];
+
+export const NETWORK = [
+  {
+    id: "quality",
+    label: "Соединение",
+    icon: <Signal />,
+  },
+  {
+    id: "downlink",
+    label: "Пропускная способность",
+    icon: <ArrowDown />,
+  },
+  {
+    id: "latency",
+    label: "Задержка",
+    icon: <Clock />,
   },
 ];

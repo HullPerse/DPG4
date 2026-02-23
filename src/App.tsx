@@ -11,6 +11,7 @@ import Selection from "./routes/desktop/components/selection.desktop";
 import {
   activeWindow,
   closeWindow,
+  deactivateWindow,
   minimizeWindow,
   refreshWindow,
 } from "./lib/window.utils";
@@ -147,6 +148,7 @@ function App() {
           onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
           onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
           onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
+          onInactive={() => setActiveApps(deactivateWindow(activeApps, app.id))}
           onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
           setIsOpening={setIsOpening}
           {...app}

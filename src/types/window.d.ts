@@ -29,6 +29,7 @@ export interface WindowProps {
   onClose?: () => void;
   onMinimize?: () => void;
   onActive?: () => void;
+  onInactive?: () => void;
   onRefresh?: () => void;
   setIsOpening?: (value: boolean) => void;
   refreshKey?: number;

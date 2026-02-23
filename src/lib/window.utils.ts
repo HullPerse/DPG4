@@ -74,6 +74,17 @@ export function activeWindow(prevWindows: WindowProps[], windowId: string) {
   }));
 }
 
+export function deactivateWindow(prevWindows: WindowProps[], windowId: string) {
+  const existingWindow = prevWindows.find((w) => w.id === windowId);
+
+  if (!existingWindow) return prevWindows;
+
+  return prevWindows.map((w) => ({
+    ...w,
+    isActive: w.id === windowId ? false : w.isActive,
+  }));
+}
+
 export function pinWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
   if (!existingWindow) return prevWindows;

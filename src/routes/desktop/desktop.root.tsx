@@ -35,8 +35,15 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context.component";
-import { lazy } from "react";
+import { lazy, useState } from "react";
 import NetworkConnection from "@/components/shared/network.component";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover.component";
+import NetworkHover from "./components/network.desktop";
+import { Calendar } from "@/components/ui/calendar.component";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -55,9 +62,11 @@ export default function Desktop({
 }) {
   const logout = useUserStore((state) => state.logout);
 
+  const [openCalendar, setOpenCalendar] = useState<boolean>(false);
+
   return (
-    <main className="relative flex flex-col w-full h-full">
-      <section className="flex flex-1">
+    <main className="flex flex-col w-full h-full">
+      <section className="relative flex flex-1">
         <div className="absolute top-6 left-6 grid grid-cols-1 gap-2">
           {APPS.map((app: AppProps) => (
             <AppDesktop
@@ -73,6 +82,13 @@ export default function Desktop({
             />
           ))}
         </div>
+
+        {openCalendar && (
+          <Calendar
+            className="absolute right-2 bottom-2"
+            timeZone="Europe/Moscow"
+          />
+        )}
       </section>
 
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
@@ -198,7 +214,14 @@ export default function Desktop({
         <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* NETWORK */}
-            <NetworkConnection />
+            <HoverCard>
+              <HoverCardTrigger>
+                <NetworkConnection />
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <NetworkHover />
+              </HoverCardContent>
+            </HoverCard>
 
             {/* NOTIFICATIONS */}
             <Bell className="w-4 h-4 hover:text-text cursor-pointer" />
@@ -225,7 +248,7 @@ export default function Desktop({
           </div>
 
           {/* TIME DATE */}
-          <Timer />
+          <Timer onClick={() => setOpenCalendar((value) => !value)} />
         </div>
       </section>
     </main>

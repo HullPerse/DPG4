@@ -14,7 +14,7 @@ export default function NetworkConnection() {
   //checking for connection
   const { data, isLoading, isError, refetch, isRefetching, isRefetchError } =
     useQuery({
-      queryKey: ["connection"],
+      queryKey: ["connection", network.online],
       queryFn: async () => {
         const isOnline = network.online;
         let [isConnected, updateAvailable] = [false, false];

@@ -2,7 +2,7 @@ import CellApi from "@/api/cell.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleX, Menu } from "lucide-react";
+import { CircleX, Menu, ToolCase, X } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
@@ -25,6 +25,7 @@ export default function Tabletop() {
 
   const [cell, setCell] = useState<number | null>(null);
   const [control, setControl] = useState<boolean>(false);
+  const [showTools, setShowTools] = useState<boolean>(false);
 
   const initialMount = useRef<boolean>(true);
 
@@ -95,15 +96,21 @@ export default function Tabletop() {
 
   return (
     <main className="relative flex w-full h-full items-center justify-center overflow-clip bg-background">
-      {/* IS EDITING */}
-      {isAdmin && (
-        <section className="absolute top-0 right-0 z-100 flex flex-row items-center gap-2">
-          Режим редактирования:
-          <Switch
-            className="cursor-pointer"
-            checked={isEditing}
-            onCheckedChange={setEditing}
+      {/* ADMIN TABLETOP TOOLS */}
+      {isAdmin && showTools && (
+        <section className="absolute bottom-2 left-2 z-100 items-center justify-center bg-card p-2 rounded border-2 border-highlight-high">
+          <X
+            className="place-self-end size-5 text-muted hover:text-text cursor-pointer mb-2"
+            onClick={() => setShowTools(false)}
           />
+          <div className="flex flex-row items-center gap-2">
+            Режим редактирования:
+            <Switch
+              className="cursor-pointer"
+              checked={isEditing}
+              onCheckedChange={setEditing}
+            />
+          </div>
         </section>
       )}
 
@@ -111,13 +118,25 @@ export default function Tabletop() {
       {control ? (
         <Controls setControls={setControl} cell={cell} setCell={setCell} />
       ) : (
-        <button
-          className="absolute left-2 top-2 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
-          title="Меню"
-          onClick={() => setControl(true)}
-        >
-          <Menu />
-        </button>
+        <>
+          <button
+            className="absolute left-2 top-2 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
+            title="Меню"
+            onClick={() => setControl(true)}
+          >
+            <Menu />
+          </button>
+
+          {!showTools && isAdmin && (
+            <button
+              className="absolute left-2 top-11 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
+              title="Инструменты"
+              onClick={() => setShowTools(true)}
+            >
+              <ToolCase />
+            </button>
+          )}
+        </>
       )}
 
       {/* GAME AREA */}

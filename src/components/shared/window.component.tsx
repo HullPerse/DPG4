@@ -11,12 +11,15 @@ import {
   useCallback,
   Children,
   useMemo,
+  RefObject,
+  isValidElement,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
 import { WindowError } from "./error.component";
 import { useDataStore } from "@/store/data.store";
 import { useWindowResize } from "@/hooks/resize.hook";
+import { useClickAway } from "@uidotdev/usehooks";
 
 function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
@@ -40,6 +43,14 @@ function Window(props: WindowProps) {
 
   const refreshKeyRef = useRef(props.refreshKey);
   refreshKeyRef.current = props.refreshKey;
+
+  const clickAwayRef = useClickAway((e: Event) => {
+    const target = e.target as HTMLElement;
+    const otherWindow = target.closest('[data-window="true"]');
+    if (!otherWindow && props.isActive && !props.isPinned) {
+      props.onInactive?.();
+    }
+  });
 
   const { handleResizeStart, handleResizeMove, resizeHandles } =
     useWindowResize({
@@ -186,7 +197,7 @@ function Window(props: WindowProps) {
       );
 
     return Children.map(props.children, (child, index) =>
-      React.isValidElement(child)
+      isValidElement(child)
         ? cloneElement(child, { key: `${refreshKeyRef.current}-${index}` })
         : child,
     );
@@ -217,11 +228,14 @@ function Window(props: WindowProps) {
 
   return (
     <main
-      ref={windowRef}
+      ref={(el: HTMLDivElement | null) => {
+        windowRef.current = el;
+        (clickAwayRef as RefObject<HTMLDivElement | null>).current = el;
+      }}
       key={props.id}
       data-window="true"
       style={windowStyle}
-      className="absolute bg-card border-highlight-high border-2 rounded text-text transition-none overflow-hidden"
+      className="absolute bg-card rounded text-text transition-none overflow-hidden"
       hidden={props.isMinimized}
       onClick={(e) => {
         const target = e.target as HTMLElement;
