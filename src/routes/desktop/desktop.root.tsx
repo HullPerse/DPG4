@@ -85,7 +85,7 @@ export default function Desktop({
 
         {openCalendar && (
           <Calendar
-            className="absolute right-2 bottom-2"
+            className="absolute right-2 bottom-2 w-52"
             timeZone="Europe/Moscow"
           />
         )}
