@@ -13,9 +13,9 @@ const handleUserUpdate = (
   get: () => UserStore,
 ) => {
   if (data.action === "update" && data.record) {
-    set({ 
+    set({
       user: data.record,
-      isAdmin: data.record.isAdmin 
+      isAdmin: data.record.isAdmin,
     });
   } else if (data.action === "delete") {
     get().clear();
@@ -28,7 +28,12 @@ export const useUserStore = create<UserStore>()(
       (set, get) => ({
         isAuth: false,
         isAdmin: false,
+        loggedIn: false,
         user: null,
+
+        setLoggedIn: (loggedIn: boolean) => {
+          set({ loggedIn });
+        },
 
         subscribeToUserUpdates: () => {
           const { user } = get();
@@ -98,8 +103,9 @@ export const useUserStore = create<UserStore>()(
       }),
       {
         name: "auth-storage",
-        partialize: () => ({
+        partialize: (state) => ({
           token: client.authStore.token,
+          loggedIn: state.loggedIn,
         }),
         onRehydrateStorage: () => {
           return (_, error) => {

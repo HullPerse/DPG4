@@ -13,6 +13,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { WindowError } from "@/components/shared/error.component";
 import { userSchema } from "@/lib/zod.utils";
+import { useDataStore } from "@/store/data.store";
 
 const userApi = new UserApi();
 
@@ -22,6 +23,10 @@ export default function Signup({
   setRegister: (value: boolean) => void;
 }) {
   const login = useUserStore((state) => state.login);
+
+  const setLoggedIn = useUserStore((state) => state.setLoggedIn);
+  const setConnected = useDataStore((state) => state.setConnected);
+
   const navigate = useNavigate();
 
   const [username, setUsername] = useState<string>("");
@@ -75,7 +80,7 @@ export default function Signup({
 
     //create user
     await userApi
-      .create(validationResult.data)
+      .create(validationResult.data as any)
       .catch((error) => {
         console.error(error);
         setErrors({
@@ -83,6 +88,8 @@ export default function Signup({
         });
       })
       .finally(() => {
+        setLoggedIn(true);
+        setConnected(true);
         login(validationResult.data.username, validationResult.data.password);
         setRegister(false);
         setLoading(false);

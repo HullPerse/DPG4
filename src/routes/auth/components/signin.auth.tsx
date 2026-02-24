@@ -5,6 +5,7 @@ import { useUserStore } from "@/store/user.store";
 import { Box } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useDataStore } from "@/store/data.store";
 
 export default function Signin({
   setRegister,
@@ -12,6 +13,8 @@ export default function Signin({
   setRegister: (value: boolean) => void;
 }) {
   const login = useUserStore((state) => state.login);
+  const setLoggedIn = useUserStore((state) => state.setLoggedIn);
+  const setConnected = useDataStore((state) => state.setConnected);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState<string>("");
@@ -21,6 +24,8 @@ export default function Signin({
   const handleAuth = async () => {
     setLoading(true);
     try {
+      setLoggedIn(true);
+      setConnected(true);
       await login(username.toUpperCase(), password).then(() => {
         navigate({
           to: "/",

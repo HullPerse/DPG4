@@ -60,7 +60,7 @@ export default function Desktop({
   isOpening: boolean;
   setIsOpening: (value: boolean) => void;
 }) {
-  const logout = useUserStore((state) => state.logout);
+  const setLoggedIn = useUserStore((state) => state.setLoggedIn);
 
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
 
@@ -243,7 +243,9 @@ export default function Desktop({
             {/* SIGNOUT */}
             <DoorOpen
               className="w-4 h-4 hover:text-text cursor-pointer"
-              onClick={logout}
+              onClick={() => {
+                setLoggedIn(false);
+              }}
             />
           </div>
 

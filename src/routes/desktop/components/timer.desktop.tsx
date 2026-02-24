@@ -21,7 +21,7 @@ export default function Timer({ onClick }: { onClick: () => void }) {
             minute: "2-digit",
           })}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted">
           {time.toLocaleDateString([], {
             timeZone: "Europe/Moscow",
             weekday: "short",

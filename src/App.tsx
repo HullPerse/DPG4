@@ -15,6 +15,7 @@ import {
   minimizeWindow,
   refreshWindow,
 } from "./lib/window.utils";
+import Signpout from "./routes/desktop/components/signout.component";
 
 function App() {
   //routing
@@ -23,6 +24,7 @@ function App() {
   //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
   const isAuth = useUserStore((state) => state.isAuth);
+  const loggedIn = useUserStore((state) => state.loggedIn);
 
   //app states
   const [wallpaper, setWallpaper] = useState<string | null>(null);
@@ -105,7 +107,7 @@ function App() {
     });
 
     const dataUrl = await invoke<string>("get_wallpaper_data", {
-      path: wallpaper,
+      path: wallpaper || "",
     });
 
     if (dataUrl) {
@@ -125,6 +127,8 @@ function App() {
     getWallpaper();
   }, [isAuth, navigate]);
 
+  if (!loggedIn) return <Signpout />;
+
   return (
     <main
       ref={desktopRef}
@@ -132,6 +136,8 @@ function App() {
       style={{
         backgroundImage: `url(${wallpaper})`,
         cursor: isOpening ? "wait" : "default",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}

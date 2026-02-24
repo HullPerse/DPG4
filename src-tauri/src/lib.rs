@@ -11,7 +11,7 @@ struct Wallpaper {
 
 #[tauri::command]
 async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<String, String> {
-    // First check default wallpapers
+    //get default wallpapers
     let default_wallpapers_dir = Path::new("assets/wallpapers");
 
     if default_wallpapers_dir.exists() {
@@ -35,7 +35,7 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
         }
     }
 
-    // Then check custom wallpapers
+    //get custom wallpapers
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -69,7 +69,7 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
 async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String> {
     let mut wallpapers = Vec::new();
 
-    // Get default wallpapers from assets/wallpapers
+    //get default wallpapers
     let default_wallpapers_dir = Path::new("assets/wallpapers");
 
     if default_wallpapers_dir.exists() {
@@ -100,7 +100,7 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
         }
     }
 
-    // Get custom wallpapers from app data directory
+    //get custom wallpapers
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -157,7 +157,7 @@ async fn save_wallpaper(
     file_name: String,
     data: String,
 ) -> Result<String, String> {
-    // Validate filename
+
     if file_name.is_empty() {
         return Err("Filename cannot be empty".to_string());
     }
@@ -192,12 +192,10 @@ async fn save_wallpaper(
         return Err("Expected data URL format, received plain data".to_string());
     };
 
-    // Validate base64 data
     if base64_data.is_empty() {
         return Err("Empty base64 data received".to_string());
     }
 
-    // Decode base64 data with better error handling
     use base64::{engine::general_purpose, Engine as _};
     let decoded_data = general_purpose::STANDARD.decode(base64_data).map_err(|e| {
         format!(
@@ -207,7 +205,6 @@ async fn save_wallpaper(
         )
     })?;
 
-    // Validate file size (max 10MB)
     const MAX_FILE_SIZE: usize = 10 * 1024 * 1024;
     if decoded_data.len() > MAX_FILE_SIZE {
         return Err(format!(
@@ -217,7 +214,6 @@ async fn save_wallpaper(
         ));
     }
 
-    // Write file with detailed error message
     fs::write(&file_path, decoded_data).map_err(|e| {
         format!(
             "Failed to write wallpaper to {}: {}",
@@ -231,12 +227,10 @@ async fn save_wallpaper(
 
 #[tauri::command]
 async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    // Prevent deletion of default wallpapers
     if path.starts_with("assets/wallpapers") {
         return Err("Cannot delete default wallpapers".to_string());
     }
 
-    // Verify the file is in the app data directory to prevent deleting arbitrary files
     let app_data_dir = app
         .path()
         .app_data_dir()

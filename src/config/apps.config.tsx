@@ -2,7 +2,6 @@ import {
   ArrowDown,
   Clock,
   Dices,
-  Globe,
   Image,
   MoveDown,
   MoveLeft,

@@ -7,7 +7,6 @@ import {
   useEffect,
   Suspense,
   cloneElement,
-  memo,
   useCallback,
   Children,
   useMemo,
@@ -26,9 +25,15 @@ function Window(props: WindowProps) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
   const [position, setPosition] = useState<WindowPosition>(
-    props.position ?? props.initialPosition,
+    props.position ??
+      props.initialPosition ?? {
+        x: Math.max(0, (window.innerWidth - props.size.width) / 2),
+        y: Math.max(0, (window.innerHeight - props.size.height) / 2),
+      },
   );
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [windowSize, setWindowSize] = useState(() => {
@@ -188,7 +193,7 @@ function Window(props: WindowProps) {
   };
 
   const getChildren = useCallback(() => {
-    if (!isConnected)
+    if (!isConnected && props.id !== "auth")
       return (
         <WindowError
           error={new Error("Соединение с сервером потеряно")}
@@ -201,7 +206,7 @@ function Window(props: WindowProps) {
         ? cloneElement(child, { key: `${refreshKeyRef.current}-${index}` })
         : child,
     );
-  }, [isConnected]);
+  }, [isConnected, props.children]);
 
   const windowStyle = useMemo(
     () => ({
@@ -313,4 +318,4 @@ function Window(props: WindowProps) {
   );
 }
 
-export default memo(Window);
+export default Window;

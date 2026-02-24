@@ -4,6 +4,7 @@ export interface UserStore {
   // State
   isAuth: boolean;
   isAdmin: boolean;
+  loggedIn: boolean;
   user: User | null;
 
   // Actions
@@ -11,6 +12,7 @@ export interface UserStore {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   clear: () => void;
+  setLoggedIn: (loggedIn: boolean) => void;
   subscribeToUserUpdates: () => void;
   unsubscribeFromUserUpdates: () => void;
 }
