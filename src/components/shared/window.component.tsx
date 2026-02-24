@@ -36,6 +36,14 @@ function Window(props: WindowProps) {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [oldData, setOldData] = useState<{
+    position: WindowPosition;
+    size: { width: number; height: number };
+  }>({
+    position: props.position ?? props.initialPosition ?? { x: 0, y: 0 },
+    size: props.size ?? { width: 0, height: 0 },
+  });
+
   const [windowSize, setWindowSize] = useState(() => {
     const initialWidth = Math.min(props.size.width, window.innerWidth);
     const initialHeight = Math.min(props.size.height, window.innerHeight);
@@ -162,27 +170,32 @@ function Window(props: WindowProps) {
     }
   }, [isDragging, isResizing, handleResizeMove, windowSize, setPosition]);
 
-  const handleMaximize = useCallback(() => {
+  const handleMaximize = () => {
     const fullScreen =
       windowSize.width === window.innerWidth &&
       windowSize.height === window.innerHeight;
 
     if (fullScreen) {
-      const width =
-        props.size?.width <= window.innerWidth
-          ? props.size?.width
-          : window.innerWidth;
-      const height =
-        props.size?.height <= window.innerHeight
-          ? props.size?.height
-          : window.innerHeight;
-      setWindowSize({ width: width, height: height });
+      const size = {
+        width:
+          oldData.size.width <= window.innerWidth
+            ? oldData.size.width
+            : window.innerWidth,
+        height:
+          oldData.size.height <= window.innerHeight
+            ? oldData.size.height
+            : window.innerHeight,
+      };
+
+      setWindowSize(size);
+      setPosition(oldData.position);
       return;
     }
 
+    setOldData({ position: position, size: windowSize });
     setPosition({ x: 0, y: 0 });
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-  }, [windowSize.width, windowSize.height, props.size]);
+  };
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);

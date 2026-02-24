@@ -11,7 +11,7 @@ export default function NetworkHover() {
   useEffect(() => {
     const interval = setInterval(() => {
       forceUpdate((time) => time + 1);
-    }, 60 * 1000);
+    }, 60 * 1000); //1 minute;
 
     return () => clearInterval(interval);
   }, []);

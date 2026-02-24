@@ -1,11 +1,11 @@
 import { Cell as CellType } from "@/types/cell";
 import { User } from "@/types/user";
-import { RefObject, useCallback, useEffect } from "react";
+import { memo, RefObject, useCallback, useEffect } from "react";
 import { useControls } from "react-zoom-pan-pinch";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
 
-export default function GameArea({
+function GameArea({
   cells,
   users,
   initialMount,
@@ -26,23 +26,24 @@ export default function GameArea({
   const user = useUserStore((state) => state.user);
   const isAdmin = useUserStore((state) => state.isAdmin);
 
-  const zoomToUser = useCallback(() => {
-    if (!user?.id) return;
+  const userId = user?.id;
 
+  const zoomToUser = useCallback(() => {
+    if (!userId) return;
     setTimeout(() => {
-      const element = document.getElementById(`user-${user.id}`);
+      const element = document.getElementById(`user-${userId}`);
       if (element) {
-        zoomToElement(`user-${user.id}`, 1);
+        zoomToElement(`user-${userId}`, 1);
       }
     }, 100);
-  }, [user?.id, zoomToElement]);
+  }, [userId, zoomToElement]);
 
   useEffect(() => {
     if (initialMount.current) {
       zoomToUser();
       initialMount.current = false;
     }
-  }, []);
+  }, [initialMount, zoomToUser]);
 
   return (
     <main className="flex flex-col items-start gap-2">
@@ -87,3 +88,5 @@ export default function GameArea({
     </main>
   );
 }
+
+export default memo(GameArea);

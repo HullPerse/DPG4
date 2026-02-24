@@ -67,7 +67,6 @@ export default function Tabletop() {
         users: users,
       };
     },
-
     staleTime: 60 * 1000 * 5, // 5 minutes
     gcTime: 60 * 1000 * 5, // 5 minutes
   });

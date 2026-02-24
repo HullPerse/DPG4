@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import { devtools } from "@tanstack/devtools-vite";
 import vCache from "@raegen/vite-plugin-vitest-cache";
 import viteCompression from "vite-plugin-compression";
 
@@ -12,6 +13,7 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [
     react(),
+    devtools(),
     tailwindcss(),
     vCache(),
     viteCompression({
