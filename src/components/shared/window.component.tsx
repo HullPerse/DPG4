@@ -168,7 +168,15 @@ function Window(props: WindowProps) {
       windowSize.height === window.innerHeight;
 
     if (fullScreen) {
-      setWindowSize({ width: props.size?.width, height: props.size?.height });
+      const width =
+        props.size?.width <= window.innerWidth
+          ? props.size?.width
+          : window.innerWidth;
+      const height =
+        props.size?.height <= window.innerHeight
+          ? props.size?.height
+          : window.innerHeight;
+      setWindowSize({ width: width, height: height });
       return;
     }
 

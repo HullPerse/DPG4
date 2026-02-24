@@ -1,4 +1,3 @@
-import UserApi from "@/api/user.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
@@ -7,8 +6,6 @@ import { useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-
-const userApi = new UserApi();
 
 export default function Signpout() {
   const user = useUserStore((state) => state.user);
@@ -57,19 +54,6 @@ export default function Signpout() {
       setLoading(false);
     }
   };
-
-  // const handleAuth = useCallback(async () => {
-  //   if (!user) return;
-  //   setLoading(true);
-  //   try {
-  //     await login(user.username.toUpperCase(), password).finally(() => {
-  //       setLoggedIn(true);
-  //       setLoading(false);
-  //     });
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // }, [user, password, login, setLoggedIn]);
 
   return (
     <main
