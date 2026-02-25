@@ -131,7 +131,6 @@ export default function WallpaperApp({
           setLoading(true);
           await loadWallpapers();
           setUploading(false);
-          setLoading(false);
         } catch (error) {
           console.error(error);
           alert("Не удалось сохранить обои. Пожалуйста, попробуйте еще раз.");

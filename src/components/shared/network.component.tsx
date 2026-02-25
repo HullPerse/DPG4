@@ -45,12 +45,16 @@ export default function NetworkConnection() {
 
   //refetch every 5 minutes
   useEffect(() => {
-    setInterval(
-      () => {
-        handleRefetch();
-      },
-      1000 * 60 * 5,
-    );
+    return () => {
+      clearInterval(
+        setInterval(
+          () => {
+            handleRefetch();
+          },
+          1000 * 60 * 5,
+        ),
+      );
+    };
   }, []);
 
   //connection loading

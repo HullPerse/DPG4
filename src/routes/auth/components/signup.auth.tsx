@@ -98,7 +98,17 @@ export default function Signup({
           replace: true,
         });
       });
-  }, [username, password, avatar, color, setRegister]);
+  }, [
+    username,
+    password,
+    avatar,
+    color,
+    setRegister,
+    navigate,
+    setLoggedIn,
+    setConnected,
+    login,
+  ]);
 
   const clearError = (field: string) => {
     setErrors((prev) => {

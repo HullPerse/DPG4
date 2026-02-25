@@ -1,17 +1,22 @@
-export default function Selection({
-  selectionRect,
-}: {
-  selectionRect: { left: number; top: number; width: number; height: number };
-}) {
-  return (
-    <div
-      className="absolute pointer-events-none z-50 border border-primary bg-primary/20"
-      style={{
-        left: selectionRect.left,
-        top: selectionRect.top,
-        width: selectionRect.width,
-        height: selectionRect.height,
-      }}
-    />
-  );
-}
+import { forwardRef, memo } from "react";
+
+const Selection = forwardRef<HTMLDivElement, { visible: boolean }>(
+  function Selection({ visible }, ref) {
+    if (!visible) return null;
+
+    return (
+      <div
+        ref={ref}
+        className="absolute pointer-events-none z-50 border border-primary bg-primary/20"
+        style={{
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
+        }}
+      />
+    );
+  }
+);
+
+export default memo(Selection);

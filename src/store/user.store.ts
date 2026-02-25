@@ -76,7 +76,7 @@ export const useUserStore = create<UserStore>()(
         },
 
         refresh: async () => {
-          usersCollection.authRefresh();
+          await usersCollection.authRefresh();
 
           const isValid = client.authStore.isValid;
           const isAdmin = client.authStore.record?.isAdmin || false;

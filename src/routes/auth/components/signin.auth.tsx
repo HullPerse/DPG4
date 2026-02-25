@@ -24,9 +24,9 @@ export default function Signin({
   const handleAuth = async () => {
     setLoading(true);
     try {
-      setLoggedIn(true);
-      setConnected(true);
       await login(username.toUpperCase(), password).then(() => {
+        setLoggedIn(true);
+        setConnected(true);
         navigate({
           to: "/",
           replace: true,

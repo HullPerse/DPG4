@@ -28,6 +28,8 @@ export default function Tabletop() {
   const [showTools, setShowTools] = useState<boolean>(false);
 
   const initialMount = useRef<boolean>(true);
+  const zoomToUserRef = useRef<{ userId: string } | null>(null);
+  const zoomCompleted = useRef(false);
 
   const { data, isLoading, isError, refetch } = useQuery<{
     cells: {
@@ -151,6 +153,18 @@ export default function Tabletop() {
           allowRightClickPan: true,
         }}
         wheel={{ step: 0.1 }}
+        onTransformed={(ref) => {
+          if (zoomCompleted.current) return;
+          if (zoomToUserRef.current) {
+            const { userId } = zoomToUserRef.current;
+            const element = document.getElementById(`user-${userId}`);
+            if (element) {
+              ref.zoomToElement(element, 1);
+              zoomToUserRef.current = null;
+              zoomCompleted.current = true;
+            }
+          }
+        }}
       >
         <TransformComponent
           contentStyle={{ height: "100%" }}
@@ -164,6 +178,9 @@ export default function Tabletop() {
             initialMount={initialMount}
             setCell={setCell}
             setControl={setControl}
+            requestZoomToUser={(userId) => {
+              zoomToUserRef.current = { userId };
+            }}
           />
         </TransformComponent>
       </TransformWrapper>

@@ -33,9 +33,9 @@ function App() {
 
   //selection states
   const desktopRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<HTMLDivElement>(null);
+  const selectionStartRef = useRef({ x: 0, y: 0 });
   const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
-  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 });
 
   const handleDesktopMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -51,13 +51,12 @@ function App() {
       const taskbarHeight = 60;
       if (y > rect.height - taskbarHeight) return;
 
-      // check if mouse is over any window
+      //check if mouse is over any window
       const target = e.target as HTMLElement;
       const windowElement = target.closest('[data-window="true"]');
       if (windowElement) return;
 
-      setSelectionStart({ x, y });
-      setSelectionEnd({ x, y });
+      selectionStartRef.current = { x, y };
       setIsSelecting(true);
     },
     [],
@@ -68,17 +67,28 @@ function App() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = desktopRef.current?.getBoundingClientRect();
-      if (!rect) return;
+      if (!rect || !selectionRef.current) return;
 
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const taskbarHeight = 56;
       const maxY = rect.height - taskbarHeight;
 
-      setSelectionEnd({
-        x: Math.max(0, Math.min(x, rect.width)),
-        y: Math.max(0, Math.min(y, maxY)),
-      });
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      const clampedY = Math.max(0, Math.min(y, maxY));
+
+      const startX = selectionStartRef.current.x;
+      const startY = selectionStartRef.current.y;
+
+      const left = Math.min(startX, clampedX);
+      const top = Math.min(startY, clampedY);
+      const width = Math.abs(clampedX - startX);
+      const height = Math.abs(clampedY - startY);
+
+      selectionRef.current.style.left = `${left}px`;
+      selectionRef.current.style.top = `${top}px`;
+      selectionRef.current.style.width = `${width}px`;
+      selectionRef.current.style.height = `${height}px`;
     };
 
     const handleMouseUp = () => {
@@ -93,27 +103,33 @@ function App() {
     };
   }, [isSelecting]);
 
-  const selectionRect = {
-    left: Math.min(selectionStart.x, selectionEnd.x),
-    top: Math.min(selectionStart.y, selectionEnd.y),
-    width: Math.abs(selectionEnd.x - selectionStart.x),
-    height: Math.abs(selectionEnd.y - selectionStart.y),
-  };
-
   //initialize wallpaper data
-  const getWallpaper = async () => {
-    const wallpaper = await invoke<string>("get_wallpaper_by_name", {
-      name: wallpaperData,
-    });
+  useEffect(() => {
+    let mounted = true;
 
-    const dataUrl = await invoke<string>("get_wallpaper_data", {
-      path: wallpaper || "",
-    });
+    const getWallpaper = async () => {
+      try {
+        const wallpaper = await invoke<string>("get_wallpaper_by_name", {
+          name: wallpaperData,
+        });
+        const dataUrl = await invoke<string>("get_wallpaper_data", {
+          path: wallpaper || "",
+        });
 
-    if (dataUrl) {
-      setWallpaper(dataUrl);
-    }
-  };
+        if (mounted && dataUrl) {
+          setWallpaper(dataUrl);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    getWallpaper();
+
+    return () => {
+      mounted = false;
+    };
+  }, [wallpaperData]);
 
   //navigate to auth if user not logged in
   useEffect(() => {
@@ -123,8 +139,6 @@ function App() {
         replace: true,
       });
     }
-
-    getWallpaper();
   }, [isAuth, navigate]);
 
   if (!loggedIn) return <Signpout />;
@@ -143,9 +157,7 @@ function App() {
       onMouseDown={handleDesktopMouseDown}
     >
       {/* SELECTION */}
-      {isSelecting && selectionRect.width > 2 && selectionRect.height > 2 && (
-        <Selection selectionRect={selectionRect} />
-      )}
+      <Selection ref={selectionRef} visible={isSelecting} />
 
       {/* WINDOWS */}
       {activeApps.map((app) => (

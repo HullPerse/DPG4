@@ -39,7 +39,6 @@ export function closeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
   if (!existingWindow) return prevWindows;
 
-  existingWindow.isActive = false;
   return prevWindows.filter((w) => w.id !== windowId);
 }
 
@@ -129,7 +128,10 @@ export function moveWindow(
 
   const directionMap: Record<
     string,
-    { position: { x: number; y: number }; size: { width: number; height: number } }
+    {
+      position: { x: number; y: number };
+      size: { width: number; height: number };
+    }
   > = {
     up: {
       position: { x: 0, y: 0 },

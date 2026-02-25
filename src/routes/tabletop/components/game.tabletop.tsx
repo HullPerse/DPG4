@@ -1,15 +1,16 @@
 import { Cell as CellType } from "@/types/cell";
 import { User } from "@/types/user";
 import { memo, RefObject, useCallback, useEffect } from "react";
-import { useControls } from "react-zoom-pan-pinch";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
 
 function GameArea({
   cells,
   users,
+  initialMount,
   setCell,
   setControl,
+  requestZoomToUser,
 }: {
   cells: {
     start: CellType | undefined;
@@ -20,8 +21,8 @@ function GameArea({
   initialMount: RefObject<boolean>;
   setCell: (value: number | null) => void;
   setControl: (value: boolean) => void;
+  requestZoomToUser: (userId: string) => void;
 }) {
-  const { zoomToElement } = useControls();
   const user = useUserStore((state) => state.user);
   const isAdmin = useUserStore((state) => state.isAdmin);
 
@@ -29,13 +30,15 @@ function GameArea({
 
   const zoomToUser = useCallback(() => {
     if (!userId) return;
-    setTimeout(() => {
-      const element = document.getElementById(`user-${userId}`);
-      if (element) {
-        zoomToElement(`user-${userId}`, 1);
-      }
-    }, 100);
-  }, [userId, zoomToElement]);
+    requestZoomToUser(userId);
+  }, [userId, requestZoomToUser]);
+
+  useEffect(() => {
+    if (initialMount.current) {
+      zoomToUser();
+      initialMount.current = false;
+    }
+  }, [initialMount, zoomToUser]);
 
   return (
     <main className="flex flex-col items-start gap-2">
