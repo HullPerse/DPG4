@@ -6,6 +6,7 @@ import { useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { TimeDisplay } from "./timer.desktop";
 
 export default function Signpout() {
   const user = useUserStore((state) => state.user);
@@ -76,21 +77,7 @@ export default function Signpout() {
       <section className="absolute flex flex-col top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold text-text tabular-nums">
-              {time.toLocaleTimeString([], {
-                timeZone: "Europe/Moscow",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-            <span className="text-xs text-text">
-              {time.toLocaleDateString([], {
-                timeZone: "Europe/Moscow",
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+            <TimeDisplay time={time} />
           </div>
         </div>
 

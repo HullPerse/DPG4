@@ -1,20 +1,9 @@
 import { NETWORK } from "@/config/apps.config";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { Wifi, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export default function NetworkHover() {
   const network = useNetworkState();
-
-  const [, forceUpdate] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      forceUpdate((time) => time + 1);
-    }, 60 * 1000); //1 minute;
-
-    return () => clearInterval(interval);
-  }, []);
 
   const getSignalBars = (type: string) => {
     switch (type) {
@@ -32,6 +21,7 @@ export default function NetworkHover() {
   };
 
   const getQuality = (effectiveType: string) => {
+    if (!network.online) return "text-red-500";
     if (!effectiveType) return "text-muted";
 
     switch (effectiveType) {
@@ -40,7 +30,7 @@ export default function NetworkHover() {
       case "3g":
         return "text-yellow-500";
       case "2g":
-        return "text-orange-500";
+        return "text-yellow-800";
       case "slow-2g":
         return "text-red-500";
       default:
@@ -53,7 +43,9 @@ export default function NetworkHover() {
 
     switch (id) {
       case "quality":
-        return network.effectiveType?.toUpperCase();
+        return !network.online
+          ? "ОФФЛАЙН"
+          : network.effectiveType?.toUpperCase();
       case "downlink":
         return `${network.downlink} Mbps`.toUpperCase();
       case "latency":
@@ -83,11 +75,9 @@ export default function NetworkHover() {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground leading-none">
-              {network.online ? "Connected" : "Disconnected"}
+              {network.online ? "Подключено" : "Нет подключения"}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {network.type ? network.type.toUpperCase() : "Network"}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Сеть</p>
           </div>
         </div>
         <div className="flex items-end gap-0.5">
@@ -117,7 +107,7 @@ export default function NetworkHover() {
               <span className="text-xs">{data.label}</span>
             </div>
             <span
-              className={`flex flex-row text-xs font-medium text-text ${data.id === "quality" && getQuality(network.effectiveType ?? "4g")}`}
+              className={`flex flex-row text-xs font-medium ${data.id === "quality" && !network.online ? "text-red-700" : "text-text"}  ${data.id === "quality" && getQuality(network.effectiveType ?? "4g")}`}
             >
               {getValue(data.id)}
             </span>

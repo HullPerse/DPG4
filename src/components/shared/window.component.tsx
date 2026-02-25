@@ -131,8 +131,8 @@ function Window(props: WindowProps) {
     return () => window.removeEventListener("resize", handleWindowResize);
   }, [windowSize.width, windowSize.height]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
       if (isDragging) {
         const deltaX = e.clientX - dragStartPos.current.x;
         const deltaY = e.clientY - dragStartPos.current.y;
@@ -153,13 +153,16 @@ function Window(props: WindowProps) {
       }
 
       handleResizeMove(e);
-    };
+    },
+    [isDragging, handleResizeMove, windowSize, setPosition],
+  );
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      setIsResizing(false);
-    };
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsResizing(false);
+  }, [setIsDragging, setIsResizing]);
 
+  useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);

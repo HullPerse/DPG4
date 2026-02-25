@@ -8,7 +8,6 @@ import { Cell } from "./cell.tabletop";
 function GameArea({
   cells,
   users,
-  initialMount,
   setCell,
   setControl,
 }: {
@@ -37,13 +36,6 @@ function GameArea({
       }
     }, 100);
   }, [userId, zoomToElement]);
-
-  useEffect(() => {
-    if (initialMount.current) {
-      zoomToUser();
-      initialMount.current = false;
-    }
-  }, [initialMount, zoomToUser]);
 
   return (
     <main className="flex flex-col items-start gap-2">
