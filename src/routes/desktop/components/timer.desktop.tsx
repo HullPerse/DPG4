@@ -48,6 +48,7 @@ export default memo(function Timer({
         "flex items-center justify-center px-4 h-full w-26 border-l-2 border-highlight-high cursor-pointer hover:bg-white/5 transition-all duration-200",
         className,
       )}
+      data-timer="true"
       onClick={handleClick}
     >
       <div className="flex flex-col items-center">

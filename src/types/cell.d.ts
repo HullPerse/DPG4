@@ -8,4 +8,5 @@ export interface Cell {
   difficulty: string;
   ladderTo: number;
   snakeTo: number;
+  status: string[] | null;
 }

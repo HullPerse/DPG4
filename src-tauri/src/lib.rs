@@ -1,7 +1,10 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use tauri::Manager;
+use tauri::State;
+use font_loader::system_fonts;
 
 #[derive(Serialize)]
 struct Wallpaper {
@@ -247,9 +250,60 @@ async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), Str
     Ok(())
 }
 
+
+#[derive(Serialize, Clone)]
+pub struct FontInfo {
+    pub name: String,
+    pub path: String,
+}
+
+#[derive(Deserialize)]
+pub struct SetFontPayload {
+    pub font_name: String,
+}
+
+#[tauri::command]
+fn get_all_fonts() -> Vec<FontInfo> {
+    system_fonts::query_all()
+        .into_iter()
+        .filter_map(|path_str| {
+            let path = PathBuf::from(&path_str);
+            let name = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.replace(|c: char| !c.is_alphanumeric() && c != ' ', " "))
+                .map(|n| n.trim().to_string())
+                .unwrap_or_else(|| "Unknown".to_string());
+            if name.is_empty() {
+                None
+            } else {
+                Some(FontInfo {
+                    name,
+                    path: path_str,
+                })
+            }
+        })
+        .collect()
+}
+
+#[tauri::command]
+fn set_default_font(font_name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    let mut state = state.lock().map_err(|e| e.to_string())?;
+    state.selected_font = font_name;
+    Ok(())
+}
+
+pub struct AppState {
+    pub selected_font: String,
+}
+
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+      .manage(Mutex::new(AppState {
+                  selected_font: "Segoe UI".to_string(), // Default
+              }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
@@ -257,7 +311,9 @@ pub fn run() {
             get_wallpaper_data,
             save_wallpaper,
             delete_wallpaper,
-            get_wallpaper_by_name
+            get_wallpaper_by_name,
+            get_all_fonts,
+            set_default_font
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

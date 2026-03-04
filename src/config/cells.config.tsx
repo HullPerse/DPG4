@@ -1,34 +1,36 @@
+import PoopSvg from "@/components/svg/poop.component";
+
 export const cellsConfig = {
   difficulty: [
     {
       name: "easy",
       label: "Лёгкий",
-      color: "#77dd77",
+      color: "rgba(119, 221, 119, 1)",
     },
     {
       name: "medium",
       label: "Средний",
-      color: "#ffff7d ",
+      color: "rgba(255, 255, 125, 1)",
     },
     {
       name: "medium-hard",
       label: "Сложноватый",
-      color: "#fcb272",
+      color: "rgba(252, 178, 114, 1)",
     },
     {
       name: "hard",
       label: "Сложный",
-      color: "#ff6969",
+      color: "rgba(255, 105, 105, 1)",
     },
     {
       name: "hell",
       label: "Адский",
-      color: "#b04f4f",
+      color: "rgba(176, 79, 79, 1)",
     },
     {
       name: "core",
       label: "Сердце",
-      color: "#ff0000",
+      color: "rgba(255, 0, 0, 1)",
     },
   ],
   type: [
@@ -39,6 +41,12 @@ export const cellsConfig = {
     {
       name: "preset",
       label: "Пресет",
+    },
+  ],
+  status: [
+    {
+      name: "poop",
+      icon: <PoopSvg />,
     },
   ],
 };

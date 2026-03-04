@@ -43,7 +43,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
 import NetworkHover from "./components/network.desktop";
-import { Calendar } from "@/components/ui/calendar.component";
+import CalendarDesktop from "./components/calendar.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -84,9 +84,9 @@ export default function Desktop({
         </div>
 
         {openCalendar && (
-          <Calendar
-            className="absolute right-2 bottom-2 w-52"
-            timeZone="Europe/Moscow"
+          <CalendarDesktop
+            openCalendar={openCalendar}
+            setOpenCalendar={setOpenCalendar}
           />
         )}
       </section>

@@ -20,3 +20,34 @@ export function networkClass(connection: boolean) {
   if (connection) return "text-text";
   return "text-red-700";
 }
+
+export function selectionMouse(
+  e: MouseEvent,
+  desktopRef: React.RefObject<HTMLDivElement | null>,
+  selectionRef: React.RefObject<HTMLDivElement | null>,
+  selectionStartRef: React.RefObject<{ x: number; y: number }>,
+) {
+  const rect = desktopRef?.current?.getBoundingClientRect();
+  if (!rect || !selectionRef.current) return;
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const taskbarHeight = 56;
+  const maxY = rect.height - taskbarHeight;
+
+  const clampedX = Math.max(0, Math.min(x, rect.width));
+  const clampedY = Math.max(0, Math.min(y, maxY));
+
+  const startX = selectionStartRef.current.x;
+  const startY = selectionStartRef.current.y;
+
+  const left = Math.min(startX, clampedX);
+  const top = Math.min(startY, clampedY);
+  const width = Math.abs(clampedX - startX);
+  const height = Math.abs(clampedY - startY);
+
+  selectionRef.current.style.left = `${left}px`;
+  selectionRef.current.style.top = `${top}px`;
+  selectionRef.current.style.width = `${width}px`;
+  selectionRef.current.style.height = `${height}px`;
+}

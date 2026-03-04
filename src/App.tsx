@@ -16,6 +16,7 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/desktop/components/signout.component";
+import { selectionMouse } from "./lib/utils";
 
 function App() {
   //routing
@@ -51,10 +52,15 @@ function App() {
       const taskbarHeight = 60;
       if (y > rect.height - taskbarHeight) return;
 
-      //check if mouse is over any window
       const target = e.target as HTMLElement;
+
+      //check if mouse is over any window
       const windowElement = target.closest('[data-window="true"]');
       if (windowElement) return;
+
+      //check if mouse over calendar
+      const calendarElement = target.closest('[data-calendar="true"]');
+      if (calendarElement) return;
 
       selectionStartRef.current = { x, y };
       setIsSelecting(true);
@@ -65,38 +71,14 @@ function App() {
   useEffect(() => {
     if (!isSelecting) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = desktopRef.current?.getBoundingClientRect();
-      if (!rect || !selectionRef.current) return;
+    const handleMouseMove = (e: MouseEvent) =>
+      selectionMouse(e, desktopRef, selectionRef, selectionStartRef);
 
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const taskbarHeight = 56;
-      const maxY = rect.height - taskbarHeight;
-
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      const clampedY = Math.max(0, Math.min(y, maxY));
-
-      const startX = selectionStartRef.current.x;
-      const startY = selectionStartRef.current.y;
-
-      const left = Math.min(startX, clampedX);
-      const top = Math.min(startY, clampedY);
-      const width = Math.abs(clampedX - startX);
-      const height = Math.abs(clampedY - startY);
-
-      selectionRef.current.style.left = `${left}px`;
-      selectionRef.current.style.top = `${top}px`;
-      selectionRef.current.style.width = `${width}px`;
-      selectionRef.current.style.height = `${height}px`;
-    };
-
-    const handleMouseUp = () => {
-      setIsSelecting(false);
-    };
+    const handleMouseUp = () => setIsSelecting(false);
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);

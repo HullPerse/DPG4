@@ -7,11 +7,15 @@ export const useDataStore = create<DataStore>()(
     persist(
       (set) => ({
         wallpaper: "",
+        font: "",
         isConnected: false,
         isEditing: false,
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
+        },
+        setFont: (font: string) => {
+          set({ font });
         },
         setConnected: (isConnected: boolean) => {
           set({ isConnected });

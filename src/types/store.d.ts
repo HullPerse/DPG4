@@ -20,11 +20,13 @@ export interface UserStore {
 export interface DataStore {
   // State
   wallpaper: string;
+  font: string;
   isConnected: boolean;
   isEditing: boolean;
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
+  setFont: (font: string) => void;
   setConnected: (isConnected: boolean) => void;
   setEditing: (isEditing: boolean) => void;
 }

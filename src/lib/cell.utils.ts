@@ -1,17 +1,16 @@
-export function getCellClass(type: "start" | "finish" | "grid") {
+export function getCellClass() {
   const cellClass =
-    "relative flex w-42 h-42 border-2 rounded items-center justify-center overflow-hidden";
+    "relative flex flex-col gap-1 w-42 h-42 border-2 rounded items-center overflow-hidden bg-background";
 
-  const cellMap = {
-    start: "bg-green-500/20",
-    finish: "bg-red-500/20",
-    grid: "bg-card",
-  };
-
-  return cellClass + " " + cellMap[type as keyof typeof cellMap];
+  return cellClass;
 }
 
-export function translateCell(type: "start" | "finish") {
+export function translateCell(
+  type: "start" | "finish" | string,
+  number?: number,
+) {
+  if (!["start", "finish"].includes(type)) return number;
+
   const cellMap = {
     start: "СТАРТ",
     finish: "ФИНИШ",
