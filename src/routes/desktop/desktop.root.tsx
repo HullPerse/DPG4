@@ -5,6 +5,7 @@ import {
   Bell,
   DoorOpen,
   Image,
+  Languages,
   Maximize,
   Minimize,
   Move,
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/hover.component";
 import NetworkHover from "./components/network.desktop";
 import CalendarDesktop from "./components/calendar.desktop";
+import FontDesktop from "./components/font.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -63,6 +65,7 @@ export default function Desktop({
   const setLoggedIn = useUserStore((state) => state.setLoggedIn);
 
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
+  const [openLanguage, setOpenLanguage] = useState<boolean>(false);
 
   return (
     <main className="flex flex-col w-full h-full">
@@ -87,8 +90,11 @@ export default function Desktop({
           <CalendarDesktop
             openCalendar={openCalendar}
             setOpenCalendar={setOpenCalendar}
+            setOpenLanguage={setOpenLanguage}
           />
         )}
+
+        {openLanguage && <FontDesktop />}
       </section>
 
       <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
@@ -240,6 +246,14 @@ export default function Desktop({
               }
             />
 
+            {/* LANGUAGE */}
+            <Languages
+              className="w-4 h-4 hover:text-text cursor-pointer"
+              onClick={() => {
+                setOpenLanguage(!openLanguage);
+              }}
+            />
+
             {/* SIGNOUT */}
             <DoorOpen
               className="w-4 h-4 hover:text-text cursor-pointer"
@@ -250,7 +264,12 @@ export default function Desktop({
           </div>
 
           {/* TIME DATE */}
-          <Timer onClick={() => setOpenCalendar((value) => !value)} />
+          <Timer
+            onClick={() => {
+              setOpenCalendar((value) => !value);
+              setOpenLanguage(false);
+            }}
+          />
         </div>
       </section>
     </main>

@@ -293,6 +293,12 @@ fn set_default_font(font_name: String, state: State<'_, Mutex<AppState>>) -> Res
     Ok(())
 }
 
+#[tauri::command]
+fn get_default_font(state: State<'_, Mutex<AppState>>) -> Result<String, String> {
+    let state = state.lock().map_err(|e| e.to_string())?;
+    Ok(state.selected_font.clone())
+}
+
 pub struct AppState {
     pub selected_font: String,
 }
@@ -302,7 +308,7 @@ pub struct AppState {
 pub fn run() {
     tauri::Builder::default()
       .manage(Mutex::new(AppState {
-                  selected_font: "Segoe UI".to_string(), // Default
+                  selected_font: "Segoe UI".to_string(),
               }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
@@ -313,7 +319,8 @@ pub fn run() {
             delete_wallpaper,
             get_wallpaper_by_name,
             get_all_fonts,
-            set_default_font
+            set_default_font,
+            get_default_font
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
