@@ -1,41 +1,12 @@
-import { APPS, DIRECTIONS, WINDOWS } from "@/config/apps.config";
+import { APPS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
-import {
-  Activity,
-  Bell,
-  DoorOpen,
-  Image,
-  Languages,
-  Maximize,
-  Minimize,
-  Move,
-  Pin,
-  PinOff,
-  X,
-} from "lucide-react";
+import { Bell, DoorOpen, Image, Languages } from "lucide-react";
 import Timer from "./components/timer.desktop";
 import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
 import { AppProps } from "@/types/desktop";
-import {
-  activeWindow,
-  closeWindow,
-  createWindow,
-  minimizeWindow,
-  unminimizeWindow,
-  pinWindow,
-  moveWindow,
-} from "@/lib/window.utils";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuGroup,
-  ContextMenuItem,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuTrigger,
-} from "@/components/ui/context.component";
+import { createWindow } from "@/lib/window.utils";
+
 import { lazy, useState } from "react";
 import NetworkConnection from "@/components/shared/network.component";
 import {
@@ -46,6 +17,7 @@ import {
 import NetworkHover from "./components/network.desktop";
 import CalendarDesktop from "./components/calendar.desktop";
 import FontDesktop from "./components/font.desktop";
+import ContextDesktop from "./components/context.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -111,110 +83,12 @@ export default function Desktop({
               );
             })
             .map((app) => (
-              <ContextMenu key={app.id}>
-                <ContextMenuTrigger>
-                  <button
-                    className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} hover:text-text cursor-pointer border rounded p-1`}
-                    title={app.title}
-                    onClick={() =>
-                      setActiveApps(unminimizeWindow(activeApps, app.id))
-                    }
-                  >
-                    {WINDOWS.find((w) => w.id === app.id)?.icon}
-
-                    {/* pinned */}
-                    {app.isPinned && (
-                      <Pin className="absolute -top-1 -left-1 rotate-45 text-primary/60 size-4" />
-                    )}
-                  </button>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-42">
-                  <ContextMenuGroup>
-                    {!app.isActive && (
-                      <ContextMenuItem
-                        onClick={() =>
-                          setActiveApps(activeWindow(activeApps, app.id))
-                        }
-                      >
-                        <Activity /> Сдеать активным
-                      </ContextMenuItem>
-                    )}
-                    <ContextMenuItem
-                      onClick={() =>
-                        setActiveApps(pinWindow(activeApps, app.id))
-                      }
-                    >
-                      {app.isPinned ? (
-                        <>
-                          <PinOff />
-                          Открепить
-                        </>
-                      ) : (
-                        <>
-                          <Pin />
-                          Закрепить
-                        </>
-                      )}
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      onClick={() => {
-                        if (app.isMinimized) {
-                          return setActiveApps(
-                            unminimizeWindow(activeApps, app.id),
-                          );
-                        }
-
-                        setActiveApps(minimizeWindow(activeApps, app.id));
-                      }}
-                    >
-                      {app.isMinimized ? (
-                        <>
-                          <Maximize />
-                          Развернуть
-                        </>
-                      ) : (
-                        <>
-                          <Minimize />
-                          Свернуть
-                        </>
-                      )}
-                    </ContextMenuItem>
-                    <ContextMenuSub>
-                      <ContextMenuSubTrigger>
-                        <Move />
-                        Переместить
-                      </ContextMenuSubTrigger>
-                      <ContextMenuSubContent className="ml-2">
-                        <ContextMenuGroup>
-                          {DIRECTIONS.map((direction) => (
-                            <ContextMenuItem
-                              key={direction.direction}
-                              onClick={() => {
-                                setActiveApps(
-                                  moveWindow(
-                                    activeApps,
-                                    app.id,
-                                    direction.direction,
-                                  ),
-                                );
-                              }}
-                            >
-                              {direction.icon} {direction.label}
-                            </ContextMenuItem>
-                          ))}
-                        </ContextMenuGroup>
-                      </ContextMenuSubContent>
-                    </ContextMenuSub>
-                    <ContextMenuItem
-                      onClick={() =>
-                        setActiveApps(closeWindow(activeApps, app.id))
-                      }
-                    >
-                      <X /> Закрыть
-                    </ContextMenuItem>
-                  </ContextMenuGroup>
-                </ContextMenuContent>
-              </ContextMenu>
+              <ContextDesktop
+                key={app.id}
+                app={app}
+                activeApps={activeApps}
+                setActiveApps={setActiveApps}
+              />
             ))}
         </div>
         <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
