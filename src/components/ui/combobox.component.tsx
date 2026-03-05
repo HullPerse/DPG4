@@ -25,7 +25,7 @@ function Combobox({
   options,
   value,
   onChange,
-  placeholder = "Select option...",
+  placeholder = "Выберите опцию...",
   className,
   disabled,
   size = "default",

@@ -38,7 +38,7 @@ export default function FontDesktop() {
   };
 
   return (
-    <div className="absolute right-2 bottom-2">
+    <div data-font="true" className="absolute right-2 bottom-2 z-50">
       <Combobox
         options={fonts.map((f) => {
           return {
