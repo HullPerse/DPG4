@@ -2,6 +2,7 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { cn } from "@/lib/utils";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
+import { SmallLoader } from "../shared/loader.component";
 
 interface ComboboxOption {
   value: string;
@@ -17,6 +18,7 @@ interface ComboboxProps {
   className?: string;
   disabled?: boolean;
   size?: "sm" | "default";
+  loading?: boolean;
 }
 
 function Combobox({
@@ -27,6 +29,7 @@ function Combobox({
   className,
   disabled,
   size = "default",
+  loading,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -89,7 +92,7 @@ function Combobox({
             <div className="p-1">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Поиск..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={cn(
@@ -101,40 +104,45 @@ function Combobox({
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
-
-            <div className="max-h-60 overflow-y-auto overflow-x-hidden p-1">
-              {filteredOptions.length === 0 ? (
-                <div className="py-2 px-1.5 text-sm text-muted font-normal">
-                  No results found.
-                </div>
-              ) : (
-                filteredOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      onChange?.(option.value);
-                      setOpen(false);
-                      setSearch("");
-                    }}
-                    className={cn(
-                      "focus:bg-primary/20 focus:text-text gap-1.5 rounded py-1 pr-8 pl-1.5 text-sm font-bold relative flex w-full items-center outline-hidden select-none data-disabled:pointer-events-none cursor-pointer data-disabled:opacity-50 hover:bg-primary/10 transition-colors duration-200 text-left",
-                      value === option.value && "bg-primary/20",
-                    )}
-                    style={option.style}
-                  >
-                    <span className="flex flex-1 gap-2 shrink-0 whitespace-nowrap">
-                      {option.label}
-                    </span>
-                    {value === option.value && (
-                      <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
-                        <CheckIcon className="pointer-events-none" />
+            {loading ? (
+              <div className="w-full h-full flex items-center justify-center p-6">
+                <SmallLoader size={24} />
+              </div>
+            ) : (
+              <div className="max-h-60 overflow-y-auto overflow-x-hidden p-1">
+                {filteredOptions.length === 0 ? (
+                  <div className="py-2 px-1.5 text-sm text-muted font-normal">
+                    Нет результатов.
+                  </div>
+                ) : (
+                  filteredOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        onChange?.(option.value);
+                        setOpen(false);
+                        setSearch("");
+                      }}
+                      className={cn(
+                        "focus:bg-primary/20 focus:text-text gap-1.5 rounded py-1 pr-8 pl-1.5 text-sm font-bold relative flex w-full items-center outline-hidden select-none data-disabled:pointer-events-none cursor-pointer data-disabled:opacity-50 hover:bg-primary/10 transition-colors duration-200 text-left",
+                        value === option.value && "bg-primary/20",
+                      )}
+                      style={option.style}
+                    >
+                      <span className="flex flex-1 gap-2 shrink-0 whitespace-nowrap">
+                        {option.label}
                       </span>
-                    )}
-                  </button>
-                ))
-              )}
-            </div>
+                      {value === option.value && (
+                        <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
+                          <CheckIcon className="pointer-events-none" />
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>

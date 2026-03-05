@@ -8,9 +8,12 @@ export default function FontDesktop() {
 
   const [fonts, setFonts] = useState<string[]>([]);
   const [selectedValue, setSelectedValue] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    setLoading(true);
+
     invoke<string>("get_default_font").then((defaultFont) => {
       setSelectedValue(defaultFont);
       setFont(defaultFont);
@@ -22,7 +25,9 @@ export default function FontDesktop() {
         name: string;
         path: string;
       }[]
-    >("get_all_fonts").then((f) => setFonts(f.map((fo) => fo.name)));
+    >("get_all_fonts")
+      .then((f) => setFonts(f.map((fo) => fo.name)))
+      .finally(() => setTimeout(() => setLoading(false), 1000));
   }, [setFont]);
 
   const handleFontChange = async (value: string) => {
@@ -46,6 +51,7 @@ export default function FontDesktop() {
         onChange={handleFontChange}
         placeholder={font || "Выберите шрифт"}
         className="w-64"
+        loading={loading}
       />
     </div>
   );
