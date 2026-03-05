@@ -57,7 +57,7 @@ function Combobox({
           <button
             type="button"
             className={cn(
-              "gap-1.5 rounded border-2 border-text bg-card px-3 py-2 text-base font-bold text transition-all duration-200 flex w-full items-center justify-between whitespace-nowrap outline-none focus:outline-none focus:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer select-none",
+              "gap-1.5 rounded border-2 bg-card px-3 py-2 text-base font-bold text transition-all duration-200 flex w-full items-center justify-between whitespace-nowrap outline-none focus:outline-none focus:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer select-none border-highlight-high",
               "data-[size=default]:h-9 data-[size=sm]:h-8",
               className,
             )}
