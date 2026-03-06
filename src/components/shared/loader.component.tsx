@@ -22,6 +22,12 @@ export function WindowLoader({ className }: { className?: string }) {
   );
 }
 
-export function SmallLoader({ size }: { size?: number }) {
-  return <Box className={`animate-spin size-${size || 4}`} />;
+export function SmallLoader({
+  size,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return <Box className={cn(`animate-spin size-${size || 4}`, className)} />;
 }
