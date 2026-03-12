@@ -22,6 +22,8 @@ import {
   TrafficCone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
+import LadderSvg from "@/components/svg/ladder.component";
+import SnakeSvg from "@/components/svg/snake.component";
 
 function CellComponent({
   cell,
@@ -37,6 +39,7 @@ function CellComponent({
   setControl: (value: boolean) => void;
 }) {
   const isEditing = useDataStore((state) => state.isEditing);
+  const arrowType = useDataStore((state) => state.arrowType);
 
   const [open, setOpen] = useState(false);
 
@@ -64,6 +67,25 @@ function CellComponent({
     };
 
     return cellTypeMap[type as keyof typeof cellTypeMap] ?? <Box />;
+  };
+
+  const getCellArrows = (destination: number) => {
+    const snake = cell.snakeTo > 0 ? "snakes" : null;
+    const ladder = cell.ladderTo > 0 ? "ladders" : null;
+    const arrowType = snake || ladder;
+
+    const arrowMap = {
+      snakes: <SnakeSvg className="text-red-500" />,
+      ladders: <LadderSvg className="text-green-500" />,
+    };
+    return (
+      <div className="absolute">
+        {arrowMap[arrowType as keyof typeof arrowMap]}
+        <span className="absolute -top-1.5 -right-0.5 font-bold text-xs text-text">
+          {destination}
+        </span>
+      </div>
+    );
   };
 
   const computeStatusPages = useCallback(() => {
@@ -121,9 +143,22 @@ function CellComponent({
             >
               {translateCell(cell.type, cell.number)}
             </span>
-            {/* game type */}
-            <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
-              {getCellType(cell.cellType)}
+
+            <div className="flex flex-row gap-1">
+              {/* ladders and snakes */}
+              {["icons", "all"].includes(arrowType) &&
+                (cell.snakeTo > 0 || cell.ladderTo > 0) && (
+                  <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
+                    {getCellArrows(
+                      cell.ladderTo > 0 ? cell.ladderTo : cell.snakeTo,
+                    )}
+                  </div>
+                )}
+
+              {/* game type */}
+              <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
+                {getCellType(cell.cellType)}
+              </div>
             </div>
           </section>
           {/* users */}
