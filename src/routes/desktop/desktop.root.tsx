@@ -1,6 +1,6 @@
 import { APPS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
-import { Bell, DoorOpen, Image, Languages } from "lucide-react";
+import { DoorOpen, Image, Languages } from "lucide-react";
 import Timer from "./components/timer.desktop";
 import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
@@ -103,9 +103,6 @@ export default function Desktop({
                 <NetworkHover />
               </HoverCardContent>
             </HoverCard>
-
-            {/* NOTIFICATIONS */}
-            <Bell className="w-4 h-4 hover:text-text cursor-pointer" />
 
             {/* WALLAPAPER */}
             <Image

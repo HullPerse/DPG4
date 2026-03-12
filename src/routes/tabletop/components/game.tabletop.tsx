@@ -3,6 +3,8 @@ import { User } from "@/types/user";
 import { memo, RefObject, useCallback, useEffect } from "react";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
+import ArrowTabletop from "./arrow.tabletop";
+import { useDataStore } from "@/store/data.store";
 
 function GameArea({
   cells,
@@ -25,6 +27,7 @@ function GameArea({
 }) {
   const user = useUserStore((state) => state.user);
   const isAdmin = useUserStore((state) => state.isAdmin);
+  const arrowType = useDataStore((state) => state.arrowType);
 
   const userId = user?.id;
 
@@ -80,6 +83,8 @@ function GameArea({
           setControl={setControl}
         />
       )}
+
+      {arrowType !== "none" && <ArrowTabletop cells={cells} type={arrowType} />}
     </main>
   );
 }

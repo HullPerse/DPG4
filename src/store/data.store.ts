@@ -11,6 +11,7 @@ export const useDataStore = create<DataStore>()(
         font: "",
         isConnected: false,
         isEditing: false,
+        arrowType: "all",
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
@@ -23,6 +24,9 @@ export const useDataStore = create<DataStore>()(
         },
         setEditing: (isEditing: boolean) => {
           set({ isEditing });
+        },
+        setArrowType: (arrowType: DataStore["arrowType"]) => {
+          set({ arrowType });
         },
       }),
       {
@@ -43,6 +47,9 @@ export const initializeFontStore = async () => {
 };
 
 export const applyFont = (fontName: string) => {
-  document.documentElement.style.setProperty("--font-family", `"${fontName}", sans-serif`);
+  document.documentElement.style.setProperty(
+    "--font-family",
+    `"${fontName}", sans-serif`,
+  );
   document.body.style.fontFamily = `"${fontName}", sans-serif`;
 };

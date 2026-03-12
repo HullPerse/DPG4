@@ -2,7 +2,7 @@ import CellApi from "@/api/cell.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleX, Menu, ToolCase, X } from "lucide-react";
+import { CircleX, Menu, ToolCase } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
@@ -11,9 +11,8 @@ import { startTransition, useCallback, useRef, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
-import { Switch } from "../../components/ui/switch.component";
 import { useDataStore } from "@/store/data.store";
-import { useUserStore } from "@/store/user.store";
+import ToolsTaletop from "./components/tools.taletop";
 
 const cellApi = new CellApi();
 const userApi = new UserApi();
@@ -21,7 +20,6 @@ const userApi = new UserApi();
 export default function Tabletop() {
   const queryClient = useQueryClient();
   const { isEditing, setEditing } = useDataStore((state) => state);
-  const isAdmin = useUserStore((state) => state.isAdmin);
 
   const [cell, setCell] = useState<number | null>(null);
   const [control, setControl] = useState<boolean>(false);
@@ -98,21 +96,12 @@ export default function Tabletop() {
   return (
     <main className="relative flex w-full h-full items-center justify-center overflow-clip bg-background">
       {/* ADMIN TABLETOP TOOLS */}
-      {isAdmin && showTools && (
-        <section className="absolute bottom-2 left-2 z-100 items-center justify-center bg-card p-2 rounded border-2 border-highlight-high">
-          <X
-            className="place-self-end size-5 text-muted hover:text-text cursor-pointer mb-2"
-            onClick={() => setShowTools(false)}
-          />
-          <div className="flex flex-row items-center gap-2">
-            Режим редактирования:
-            <Switch
-              className="cursor-pointer"
-              checked={isEditing}
-              onCheckedChange={setEditing}
-            />
-          </div>
-        </section>
+      {showTools && (
+        <ToolsTaletop
+          setShowTools={setShowTools}
+          isEditing={isEditing}
+          setEditing={setEditing}
+        />
       )}
 
       {/* CONTROLS */}
@@ -128,7 +117,7 @@ export default function Tabletop() {
             <Menu />
           </button>
 
-          {!showTools && isAdmin && (
+          {!showTools && (
             <button
               className="absolute left-2 top-11 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
               title="Инструменты"

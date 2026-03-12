@@ -42,11 +42,42 @@ export const cellsConfig = {
       name: "preset",
       label: "Пресет",
     },
+    {
+      name: "watch",
+      label: "Просмотр",
+    },
   ],
   status: [
     {
       name: "poop",
       icon: <PoopSvg />,
+      description: "Попа",
+    },
+  ],
+  arrowType: [
+    {
+      name: "none",
+      label: "Не показывать",
+    },
+    {
+      name: "all",
+      label: "Все",
+    },
+    {
+      name: "arrows",
+      label: "Только стрелки",
+    },
+    {
+      name: "icons",
+      label: "Только иконки",
+    },
+    {
+      name: "ladders",
+      label: "Только лестницы",
+    },
+    {
+      name: "snakes",
+      label: "Только змейки",
     },
   ],
 };

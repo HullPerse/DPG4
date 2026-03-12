@@ -23,10 +23,14 @@ export interface DataStore {
   font: string;
   isConnected: boolean;
   isEditing: boolean;
+  arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes";
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
   setFont: (font: string) => void;
   setConnected: (isConnected: boolean) => void;
   setEditing: (isEditing: boolean) => void;
+  setArrowType: (
+    arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
+  ) => void;
 }

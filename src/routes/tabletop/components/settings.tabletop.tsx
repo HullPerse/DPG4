@@ -49,7 +49,7 @@ export default function Settings({
     };
 
     try {
-      await cellApi.editCell(cell.id, data);
+      await cellApi.editCell(cell.id, data as Cell);
     } catch (error) {
       console.log(error);
       setLoading(false);
