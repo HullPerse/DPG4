@@ -81,6 +81,7 @@ export default function Tabletop() {
   }, [queryClient]);
 
   useSubscription("cells", "*", invalidateQuery);
+  useSubscription("users", "*", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)

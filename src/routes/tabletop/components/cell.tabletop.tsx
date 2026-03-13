@@ -159,18 +159,38 @@ function CellComponent({
               <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
                 {getCellType(cell.cellType)}
               </div>
+
+              {/* captured amount */}
+
+              {cell.captured && (
+                <div
+                  className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center font-bold"
+                  style={{
+                    color: (() => {
+                      const count = cell.captured?.length || 0;
+                      if (count === 0) return "hsl(var(--background) / 0.8)";
+                      if (count <= 1) return "hsl(142 76% 36% / 0.8)";
+                      if (count <= 2) return "hsl(173 80% 40% / 0.8)";
+                      if (count <= 3) return "hsl(43 96% 56% / 0.8)";
+                      if (count <= 4) return "hsl(25 95% 53% / 0.8)";
+                      return "hsl(0 84% 60% / 0.8)";
+                    })(),
+                  }}
+                >
+                  {cell.captured.length}
+                </div>
+              )}
             </div>
           </section>
           {/* users */}
           <section className="flex flex-row flex-wrap items-start w-full h-full gap-2 p-1">
-            {cell.title}
             {users
               .filter((user) => user.position === cell.number)
               .map((user) => (
                 <span
                   key={user.id}
                   id={`user-${user.id}`}
-                  className="border border-highlight-low rounded-full w-6 h-6 flex items-center justify-center"
+                  className="border border-highlight-low rounded-full w-8 h-8 flex items-center justify-center"
                   style={{
                     backgroundColor: user.color,
                   }}

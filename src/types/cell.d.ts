@@ -9,4 +9,5 @@ export interface Cell {
   ladderTo: number;
   snakeTo: number;
   status: string[] | null;
+  captured: string[] | null;
 }

@@ -38,4 +38,9 @@ export default class UserApi {
       fields: "id, position, username, avatar, color",
     });
   };
+
+  //move user
+  moveUser = async (userId: string, newPosition: number) => {
+    await this.usersCollection.update(userId, { position: newPosition });
+  };
 }
