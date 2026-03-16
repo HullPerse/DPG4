@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button.component";
 import { useMemo, useState } from "react";
 import SteamLibrary from "./steam.library";
+import CustomLibrary from "./custom.library";
 
 export default function NewGameLibrary() {
   const [newType, setNewType] = useState<"game" | "custom">("game");
 
   const getComponent = useMemo(() => {
     if (newType === "game") return <SteamLibrary />;
-    return;
+    return <CustomLibrary />;
   }, [newType]);
 
   return (
