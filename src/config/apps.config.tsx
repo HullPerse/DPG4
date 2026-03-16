@@ -84,6 +84,7 @@ export const WINDOWS = [
     id: "library",
     title: "Библиотека",
     icon: <LibraryBig className="size-7" />,
+    overflow: false,
     size: {
       minWidth: 840,
       minHeight: 680,

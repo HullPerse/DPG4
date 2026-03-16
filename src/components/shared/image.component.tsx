@@ -23,13 +23,8 @@ const ImageComponent = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const isExternal =
-    src.startsWith("http") ||
-    src.startsWith("blob:") ||
-    src.startsWith("data:");
-
   const getWebpSrc = (originalSrc: string) => {
-    if (isExternal || !originalSrc) return originalSrc;
+    if (!originalSrc) return originalSrc;
 
     const baseSrc = originalSrc.split("?")[0];
     return `${baseSrc}?format=webp&quality=${quality}`;

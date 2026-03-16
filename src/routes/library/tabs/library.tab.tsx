@@ -1,7 +1,7 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { NetworkIcon, Plus } from "lucide-react";
+import { ChevronRight, NetworkIcon, Plus } from "lucide-react";
 import {
   memo,
   startTransition,
@@ -50,7 +50,7 @@ function LibraryTab() {
 
   useEffect(() => {
     if (data) {
-      return setCurrentGame(data[0]?.id);
+      return setCurrentGame(data[data.length - 1]?.id as string);
     }
   }, [data]);
 
@@ -72,7 +72,7 @@ function LibraryTab() {
 
   return (
     <main className="flex flex-row w-full h-full">
-      <section className="relative flex flex-col bg-highlight-low border-r border-highlight-medium p-2 w-64 gap-1">
+      <section className="relative flex flex-col bg-highlight-low border-r border-highlight-medium p-2 min-w-64 w-64 gap-1 overflow-y-auto">
         <Input
           type="text"
           placeholder="Поиск игр"
@@ -82,35 +82,42 @@ function LibraryTab() {
 
         <Button
           variant="link"
-          className="absolute left-1 bottom-1 border border-text text-text"
+          className="border border-text text-text"
           onClick={() => setCurrentGame("newGame")}
           disabled={currentGame === "newGame"}
         >
           <Plus />
         </Button>
+        <div className="flex flex-col gap-1 overflow-y-auto h-full">
+          {data
+            ?.filter((game) =>
+              game.data.name.toUpperCase().includes(searchTerm.toUpperCase()),
+            )
+            .sort((a, b) => (a.createdAt! > b.createdAt! ? 1 : -1))
+            .map((game) => (
+              <div key={game.id} className="flex flex-col w-full">
+                <Button
+                  variant="link"
+                  className="relative border border-text text-text disabled:opacity-45"
+                  disabled={currentGame === game.id}
+                  onClick={() => setCurrentGame(game.id as string)}
+                >
+                  <span
+                    className="flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ml-3"
+                    style={{ backgroundColor: getStatusColor(game.status) }}
+                  >
+                    {currentGame === game.id && (
+                      <ChevronRight className="mr-8" />
+                    )}
+                  </span>
 
-        {data
-          ?.filter((game) =>
-            game.data.name
-              .toUpperCase()
-              .includes(searchTerm.trim().toUpperCase()),
-          )
-          .map((game) => (
-            <Button
-              key={game.id}
-              variant="link"
-              className="border border-text text-text"
-              style={{
-                borderColor: getStatusColor(game.status),
-              }}
-              disabled={currentGame === game.id}
-              onClick={() => setCurrentGame(game.id)}
-            >
-              {game.data.name}
-            </Button>
-          ))}
+                  {game.data.name}
+                </Button>
+              </div>
+            ))}
+        </div>
       </section>
-      <section>{getComponent}</section>
+      <section className="flex w-full h-full">{getComponent}</section>
     </main>
   );
 }

@@ -323,7 +323,7 @@ function Window(props: WindowProps) {
 
       {/* Body */}
       <section
-        className="flex w-full overflow-y-auto"
+        className={`flex w-full ${props.overflow ? "overflow-y-auto" : ""}`}
         style={{ height: "calc(100% - 3rem)" }}
       >
         <Suspense fallback={<WindowLoader />}>

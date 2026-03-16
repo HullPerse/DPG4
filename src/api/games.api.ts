@@ -46,6 +46,10 @@ export default class GameApi {
     return await this.gamesCollection.getOne(id);
   };
 
+  addGame = async (game: Game): Promise<Game> => {
+    return await this.gamesCollection.create(game);
+  };
+
   //presets
   getPresets = async (): Promise<Preset[]> => {
     return await this.presetsCollection.getFullList();

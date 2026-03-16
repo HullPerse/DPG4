@@ -7,26 +7,28 @@ export interface Preset {
 }
 
 export interface Game {
-  id: string;
+  id?: string;
   user: {
     id: string;
-    usernname: string;
+    username: string;
   };
   data: GameData;
-  score: number;
+  score?: number;
   playtime: {
     hltb: number;
-    user: number;
+    user?: number;
   };
   status: GameStatus;
-  review: GameReview;
+  review?: GameReview;
   image?: File;
+  createdAt?: string;
 }
 
 export type GameData = {
   id: number;
   name: string;
   image: string;
+  capsuleImage: string;
   backgroundImage: string;
   steamLink: string;
   websiteLink: string;

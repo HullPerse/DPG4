@@ -28,6 +28,7 @@ export interface WindowProps {
     close?: boolean;
   };
 
+  overflow?: boolean;
   onClose?: () => void;
   onMinimize?: () => void;
   onActive?: () => void;
