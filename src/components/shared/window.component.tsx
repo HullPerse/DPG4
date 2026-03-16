@@ -70,6 +70,8 @@ function Window(props: WindowProps) {
       windowSize,
       position,
       isResizing,
+      minWidth: props.size.minWidth,
+      minHeight: props.size.minHeight,
       onActive: props.onActive,
       windowRef,
       setIsResizing,

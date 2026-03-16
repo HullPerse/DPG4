@@ -2,12 +2,14 @@ import { WINDOWS } from "@/config/apps.config";
 import { createWindow } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { memo } from "react";
 
 function AppDesktop({
   name,
   label,
   icon,
+  link,
   component,
   activeApps,
   setActiveApps,
@@ -22,11 +24,12 @@ function AppDesktop({
   return (
     <button
       key={name}
-      className="flex flex-col items-center justify-center hover:bg-primary/20 w-18 h-18 rounded drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] border-2"
+      className="flex flex-col items-center justify-center hover:bg-primary/20 w-20 h-20 rounded drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] border-2"
       style={{
         cursor: isOpening ? "wait" : "pointer",
       }}
       onDoubleClick={() => {
+        if (link) return openUrl(link);
         if (!activeApps.find((item) => item.id === name)) setIsOpening(true);
 
         setActiveApps(
@@ -36,6 +39,8 @@ function AppDesktop({
             component,
           ),
         );
+
+        return setTimeout(() => setIsOpening(false), 1000);
       }}
     >
       {icon}

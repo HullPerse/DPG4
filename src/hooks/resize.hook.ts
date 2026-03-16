@@ -22,6 +22,8 @@ interface UseWindowResizeProps {
   windowSize: { width: number; height: number };
   position: WindowPosition;
   isResizing: boolean;
+  minWidth?: number;
+  minHeight?: number;
   onActive?: () => void;
   windowRef: React.RefObject<HTMLDivElement | null>;
   setIsResizing: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,6 +37,8 @@ export const useWindowResize = ({
   windowSize,
   position,
   isResizing,
+  minWidth = 200,
+  minHeight = 150,
   onActive,
   windowRef,
   setIsResizing,
@@ -77,14 +81,14 @@ export const useWindowResize = ({
         case "left":
         case "top-left":
         case "bottom-left":
-          const leftDelta = Math.max(-state.startSize.width + 200, deltaX);
+          const leftDelta = Math.max(-state.startSize.width + minWidth, deltaX);
           newWidth = state.startSize.width - leftDelta;
           newX += leftDelta;
           break;
         case "right":
         case "top-right":
         case "bottom-right":
-          newWidth = Math.max(200, state.startSize.width + deltaX);
+          newWidth = Math.max(minWidth, state.startSize.width + deltaX);
           break;
       }
 
@@ -92,14 +96,14 @@ export const useWindowResize = ({
         case "top":
         case "top-left":
         case "top-right":
-          const topDelta = Math.max(-state.startSize.height + 150, deltaY);
+          const topDelta = Math.max(-state.startSize.height + minHeight, deltaY);
           newHeight = state.startSize.height - topDelta;
           newY += topDelta;
           break;
         case "bottom":
         case "bottom-left":
         case "bottom-right":
-          newHeight = Math.max(150, state.startSize.height + deltaY);
+          newHeight = Math.max(minHeight, state.startSize.height + deltaY);
           break;
       }
 

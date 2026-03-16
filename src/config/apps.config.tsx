@@ -2,16 +2,19 @@ import {
   ArrowDown,
   Clock,
   Dices,
-  Image,
   MoveDown,
   MoveLeft,
   MoveRight,
   MoveUp,
   Signal,
+  ImageIcon,
+  LibraryBig,
+  Star,
 } from "lucide-react";
 import { lazy } from "react";
 
 const Tabletop = lazy(() => import("@/routes/tabletop/tabletop.root"));
+const Library = lazy(() => import("@/routes/library/library.root"));
 
 export const APPS = [
   {
@@ -19,6 +22,22 @@ export const APPS = [
     label: "Подвал",
     icon: <Dices className="size-7" />,
     component: <Tabletop />,
+    priority: 1,
+  },
+  {
+    name: "library",
+    label: "Библиотека",
+    icon: <LibraryBig className="size-7" />,
+    component: <Library />,
+    priority: 2,
+  },
+  {
+    name: "gamewheel",
+    label: "Колесо Игр",
+    link: "https://gamegauntlets.com/",
+    icon: <Star className="size-7" />,
+    component: <Tabletop />,
+    priority: 10,
   },
 ];
 
@@ -46,7 +65,7 @@ export const WINDOWS = [
   {
     id: "wallpaper",
     title: "Обои",
-    icon: <Image className="size-7" />,
+    icon: <ImageIcon className="size-7" />,
     size: {
       width: 840,
       height: 680,
@@ -57,6 +76,17 @@ export const WINDOWS = [
     title: "Подвал",
     icon: <Dices className="size-7" />,
     size: {
+      width: 840,
+      height: 680,
+    },
+  },
+  {
+    id: "library",
+    title: "Библиотека",
+    icon: <LibraryBig className="size-7" />,
+    size: {
+      minWidth: 840,
+      minHeight: 680,
       width: 840,
       height: 680,
     },

@@ -44,12 +44,13 @@ export default function Desktop({
     <main className="flex flex-col w-full h-full">
       <section className="relative flex flex-1">
         <div className="absolute top-6 left-6 grid grid-cols-1 gap-2">
-          {APPS.map((app: AppProps) => (
+          {APPS.sort((a, b) => a.priority - b.priority).map((app: AppProps) => (
             <AppDesktop
               key={app.name}
               label={app.label}
               name={app.name}
               icon={app.icon}
+              link={app.link ?? null}
               component={app.component}
               activeApps={activeApps}
               setActiveApps={setActiveApps}

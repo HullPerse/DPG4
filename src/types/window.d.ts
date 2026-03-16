@@ -3,6 +3,8 @@ export interface WindowProps {
   title: string;
   children: ReactNode;
   size: {
+    minWidth?: number;
+    minHeight?: number;
     width: number;
     height: number;
   };

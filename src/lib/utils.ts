@@ -1,3 +1,4 @@
+import { GameStatus } from "@/types/games";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -50,4 +51,16 @@ export function selectionMouse(
   selectionRef.current.style.top = `${top}px`;
   selectionRef.current.style.width = `${width}px`;
   selectionRef.current.style.height = `${height}px`;
+}
+
+export function getStatusColor(status: GameStatus) {
+  if (!status) return "red";
+
+  const colorMap = {
+    COMPLETED: "green",
+    PLAYING: "yellow",
+    DROPPED: "red",
+    REROLL: "cyan",
+  };
+  return colorMap[status as keyof typeof colorMap] ?? "yellow";
 }
