@@ -24,7 +24,21 @@ const ImageComponent = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   const getWebpSrc = (originalSrc: string) => {
-    if (!originalSrc) return originalSrc;
+    const isExternal =
+      originalSrc.startsWith("http") ||
+      originalSrc.startsWith("https") ||
+      originalSrc.startsWith("data:image") ||
+      originalSrc.startsWith("") ||
+      src.startsWith("blob:") ||
+      src.startsWith("data:");
+
+    if (!originalSrc || isExternal) return originalSrc;
+
+    const isDiscord =
+      originalSrc.includes("cdn.discordapp.com") ||
+      originalSrc.includes("media.discordapp.net");
+
+    if (isDiscord) return originalSrc;
 
     const baseSrc = originalSrc.split("?")[0];
     return `${baseSrc}?format=webp&quality=${quality}`;
@@ -68,7 +82,7 @@ const ImageComponent = ({
           width={width}
           height={height}
           className={cn(
-            "transition-opacity duration-300 rounded",
+            "absolute inset-0 w-full h-full transition-opacity duration-300 rounded",
             isLoaded ? "opacity-100" : "opacity-0",
           )}
           loading="lazy"

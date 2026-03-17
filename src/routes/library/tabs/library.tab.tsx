@@ -98,7 +98,7 @@ function LibraryTab() {
               <div key={game.id} className="flex flex-col w-full">
                 <Button
                   variant="link"
-                  className="relative border border-text text-text disabled:opacity-45"
+                  className="relative border border-text text-text disabled:opacity-45 overflow-hidden"
                   disabled={currentGame === game.id}
                   onClick={() => setCurrentGame(game.id as string)}
                 >

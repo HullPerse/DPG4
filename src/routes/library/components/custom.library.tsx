@@ -15,27 +15,9 @@ import GameApi from "@/api/games.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Image } from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
+import { STATUSES } from "@/config/library.config";
 
 const gameApi = new GameApi();
-
-const STATUSES = [
-  {
-    name: "PLAYING",
-    label: "В ПРОЦЕССЕ",
-  },
-  {
-    name: "COMPLETED",
-    label: "ПРОЙДЕНО",
-  },
-  {
-    name: "DROPPED",
-    label: "ДРОПНУТО",
-  },
-  {
-    name: "REROLLED",
-    label: "РЕРОЛЬНУТО",
-  },
-];
 
 export default function CustomLibrary() {
   const user = useUserStore((state) => state.user);
@@ -43,6 +25,7 @@ export default function CustomLibrary() {
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [name, setName] = useState("");
   const [headerImage, setHeaderImage] = useState<string | null>(null);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -60,12 +43,13 @@ export default function CustomLibrary() {
         hltb: Number(time),
       },
       status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
+      score: null,
       data: {
         id: `${Date.now()}`,
         name: name,
         image: headerImage,
         capsuleImage: headerImage,
-        backgroundImage: headerImage,
+        backgroundImage: backgroundImage,
         steamLink: "",
         websiteLink: "",
       },
@@ -75,6 +59,7 @@ export default function CustomLibrary() {
       await gameApi.addGame(gameData as any);
       setName("");
       setHeaderImage("");
+      setBackgroundImage("");
       setTime("");
       setStatus("В ПРОЦЕССЕ");
     } catch (e) {
@@ -97,7 +82,16 @@ export default function CustomLibrary() {
           />
         </div>
         <div className="leading-tight">
-          <span>Ссылка на картинку</span>
+          <span>Фоновая картинка</span>
+          <Input
+            placeholder="URL изображения"
+            className="h-12"
+            value={backgroundImage ?? ""}
+            onChange={(e) => setBackgroundImage(e.target.value)}
+          />
+        </div>
+        <div className="leading-tight">
+          <span>Вертикальная картинка</span>
           <Input
             placeholder="URL изображения"
             className="h-12"
@@ -152,13 +146,12 @@ export default function CustomLibrary() {
         <span className="font-bold text-xl text-wrap">
           {name || "Название игры"}
         </span>
-        {headerImage && (
-          <Image
-            src={headerImage ?? ""}
-            alt="image"
-            className="w-full h-38 object-cover border-2 rounded"
-          />
-        )}
+
+        <Image
+          src={headerImage ?? "https://placehold.co/820x450/EEE/31343C"}
+          alt="image"
+          className="w-full h-38 object-cover border-2 rounded"
+        />
 
         {time && <span>Время: {time}</span>}
       </section>

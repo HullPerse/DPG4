@@ -1,4 +1,4 @@
-import { Preset, Game } from "@/types/games";
+import { Preset, Game, GameReview } from "@/types/games";
 import { client } from "./client.api";
 
 export default class GameApi {
@@ -42,12 +42,49 @@ export default class GameApi {
     });
   };
 
-  getGameInfo = async (id: string): Promise<Game[]> => {
+  getGameInfo = async (id: string): Promise<Game> => {
     return await this.gamesCollection.getOne(id);
   };
 
   addGame = async (game: Game): Promise<Game> => {
     return await this.gamesCollection.create(game);
+  };
+
+  deleteGame = async (id: string) => {
+    return await this.gamesCollection.delete(id);
+  };
+
+  //reviews
+  voteReview = async (id: string, userId: string, vote: -1 | 1) => {
+    const review = await this.getVotes(id);
+    if (!review) return;
+
+    //check if any votes exists
+    // if no then just create a new array with only current user vote
+    // if exists then check if current user has a vote there
+    // if no then create a new object for current user vote
+    // if yes then update the vote
+    const existingVote = review.votes
+      ? review.votes.find((vote) => vote.userId === userId)
+      : false;
+
+    const reviewData = {
+      rating: review.rating,
+      comment: review.comment,
+      votes: existingVote
+        ? review.votes.map((v) => (v.userId === userId ? { userId, vote } : v))
+        : [{ userId, vote }],
+    };
+
+    await this.gamesCollection.update(id, { review: reviewData });
+  };
+
+  getVotes = async (id: string): Promise<GameReview> => {
+    return await this.gamesCollection
+      .getOne(id, {
+        fields: "review",
+      })
+      .then((res) => res.review as GameReview);
   };
 
   //presets

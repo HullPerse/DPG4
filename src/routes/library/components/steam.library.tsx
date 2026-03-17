@@ -64,6 +64,7 @@ export default function SteamLibrary() {
         hltb: Number(time),
       },
       status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
+      score: null,
       data: {
         id: game.game.steam_appid,
         name: game.game.name,

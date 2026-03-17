@@ -60,7 +60,7 @@ export function getStatusColor(status: GameStatus) {
     COMPLETED: "green",
     PLAYING: "yellow",
     DROPPED: "red",
-    REROLL: "cyan",
+    REROLLED: "cyan",
   };
   return colorMap[status as keyof typeof colorMap] ?? "yellow";
 }

@@ -6,3 +6,22 @@ export const libraryTabs = [
   { value: "library", label: "Библиотека", component: <LibraryTab /> },
   { value: "community", label: "Сообщество", component: <></> },
 ];
+
+export const STATUSES = [
+  {
+    name: "PLAYING",
+    label: "В ПРОЦЕССЕ",
+  },
+  {
+    name: "COMPLETED",
+    label: "ПРОЙДЕНО",
+  },
+  {
+    name: "DROPPED",
+    label: "ДРОПНУТО",
+  },
+  {
+    name: "REROLLED",
+    label: "РЕРОЛЬНУТО",
+  },
+];

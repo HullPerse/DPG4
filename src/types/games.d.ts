@@ -13,7 +13,7 @@ export interface Game {
     username: string;
   };
   data: GameData;
-  score?: number;
+  score?: string | null;
   playtime: {
     hltb: number;
     user?: number;
@@ -37,4 +37,8 @@ export type GameStatus = "PLAYING" | "COMPLETED" | "DROPPED" | "REROLLED";
 export type GameReview = {
   rating: number;
   comment: string;
+  votes: {
+    userId: string;
+    vote: number;
+  }[];
 };
