@@ -164,7 +164,7 @@ export default function SteamLibrary() {
             <Image
               src={game?.game.header_image}
               alt="image"
-              className="w-full h-38 object-cover border-2 rounded"
+              className="aspect-video h-38 object-cover border-2 rounded"
             />
 
             <Button

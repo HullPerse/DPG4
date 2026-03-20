@@ -39,6 +39,11 @@ export default class UserApi {
     });
   };
 
+  //get user by id
+  getUserById = async (userId: string): Promise<User> => {
+    return await this.usersCollection.getOne(userId);
+  };
+
   //move user
   moveUser = async (userId: string, newPosition: number) => {
     await this.usersCollection.update(userId, { position: newPosition });

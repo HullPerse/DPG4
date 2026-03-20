@@ -156,7 +156,7 @@ export default function CustomLibrary() {
           <Image
             src={headerImage ?? ""}
             alt="image"
-            className="w-full h-38 object-cover border-2 rounded"
+            className="aspect-video h-38 object-cover border-2 rounded"
           />
         )}
 

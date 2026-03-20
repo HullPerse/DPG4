@@ -24,7 +24,14 @@ const ImageComponent = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   const getWebpSrc = (originalSrc: string) => {
-    if (!originalSrc) return originalSrc;
+    const isExternal =
+      originalSrc.startsWith("http") ||
+      originalSrc.startsWith("https") ||
+      originalSrc.startsWith("ftp") ||
+      originalSrc.startsWith("data:") ||
+      originalSrc.startsWith("blob:");
+
+    if (!originalSrc || isExternal) return originalSrc;
 
     const baseSrc = originalSrc.split("?")[0];
     return `${baseSrc}?format=webp&quality=${quality}`;
@@ -54,7 +61,10 @@ const ImageComponent = ({
 
   return (
     <div
-      className={cn("relative overflow-hidden items-center flex", className)}
+      className={cn(
+        "relative overflow-hidden items-center flex w-full",
+        className,
+      )}
       style={{
         aspectRatio: width && height ? `${width}/${height}` : undefined,
       }}
@@ -68,7 +78,7 @@ const ImageComponent = ({
           width={width}
           height={height}
           className={cn(
-            "transition-opacity duration-300 rounded",
+            "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
             isLoaded ? "opacity-100" : "opacity-0",
           )}
           loading="lazy"

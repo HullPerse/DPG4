@@ -34,7 +34,12 @@ export type GameData = {
   websiteLink: string;
 };
 export type GameStatus = "PLAYING" | "COMPLETED" | "DROPPED" | "REROLLED";
+export type ReviewRating = {
+  user: string;
+  score: number;
+};
 export type GameReview = {
   rating: number;
   comment: string;
+  votes?: ReviewRating[];
 };

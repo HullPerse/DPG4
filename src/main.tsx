@@ -7,9 +7,6 @@ import { initializeAuthStore } from "./store/user.store";
 import { initializeFontStore } from "./store/data.store";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { QueryConfig } from "@/config/query.config";
 
@@ -27,20 +24,6 @@ await import("react-dom/client").then(async ({ createRoot }) => {
       <StrictMode>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
-          <TanStackDevtools
-            plugins={[
-              {
-                name: "TanStack Query",
-                render: <ReactQueryDevtoolsPanel />,
-                defaultOpen: true,
-              },
-              {
-                name: "TanStack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-                defaultOpen: false,
-              },
-            ]}
-          />
         </QueryClientProvider>
       </StrictMode>,
     );
