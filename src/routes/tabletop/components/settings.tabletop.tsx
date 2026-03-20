@@ -60,7 +60,7 @@ export default function Settings({
   };
 
   return (
-    <main className="flex flex-col text-text w-full h-full gap-2">
+    <main className="flex h-full w-full flex-col gap-2 text-text">
       <div className="flex flex-col">
         <span>Название</span>
         <Input

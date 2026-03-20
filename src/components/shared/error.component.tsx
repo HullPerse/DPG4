@@ -16,9 +16,9 @@ export function BigError({
   const location = useLocation();
 
   return (
-    <main className="absolute flex flex-col items-center justify-center h-screen w-screen bg-background text-text font-extrabold gap-4 px-2">
+    <main className="absolute flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background px-2 font-extrabold text-text">
       {icon}
-      <span className="text-xl text-text text-center">{error.message}</span>
+      <span className="text-center text-xl text-text">{error.message}</span>
       {button && (
         <Button
           variant="default"
@@ -52,12 +52,12 @@ export function WindowError({
   return (
     <main
       className={cn(
-        "absolute flex flex-col items-center justify-center h-full w-full bg-card text-text font-extrabold gap-4 px-2",
+        "absolute flex h-full w-full flex-col items-center justify-center gap-4 bg-card px-2 font-extrabold text-text",
         className,
       )}
     >
       {icon}
-      <span className="text-xl text-text text-center">{error.message}</span>
+      <span className="text-center text-xl text-text">{error.message}</span>
       {button && (
         <Button variant="default" className="w-md max-w-full" onClick={refresh}>
           Повторить

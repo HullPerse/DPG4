@@ -37,16 +37,16 @@ export function Input({
       <input
         ref={props.ref || inputRef}
         className={cn(
-          "flex h-11 w-full rounded border-2 border-border bg-input px-4 py-2 text-base font-bold text",
-          "placeholder:text-muted placeholder:font-normal",
-          "focus:outline-none focus:border-primary",
+          "border-border bg-input text flex h-11 w-full rounded border-2 px-4 py-2 text-base font-bold",
+          "placeholder:font-normal placeholder:text-muted",
+          "focus:border-primary focus:outline-none",
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
           "transition-all duration-200",
 
-          "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-bold file:text",
+          "file:text file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-bold",
 
           inputType === "number" &&
-            "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           className,
         )}
         type={inputType}
@@ -64,12 +64,12 @@ export function Input({
 
       {arrows && (
         <div
-          className={`absolute right-2 top-1 text-gray-400 flex flex-col items-center justify-center`}
+          className={`absolute top-1 right-2 flex flex-col items-center justify-center text-gray-400`}
           aria-hidden={props.disabled ? "true" : "false"}
         >
           <button
             type="button"
-            className="hover:text-gray-200 cursor-pointer disabled:cursor-not-allowed"
+            className="cursor-pointer hover:text-gray-200 disabled:cursor-not-allowed"
             onClick={() => {
               const newValue = (() => {
                 const current = Number(inputValue) || 0;
@@ -99,7 +99,7 @@ export function Input({
           </button>
           <button
             type="button"
-            className="hover:text-gray-200 cursor-pointer disabled:cursor-not-allowed"
+            className="cursor-pointer hover:text-gray-200 disabled:cursor-not-allowed"
             onClick={() => {
               const newValue = (() => {
                 const current = Number(inputValue) || 0;
@@ -135,7 +135,7 @@ export function Input({
           type="button"
           tabIndex={-1}
           className={cn(
-            "absolute right-3 text-muted hover:text cursor-pointer transition-colors",
+            "hover:text absolute right-3 cursor-pointer text-muted transition-colors",
             props.min || props.max ? "top-1/4" : "top-1/2 -translate-y-1/2",
           )}
           onClick={() => setVisiblePassword((value) => !value)}
@@ -148,7 +148,7 @@ export function Input({
       {(props.min || props.max) && amount && (
         <div
           className={cn(
-            "absolute right-2 bottom-1 text-xs font-bold text-muted inline-flex items-center gap-0.5",
+            "absolute right-2 bottom-1 inline-flex items-center gap-0.5 text-xs font-bold text-muted",
             type === "password" && "right-2",
           )}
         >

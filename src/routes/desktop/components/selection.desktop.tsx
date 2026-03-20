@@ -7,7 +7,7 @@ const Selection = forwardRef<HTMLDivElement, { visible: boolean }>(
     return (
       <div
         ref={ref}
-        className="absolute pointer-events-none z-50 border border-primary bg-primary/20"
+        className="pointer-events-none absolute z-50 border border-primary bg-primary/20"
         style={{
           left: 0,
           top: 0,
@@ -16,7 +16,7 @@ const Selection = forwardRef<HTMLDivElement, { visible: boolean }>(
         }}
       />
     );
-  }
+  },
 );
 
 export default memo(Selection);

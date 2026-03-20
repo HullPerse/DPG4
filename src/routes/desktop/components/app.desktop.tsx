@@ -24,7 +24,7 @@ function AppDesktop({
   return (
     <button
       key={name}
-      className="flex flex-col items-center justify-center hover:bg-primary/20 w-20 h-20 rounded drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] border-2"
+      className="flex h-20 w-20 flex-col items-center justify-center rounded border-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] hover:bg-primary/20"
       style={{
         cursor: isOpening ? "wait" : "pointer",
       }}
@@ -44,7 +44,7 @@ function AppDesktop({
       }}
     >
       {icon}
-      <span className="text-xs font-bold text-text text-center leading-tight">
+      <span className="text-center text-xs leading-tight font-bold text-text">
         {label}
       </span>
     </button>

@@ -88,14 +88,14 @@ export default function Tabletop() {
     return (
       <WindowError
         error={new Error("Ошибка загрузки данных")}
-        icon={<CircleX className="animate-pulse size-28 text-red-500" />}
+        icon={<CircleX className="size-28 animate-pulse text-red-500" />}
         refresh={refetch}
         button
       />
     );
 
   return (
-    <main className="relative flex w-full h-full items-center justify-center overflow-clip bg-background">
+    <main className="relative flex h-full w-full items-center justify-center overflow-clip bg-background">
       {/* ADMIN TABLETOP TOOLS */}
       {showTools && (
         <ToolsTaletop
@@ -111,7 +111,7 @@ export default function Tabletop() {
       ) : (
         <>
           <button
-            className="absolute left-2 top-2 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
+            className="absolute top-2 left-2 z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
             title="Меню"
             onClick={() => setControl(true)}
           >
@@ -120,7 +120,7 @@ export default function Tabletop() {
 
           {!showTools && (
             <button
-              className="absolute left-2 top-11 text-muted hover:text-text cursor-pointer border rounded p-1 z-500"
+              className="absolute top-11 left-2 z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
               title="Инструменты"
               onClick={() => setShowTools(true)}
             >

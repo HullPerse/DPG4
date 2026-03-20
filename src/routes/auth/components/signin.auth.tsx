@@ -40,14 +40,14 @@ export default function Signin({
 
   return (
     <main
-      className="flex flex-col w-full h-full items-center p-2 gap-2"
+      className="flex h-full w-full flex-col items-center gap-2 p-2"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           return handleAuth();
         }
       }}
     >
-      <Box className="min-h-30 min-w-30 h-30 w-30" />
+      <Box className="h-30 min-h-30 w-30 min-w-30" />
 
       <Input
         type="text"
@@ -75,7 +75,7 @@ export default function Signin({
       </Button>
       <Button
         variant="link"
-        className="text-text text-xs"
+        className="text-xs text-text"
         onClick={() => setRegister(true)}
       >
         Создать аккаунт

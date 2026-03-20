@@ -12,12 +12,12 @@ export default function NewGameLibrary() {
   }, [newType]);
 
   return (
-    <main className="flex flex-col w-full h-full items-center">
-      <section className="flex flex-row w-full py-2 gap-2">
+    <main className="flex h-full w-full flex-col items-center">
+      <section className="flex w-full flex-row gap-2 py-2">
         <Button
           variant="link"
           onClick={() => setNewType("game")}
-          className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 w-1/2"
+          className="w-1/2 text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
           disabled={newType === "game"}
         >
           STEAM
@@ -25,14 +25,14 @@ export default function NewGameLibrary() {
         <Button
           variant="link"
           onClick={() => setNewType("custom")}
-          className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 w-1/2"
+          className="w-1/2 text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
           disabled={newType === "custom"}
         >
           КАСТОМНАЯ
         </Button>
       </section>
 
-      <section className="flex flex-col w-full h-full overflow-y-auto">
+      <section className="flex h-full w-full flex-col overflow-y-auto">
         {getComponent}
       </section>
     </main>

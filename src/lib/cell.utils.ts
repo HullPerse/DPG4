@@ -60,7 +60,7 @@ export function getGridPosition(cellNumber: number): {
 
 export function getCellCenter(cellNumber: number): Point {
   const rowHeight = CELL_SIZE + CELL_GAP;
-  
+
   if (cellNumber === 0) {
     return {
       x: CELL_SIZE / 2,

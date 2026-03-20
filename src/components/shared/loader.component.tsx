@@ -3,8 +3,8 @@ import { Box } from "lucide-react";
 
 export function BigLoader() {
   return (
-    <main className="absolute flex flex-col items-center justify-center h-screen w-screen bg-background text-text font-extrabold">
-      <Box className="animate-spin size-28" />
+    <main className="absolute flex h-screen w-screen flex-col items-center justify-center bg-background font-extrabold text-text">
+      <Box className="size-28 animate-spin" />
     </main>
   );
 }
@@ -13,11 +13,11 @@ export function WindowLoader({ className }: { className?: string }) {
   return (
     <main
       className={cn(
-        "absolute flex flex-col items-center justify-center w-full h-full bg-card text-text font-extrabold pb-12",
+        "absolute flex h-full w-full flex-col items-center justify-center bg-card pb-12 font-extrabold text-text",
         className,
       )}
     >
-      <Box className="animate-spin size-28" />
+      <Box className="size-28 animate-spin" />
     </main>
   );
 }
@@ -29,5 +29,5 @@ export function SmallLoader({
   size?: number;
   className?: string;
 }) {
-  return <Box className={cn(`animate-spin size-${size || 4}`, className)} />;
+  return <Box className={cn(`size- animate-spin${size || 4}`, className)} />;
 }

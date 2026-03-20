@@ -85,9 +85,9 @@ export default function SteamLibrary() {
   }, [game, time, appId, status]);
 
   return (
-    <main className="flex flex-row w-full h-full items-center">
-      <section className="flex flex-col w-1/2 h-full px-1 gap-2">
-        <div className="flex flex-row gap-1 items-center justify-center">
+    <main className="flex h-full w-full flex-row items-center">
+      <section className="flex h-full w-1/2 flex-col gap-2 px-1">
+        <div className="flex flex-row items-center justify-center gap-1">
           <Input
             type="number"
             placeholder="ID игры"
@@ -109,7 +109,7 @@ export default function SteamLibrary() {
               }
             }}
           >
-            <Search className="w-4 h-4 text-text border-text" />
+            <Search className="h-4 w-4 border-text text-text" />
           </Button>
         </div>
         <div className="leading-tight">
@@ -155,16 +155,16 @@ export default function SteamLibrary() {
           {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
         </Button>
       </section>
-      <section className="flex flex-col w-1/2 h-full border-highlight-high border-2 rounded p-2 items-center">
+      <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">
         {game && (
           <>
-            <span className="font-bold text-xl text-wrap">
+            <span className="text-xl font-bold text-wrap">
               {game?.game.name}
             </span>
             <Image
               src={game?.game.header_image}
               alt="image"
-              className="aspect-video h-38 object-cover border-2 rounded"
+              className="aspect-video h-38 rounded border-2 object-cover"
             />
 
             <Button

@@ -35,9 +35,9 @@ function PresetsTab() {
     );
 
   return (
-    <main className="relative flex flex-col w-full h-full">
+    <main className="relative flex h-full w-full flex-col">
       {isAdmin && (
-        <Button className="absolute right-2 bottom-2 rounded-full border w-8 h-8">
+        <Button className="absolute right-2 bottom-2 h-8 w-8 rounded-full border">
           <Plus />
         </Button>
       )}

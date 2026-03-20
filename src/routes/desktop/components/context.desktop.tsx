@@ -42,7 +42,7 @@ export default function ContextDesktop({
     <ContextMenu key={app.id}>
       <ContextMenuTrigger>
         <button
-          className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} hover:text-text cursor-pointer border rounded p-1`}
+          className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} cursor-pointer rounded border p-1 hover:text-text`}
           title={app.title}
           onClick={() => setActiveApps(unminimizeWindow(activeApps, app.id))}
         >
@@ -50,7 +50,7 @@ export default function ContextDesktop({
 
           {/* pinned */}
           {app.isPinned && (
-            <Pin className="absolute -top-1 -left-1 rotate-45 text-primary/60 size-4" />
+            <Pin className="absolute -top-1 -left-1 size-4 rotate-45 text-primary/60" />
           )}
         </button>
       </ContextMenuTrigger>

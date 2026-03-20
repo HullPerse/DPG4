@@ -25,19 +25,19 @@ export default function ToolsTaletop({
   const dataStore = useDataStore((state) => state);
 
   return (
-    <main className="flex flex-col gap-2 absolute bottom-2 left-2 z-100 items-center justify-center bg-card p-2 rounded border-2 border-highlight-high w-2xl">
-      <div className="flex flex-row gap-2 w-full items-center justify-between">
+    <main className="absolute bottom-2 left-2 z-100 flex w-2xl flex-col items-center justify-center gap-2 rounded border-2 border-highlight-high bg-card p-2">
+      <div className="flex w-full flex-row items-center justify-between gap-2">
         <span className="font-bold">Инструменты</span>
         <X
-          className="place-self-end size-5 text-muted hover:text-text cursor-pointer mb-2"
+          className="mb-2 size-5 cursor-pointer place-self-end text-muted hover:text-text"
           onClick={() => setShowTools(false)}
         />
       </div>
 
       {/* admin tools */}
       {isAdmin && (
-        <section className="flex flex-col w-full h-full gap-2 border-b-2 border-highlight-high pb-2">
-          <div className="flex flex-row items-center gap-2 justify-between">
+        <section className="flex h-full w-full flex-col gap-2 border-b-2 border-highlight-high pb-2">
+          <div className="flex flex-row items-center justify-between gap-2">
             Режим редактирования:
             <Switch
               className="cursor-pointer"
@@ -49,7 +49,7 @@ export default function ToolsTaletop({
       )}
 
       {/* user tools */}
-      <section className="flex flex-col w-full h-full gap-2 border-highlight-high pb-2">
+      <section className="flex h-full w-full flex-col gap-2 border-highlight-high pb-2">
         <div className="flex flex-col">
           <span>Стрелки:</span>
           <Select

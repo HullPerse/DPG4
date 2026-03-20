@@ -66,8 +66,8 @@ export default class GameApi {
     score: number,
   ) => {
     const allReviews = (await this.gamesCollection
-      .getOne(gameId)
-      .then((game) => game.review)) as GameReview;
+      .getOne(gameId, { fields: "review" })
+      .then((game) => game)) as GameReview;
 
     const existingVote = allReviews.votes?.find(
       (item) => item.user === user.id,

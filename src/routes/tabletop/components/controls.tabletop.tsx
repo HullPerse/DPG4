@@ -52,7 +52,7 @@ export default function Controls({
   if (minLoading)
     return (
       <section
-        className="absolute bottom-2 left-2 w-120 bg-card rounded border-2 border-highlight-high z-50 transition-all duration-300 ease-in-out "
+        className="absolute bottom-2 left-2 z-50 w-120 rounded border-2 border-highlight-high bg-card transition-all duration-300 ease-in-out"
         style={{
           height: "10rem",
         }}
@@ -63,7 +63,7 @@ export default function Controls({
   if (isError || isRefetchError)
     return (
       <section
-        className="absolute bottom-2 left-2 w-120 bg-card rounded border-2 border-highlight-high z-50 transition-all duration-300 ease-in-out"
+        className="absolute bottom-2 left-2 z-50 w-120 rounded border-2 border-highlight-high bg-card transition-all duration-300 ease-in-out"
         style={{
           height: "10rem",
         }}
@@ -85,11 +85,11 @@ export default function Controls({
   };
 
   return (
-    <section className="absolute bottom-2 left-2 w-120 max-w-[96%] bg-card rounded border-2 border-highlight-high z-50 transition-all duration-300 ease-in-out">
-      <div className="flex flex-row w-full items-center jusitfy-between px-2 py-1 border-b-2 border-highlight-high">
+    <section className="absolute bottom-2 left-2 z-50 w-120 max-w-[96%] rounded border-2 border-highlight-high bg-card transition-all duration-300 ease-in-out">
+      <div className="jusitfy-between flex w-full flex-row items-center border-b-2 border-highlight-high px-2 py-1">
         <span className="w-full font-bold">{cellId()}</span>
         <X
-          className="text-muted hover:text-text hover:cursor-pointer w-4 h-4"
+          className="h-4 w-4 text-muted hover:cursor-pointer hover:text-text"
           onClick={() => {
             queryClient.removeQueries({ queryKey: ["cellCard"] });
             setCell(null);
@@ -101,18 +101,18 @@ export default function Controls({
       {!cell ? (
         <MenuTabletop />
       ) : (
-        <section className="flex flex-col w-full h-full p-2 bg-background">
+        <section className="flex h-full w-full flex-col bg-background p-2">
           {Object.entries(data?.cell.conditions ?? {}).map(([key, value]) => {
             if (!value) return;
 
             return (
               <div
                 key={key}
-                className="flex justify-between items-start gap-3 min-w-0"
+                className="flex min-w-0 items-start justify-between gap-3"
               >
-                <span className="font-mono text-md shrink-0">{key}:</span>
+                <span className="text-md shrink-0 font-mono">{key}:</span>
                 <span
-                  className="font-mono text-md text-muted text-right wrap-break-word min-w-0 flex-1"
+                  className="text-md min-w-0 flex-1 text-right font-mono wrap-break-word text-muted"
                   style={{ whiteSpace: "pre-line" }}
                 >
                   {value.replace(/\\n/g, "\n")}
@@ -120,7 +120,7 @@ export default function Controls({
               </div>
             );
           })}
-          <div className="w-full bg-highlight-high h-0.5 my-1" />
+          <div className="my-1 h-0.5 w-full bg-highlight-high" />
           {(() => {
             const statusCounts = data?.cell?.status?.reduce(
               (acc: { [key: string]: number }, status: string) => {
@@ -137,15 +137,15 @@ export default function Controls({
               return (
                 <div
                   key={status}
-                  className="flex flex-row justify-between items-start gap-1 min-w-0"
+                  className="flex min-w-0 flex-row items-start justify-between gap-1"
                 >
-                  <div className="flex flex-row items-center gap-1 w-18">
+                  <div className="flex w-18 flex-row items-center gap-1">
                     <div className="w-6">
                       {statusData?.icon ?? <CircleQuestionMark />}
                     </div>
-                    <span className="text-text text-xs">x{count}</span>
+                    <span className="text-xs text-text">x{count}</span>
                   </div>
-                  <span className="font-mono text-md text-muted text-right wrap-break-word min-w-0 flex-1">
+                  <span className="text-md min-w-0 flex-1 text-right font-mono wrap-break-word text-muted">
                     {statusData?.description ?? "Неизвестно"}
                   </span>
                 </div>
@@ -159,10 +159,10 @@ export default function Controls({
               {Object.entries(userHistory).map(([user, count]) => (
                 <div
                   key={user}
-                  className="flex flex-row justify-between items-start gap-1 min-w-0"
+                  className="flex min-w-0 flex-row items-start justify-between gap-1"
                 >
-                  <span className="text-text text-xs">• {user}</span>
-                  <span className="text-text text-xs">x{count}</span>
+                  <span className="text-xs text-text">• {user}</span>
+                  <span className="text-xs text-text">x{count}</span>
                 </div>
               ))}
             </div>

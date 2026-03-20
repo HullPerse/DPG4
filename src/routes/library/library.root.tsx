@@ -16,9 +16,9 @@ export default function Library() {
   const [tab, setTab] = useState<LibraryTabs>("library");
 
   return (
-    <main className="flex flex-col w-full h-full">
+    <main className="flex h-full w-full flex-col">
       {/* header */}
-      <section className="flex items-center justify-between h-12 px-4 bg-highlight-low border-b border-highlight-medium">
+      <section className="flex h-12 items-center justify-between border-b border-highlight-medium bg-highlight-low px-4">
         <div className="flex flex-row gap-1">
           {libraryTabs.map((item) => (
             <Button
@@ -75,7 +75,7 @@ export default function Library() {
         </HoverCard>
       </section>
       {/* body*/}
-      <section className="flex w-full h-full">
+      <section className="flex h-full w-full">
         {libraryTabs.find((item) => item.value === tab)?.component}
       </section>
     </main>

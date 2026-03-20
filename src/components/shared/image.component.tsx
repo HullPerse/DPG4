@@ -47,14 +47,14 @@ const ImageComponent = ({
     return (
       <div
         className={cn(
-          "bg-background/40 border border-primary/20 flex items-center justify-center",
+          "flex items-center justify-center border border-primary/20 bg-background/40",
           className,
         )}
         style={{
           aspectRatio: width && height ? `${width}/${height}` : undefined,
         }}
       >
-        <span className="text-xs text-muted-foreground">Image</span>
+        <span className="text-muted-foreground text-xs">Image</span>
       </div>
     );
   }
@@ -62,7 +62,7 @@ const ImageComponent = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden items-center flex w-full",
+        "relative flex w-full items-center overflow-hidden",
         className,
       )}
       style={{
@@ -78,7 +78,7 @@ const ImageComponent = ({
           width={width}
           height={height}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
             isLoaded ? "opacity-100" : "opacity-0",
           )}
           loading="lazy"

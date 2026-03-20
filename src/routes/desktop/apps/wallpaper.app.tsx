@@ -153,10 +153,10 @@ export default function WallpaperApp({
   };
 
   return (
-    <main className="flex flex-col w-full h-full overflow-auto p-2 gap-2">
+    <main className="flex h-full w-full flex-col gap-2 overflow-auto p-2">
       <section>
         <Button
-          className="w-full h-16"
+          className="h-16 w-full"
           onClick={() => {
             document.getElementById("imageInput")?.click();
           }}
@@ -173,15 +173,15 @@ export default function WallpaperApp({
         />
       </section>
 
-      <section className="flex flex-row flex-wrap w-full gap-2 cursor-pointer items-center justify-center">
+      <section className="flex w-full cursor-pointer flex-row flex-wrap items-center justify-center gap-2">
         {wallpapers.map((wallpaper) => {
           if (loading)
             return (
               <div
                 key={wallpaper.path}
-                className="relative h-36 w-48 bg-background border-2 rounded overflow-hidden"
+                className="relative h-36 w-48 overflow-hidden rounded border-2 bg-background"
               >
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="flex h-full w-full items-center justify-center">
                   <SmallLoader />
                 </div>
               </div>

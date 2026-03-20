@@ -45,7 +45,7 @@ export default memo(function Timer({
   return (
     <div
       className={cn(
-        "flex items-center justify-center px-4 h-full w-26 border-l-2 border-highlight-high cursor-pointer hover:bg-white/5 transition-all duration-200",
+        "flex h-full w-26 cursor-pointer items-center justify-center border-l-2 border-highlight-high px-4 transition-all duration-200 hover:bg-white/5",
         className,
       )}
       data-timer="true"

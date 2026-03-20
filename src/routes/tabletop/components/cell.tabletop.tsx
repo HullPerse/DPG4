@@ -81,7 +81,7 @@ function CellComponent({
     return (
       <div className="absolute">
         {arrowMap[arrowType as keyof typeof arrowMap]}
-        <span className="absolute -top-1.5 -right-0.5 font-bold text-xs text-text">
+        <span className="absolute -top-1.5 -right-0.5 text-xs font-bold text-text">
           {destination}
         </span>
       </div>
@@ -133,7 +133,7 @@ function CellComponent({
       >
         <main className={getCellClass()}>
           {/* cell info */}
-          <section className="flex flex-row w-full h-10 border-b bg-card items-center justify-between p-0.5">
+          <section className="flex h-10 w-full flex-row items-center justify-between border-b bg-card p-0.5">
             {/* cell number */}
             <span
               className="ml-1 font-bold"
@@ -148,7 +148,7 @@ function CellComponent({
               {/* ladders and snakes */}
               {["icons", "all"].includes(arrowType) &&
                 (cell.snakeTo > 0 || cell.ladderTo > 0) && (
-                  <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
+                  <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
                     {getCellArrows(
                       cell.ladderTo > 0 ? cell.ladderTo : cell.snakeTo,
                     )}
@@ -156,7 +156,7 @@ function CellComponent({
                 )}
 
               {/* game type */}
-              <div className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center">
+              <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
                 {getCellType(cell.cellType)}
               </div>
 
@@ -164,7 +164,7 @@ function CellComponent({
 
               {cell.captured && (
                 <div
-                  className="bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center font-bold"
+                  className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background font-bold"
                   style={{
                     color: (() => {
                       const count = cell.captured?.length || 0;
@@ -183,14 +183,14 @@ function CellComponent({
             </div>
           </section>
           {/* users */}
-          <section className="flex flex-row flex-wrap items-start w-full h-full gap-2 p-1">
+          <section className="flex h-full w-full flex-row flex-wrap items-start gap-2 p-1">
             {users
               .filter((user) => user.position === cell.number)
               .map((user) => (
                 <span
                   key={user.id}
                   id={`user-${user.id}`}
-                  className="border border-highlight-low rounded-full w-8 h-8 flex items-center justify-center"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-highlight-low"
                   style={{
                     backgroundColor: user.color,
                   }}
@@ -201,7 +201,7 @@ function CellComponent({
           </section>
 
           {/* cell status */}
-          <section className="flex flex-row w-full h-8 min-h-8 max-h-8 border-t bg-card p-1 gap-1 items-center justify-between">
+          <section className="flex h-8 max-h-8 min-h-8 w-full flex-row items-center justify-between gap-1 border-t bg-card p-1">
             <div className="flex flex-row gap-1">
               {computeStatusPages().statuses.map(({ status, count }) => {
                 const statusData =
@@ -211,7 +211,7 @@ function CellComponent({
                 return (
                   <div
                     key={status}
-                    className="relative bg-background w-6 h-6 rounded border border-highlight-high flex items-center justify-center"
+                    className="relative flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background"
                   >
                     {statusData?.icon ?? <CircleQuestionMark />}
 
@@ -238,7 +238,7 @@ function CellComponent({
                     setCurrentPage(currentPage - 1);
                   }}
                   disabled={currentPage === 1}
-                  className="size-4 opacity-75 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="size-4 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronUp />
                 </Button>
@@ -250,7 +250,7 @@ function CellComponent({
                     setCurrentPage(currentPage + 1);
                   }}
                   disabled={currentPage >= computeStatusPages().totalPages}
-                  className="size-4 opacity-75 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="size-4 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronDown />
                 </Button>

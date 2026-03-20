@@ -41,7 +41,7 @@ export default function Desktop({
   const [openLanguage, setOpenLanguage] = useState<boolean>(false);
 
   return (
-    <main className="flex flex-col w-full h-full">
+    <main className="flex h-full w-full flex-col">
       <section className="relative flex flex-1">
         <div className="absolute top-6 left-6 grid grid-cols-1 gap-2">
           {APPS.sort((a, b) => a.priority - b.priority).map((app: AppProps) => (
@@ -71,8 +71,8 @@ export default function Desktop({
         {openLanguage && <FontDesktop />}
       </section>
 
-      <section className="flex flex-row w-full bg-card items-center justify-between border-t-2 border-t-highlight-high h-14">
-        <div className="flex flex-row items-center h-full px-2 gap-2 overflow-x-auto w-full">
+      <section className="flex h-14 w-full flex-row items-center justify-between border-t-2 border-t-highlight-high bg-card">
+        <div className="flex h-full w-full flex-row items-center gap-2 overflow-x-auto px-2">
           {[...activeApps]
             .sort((a, b) => {
               if (Boolean(a.isPinned) !== Boolean(b.isPinned)) {
@@ -93,7 +93,7 @@ export default function Desktop({
               />
             ))}
         </div>
-        <div className="flex flex-row items-center h-full gap-2 border-l-2 border-highlight-high pl-2">
+        <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* NETWORK */}
             <HoverCard>
@@ -107,7 +107,7 @@ export default function Desktop({
 
             {/* WALLAPAPER */}
             <Image
-              className="w-4 h-4 hover:text-text cursor-pointer"
+              className="h-4 w-4 cursor-pointer hover:text-text"
               onClick={() =>
                 setActiveApps(
                   createWindow(
@@ -121,7 +121,7 @@ export default function Desktop({
 
             {/* LANGUAGE */}
             <Languages
-              className="w-4 h-4 hover:text-text cursor-pointer"
+              className="h-4 w-4 cursor-pointer hover:text-text"
               onClick={() => {
                 setOpenLanguage(!openLanguage);
               }}
@@ -129,7 +129,7 @@ export default function Desktop({
 
             {/* SIGNOUT */}
             <DoorOpen
-              className="w-4 h-4 hover:text-text cursor-pointer"
+              className="h-4 w-4 cursor-pointer hover:text-text"
               onClick={() => {
                 setLoggedIn(false);
               }}

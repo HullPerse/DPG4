@@ -96,7 +96,10 @@ export const useWindowResize = ({
         case "top":
         case "top-left":
         case "top-right":
-          const topDelta = Math.max(-state.startSize.height + minHeight, deltaY);
+          const topDelta = Math.max(
+            -state.startSize.height + minHeight,
+            deltaY,
+          );
           newHeight = state.startSize.height - topDelta;
           newY += topDelta;
           break;

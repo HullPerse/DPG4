@@ -56,12 +56,12 @@ export default function NetworkHover() {
   };
 
   return (
-    <main className="flex flex-col gap-2 w-full">
+    <main className="flex w-full flex-col gap-2">
       {/* TOP BAR */}
-      <section className="flex flex-row w-full gap-2 items-center justify-between">
+      <section className="flex w-full flex-row items-center justify-between gap-2">
         <div className="flex flex-row gap-2">
           <div
-            className={`flex items-center justify-center size-8 rounded-lg ${
+            className={`flex size-8 items-center justify-center rounded-lg ${
               network.online
                 ? "bg-primary/15 text-primary"
                 : "bg-red-500/20 text-red-500/70"
@@ -74,10 +74,10 @@ export default function NetworkHover() {
             )}
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground leading-none">
+            <p className="text-foreground text-sm leading-none font-semibold">
               {network.online ? "Подключено" : "Нет подключения"}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Сеть</p>
+            <p className="text-muted-foreground mt-0.5 text-xs">Сеть</p>
           </div>
         </div>
         <div className="flex items-end gap-0.5">
@@ -107,7 +107,7 @@ export default function NetworkHover() {
               <span className="text-xs">{data.label}</span>
             </div>
             <span
-              className={`flex flex-row text-xs font-medium ${data.id === "quality" && !network.online ? "text-red-700" : "text-text"}  ${data.id === "quality" && getQuality(network.effectiveType ?? "4g")}`}
+              className={`flex flex-row text-xs font-medium ${data.id === "quality" && !network.online ? "text-red-700" : "text-text"} ${data.id === "quality" && getQuality(network.effectiveType ?? "4g")}`}
             >
               {getValue(data.id)}
             </span>

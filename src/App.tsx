@@ -132,7 +132,7 @@ function App() {
   return (
     <main
       ref={desktopRef}
-      className="relative w-screen h-screen text-text bg-background bg-cover bg-center bg-no-repeat select-none"
+      className="relative h-screen w-screen bg-background bg-cover bg-center bg-no-repeat text-text select-none"
       style={{
         backgroundImage: `url(${wallpaper})`,
         cursor: isOpening ? "wait" : "default",

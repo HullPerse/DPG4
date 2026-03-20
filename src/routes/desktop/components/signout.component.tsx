@@ -58,7 +58,7 @@ export default function Signpout() {
 
   return (
     <main
-      className="relative w-screen h-screen"
+      className="relative h-screen w-screen"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           return handleAuth();
@@ -66,7 +66,7 @@ export default function Signpout() {
       }}
     >
       <section
-        className="w-full h-full blur"
+        className="h-full w-full blur"
         style={{
           backgroundImage: `url(${wallpaper})`,
           backgroundSize: "cover",
@@ -74,25 +74,25 @@ export default function Signpout() {
         }}
       />
 
-      <section className="absolute flex flex-col top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 items-center justify-center">
+      <section className="absolute top-1/2 right-1/2 flex translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-col items-center">
             <TimeDisplay time={time} />
           </div>
         </div>
 
-        <div className="w-32 h-32 border-4 border-highlight-high p-4 rounded-full flex items-center justify-center bg-card">
+        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-highlight-high bg-card p-4">
           <span className="text-6xl">{user?.avatar}</span>
         </div>
         <span className="text-xl font-bold text-text drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
           {user?.username}
         </span>
-        <div className="w-full flex flex-row items-center gap-1">
+        <div className="flex w-full flex-row items-center gap-1">
           <Input
             autoFocus
             type="password"
             placeholder="Пароль"
-            className="bg-card border-highlight-high focus:border-highlight-high text-text"
+            className="border-highlight-high bg-card text-text focus:border-highlight-high"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -108,7 +108,7 @@ export default function Signpout() {
         </div>
         <Button
           variant="ghost"
-          className="text-xs text-text font-bold underline"
+          className="text-xs font-bold text-text underline"
           onClick={() => {
             setLoggedIn(false);
             logout();

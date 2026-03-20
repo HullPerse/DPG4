@@ -8,7 +8,7 @@ export default function MenuTabletop() {
   const user = useUserStore((state) => state.user);
 
   return (
-    <main className="flex flex-col w-full h-full p-2 bg-background">
+    <main className="flex h-full w-full flex-col bg-background p-2">
       <Button
         onClick={async () => {
           if (!user) return;

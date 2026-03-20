@@ -82,7 +82,7 @@ function ArrowTabletop({ cells, type }: ArrowTabletopProps) {
 
   return (
     <svg
-      className="absolute top-0 left-0 pointer-events-none"
+      className="pointer-events-none absolute top-0 left-0"
       width={totalWidth}
       height={totalHeight}
       style={{

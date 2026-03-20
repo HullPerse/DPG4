@@ -85,8 +85,8 @@ export default function CustomLibrary() {
   }, [name, headerImage, time, status, gameApi]);
 
   return (
-    <main className="flex flex-row w-full h-full items-center">
-      <section className="flex flex-col w-1/2 h-full px-1 gap-2">
+    <main className="flex h-full w-full flex-row items-center">
+      <section className="flex h-full w-1/2 flex-col gap-2 px-1">
         <div className="leading-tight">
           <span>Название</span>
           <Input
@@ -148,15 +148,15 @@ export default function CustomLibrary() {
           {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
         </Button>
       </section>
-      <section className="flex flex-col w-1/2 h-full border-highlight-high border-2 rounded p-2 items-center">
-        <span className="font-bold text-xl text-wrap">
+      <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">
+        <span className="text-xl font-bold text-wrap">
           {name || "Название игры"}
         </span>
         {headerImage && (
           <Image
             src={headerImage ?? ""}
             alt="image"
-            className="aspect-video h-38 object-cover border-2 rounded"
+            className="aspect-video h-38 rounded border-2 object-cover"
           />
         )}
 

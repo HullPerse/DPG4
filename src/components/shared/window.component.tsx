@@ -266,7 +266,7 @@ function Window(props: WindowProps) {
       key={props.id}
       data-window="true"
       style={windowStyle}
-      className="absolute bg-card rounded text-text transition-none overflow-hidden"
+      className="absolute overflow-hidden rounded bg-card text-text transition-none"
       hidden={props.isMinimized}
       onClick={(e) => {
         const target = e.target as HTMLElement;
@@ -280,7 +280,7 @@ function Window(props: WindowProps) {
     >
       {/* Head */}
       <section
-        className="flex flex-row w-full h-12 px-1 items-center justify-between select-none bg-highlight-high"
+        className="flex h-12 w-full flex-row items-center justify-between bg-highlight-high px-1 select-none"
         onMouseDown={handleMouseDown}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >

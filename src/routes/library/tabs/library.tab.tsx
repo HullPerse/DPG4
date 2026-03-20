@@ -71,8 +71,8 @@ function LibraryTab() {
     );
 
   return (
-    <main className="flex flex-row w-full h-full">
-      <section className="relative flex flex-col bg-highlight-low border-r border-highlight-medium p-2 min-w-64 w-64 gap-1 overflow-y-auto">
+    <main className="flex h-full w-full flex-row">
+      <section className="relative flex w-64 min-w-64 flex-col gap-1 overflow-y-auto border-r border-highlight-medium bg-highlight-low p-2">
         <Input
           type="text"
           placeholder="Поиск игр"
@@ -88,14 +88,14 @@ function LibraryTab() {
         >
           <Plus />
         </Button>
-        <div className="flex flex-col gap-1 overflow-y-auto h-full">
+        <div className="flex h-full flex-col gap-1 overflow-y-auto">
           {data
             ?.filter((game) =>
               game.data.name.toUpperCase().includes(searchTerm.toUpperCase()),
             )
             .sort((a, b) => (a.createdAt! > b.createdAt! ? 1 : -1))
             .map((game) => (
-              <div key={game.id} className="flex flex-col w-full">
+              <div key={game.id} className="flex w-full flex-col">
                 <Button
                   variant="link"
                   className="relative border border-text text-text disabled:opacity-45"
@@ -103,7 +103,7 @@ function LibraryTab() {
                   onClick={() => setCurrentGame(game.id as string)}
                 >
                   <span
-                    className="flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ml-3"
+                    className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
                     style={{ backgroundColor: getStatusColor(game.status) }}
                   >
                     {currentGame === game.id && (
@@ -117,7 +117,7 @@ function LibraryTab() {
             ))}
         </div>
       </section>
-      <section className="flex w-full h-full">{getComponent}</section>
+      <section className="flex h-full w-full">{getComponent}</section>
     </main>
   );
 }

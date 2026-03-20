@@ -142,23 +142,23 @@ export default function Signup({
     const verificationComponent = {
       0: (
         <Square
-          className="size-14 text-text cursor-pointer opacity-75 hover:opacity-100"
+          className="size-14 cursor-pointer text-text opacity-75 hover:opacity-100"
           onClick={verificationFunction}
         />
       ),
       1: (
         <div className="relative">
-          <Square className="size-14 text-text " />
-          <SmallLoader className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 size-8" />
+          <Square className="size-14 text-text" />
+          <SmallLoader className="absolute top-1/2 right-1/2 size-8 translate-x-1/2 -translate-y-1/2" />
         </div>
       ),
       2: (
         <div className="relative">
-          <Square className="size-14 text-text " />
+          <Square className="size-14 text-text" />
           <Image
             src="./src/assets/trollface.png"
             alt="trollface"
-            className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 size-8"
+            className="absolute top-1/2 right-1/2 size-8 translate-x-1/2 -translate-y-1/2"
           />
         </div>
       ),
@@ -183,7 +183,7 @@ export default function Signup({
     return (
       <WindowError
         error={new Error("Произошла ошибка при соединении с сервером")}
-        icon={<CircleX className="animate-pulse size-28 text-red-500" />}
+        icon={<CircleX className="size-28 animate-pulse text-red-500" />}
         refresh={refetch}
         button
       />
@@ -193,18 +193,18 @@ export default function Signup({
 
   return (
     <main
-      className="flex flex-col w-full h-full items-center px-2 gap-3"
+      className="flex h-full w-full flex-col items-center gap-3 px-2"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           return handleAuth();
         }
       }}
     >
-      <Box className="min-h-30 min-w-30 h-30 w-30" />
+      <Box className="h-30 min-h-30 w-30 min-w-30" />
 
       {errors.general && (
-        <div className="w-full bg-red-500/20 border border-red-500 rounded p-2">
-          <p className="text-red-500 text-sm text-center">{errors.general}</p>
+        <div className="w-full rounded border border-red-500 bg-red-500/20 p-2">
+          <p className="text-center text-sm text-red-500">{errors.general}</p>
         </div>
       )}
 
@@ -221,7 +221,7 @@ export default function Signup({
           autoFocus
         />
         {errors.username && (
-          <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+          <p className="mt-1 text-xs text-red-500">{errors.username}</p>
         )}
       </div>
 
@@ -238,11 +238,11 @@ export default function Signup({
           }}
         />
         {errors.password && (
-          <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+          <p className="mt-1 text-xs text-red-500">{errors.password}</p>
         )}
       </div>
       <div className="w-full">
-        <section className="flex flex-row flex-wrap gap-2 items-center justify-center">
+        <section className="flex flex-row flex-wrap items-center justify-center gap-2">
           {ICONS.map((icon) => {
             const isUsed = usedItems.avatars.has(icon);
 
@@ -251,9 +251,7 @@ export default function Signup({
                 key={icon}
                 size="icon"
                 variant="ghost"
-                className={`border-2 rounded p-6 transition-all duration-100 select-none
-                ${avatar === icon ? "bg-primary/50 border-primary" : "transparent cursor-pointer"}
-                  ${errors.avatar ? "border-red-500" : ""}`}
+                className={`rounded border-2 p-6 transition-all duration-100 select-none ${avatar === icon ? "border-primary bg-primary/50" : "transparent cursor-pointer"} ${errors.avatar ? "border-red-500" : ""}`}
                 style={{
                   scale: avatar === icon ? 1.2 : 1,
                 }}
@@ -269,14 +267,14 @@ export default function Signup({
           })}
         </section>
         {errors.avatar && (
-          <p className="text-red-500 text-xs mt-1 text-center">
+          <p className="mt-1 text-center text-xs text-red-500">
             {errors.avatar}
           </p>
         )}
       </div>
 
       <div className="w-full">
-        <section className="flex flex-row flex-wrap gap-2 items-center justify-center">
+        <section className="flex flex-row flex-wrap items-center justify-center gap-2">
           {COLORS.map((item) => {
             const isUsed = usedItems.colors.has(item);
 
@@ -285,9 +283,7 @@ export default function Signup({
                 key={item}
                 size="icon"
                 variant="ghost"
-                className={`border-2 rounded p-4 transition-all duration-100 select-none
-                 ${color === item ? "border-primary" : "transparent cursor-pointer"}
-                 ${errors.color ? "border-red-500" : ""}`}
+                className={`rounded border-2 p-4 transition-all duration-100 select-none ${color === item ? "border-primary" : "transparent cursor-pointer"} ${errors.color ? "border-red-500" : ""}`}
                 style={{
                   scale: color === item ? 1.2 : 1,
                   backgroundColor: item,
@@ -302,14 +298,14 @@ export default function Signup({
           })}
         </section>
         {errors.color && (
-          <p className="text-red-500 text-xs mt-1 text-center">
+          <p className="mt-1 text-center text-xs text-red-500">
             {errors.color}
           </p>
         )}
       </div>
 
       {/* ROBOT VERIFICATION */}
-      <section className="flex flex-row w-full min-h-16 h-fit p-1 border-2 border-highlight-high rounded bg-background items-center gap-1 text-wrap transition-all duration-300">
+      <section className="flex h-fit min-h-16 w-full flex-row items-center gap-1 rounded border-2 border-highlight-high bg-background p-1 text-wrap transition-all duration-300">
         <div>{getVerification().component}</div>
         <span>{getVerification().text}</span>
       </section>
@@ -332,7 +328,7 @@ export default function Signup({
       </Button>
       <Button
         variant="link"
-        className="text-text text-xs"
+        className="text-xs text-text"
         onClick={() => setRegister(false)}
       >
         Войти в аккаунт

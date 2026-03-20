@@ -62,7 +62,7 @@ export default function NetworkConnection() {
     return (
       <Loader
         className={cn(
-          "w-4 h-4 animate-spin",
+          "h-4 w-4 animate-spin",
           networkClass(!!data?.isConnected),
         )}
       />
@@ -72,7 +72,7 @@ export default function NetworkConnection() {
   if (isError || !data?.isConnected || isRefetchError)
     return (
       <WifiOff
-        className="w-4 h-4 text-red-700/60 hover:text-red-700 cursor-pointer  animate-pulse"
+        className="h-4 w-4 animate-pulse cursor-pointer text-red-700/60 hover:text-red-700"
         onClick={handleRefetch}
       />
     );
@@ -81,7 +81,7 @@ export default function NetworkConnection() {
   if (data.updateAvailable)
     return (
       <WifiSync
-        className="w-4 h-4 text-yellow-700/60 hover:text-yellow-700 cursor-pointer animate-pulse"
+        className="h-4 w-4 animate-pulse cursor-pointer text-yellow-700/60 hover:text-yellow-700"
         onClick={() => {}}
       />
     );
@@ -89,7 +89,7 @@ export default function NetworkConnection() {
   //connection found
   return (
     <Wifi
-      className="w-4 h-4 hover:text-text cursor-pointer"
+      className="h-4 w-4 cursor-pointer hover:text-text"
       onClick={handleRefetch}
     />
   );

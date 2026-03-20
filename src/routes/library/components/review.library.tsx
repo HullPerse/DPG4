@@ -60,7 +60,7 @@ function ReviewLibrary({ id }: { id: string }) {
 
   if (!data?.game.review)
     return (
-      <span className="flex w-full h-full items-center justify-center font-bold text-2xl">
+      <span className="flex h-full w-full items-center justify-center text-2xl font-bold">
         Тут будет ваш отзыв!
       </span>
     );
@@ -69,14 +69,14 @@ function ReviewLibrary({ id }: { id: string }) {
     data?.game.review?.votes?.reduce((a, b) => a + b.score, 0) ?? 0;
 
   return (
-    <main className="flex flex-row w-full h-full border-2 border-highlight-high rounded">
-      <section className="flex flex-col h-full w-25 border-r-2 border-highlight-high items-center pt-2">
-        <div className="border-2 border-highlight-high size-20 rounded flex items-center justify-center">
-          <div className="relative w-full h-full text-4xl items-center flex justify-center pb-2">
+    <main className="flex h-full w-full flex-row rounded border-2 border-highlight-high">
+      <section className="flex h-full w-25 flex-col items-center border-r-2 border-highlight-high pt-2">
+        <div className="flex size-20 items-center justify-center rounded border-2 border-highlight-high">
+          <div className="relative flex h-full w-full items-center justify-center pb-2 text-4xl">
             {data?.user.avatar}
             {totalScore !== 0 && totalScore && (
               <span
-                className="absolute -bottom-1 -right-1 text-[20px] border border-highlight-high rounded bg-background min-w-6 w-10 items-center justify-center flex text-center font-bold"
+                className="absolute -right-1 -bottom-1 flex w-10 min-w-6 items-center justify-center rounded border border-highlight-high bg-background text-center text-[20px] font-bold"
                 style={{
                   color: totalScore > 0 ? "green" : "red",
                 }}
@@ -90,7 +90,7 @@ function ReviewLibrary({ id }: { id: string }) {
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-1 p-2 w-full">
+        <div className="flex w-full flex-col gap-1 p-2">
           <Button
             variant="success"
             size="icon"

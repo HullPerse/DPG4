@@ -30,7 +30,7 @@ function Wallpaper({
   return (
     <div
       key={wallpaper.path}
-      className="relative h-36 w-48 bg-background border-2 rounded overflow-hidden"
+      className="relative h-36 w-48 overflow-hidden rounded border-2 bg-background"
       onClick={() => {
         setWallpaper(wallUrls[wallpaper.path]);
         setData(wallpaper.name);
@@ -41,11 +41,11 @@ function Wallpaper({
       <Image
         src={wallUrls[wallpaper.path]}
         alt={wallpaper.name}
-        className="w-full h-26 object-contain"
+        className="h-26 w-full object-contain"
       />
 
       <section className="border-t-2 p-1">
-        <div className="line-clamp-1 truncate font-bold text-center">
+        <div className="line-clamp-1 truncate text-center font-bold">
           {wallpaper.name.replace("Default:", "")}
         </div>
       </section>
