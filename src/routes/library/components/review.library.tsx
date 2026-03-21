@@ -1,6 +1,5 @@
 import { WindowError } from "@/components/shared/error.component";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +12,7 @@ import {
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 
 const gameApi = new GameApi();
@@ -26,7 +25,6 @@ function EditReview() {
 function ReviewLibrary({ id }: { id: string }) {
   const queryClient = useQueryClient();
 
-  const [loading, setLoading] = useState<"like" | "dislike" | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["libraryReview", id],
@@ -76,7 +74,7 @@ function ReviewLibrary({ id }: { id: string }) {
             {data?.user.avatar}
             {totalScore !== 0 && totalScore && (
               <span
-                className="absolute -right-1 -bottom-1 flex w-10 min-w-6 items-center justify-center rounded border border-highlight-high bg-background text-center text-[20px] font-bold"
+                className="absolute -right-2 -bottom-2 flex w-10 min-w-6 items-center justify-center rounded border border-highlight-high bg-background text-center text-[20px] font-bold"
                 style={{
                   color: totalScore > 0 ? "green" : "red",
                 }}
@@ -97,7 +95,6 @@ function ReviewLibrary({ id }: { id: string }) {
             className="w-full"
             onClick={async () => {
               if (!data) return;
-              setLoading("like");
 
               await gameApi.voteReview(
                 data.game.id,
@@ -107,24 +104,20 @@ function ReviewLibrary({ id }: { id: string }) {
                 },
                 1,
               );
-              setLoading(null);
             }}
           >
-            {loading === "like" ? (
-              <SmallLoader />
-            ) : (
-              <ChevronUp
-                color={
-                  data?.game.review?.votes?.some(
-                    (item) =>
-                      item.user === String(data.user.id) && item.score === 1,
-                  )
-                    ? "gold"
-                    : "white"
-                }
-                className="size-6"
-              />
-            )}
+
+            <ChevronUp
+              color={
+                data?.game.review?.votes?.some(
+                  (item) =>
+                    item.user === String(data.user.id) && item.score === 1,
+                )
+                  ? "gold"
+                  : "white"
+              }
+              className="size-6"
+            />
           </Button>
           <Button
             variant="error"
@@ -132,7 +125,6 @@ function ReviewLibrary({ id }: { id: string }) {
             className="w-full"
             onClick={async () => {
               if (!data) return;
-              setLoading("dislike");
 
               await gameApi.voteReview(
                 data.game.id,
@@ -142,24 +134,20 @@ function ReviewLibrary({ id }: { id: string }) {
                 },
                 -1,
               );
-              setLoading(null);
             }}
           >
-            {loading === "dislike" ? (
-              <SmallLoader />
-            ) : (
-              <ChevronDown
-                color={
-                  data?.game.review?.votes?.some(
-                    (item) =>
-                      item.user === String(data.user.id) && item.score === -1,
-                  )
-                    ? "gold"
-                    : "white"
-                }
-                className="size-6"
-              />
-            )}
+
+            <ChevronDown
+              color={
+                data?.game.review?.votes?.some(
+                  (item) =>
+                    item.user === String(data.user.id) && item.score === -1,
+                )
+                  ? "gold"
+                  : "white"
+              }
+              className="size-6"
+            />
           </Button>
         </div>
       </section>

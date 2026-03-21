@@ -67,11 +67,13 @@ export default class GameApi {
   ) => {
     const allReviews = (await this.gamesCollection
       .getOne(gameId, { fields: "review" })
-      .then((game) => game)) as GameReview;
+      .then((game) => game)).review as GameReview;
+
 
     const existingVote = allReviews.votes?.find(
       (item) => item.user === user.id,
     );
+
 
     //if no votes for user
     if (!existingVote || !allReviews.votes) {
@@ -93,11 +95,13 @@ export default class GameApi {
     const oldScore = allReviews.votes.find(
       (item) => item.user === user.id,
     )?.score;
+
     const newVotes = allReviews.votes.filter((item) => item.user !== user.id);
     const voteData = {
       user: user.id,
       score: oldScore === 0 || score !== oldScore ? score : 0,
     };
+
 
     //update the review with the new vote
     return await this.gamesCollection.update(gameId, {
