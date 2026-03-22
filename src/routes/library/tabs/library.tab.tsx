@@ -117,7 +117,7 @@ function LibraryTab() {
             ))}
         </div>
       </section>
-      <section className="flex h-full w-full">{getComponent}</section>
+      <section className="flex w-full h-full">{getComponent}</section>
     </main>
   );
 }

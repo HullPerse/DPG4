@@ -54,7 +54,7 @@ const ImageComponent = ({
           aspectRatio: width && height ? `${width}/${height}` : undefined,
         }}
       >
-        <span className="text-muted-foreground text-xs">Image</span>
+        <span className="text-muted-foreground text-xs">Изображение</span>
       </div>
     );
   }

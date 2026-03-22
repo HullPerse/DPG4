@@ -54,9 +54,10 @@ export default class GameApi {
     user: User;
     review: GameReview;
     image: File;
+    data: { name: string };
   }> => {
     return await this.gamesCollection.getOne(id, {
-      fields: "id, user.id, review, image",
+      fields: "id, user.id, review, image, data.name",
     });
   };
 
@@ -65,15 +66,15 @@ export default class GameApi {
     user: { id: string; username: string },
     score: number,
   ) => {
-    const allReviews = (await this.gamesCollection
-      .getOne(gameId, { fields: "review" })
-      .then((game) => game)).review as GameReview;
-
+    const allReviews = (
+      await this.gamesCollection
+        .getOne(gameId, { fields: "review" })
+        .then((game) => game)
+    ).review as GameReview;
 
     const existingVote = allReviews.votes?.find(
       (item) => item.user === user.id,
     );
-
 
     //if no votes for user
     if (!existingVote || !allReviews.votes) {
@@ -101,7 +102,6 @@ export default class GameApi {
       user: user.id,
       score: oldScore === 0 || score !== oldScore ? score : 0,
     };
-
 
     //update the review with the new vote
     return await this.gamesCollection.update(gameId, {
