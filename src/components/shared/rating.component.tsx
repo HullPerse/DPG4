@@ -7,16 +7,23 @@ export default function Rating({
   readOnly,
   starSize = "8",
   className,
+  onChange,
 }: {
   value: 1 | 2 | 3 | 4 | 5;
   readOnly?: boolean;
   starSize?: string;
   className?: string;
+  onChange?: (value: 1 | 2 | 3 | 4 | 5) => void;
 }) {
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
 
   const displayValue =
     hoveredValue !== null && hoveredValue < value ? hoveredValue : value;
+
+  const handleClick = (starValue: number) => {
+    if (readOnly) return;
+    onChange?.(starValue as 1 | 2 | 3 | 4 | 5);
+  };
 
   return (
     <div className={cn("-gap-2 flex flex-row", className)}>
@@ -32,9 +39,9 @@ export default function Rating({
             }}
             onMouseOut={() => {
               if (readOnly) return;
-
               setHoveredValue(null);
             }}
+            onClick={() => handleClick(index + 1)}
           >
             <Star
               className={cn(

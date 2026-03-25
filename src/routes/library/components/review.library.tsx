@@ -1,7 +1,10 @@
 import { WindowError } from "@/components/shared/error.component";
-import { WindowLoader } from "@/components/shared/loader.component";
+import {
+  SmallLoader,
+  WindowLoader,
+} from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, NetworkIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, NetworkIcon, Save } from "lucide-react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
@@ -11,25 +14,29 @@ import Rating from "@/components/shared/rating.component";
 import { Image } from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
 import { parseReviewText } from "@/lib/utils";
-import { Input } from "@/components/ui/input.component";
+import { RichTextEditor } from "@/components/shared/editor.component";
+import { ImageUploader } from "@/components/shared/uploader.component";
+import { useUserStore } from "@/store/user.store";
+import { GameReview } from "@/types/games";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
 
 function EditReview({ id }: { id: string }) {
   const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
 
-  const [internalValue, setInternalValue] = useState("");
+  const [reviewText, setReviewText] = useState("");
+  const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["libraryReview", id],
     queryFn: async () => {
       const game = await gameApi.getReview(String(id));
-      const user = await userApi.getUserById(String(game.user.id));
-
-      if (game.review.comment) setInternalValue(game.review.comment);
-
-      return { game, user };
+      const userData = await userApi.getUserById(String(game.user.id));
+      return { game, user: userData };
     },
   });
 
@@ -54,13 +61,90 @@ function EditReview({ id }: { id: string }) {
       />
     );
 
+  const existingReview = data.game.review;
+  const existingImageUrl = data.game.image
+    ? `${image.game}${data.game.id}/${data.game.image}`
+    : "";
+
+  if (reviewText === "" && existingReview?.comment) {
+    setReviewText(existingReview.comment);
+  }
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
+    try {
+      const review: GameReview = {
+        rating,
+        comment: reviewText,
+        votes: existingReview?.votes || [],
+      };
+
+      await gameApi.saveReview(
+        { id: user.id!, username: user.username },
+        id,
+        review,
+        imageFile ?? undefined,
+      );
+
+      invalidateQuery();
+    } catch (error) {
+      console.error("Failed to save review:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <main>
-      <Input
-        type="text"
-        value={internalValue}
-        onChange={(e) => setInternalValue(e.target.value)}
-      />
+    <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-10">
+      <div className="flex flex-col gap-2">
+        <span className="text-lg font-bold text-text">Оценка</span>
+        <Rating
+          value={rating}
+          onChange={setRating}
+          className="[&>div]:cursor-pointer"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-lg font-bold text-text">Изображение</span>
+        <ImageUploader
+          value={imageFile}
+          onChange={setImageFile}
+          existingImageUrl={existingImageUrl}
+          className="w-full max-w-md"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-lg font-bold text-text">Отзыв</span>
+        <RichTextEditor
+          value={reviewText}
+          onChange={setReviewText}
+          className="flex-1"
+          placeholder="Напишите ваш отзыв об игре..."
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          variant="success"
+          size="lg"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="min-w-32"
+        >
+          {isSaving ? (
+            <SmallLoader className="size-5 animate-spin" />
+          ) : (
+            <>
+              <Save className="size-5" />
+              Сохранить
+            </>
+          )}
+        </Button>
+      </div>
     </main>
   );
 }
@@ -191,7 +275,7 @@ function ReviewLibrary({ id }: { id: string }) {
           </Button>
         </div>
       </section>
-      <section className="flex flex-col w-full h-full">
+      <section className="flex flex-col w-full h-full pb-10">
         <div className="flex flex-row items-center justify-between w-full p-2 min-h-10 h-10 border-b-2 border-highlight-high">
           <span className="font-bold text-xl max-w-70 text-center truncate">
             {data.game.data.name}
@@ -270,7 +354,7 @@ function ReviewLibrary({ id }: { id: string }) {
                         return (
                           <div
                             key={`html-${part.slice(0, 20)}-${index}`}
-                            className="prose prose-sm sm:prose-base max-w-none dark:prose-invert **:text-muted"
+                            className="prose prose-sm sm:prose-base max-w-none dark:prose-invert"
                             dangerouslySetInnerHTML={{ __html: part }}
                           />
                         );
@@ -283,7 +367,7 @@ function ReviewLibrary({ id }: { id: string }) {
 
               return (
                 <div
-                  className="prose prose-sm sm:prose-base max-w-none dark:prose-invert **:text-muted"
+                  className="prose prose-sm sm:prose-base max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{ __html: reviewText }}
                 />
               );
@@ -303,7 +387,7 @@ function ReviewLibrary({ id }: { id: string }) {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                         loading="lazy"
-                        className="absolute inset-0  h-full w-full"
+                        className="absolute inset-0 h-full w-full"
                       />
                     </div>
                   </div>

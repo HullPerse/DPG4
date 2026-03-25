@@ -14,7 +14,7 @@ const gameApi = new GameApi();
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data: _presetsData, isLoading, isError, refetch } = useQuery({
     queryKey: ["presets"],
     queryFn: async () => {
       return await gameApi.getPresets();

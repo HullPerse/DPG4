@@ -61,6 +61,25 @@ export default class GameApi {
     });
   };
 
+  saveReview = async (
+    user: { id: string; username: string },
+    id: string,
+    review: GameReview,
+    image?: File,
+  ) => {
+    return await this.gamesCollection.update(id, {
+      review: {
+        rating: review.rating,
+        comment: review.comment,
+        votes: [
+          ...(review.votes ?? []),
+          { user: user.id, score: review.rating },
+        ],
+      },
+      image: image,
+    });
+  };
+
   voteReview = async (
     gameId: string,
     user: { id: string; username: string },

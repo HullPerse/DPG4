@@ -265,7 +265,11 @@ function Window(props: WindowProps) {
       }}
       key={props.id}
       data-window="true"
-      style={windowStyle}
+      style={{
+        ...windowStyle,
+        display: "grid",
+        gridTemplateRows: "auto 1fr",
+      }}
       className="absolute overflow-hidden rounded bg-card text-text transition-none"
       hidden={props.isMinimized}
       onClick={(e) => {
@@ -322,10 +326,7 @@ function Window(props: WindowProps) {
       </section>
 
       {/* Body */}
-      <section
-        className={`flex w-full ${props.overflow ? "overflow-y-auto" : ""}`}
-        style={{ height: "calc(100% - 3rem)" }}
-      >
+      <section className={`flex w-full flex-1 min-h-0 flex-col`}>
         <Suspense fallback={<WindowLoader />}>
           {isRefreshing ? <WindowLoader /> : getChildren()}
         </Suspense>
