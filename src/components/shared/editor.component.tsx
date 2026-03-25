@@ -5,46 +5,99 @@ import {
   Underline,
   Strikethrough,
   Quote,
-  Undo,
-  Redo,
   Heading1,
   Heading2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
 
-const toolbarButtons: {
+type Command = {
   icon: React.ReactNode;
-  command: string;
-  value?: string;
+  action: (selection: Selection) => void;
   ariaLabel: string;
-}[] = [
-  { icon: <Undo />, command: "undo", ariaLabel: "Отменить" },
-  { icon: <Redo />, command: "redo", ariaLabel: "Повторить" },
-  { icon: <Bold />, command: "bold", ariaLabel: "Жирный" },
-  { icon: <Italic />, command: "italic", ariaLabel: "Курсив" },
-  { icon: <Underline />, command: "underline", ariaLabel: "Подчёркнутый" },
+};
+
+const createFormatAction = (tag: string): ((selection: Selection) => void) => {
+  return (selection: Selection) => {
+    if (!selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    const wrapper = document.createElement(tag);
+
+    try {
+      range.surroundContents(wrapper);
+    } catch {
+      const fragment = range.extractContents();
+      wrapper.appendChild(fragment);
+      range.insertNode(wrapper);
+    }
+
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(wrapper);
+    selection.addRange(newRange);
+  };
+};
+
+const createBlockAction = (tag: string): ((selection: Selection) => void) => {
+  return (selection: Selection) => {
+    if (!selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    let block = range.commonAncestorContainer.parentElement;
+
+    while (block && block.parentElement !== document.body) {
+      if (block.tagName === "DIV" || block.tagName === "P") break;
+      block = block.parentElement;
+    }
+
+    if (block) {
+      const newBlock = document.createElement(tag);
+      const fragment = range.extractContents();
+      newBlock.appendChild(fragment);
+      block.parentNode?.replaceChild(newBlock, block);
+
+      const newRange = document.createRange();
+      newRange.selectNodeContents(newBlock);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }
+  };
+};
+
+const toolbarButtons: Command[] = [
+  {
+    icon: <Bold />,
+    action: createFormatAction("strong"),
+    ariaLabel: "Жирный",
+  },
+  {
+    icon: <Italic />,
+    action: createFormatAction("em"),
+    ariaLabel: "Курсив",
+  },
+  {
+    icon: <Underline />,
+    action: createFormatAction("u"),
+    ariaLabel: "Подчёркнутый",
+  },
   {
     icon: <Strikethrough />,
-    command: "strikeThrough",
+    action: createFormatAction("s"),
     ariaLabel: "Зачёркнутый",
   },
   {
     icon: <Heading1 />,
-    command: "formatBlock",
-    value: "h2",
+    action: createBlockAction("h2"),
     ariaLabel: "Заголовок 1",
   },
   {
     icon: <Heading2 />,
-    command: "formatBlock",
-    value: "h3",
+    action: createBlockAction("h3"),
     ariaLabel: "Заголовок 2",
   },
   {
     icon: <Quote />,
-    command: "formatBlock",
-    value: "blockquote",
+    action: createBlockAction("blockquote"),
     ariaLabel: "Цитата",
   },
 ];
@@ -61,6 +114,7 @@ export function RichTextEditor({
   placeholder?: string;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
@@ -69,10 +123,13 @@ export function RichTextEditor({
     }
   }, [value]);
 
-  const execCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-    handleInput();
+  const handleAction = useCallback((command: Command) => {
+    const selection = window.getSelection();
+    if (selection) {
+      command.action(selection);
+      handleInput();
+      editorRef.current?.focus();
+    }
   }, []);
 
   const handleInput = useCallback(() => {
@@ -81,18 +138,42 @@ export function RichTextEditor({
     }
   }, [onChange]);
 
-  const handlePaste = useCallback((e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const text = e.clipboardData.getData("text/plain");
-    document.execCommand("insertText", false, text);
-  }, []);
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !editorRef.current) return;
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      document.execCommand("insertText", false, "    ");
-    }
-  }, []);
+      if (!file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = document.createElement("img");
+        img.src = reader.result as string;
+        img.className = "max-w-full h-auto my-2 rounded";
+        img.style.maxWidth = "100%";
+
+        const selection = window.getSelection();
+        if (selection?.rangeCount) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(img);
+
+          const newRange = document.createRange();
+          newRange.setStartAfter(img);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        } else if (editorRef.current) {
+          editorRef.current.appendChild(img);
+        }
+
+        handleInput();
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    },
+    [handleInput],
+  );
 
   return (
     <div
@@ -109,13 +190,30 @@ export function RichTextEditor({
             variant="ghost"
             size="icon"
             className="size-8 opacity-70 hover:opacity-100"
-            onClick={() => execCommand(btn.command, btn.value)}
+            onClick={() => handleAction(btn)}
             title={btn.ariaLabel}
             type="button"
           >
             {btn.icon}
           </Button>
         ))}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 opacity-70 hover:opacity-100"
+          onClick={() => fileInputRef.current?.click()}
+          title="Добавить изображение"
+          type="button"
+        >
+          <ImageIcon />
+        </Button>
       </div>
       <div
         ref={editorRef}
@@ -134,8 +232,6 @@ export function RichTextEditor({
         onInput={handleInput}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        onPaste={handlePaste}
-        onKeyDown={handleKeyDown}
         suppressContentEditableWarning
       />
     </div>

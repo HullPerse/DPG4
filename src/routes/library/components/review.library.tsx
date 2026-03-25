@@ -8,7 +8,7 @@ import { ChevronDown, ChevronUp, NetworkIcon, Save } from "lucide-react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 import Rating from "@/components/shared/rating.component";
 import { Image } from "@/components/shared/image.component";
@@ -22,13 +22,20 @@ import { GameReview } from "@/types/games";
 const gameApi = new GameApi();
 const userApi = new UserApi();
 
-function EditReview({ id }: { id: string }) {
+function EditReview({
+  id,
+  setContent,
+}: {
+  id: string;
+  setContent: (value: "general" | "review" | "editGame") => void;
+}) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [showExistingImage, setShowExistingImage] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
@@ -36,6 +43,7 @@ function EditReview({ id }: { id: string }) {
     queryFn: async () => {
       const game = await gameApi.getReview(String(id));
       const userData = await userApi.getUserById(String(game.user.id));
+
       return { game, user: userData };
     },
   });
@@ -51,6 +59,19 @@ function EditReview({ id }: { id: string }) {
 
   useSubscription("games", "*", invalidateQuery);
 
+  useEffect(() => {
+    const existingReview = data?.game.review;
+
+    if (reviewText === "" && existingReview?.comment) {
+      setReviewText(existingReview.comment);
+    }
+
+    const existingRating = existingReview?.rating;
+    if (existingRating) {
+      setRating(existingRating as 1 | 2 | 3 | 4 | 5);
+    }
+  }, [data, reviewText, setReviewText, setRating]);
+
   if (isLoading || !data) return <WindowLoader />;
   if (isError)
     return (
@@ -61,15 +82,6 @@ function EditReview({ id }: { id: string }) {
       />
     );
 
-  const existingReview = data.game.review;
-  const existingImageUrl = data.game.image
-    ? `${image.game}${data.game.id}/${data.game.image}`
-    : "";
-
-  if (reviewText === "" && existingReview?.comment) {
-    setReviewText(existingReview.comment);
-  }
-
   const handleSave = async () => {
     if (!user) return;
 
@@ -78,14 +90,19 @@ function EditReview({ id }: { id: string }) {
       const review: GameReview = {
         rating,
         comment: reviewText,
-        votes: existingReview?.votes || [],
+        votes: data?.game.review?.votes || [],
       };
+
+      let imageToSave: File | null | undefined = imageFile;
+      if (!imageFile && !showExistingImage && data?.game.image) {
+        imageToSave = null;
+      }
 
       await gameApi.saveReview(
         { id: user.id!, username: user.username },
         id,
         review,
-        imageFile ?? undefined,
+        imageToSave,
       );
 
       invalidateQuery();
@@ -93,6 +110,7 @@ function EditReview({ id }: { id: string }) {
       console.error("Failed to save review:", error);
     } finally {
       setIsSaving(false);
+      setContent("general");
     }
   };
 
@@ -112,7 +130,13 @@ function EditReview({ id }: { id: string }) {
         <ImageUploader
           value={imageFile}
           onChange={setImageFile}
-          existingImageUrl={existingImageUrl}
+          existingImageUrl={
+            data?.game.image
+              ? `${image.game}${data.game.id}/${data.game.image}`
+              : ""
+          }
+          showExisting={showExistingImage}
+          onRemoveExisting={() => setShowExistingImage(false)}
           className="w-full max-w-md"
         />
       </div>
@@ -196,7 +220,7 @@ function ReviewLibrary({ id }: { id: string }) {
   const reviewParts = reviewText ? parseReviewText(reviewText) : [];
 
   return (
-    <main className="flex h-full w-full flex-row rounded border-2 border-highlight-high">
+    <main className="flex h-fit w-full flex-row rounded border-2 border-highlight-high">
       <section className="flex h-full w-25 flex-col items-center border-r-2 border-highlight-high p-1">
         <div className="flex size-20 items-center justify-center rounded border-2 border-highlight-high">
           <div className=" flex h-full w-full items-center justify-center pb-2 text-4xl">
@@ -335,7 +359,7 @@ function ReviewLibrary({ id }: { id: string }) {
                         return (
                           <div key={`youtube-${videoId}-${index.toString()}`}>
                             <div
-                              className="relative aspect-video rounded border border-highlight-high"
+                              className="relative aspect-video rounded border border-highlight-high overflow-hidden"
                               style={{ minWidth: "260px" }}
                             >
                               <iframe

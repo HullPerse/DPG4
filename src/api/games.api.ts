@@ -65,7 +65,7 @@ export default class GameApi {
     user: { id: string; username: string },
     id: string,
     review: GameReview,
-    image?: File,
+    image?: File | null,
   ) => {
     return await this.gamesCollection.update(id, {
       review: {

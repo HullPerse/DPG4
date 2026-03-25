@@ -1,7 +1,14 @@
 import { Image } from "@/components/shared/image.component";
 import { Game } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { memo, startTransition, useCallback, useMemo, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import GameApi from "@/api/games.api";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -53,12 +60,18 @@ function GameLibrary({ id }: { id: string }) {
 
   useSubscription("games", "*", invalidateQuery);
 
+  useEffect(() => {
+    if (id) {
+      setContent("general");
+    }
+  }, [id]);
+
   const contentComponent = useMemo(() => {
     if (!id) return null;
 
     const componentMap = {
       editGame: <SettingsLibrary />,
-      review: <EditReview id={id} />,
+      review: <EditReview id={id} setContent={setContent} />,
       general: <ReviewLibrary id={id} />,
     };
 

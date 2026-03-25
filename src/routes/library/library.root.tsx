@@ -18,7 +18,7 @@ export default function Library() {
   return (
     <main className="flex h-full w-full flex-col">
       {/* header */}
-      <section className="flex h-12 items-center justify-between border-b border-highlight-medium bg-highlight-low px-4">
+      <section className="flex h-12 min-h-12 items-center justify-between border-b border-highlight-medium bg-highlight-low px-4">
         <div className="flex flex-row gap-1">
           {libraryTabs.map((item) => (
             <Button

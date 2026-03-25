@@ -8,6 +8,8 @@ interface ImageUploaderProps {
   value: File | null;
   onChange: (file: File | null) => void;
   existingImageUrl?: string;
+  showExisting?: boolean;
+  onRemoveExisting?: () => void;
   className?: string;
 }
 
@@ -15,6 +17,8 @@ export function ImageUploader({
   value,
   onChange,
   existingImageUrl,
+  showExisting = true,
+  onRemoveExisting,
   className,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +87,11 @@ export function ImageUploader({
     [processFile],
   );
 
-  const previewUrl = value ? URL.createObjectURL(value) : existingImageUrl;
+  const previewUrl = value
+    ? URL.createObjectURL(value)
+    : showExisting && existingImageUrl
+      ? existingImageUrl
+      : undefined;
 
   return (
     <div
@@ -114,6 +122,7 @@ export function ImageUploader({
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(null);
+                onRemoveExisting?.();
               }}
               type="button"
             >
