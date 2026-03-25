@@ -5,17 +5,64 @@ import { ChevronDown, ChevronUp, NetworkIcon } from "lucide-react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
-import { startTransition, useCallback } from "react";
+import { startTransition, useCallback, useState } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 import Rating from "@/components/shared/rating.component";
 import { Image } from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
+import { parseReviewText } from "@/lib/utils";
+import { Input } from "@/components/ui/input.component";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
 
-function EditReview() {
-  return <main> edit review </main>;
+function EditReview({ id }: { id: string }) {
+  const queryClient = useQueryClient();
+
+  const [internalValue, setInternalValue] = useState("");
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["libraryReview", id],
+    queryFn: async () => {
+      const game = await gameApi.getReview(String(id));
+      const user = await userApi.getUserById(String(game.user.id));
+
+      if (game.review.comment) setInternalValue(game.review.comment);
+
+      return { game, user };
+    },
+  });
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["libraryReview", id],
+        refetchType: "all",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("games", "*", invalidateQuery);
+
+  if (isLoading || !data) return <WindowLoader />;
+  if (isError)
+    return (
+      <WindowError
+        error={new Error("Произошла ошибка при загрузке отзыва")}
+        icon={<NetworkIcon />}
+        className="relative"
+      />
+    );
+
+  return (
+    <main>
+      <Input
+        type="text"
+        value={internalValue}
+        onChange={(e) => setInternalValue(e.target.value)}
+      />
+    </main>
+  );
 }
 
 function ReviewLibrary({ id }: { id: string }) {
@@ -60,6 +107,9 @@ function ReviewLibrary({ id }: { id: string }) {
 
   const totalScore =
     data?.game.review?.votes?.reduce((a, b) => a + b.score, 0) ?? 0;
+
+  const reviewText = data.game.review?.comment;
+  const reviewParts = reviewText ? parseReviewText(reviewText) : [];
 
   return (
     <main className="flex h-full w-full flex-row rounded border-2 border-highlight-high">
@@ -141,8 +191,8 @@ function ReviewLibrary({ id }: { id: string }) {
           </Button>
         </div>
       </section>
-      <section className="flex flex-col w-full">
-        <div className="flex flex-row items-center justify-between w-full p-2 min-h-10 h-10 border-b-2 border-highlight-high overflow-hidden">
+      <section className="flex flex-col w-full h-full">
+        <div className="flex flex-row items-center justify-between w-full p-2 min-h-10 h-10 border-b-2 border-highlight-high">
           <span className="font-bold text-xl max-w-70 text-center truncate">
             {data.game.data.name}
           </span>
@@ -151,22 +201,133 @@ function ReviewLibrary({ id }: { id: string }) {
             readOnly
           />
         </div>
-        <div className="flex flex-col w-full p-1 font-bold overflow-y-auto gap-2 h-fit">
-          {data?.game.review?.comment}
-        </div>
+        <div className="flex flex-col w-full h-full p-1 font-bold gap-2 overflow-y-auto">
+          {(() => {
+            const isHTML = /<[a-z][\s\S]*>/i.test(reviewText);
 
-        {data.game.image && (
-          <div className="flex items-center justify-center p-2">
-            <div className="relative w-64 h-120 overflow-hidden rounded-lg border border-highlight-high bg-muted">
+            if (isHTML) {
+              const youtubeLinks = reviewParts.filter(
+                (p) => p.type === "youtube" && p.videoId,
+              );
+
+              if (youtubeLinks.length > 0) {
+                let processedHTML = reviewText;
+                const placeholders: Array<{
+                  placeholder: string;
+                  videoId: string;
+                }> = [];
+
+                for (const [idx, link] of youtubeLinks.entries()) {
+                  const placeholder = `__YOUTUBE_PLACEHOLDER_${idx}__`;
+                  placeholders.push({
+                    placeholder,
+                    videoId: link.videoId || "",
+                  });
+                  const escapedUrl = link.content.replace(
+                    /[.*+?^${}()|[\]\\]/g,
+                    String.raw`\$&`,
+                  );
+                  processedHTML = processedHTML.replace(
+                    new RegExp(escapedUrl, "g"),
+                    placeholder,
+                  );
+                }
+
+                const parts = processedHTML.split(
+                  /(__YOUTUBE_PLACEHOLDER_\d+__)/,
+                );
+
+                return (
+                  <>
+                    {parts.map((part: string, index: number) => {
+                      const placeholderMatch =
+                        /^__YOUTUBE_PLACEHOLDER_(\d+)__$/.exec(part);
+                      if (placeholderMatch) {
+                        const placeholderIdx = Number.parseInt(
+                          placeholderMatch[1],
+                          10,
+                        );
+                        const { videoId } = placeholders[placeholderIdx];
+                        return (
+                          <div key={`youtube-${videoId}-${index.toString()}`}>
+                            <div
+                              className="relative aspect-video rounded border border-highlight-high"
+                              style={{ minWidth: "260px" }}
+                            >
+                              <iframe
+                                src={`https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0`}
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                loading="lazy"
+                                className="absolute inset-0 w-full h-full"
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (part.trim()) {
+                        return (
+                          <div
+                            key={`html-${part.slice(0, 20)}-${index}`}
+                            className="prose prose-sm sm:prose-base max-w-none dark:prose-invert **:text-muted"
+                            dangerouslySetInnerHTML={{ __html: part }}
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                  </>
+                );
+              }
+
+              return (
+                <div
+                  className="prose prose-sm sm:prose-base max-w-none dark:prose-invert **:text-muted"
+                  dangerouslySetInnerHTML={{ __html: reviewText }}
+                />
+              );
+            }
+
+            return reviewParts.map((part, index) => {
+              if (part.type === "youtube" && part.videoId) {
+                return (
+                  <div key={index.toString()}>
+                    <div
+                      className="relative w-fit aspect-video rounded border border-highlight-high"
+                      style={{ minWidth: "260px" }}
+                    >
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${part.videoId}?modestbranding=1&rel=0`}
+                        title="YouTube video player"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                        className="absolute inset-0  h-full w-full"
+                      />
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <span key={index.toString()} className="whitespace-pre-wrap">
+                  {part.content}
+                </span>
+              );
+            });
+          })()}
+
+          {data.game.image && (
+            <div className="relative w-full flex h-full min-h-32 rounded border border-highlight-high bg-background">
               <Image
                 src={`${image.game}${data.game.id}/${data.game.image}`}
                 alt={data.game.data.name}
-                className="w-full h-full object-cover"
                 loading="lazy"
+                type="contain"
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </main>
   );

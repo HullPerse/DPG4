@@ -49,7 +49,7 @@ function LibraryTab() {
   useSubscription("users", "*", invalidateQuery);
 
   useEffect(() => {
-    if (data) {
+    if (data && data.length > 0) {
       return setCurrentGame(data[data.length - 1]?.id as string);
     }
   }, [data]);
@@ -89,35 +89,45 @@ function LibraryTab() {
           <Plus />
         </Button>
         <div className="flex h-full flex-col gap-1 overflow-y-auto">
-          {data
-            ?.filter((game) =>
-              game.data.name.toUpperCase().includes(searchTerm.toUpperCase()),
-            )
-            .sort((a, b) => (a.createdAt! > b.createdAt! ? 1 : -1))
-            .map((game) => (
-              <div key={game.id} className="flex w-full flex-col">
-                <Button
-                  variant="link"
-                  className="relative border border-text text-text disabled:opacity-45"
-                  disabled={currentGame === game.id}
-                  onClick={() => setCurrentGame(game.id as string)}
-                >
-                  <span
-                    className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
-                    style={{ backgroundColor: getStatusColor(game.status) }}
-                  >
-                    {currentGame === game.id && (
-                      <ChevronRight className="mr-8" />
-                    )}
-                  </span>
+          {data?.length && data?.length > 0
+            ? data
+                ?.filter((game) =>
+                  game.data.name
+                    .toUpperCase()
+                    .includes(searchTerm.toUpperCase()),
+                )
+                .sort((a, b) => (a.createdAt! > b.createdAt! ? 1 : -1))
+                .map((game) => (
+                  <div key={game.id} className="flex w-full flex-col">
+                    <Button
+                      variant="link"
+                      className="relative border border-text text-text disabled:opacity-45"
+                      disabled={currentGame === game.id}
+                      onClick={() => setCurrentGame(game.id as string)}
+                    >
+                      <span
+                        className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
+                        style={{ backgroundColor: getStatusColor(game.status) }}
+                      >
+                        {currentGame === game.id && (
+                          <ChevronRight className="mr-8" />
+                        )}
+                      </span>
 
-                  {game.data.name}
-                </Button>
-              </div>
-            ))}
+                      {game.data.name}
+                    </Button>
+                  </div>
+                ))
+            : null}
         </div>
       </section>
-      <section className="flex w-full h-full">{getComponent}</section>
+      <section className="flex w-full">
+        {currentGame === "newGame"
+          ? getComponent
+          : data?.length && data?.length > 0
+            ? getComponent
+            : null}
+      </section>
     </main>
   );
 }

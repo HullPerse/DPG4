@@ -8,6 +8,7 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   width?: number;
   height?: number;
   quality?: number;
+  type?: "cover" | "contain";
 }
 
 const ImageComponent = ({
@@ -16,6 +17,7 @@ const ImageComponent = ({
   className,
   width,
   height,
+  type = "cover",
   quality = 80,
   ...props
 }: ImageProps) => {
@@ -78,7 +80,8 @@ const ImageComponent = ({
           width={width}
           height={height}
           className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+            "absolute inset-0 h-full w-full transition-opacity duration-300",
+            type === "cover" ? "object-cover" : "object-contain",
             isLoaded ? "opacity-100" : "opacity-0",
           )}
           loading="lazy"

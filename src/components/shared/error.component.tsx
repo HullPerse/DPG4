@@ -52,7 +52,7 @@ export function WindowError({
   return (
     <main
       className={cn(
-        "absolute flex h-full w-full flex-col items-center justify-center gap-4 bg-card px-2 font-extrabold text-text",
+        " flex h-full w-full flex-col items-center justify-center gap-4 bg-card px-2 font-extrabold text-text",
         className,
       )}
     >

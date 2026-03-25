@@ -13,7 +13,7 @@ export function WindowLoader({ className }: { className?: string }) {
   return (
     <main
       className={cn(
-        "absolute flex h-full w-full flex-col items-center justify-center bg-card pb-12 font-extrabold text-text",
+        "flex h-full w-full flex-col items-center justify-center bg-card font-extrabold text-text",
         className,
       )}
     >

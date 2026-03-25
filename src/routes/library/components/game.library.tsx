@@ -1,20 +1,34 @@
 import { Image } from "@/components/shared/image.component";
 import { Game } from "@/types/games";
-import { useQuery } from "@tanstack/react-query";
-import { memo, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { memo, startTransition, useCallback, useMemo, useState } from "react";
 
 import GameApi from "@/api/games.api";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import { NetworkIcon, NotebookPen, Settings, Trash, X } from "lucide-react";
+import {
+  Clock,
+  ExternalLink,
+  NetworkIcon,
+  NotebookPen,
+  RussianRuble,
+  Settings,
+  Trash,
+  X,
+} from "lucide-react";
 
 import { getStatusColor } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import SettingsLibrary from "./settings.library";
 import { EditReview, ReviewLibrary } from "./review.library";
+import { useSubscription } from "@/hooks/subscription.hook";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import SteamSvg from "@/components/svg/steam.component";
 const gameApi = new GameApi();
 
 function GameLibrary({ id }: { id: string }) {
+  const queryClient = useQueryClient();
+
   const [content, setContent] = useState<"general" | "review" | "editGame">(
     "general",
   );
@@ -28,12 +42,23 @@ function GameLibrary({ id }: { id: string }) {
     queryFn: async (): Promise<Game> => await gameApi.getGameInfo(id),
   });
 
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["game", id],
+        refetchType: "all",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("games", "*", invalidateQuery);
+
   const contentComponent = useMemo(() => {
     if (!id) return null;
 
     const componentMap = {
       editGame: <SettingsLibrary />,
-      review: <EditReview />,
+      review: <EditReview id={id} />,
       general: <ReviewLibrary id={id} />,
     };
 
@@ -100,6 +125,53 @@ function GameLibrary({ id }: { id: string }) {
             </Button>
           </div>
           <div className="relative flex h-12 w-full flex-row items-center border-y-2 border-highlight-high bg-background">
+            <div className="flex flex-row gap-4 ml-42 w-full">
+              <div className="flex flex-row items-center gap-2 min-w-fit max-w-64 line-clamp-1">
+                <Clock className="w-4 h-4" />
+                <div className="flex flex-col">
+                  <span className="font-bold text-center">Время:</span>
+                  <span>
+                    {game?.playtime.user && (
+                      <span>{game?.playtime.user} ч. / </span>
+                    )}
+                    {game?.playtime.hltb} ч.
+                  </span>
+                </div>
+              </div>
+              {game?.score && Number(game.score) > 0 && (
+                <div className="flex flex-row items-center gap-2 min-w-fit max-w-64 line-clamp-1">
+                  <RussianRuble className="w-4 h-4" />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-center">Чубрики:</span>
+                    <span>{game.score}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-row w-full ml-auto gap-2 items-center justify-end">
+                {game?.data.websiteLink && (
+                  <Button
+                    variant="ghost"
+                    title="Перейти на сайт"
+                    className="items-center justify-center w-10 h-10 border rounded self-center"
+                    onClick={() => openUrl(game?.data.websiteLink)}
+                  >
+                    <ExternalLink />
+                  </Button>
+                )}
+
+                {game?.data.steamLink && (
+                  <Button
+                    variant="ghost"
+                    title="Перейти в Steam"
+                    className="items-center justify-center w-10 h-10 border rounded self-center"
+                    onClick={() => openUrl(game?.data.steamLink)}
+                  >
+                    <SteamSvg className="size-6" />
+                  </Button>
+                )}
+              </div>
+            </div>
             <div className="absolute bottom-4.5 left-2 h-52 w-36 overflow-hidden rounded border-2 border-highlight-high bg-background">
               <Image
                 src={game?.data.image ?? ""}
@@ -117,7 +189,7 @@ function GameLibrary({ id }: { id: string }) {
           </div>
         </div>
       </section>
-      <section className="relative flex h-full w-full flex-col p-2">
+      <section className="relative flex h-full w-full flex-col p-2 overflow-y-auto">
         {content !== "general" && (
           <Button
             variant="ghost"
