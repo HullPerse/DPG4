@@ -13,11 +13,11 @@ export default class GameApi {
     if (!id) return;
 
     const targetURL =
-      "https://cors-anywhere.com/" +
+      "https://corsproxy.io/" +
       `https://store.steampowered.com/api/appdetails?appids=${id}`;
 
     try {
-      const res = await fetch(targetURL);
+      const res = await fetch(targetURL, {});
       if (!res.ok) return;
 
       const json = await res.json();
