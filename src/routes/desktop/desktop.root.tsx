@@ -71,7 +71,7 @@ export default function Desktop({
         {openLanguage && <FontDesktop />}
       </section>
 
-      <section className="flex h-14 w-full flex-row items-center justify-between border-t-2 border-t-highlight-high bg-card">
+      <section className="flex h-14 w-full flex-row items-center justify-between border-t-2 border-t-iris bg-background">
         <div className="flex h-full w-full flex-row items-center gap-2 overflow-x-auto px-2">
           {[...activeApps]
             .sort((a, b) => {
@@ -93,7 +93,7 @@ export default function Desktop({
               />
             ))}
         </div>
-        <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
+        <div className="flex h-full flex-row items-center gap-2 border-l-2 border-iris pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* NETWORK */}
             <HoverCard>
@@ -107,7 +107,7 @@ export default function Desktop({
 
             {/* WALLAPAPER */}
             <Image
-              className="h-4 w-4 cursor-pointer hover:text-text"
+              className="h-4 w-4 cursor-pointer hover:text-iris"
               onClick={() =>
                 setActiveApps(
                   createWindow(
@@ -121,7 +121,7 @@ export default function Desktop({
 
             {/* LANGUAGE */}
             <Languages
-              className="h-4 w-4 cursor-pointer hover:text-text"
+              className="h-4 w-4 cursor-pointer hover:text-iris"
               onClick={() => {
                 setOpenLanguage(!openLanguage);
               }}
@@ -129,7 +129,7 @@ export default function Desktop({
 
             {/* SIGNOUT */}
             <DoorOpen
-              className="h-4 w-4 cursor-pointer hover:text-text"
+              className="h-4 w-4 cursor-pointer hover:text-iris"
               onClick={() => {
                 setLoggedIn(false);
               }}

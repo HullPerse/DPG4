@@ -19,12 +19,12 @@ export default function Library() {
     <main className="flex h-full w-full flex-col">
       {/* header */}
       <section className="flex h-12 min-h-12 items-center justify-between border-b border-highlight-medium bg-highlight-low px-4">
-        <div className="flex flex-row gap-1">
+        <div className="flex flex-row gap-2">
           {libraryTabs.map((item) => (
             <Button
               key={item.value}
               variant="link"
-              className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
+              className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 shadow-sharp-sm border"
               disabled={tab === item.value}
               onClick={() => setTab(item.value as LibraryTabs)}
             >

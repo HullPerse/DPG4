@@ -76,7 +76,10 @@ export const WINDOWS = [
     id: "tabletop",
     title: "Подвал",
     icon: <Dices className="size-7" />,
+    overflow: true,
     size: {
+      minWidth: 840,
+      minHeight: 680,
       width: 840,
       height: 680,
     },
@@ -85,7 +88,6 @@ export const WINDOWS = [
     id: "library",
     title: "Библиотека",
     icon: <LibraryBig className="size-7" />,
-    overflow: true,
     size: {
       minWidth: 840,
       minHeight: 680,

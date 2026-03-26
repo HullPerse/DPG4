@@ -29,5 +29,5 @@ export function SmallLoader({
   size?: number;
   className?: string;
 }) {
-  return <Box className={cn(`size- animate-spin${size || 4}`, className)} />;
+  return <Box className={cn(`size- animate-spin ${size || 4}`, className)} />;
 }

@@ -39,7 +39,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "text flex w-fit cursor-pointer items-center justify-between gap-1.5 rounded border-2 border-text bg-card px-3 py-2 text-base font-bold whitespace-nowrap transition-all duration-200 outline-none select-none focus:border-primary focus:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "text flex w-fit cursor-pointer items-center justify-between gap-1.5 border-2 border-iris bg-background px-3 py-2 text-base font-bold whitespace-nowrap transition-all duration-200 outline-none select-none focus:border-primary focus:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         "data-[size=default]:h-9 data-[size=sm]:h-8",
         className,
       )}
@@ -83,7 +83,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 relative isolate z-9999 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded bg-card text-text shadow-md ring-2 ring-highlight-high duration-100",
+            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 relative isolate z-9999 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto bg-background text-text border-2 border-iris shadow-sharp duration-100",
             className,
           )}
           {...props}

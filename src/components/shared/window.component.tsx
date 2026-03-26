@@ -241,9 +241,12 @@ function Window(props: WindowProps) {
       height: `${windowSize.height}px`,
       zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
       boxShadow:
-        props.isPinned || props.isActive ? "8px 8px 25px 0 black" : "none",
+        props.isPinned || props.isActive
+          ? "4px 4px 0 var(--color-highlight-low)"
+          : "",
       cursor: isDragging ? "grabbing" : "default",
       willChange: isDragging || isResizing ? "transform" : "auto",
+      border: "2px solid var(--color-iris)",
     }),
     [
       position.x,
@@ -270,7 +273,7 @@ function Window(props: WindowProps) {
         display: "grid",
         gridTemplateRows: "auto 1fr",
       }}
-      className="absolute overflow-hidden rounded bg-card text-text transition-none"
+      className="absolute overflow-hidden bg-card text-text transition-none border-2 border-iris"
       hidden={props.isMinimized}
       onClick={(e) => {
         const target = e.target as HTMLElement;
@@ -284,7 +287,7 @@ function Window(props: WindowProps) {
     >
       {/* Head */}
       <section
-        className="flex h-12 w-full flex-row items-center justify-between bg-highlight-high px-1 select-none"
+        className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-iris"
         onMouseDown={handleMouseDown}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >

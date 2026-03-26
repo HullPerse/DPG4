@@ -95,7 +95,7 @@ export default function Tabletop() {
     );
 
   return (
-    <main className="relative flex h-full w-full items-center justify-center overflow-clip bg-background">
+    <main className="relative flex h-full w-full items-center justify-center overflow-clip">
       {/* ADMIN TABLETOP TOOLS */}
       {showTools && (
         <ToolsTaletop

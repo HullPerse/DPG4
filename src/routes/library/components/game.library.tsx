@@ -161,7 +161,7 @@ function GameLibrary({ id }: { id: string }) {
                 </div>
               )}
 
-              <div className="flex flex-row w-full ml-auto gap-2 items-center justify-end">
+              <div className="flex flex-row w-full ml-auto gap-2 items-center justify-end mr-2">
                 {game?.data.websiteLink && (
                   <Button
                     variant="ghost"

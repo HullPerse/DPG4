@@ -136,6 +136,12 @@ export default class GameApi {
     return await this.gamesCollection.create(game);
   };
 
+  updateGame = async (game: Game): Promise<Game> => {
+    if (!game.id) throw new Error("Game ID is required for update");
+
+    return await this.gamesCollection.update(game.id, game);
+  };
+
   removeGame = async (id: string): Promise<void> => {
     await this.gamesCollection.delete(id);
   };

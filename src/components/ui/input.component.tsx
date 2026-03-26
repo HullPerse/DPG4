@@ -37,7 +37,7 @@ export function Input({
       <input
         ref={props.ref || inputRef}
         className={cn(
-          "border-border bg-input text flex h-11 w-full rounded border-2 px-4 py-2 text-base font-bold",
+          "border-iris bg-background text-text flex h-11 w-full border-2 px-4 py-2 text-base font-bold",
           "placeholder:font-normal placeholder:text-muted",
           "focus:border-primary focus:outline-none",
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",

@@ -82,7 +82,7 @@ function LibraryTab() {
 
         <Button
           variant="link"
-          className="border border-text text-text"
+          className="border border-text text-text active:translate-x-0 active:translate-y-0"
           onClick={() => setCurrentGame("newGame")}
           disabled={currentGame === "newGame"}
         >
@@ -101,7 +101,7 @@ function LibraryTab() {
                   <div key={game.id} className="flex w-full flex-col">
                     <Button
                       variant="link"
-                      className="relative border border-text text-text disabled:opacity-45"
+                      className="relative border border-text text-text disabled:opacity-45 active:translate-x-0 active:translate-y-0"
                       disabled={currentGame === game.id}
                       onClick={() => setCurrentGame(game.id as string)}
                     >
