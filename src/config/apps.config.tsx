@@ -45,6 +45,7 @@ export const WINDOWS = [
   {
     id: "auth",
     title: "Авторизация",
+    overflow: true,
     size: {
       width: 640,
       height: 480,

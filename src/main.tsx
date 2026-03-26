@@ -1,5 +1,5 @@
-import { startTransition, StrictMode } from "react";
-import "./index.css";
+import { StrictMode } from "react";
+import "@/index.css";
 
 import { router } from "@/routes/__root";
 import { RouterProvider } from "@tanstack/react-router";
@@ -19,13 +19,11 @@ await import("react-dom/client").then(async ({ createRoot }) => {
   await initializeAuthStore();
   await initializeFontStore();
 
-  startTransition(() => {
-    createRoot(rootElement).render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
-      </StrictMode>,
-    );
-  });
+  createRoot(rootElement).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>,
+  );
 });

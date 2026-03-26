@@ -326,7 +326,9 @@ function Window(props: WindowProps) {
       </section>
 
       {/* Body */}
-      <section className={`flex w-full flex-1 min-h-0 flex-col`}>
+      <section
+        className={`flex w-full flex-1 min-h-0 flex-col ${props.overflow ? "overflow-auto" : ""}`}
+      >
         <Suspense fallback={<WindowLoader />}>
           {isRefreshing ? <WindowLoader /> : getChildren()}
         </Suspense>
