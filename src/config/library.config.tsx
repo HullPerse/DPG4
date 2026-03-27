@@ -1,8 +1,20 @@
 import LibraryTab from "@/routes/library/tabs/library.tab";
 import PresetsTab from "@/routes/library/tabs/presets.tab";
+import { GameStatus } from "@/types/games";
+import { Ban, Check, Play, RefreshCcw } from "lucide-react";
 
 export const libraryTabs = [
   { value: "presets", label: "Пресеты", component: <PresetsTab /> },
   { value: "library", label: "Библиотека", component: <LibraryTab /> },
   { value: "community", label: "Сообщество", component: <></> },
+];
+
+export const gameButtons: {
+  value: GameStatus;
+  icon: React.ReactNode;
+}[] = [
+  { value: "COMPLETED", icon: <Check /> },
+  { value: "DROPPED", icon: <Ban /> },
+  { value: "REROLLED", icon: <RefreshCcw /> },
+  { value: "PLAYING", icon: <Play /> },
 ];

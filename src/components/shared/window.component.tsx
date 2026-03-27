@@ -241,9 +241,7 @@ function Window(props: WindowProps) {
       height: `${windowSize.height}px`,
       zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
       boxShadow:
-        props.isPinned || props.isActive
-          ? "4px 4px 0 var(--color-highlight-low)"
-          : "",
+        props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
       cursor: isDragging ? "grabbing" : "default",
       willChange: isDragging || isResizing ? "transform" : "auto",
       border: "2px solid var(--color-iris)",

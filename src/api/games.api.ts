@@ -1,4 +1,4 @@
-import { Preset, Game, GameReview } from "@/types/games";
+import { Preset, Game, GameReview, GameStatus } from "@/types/games";
 import { client } from "./client.api";
 import { User } from "@/types/user";
 
@@ -140,6 +140,23 @@ export default class GameApi {
     if (!game.id) throw new Error("Game ID is required for update");
 
     return await this.gamesCollection.update(game.id, game);
+  };
+
+  changeStatus = async (
+    id: string,
+    game: Game,
+    status: GameStatus,
+    time: number,
+    score: number,
+  ) => {
+    const newTime =
+      status === "COMPLETED" ? { ...game.playtime, user: time } : game.playtime;
+
+    return await this.gamesCollection.update(id, {
+      status: status,
+      playtime: newTime,
+      score: score,
+    });
   };
 
   removeGame = async (id: string): Promise<void> => {

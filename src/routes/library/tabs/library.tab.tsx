@@ -50,9 +50,11 @@ function LibraryTab() {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      return setCurrentGame(data[data.length - 1]?.id as string);
+      if (!currentGame) {
+        setCurrentGame(data[data.length - 1]?.id as string);
+      }
     }
-  }, [data]);
+  }, [data, currentGame]);
 
   const getComponent = useMemo(() => {
     if (currentGame === "newGame") return <NewGameLibrary />;

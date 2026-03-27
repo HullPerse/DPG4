@@ -15,7 +15,7 @@ import {
   minimizeWindow,
   refreshWindow,
 } from "./lib/window.utils";
-import Signpout from "./routes/desktop/components/signout.component";
+import Signpout from "./routes/auth/components/signout.component";
 import { selectionMouse } from "./lib/utils";
 
 function App() {

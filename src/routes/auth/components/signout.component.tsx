@@ -6,7 +6,7 @@ import { useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { TimeDisplay } from "./timer.desktop";
+import { TimeDisplay } from "../../desktop/components/timer.desktop";
 
 export default function Signpout() {
   const user = useUserStore((state) => state.user);
@@ -107,7 +107,7 @@ export default function Signpout() {
           </Button>
         </div>
         <Button
-          variant="ghost"
+          variant="link"
           className="text-xs font-bold text-text underline"
           onClick={() => {
             setLoggedIn(false);

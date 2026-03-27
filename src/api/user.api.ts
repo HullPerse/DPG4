@@ -48,4 +48,16 @@ export default class UserApi {
   moveUser = async (userId: string, newPosition: number) => {
     await this.usersCollection.update(userId, { position: newPosition });
   };
+
+  scoreUser = async (userId: string, score: number) => {
+    const currentScore = await this.usersCollection
+      .getOne(userId, {
+        fields: "money",
+      })
+      .then((res) => res.money);
+
+    return await this.usersCollection.update(userId, {
+      money: currentScore + score,
+    });
+  };
 }

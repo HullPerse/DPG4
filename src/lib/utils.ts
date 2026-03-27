@@ -8,11 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  *
- * @param realTime
- * @param hltbTime
- * @description this score calculation function will reward players to not speedrun games, but it also is an option to speedrun or not, since speedrunners will have a much sooner dice throw
+ * @param realTime time in hours user spent playing the game
+ * @param hltbTime time in hours from https://howlongtobeat.com
+ * @description this score calculation function will reward players to not speedrun games, but keeping an option to speedrun if user really wants to, since speedrunners will have a much sooner dice throw
  */
 export function calculateScore(realTime: number, hltbTime: number) {
+  if (isNaN(realTime) || isNaN(hltbTime)) return 0;
+
   const score = realTime * (1 + 0.2 * (1 - realTime / hltbTime));
   return Math.round(score);
 }
@@ -60,7 +62,7 @@ export function getStatusColor(status: GameStatus) {
     COMPLETED: "green",
     PLAYING: "yellow",
     DROPPED: "red",
-    REROLL: "cyan",
+    REROLLED: "blue",
   };
   return colorMap[status as keyof typeof colorMap] ?? "yellow";
 }

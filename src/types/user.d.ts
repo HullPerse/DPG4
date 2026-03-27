@@ -8,5 +8,6 @@ export interface User {
   color: string;
   isAdmin?: boolean;
   position: number;
+  money: number;
   currentAction: "MOVE" | "GAMEADD" | "GAMEFINISH";
 }
