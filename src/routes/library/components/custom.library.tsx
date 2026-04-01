@@ -37,7 +37,11 @@ const STATUSES = [
   },
 ];
 
-export default function CustomLibrary() {
+export default function CustomLibrary({
+  setCurrentGame,
+}: {
+  setCurrentGame: (gameId: string) => void;
+}) {
   const user = useUserStore((state) => state.user);
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
@@ -71,17 +75,15 @@ export default function CustomLibrary() {
       },
     };
 
-    try {
-      await gameApi.addGame(gameData as any);
-      setName("");
-      setHeaderImage("");
-      setTime("");
-      setStatus("В ПРОЦЕССЕ");
-    } catch (e) {
-      return console.log(e);
-    } finally {
-      setLoading(false);
-    }
+    await gameApi
+      .addGame(gameData as any)
+      .then((res) => setCurrentGame(String(res.id)))
+      .finally(() => {
+        setName("");
+        setHeaderImage("");
+        setTime("");
+        setStatus("В ПРОЦЕССЕ");
+      });
   }, [name, headerImage, time, status, gameApi]);
 
   return (

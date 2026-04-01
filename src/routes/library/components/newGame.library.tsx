@@ -3,12 +3,17 @@ import { useMemo, useState } from "react";
 import SteamLibrary from "./steam.library";
 import CustomLibrary from "./custom.library";
 
-export default function NewGameLibrary() {
+export default function NewGameLibrary({
+  setCurrentGame,
+}: {
+  setCurrentGame: (gameId: string) => void;
+}) {
   const [newType, setNewType] = useState<"game" | "custom">("game");
 
   const getComponent = useMemo(() => {
-    if (newType === "game") return <SteamLibrary />;
-    return <CustomLibrary />;
+    if (newType === "game")
+      return <SteamLibrary setCurrentGame={setCurrentGame} />;
+    return <CustomLibrary setCurrentGame={setCurrentGame} />;
   }, [newType]);
 
   return (

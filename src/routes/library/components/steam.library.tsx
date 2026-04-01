@@ -39,7 +39,11 @@ const STATUSES = [
   },
 ];
 
-export default function SteamLibrary() {
+export default function SteamLibrary({
+  setCurrentGame,
+}: {
+  setCurrentGame: (gameId: string) => void;
+}) {
   const user = useUserStore((state) => state.user);
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
@@ -75,13 +79,9 @@ export default function SteamLibrary() {
       },
     };
 
-    try {
-      await gameApi.addGame(gameData);
-    } catch (e) {
-      return console.log(e);
-    } finally {
-      setLoading(false);
-    }
+    await gameApi
+      .addGame(gameData)
+      .then((res) => setCurrentGame(String(res.id)));
   }, [game, time, appId, status]);
 
   return (

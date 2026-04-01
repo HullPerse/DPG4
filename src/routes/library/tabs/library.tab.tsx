@@ -56,10 +56,28 @@ function LibraryTab() {
     }
   }, [data, currentGame]);
 
+  const getNextGame = () => {
+    if (!data) return "newGame";
+
+    const currentIndex = data.findIndex((game) => game.id === currentGame);
+
+    if (currentIndex === -1 || currentIndex === data.length - 1) {
+      return data[0]?.id;
+    }
+    return data[currentIndex + 1]?.id;
+  };
+
   const getComponent = useMemo(() => {
-    if (currentGame === "newGame") return <NewGameLibrary />;
-    return <GameLibrary id={currentGame} />;
-  }, [currentGame]);
+    if (currentGame === "newGame")
+      return <NewGameLibrary setCurrentGame={setCurrentGame} />;
+
+    return (
+      <GameLibrary
+        id={currentGame}
+        switchGame={() => setCurrentGame(getNextGame() as string)}
+      />
+    );
+  }, [currentGame, data]);
 
   if (isLoading) return <WindowLoader />;
   if (isError)

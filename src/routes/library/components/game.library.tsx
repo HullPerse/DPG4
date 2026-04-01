@@ -46,7 +46,13 @@ import { User } from "@/types/user";
 const gameApi = new GameApi();
 const userApi = new UserApi();
 
-function GameLibrary({ id }: { id: string }) {
+function GameLibrary({
+  id,
+  switchGame,
+}: {
+  id: string;
+  switchGame: () => void;
+}) {
   const queryClient = useQueryClient();
 
   const [content, setContent] = useState<"general" | "review" | "editGame">(
@@ -273,7 +279,10 @@ function GameLibrary({ id }: { id: string }) {
             style={{
               boxShadow: "0px 4px 4px 2px rgba(0, 0, 0, 0.3)",
             }}
-            onClick={async () => await gameApi.removeGame(id)}
+            onClick={async () => {
+              await gameApi.removeGame(id);
+              switchGame();
+            }}
           >
             <Trash />
           </Button>
