@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-background text-iris border-iris hover:bg-iris/20 hover:text-text active:bg-iris/40 shadow-sharp-sm",
+          "bg-background text-text border-iris hover:bg-iris/20 hover:text-text active:bg-iris/40 shadow-sharp-sm",
         success:
-          "bg-green-500/20 text-green-500 border-green-500 hover:bg-green-500/60 active:bg-green-500/50",
+          "bg-green-500/20 text-text border-green-500 hover:bg-green-500/60 active:bg-green-500/50",
         error:
-          "bg-red-500/20 text-red-500 border-red-500 hover:bg-red-500/60 active:bg-red-500/50",
-        info: "bg-blue-500/20 text-blue-500 border-blue-500 hover:bg-blue-500/60 active:bg-blue-500/50",
+          "bg-red-500/20 text-text border-red-500 hover:bg-red-500/60 active:bg-red-500/50",
+        info: "bg-blue-500/20 text-text border-blue-500 hover:bg-blue-500/60 active:bg-blue-500/50",
         warning:
-          "bg-yellow-500/20 text-yellow-500 border-yellow-500 hover:bg-yellow-500/60 active:bg-yellow-500/50",
+          "bg-yellow-500/20 text-text border-yellow-500 hover:bg-yellow-500/60 active:bg-yellow-500/50",
         ghost:
           "hover:bg-highlight-medium hover:text-text shadow-none hover:shadow-none active:translate-x-0 active:translate-y-0 border-0",
-        link: "text-iris underline-offset-4 hover:underline border-0 shadow-none hover:shadow-none",
+        link: "text-text underline-offset-4 hover:underline border-0 shadow-none hover:shadow-none",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

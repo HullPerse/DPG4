@@ -81,7 +81,8 @@ export const useWindowResize = ({
         case "left":
         case "top-left":
         case "bottom-left":
-          const leftDelta = Math.max(-state.startSize.width + minWidth, deltaX);
+          const maxLeftDelta = state.startSize.width - minWidth;
+          const leftDelta = Math.min(maxLeftDelta, deltaX);
           newWidth = state.startSize.width - leftDelta;
           newX += leftDelta;
           break;
@@ -96,10 +97,8 @@ export const useWindowResize = ({
         case "top":
         case "top-left":
         case "top-right":
-          const topDelta = Math.max(
-            -state.startSize.height + minHeight,
-            deltaY,
-          );
+          const maxTopDelta = state.startSize.height - minHeight;
+          const topDelta = Math.min(maxTopDelta, deltaY);
           newHeight = state.startSize.height - topDelta;
           newY += topDelta;
           break;

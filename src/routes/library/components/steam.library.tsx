@@ -14,7 +14,7 @@ import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import { SmallLoader } from "@/components/shared/loader.component";
-import { Image } from "@/components/shared/image.component";
+import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
 

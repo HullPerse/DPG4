@@ -13,7 +13,7 @@ import { GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import { SmallLoader } from "@/components/shared/loader.component";
-import { Image } from "@/components/shared/image.component";
+import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 
 const gameApi = new GameApi();

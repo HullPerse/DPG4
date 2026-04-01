@@ -1,5 +1,6 @@
 import { Preset, Game, GameReview, GameStatus } from "@/types/games";
 import { client } from "./client.api";
+
 import { User } from "@/types/user";
 
 export default class GameApi {

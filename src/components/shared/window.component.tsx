@@ -244,7 +244,7 @@ function Window(props: WindowProps) {
         props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
       cursor: isDragging ? "grabbing" : "default",
       willChange: isDragging || isResizing ? "transform" : "auto",
-      border: "2px solid var(--color-iris)",
+      border: "2px solid var(--color-highlight-high)",
     }),
     [
       position.x,
@@ -271,7 +271,7 @@ function Window(props: WindowProps) {
         display: "grid",
         gridTemplateRows: "auto 1fr",
       }}
-      className="absolute overflow-hidden bg-card text-text transition-none border-2 border-iris"
+      className="absolute overflow-hidden bg-card text-text transition-none"
       hidden={props.isMinimized}
       onClick={(e) => {
         const target = e.target as HTMLElement;
@@ -285,7 +285,7 @@ function Window(props: WindowProps) {
     >
       {/* Head */}
       <section
-        className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-iris"
+        className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high"
         onMouseDown={handleMouseDown}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
       >

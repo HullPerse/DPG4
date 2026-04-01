@@ -1,4 +1,4 @@
-import { Image } from "@/components/shared/image.component";
+import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { WallpaperProps } from "@/types/desktop";
 import { Trash } from "lucide-react";

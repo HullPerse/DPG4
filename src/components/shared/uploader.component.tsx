@@ -1,15 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
-import { Image as ImageComponent } from "@/components/shared/image.component";
+import Image from "@/components/shared/image.component";
 
 interface ImageUploaderProps {
   value: File | null;
   onChange: (file: File | null) => void;
   existingImageUrl?: string;
-  showExisting?: boolean;
-  onRemoveExisting?: () => void;
+  onRemove?: () => void;
   className?: string;
 }
 
@@ -17,12 +16,17 @@ export function ImageUploader({
   value,
   onChange,
   existingImageUrl,
-  showExisting = true,
-  onRemoveExisting,
+  onRemove,
   className,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [image, setImage] = useState<string | null>(
+    value
+      ? URL.createObjectURL(value)
+      : existingImageUrl
+        ? existingImageUrl
+        : null,
+  );
 
   const processFile = useCallback(
     (file: File) => {
@@ -35,48 +39,6 @@ export function ImageUploader({
     [onChange],
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        processFile(files[0]);
-      }
-    },
-    [processFile],
-  );
-
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent) => {
-      const items = e.clipboardData.items;
-      for (const item of items) {
-        if (item.type.startsWith("image/")) {
-          const file = item.getAsFile();
-          if (file) {
-            processFile(file);
-          }
-          break;
-        }
-      }
-    },
-    [processFile],
-  );
-
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -87,29 +49,28 @@ export function ImageUploader({
     [processFile],
   );
 
-  const previewUrl = value
-    ? URL.createObjectURL(value)
-    : showExisting && existingImageUrl
-      ? existingImageUrl
-      : undefined;
+  useEffect(() => {
+    if (value) {
+      setImage(URL.createObjectURL(value));
+    } else if (existingImageUrl) {
+      setImage(existingImageUrl);
+    } else {
+      setImage(null);
+    }
+  }, [value, existingImageUrl]);
 
   return (
     <div
       className={cn(
         "relative flex flex-col rounded border-2 border-dashed border-highlight-high bg-card transition-all",
-        isDragging && "border-primary bg-primary/10",
         className,
       )}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onPaste={handlePaste}
       tabIndex={0}
     >
-      {previewUrl ? (
+      {image ? (
         <div className="group relative aspect-video w-full overflow-hidden rounded">
-          <ImageComponent
-            src={previewUrl}
+          <Image
+            src={image}
             alt="Preview"
             className="h-full w-full object-contain"
             type="contain"
@@ -122,7 +83,8 @@ export function ImageUploader({
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(null);
-                onRemoveExisting?.();
+                setImage(null);
+                onRemove?.();
               }}
               type="button"
             >

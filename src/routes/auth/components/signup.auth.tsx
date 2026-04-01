@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { WindowError } from "@/components/shared/error.component";
 import { userSchema } from "@/lib/zod.utils";
 import { useDataStore } from "@/store/data.store";
-import { Image } from "@/components/shared/image.component";
+import Image from "@/components/shared/image.component";
 
 const userApi = new UserApi();
 

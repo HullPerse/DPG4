@@ -12,9 +12,16 @@ export const libraryTabs = [
 export const gameButtons: {
   value: GameStatus;
   icon: React.ReactNode;
+  description: string;
+  priority: number;
 }[] = [
-  { value: "COMPLETED", icon: <Check /> },
-  { value: "DROPPED", icon: <Ban /> },
-  { value: "REROLLED", icon: <RefreshCcw /> },
-  { value: "PLAYING", icon: <Play /> },
+  { value: "COMPLETED", icon: <Check />, description: "ПРОЙДЕНО", priority: 1 },
+  { value: "PLAYING", icon: <Play />, description: "В ПРОЦЕССЕ", priority: 2 },
+  { value: "DROPPED", icon: <Ban />, description: "ДРОПНУТО", priority: 3 },
+  {
+    value: "REROLLED",
+    icon: <RefreshCcw />,
+    description: "РЕРОЛЛ",
+    priority: 4,
+  },
 ];

@@ -121,22 +121,23 @@ export function calculateDirection(
   const angle = Math.atan2(dy, dx);
   const degrees = (angle * 180) / Math.PI;
 
-  if (degrees >= -22.5 && degrees < 22.5) {
-    return Direction.RIGHT;
-  } else if (degrees >= 22.5 && degrees < 67.5) {
-    return Direction.BOTTOM_RIGHT;
-  } else if (degrees >= 67.5 && degrees < 112.5) {
-    return Direction.BOTTOM;
-  } else if (degrees >= 112.5 && degrees < 157.5) {
-    return Direction.BOTTOM_LEFT;
-  } else if (degrees >= 157.5 || degrees < -157.5) {
-    return Direction.LEFT;
-  } else if (degrees >= -157.5 && degrees < -112.5) {
-    return Direction.TOP_LEFT;
-  } else if (degrees >= -112.5 && degrees < -67.5) {
-    return Direction.TOP;
-  } else {
-    return Direction.TOP_RIGHT;
+  switch (true) {
+    case degrees >= -22.5 && degrees < 22.5:
+      return Direction.RIGHT;
+    case degrees >= 22.5 && degrees < 67.5:
+      return Direction.BOTTOM_RIGHT;
+    case degrees >= 67.5 && degrees < 112.5:
+      return Direction.BOTTOM;
+    case degrees >= 112.5 && degrees < 157.5:
+      return Direction.BOTTOM_LEFT;
+    case degrees >= 157.5 || degrees < -157.5:
+      return Direction.LEFT;
+    case degrees >= -157.5 && degrees < -112.5:
+      return Direction.TOP_LEFT;
+    case degrees >= -112.5 && degrees < -67.5:
+      return Direction.TOP;
+    default:
+      return Direction.TOP_RIGHT;
   }
 }
 

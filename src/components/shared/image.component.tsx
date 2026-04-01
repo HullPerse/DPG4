@@ -11,7 +11,7 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   type?: "cover" | "contain";
 }
 
-const ImageComponent = ({
+const Image = ({
   src,
   alt,
   className,
@@ -95,4 +95,4 @@ const ImageComponent = ({
   );
 };
 
-export const Image = memo(ImageComponent);
+export default memo(Image);
