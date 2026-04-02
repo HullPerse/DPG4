@@ -168,4 +168,29 @@ export default class GameApi {
   getPresets = async (): Promise<Preset[]> => {
     return await this.presetsCollection.getFullList();
   };
+
+  getPresetById = async (id: string): Promise<Preset> => {
+    return await this.presetsCollection.getOne(id);
+  };
+
+  addPreset = async (label: string) => {
+    return await this.presetsCollection.create({
+      label: label,
+    });
+  };
+
+  removePreset = async (id: string) => {
+    return await this.presetsCollection.delete(id);
+  };
+
+  addPresetGame = async (id: string, game: Game): Promise<Preset> => {
+    //get existing Preset
+    const preset = (await this.presetsCollection.getOne(id)) as Preset;
+
+    const newGames = [...(preset.games ?? []), game.data];
+
+    return await this.presetsCollection.update(id, {
+      games: newGames,
+    });
+  };
 }

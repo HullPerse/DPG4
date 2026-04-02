@@ -41,8 +41,12 @@ const STATUSES = [
 
 export default function SteamLibrary({
   setCurrentGame,
+  currentType,
+  presetId,
 }: {
   setCurrentGame: (gameId: string) => void;
+  currentType: "library" | "preset";
+  presetId?: string;
 }) {
   const user = useUserStore((state) => state.user);
 
@@ -79,9 +83,15 @@ export default function SteamLibrary({
       },
     };
 
-    await gameApi
-      .addGame(gameData)
-      .then((res) => setCurrentGame(String(res.id)));
+    if (currentType === "library") {
+      return await gameApi
+        .addGame(gameData)
+        .then((res) => setCurrentGame(String(res.id)));
+    }
+
+    return await gameApi
+      .addPresetGame(String(presetId), gameData)
+      .then(() => setCurrentGame("presetSettings"));
   }, [game, time, appId, status]);
 
   return (
@@ -99,6 +109,7 @@ export default function SteamLibrary({
             className="h-12 w-12"
             onClick={async () => {
               setLoading(true);
+
               try {
                 const game = await gameApi.getSteamGame(appId);
                 setGame(game as any);
@@ -122,30 +133,32 @@ export default function SteamLibrary({
             onChange={(e) => setTime(e.target.value)}
           />
         </div>
-        <div className="leading-tight">
-          <span>Сложность</span>
-          <Select
-            value={status}
-            onValueChange={(e) => setStatus(e as GameStatus)}
-          >
-            <SelectTrigger className="w-full py-5">
-              <SelectValue placeholder="Сложность" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {STATUSES.map((item) => (
-                  <SelectItem
-                    key={item.label}
-                    value={item.label}
-                    style={{ color: getStatusColor(item.name as GameStatus) }}
-                  >
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+        {currentType === "library" && (
+          <div className="leading-tight">
+            <span>Сложность</span>
+            <Select
+              value={status}
+              onValueChange={(e) => setStatus(e as GameStatus)}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Сложность" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {STATUSES.map((item) => (
+                    <SelectItem
+                      key={item.label}
+                      value={item.label}
+                      style={{ color: getStatusColor(item.name as GameStatus) }}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <Button
           variant="success"
           className="mt-auto mb-1"

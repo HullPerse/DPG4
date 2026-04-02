@@ -3,7 +3,7 @@ import { User } from "./user";
 export interface Preset {
   id: string;
   label: string;
-  games: any[];
+  games: GameData[];
 }
 
 export interface Game {
@@ -21,7 +21,7 @@ export interface Game {
   status: GameStatus;
   review?: GameReview;
   image?: File;
-  createdAt?: string;
+  created?: string;
 }
 
 export type GameData = {

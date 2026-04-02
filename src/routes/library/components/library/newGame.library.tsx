@@ -4,17 +4,33 @@ import SteamLibrary from "./steam.library";
 import CustomLibrary from "./custom.library";
 
 export default function NewGameLibrary({
+  currentType,
   setCurrentGame,
+  presetId,
 }: {
+  currentType: "library" | "preset";
   setCurrentGame: (gameId: string) => void;
+  presetId?: string;
 }) {
   const [newType, setNewType] = useState<"game" | "custom">("game");
 
   const getComponent = useMemo(() => {
     if (newType === "game")
-      return <SteamLibrary setCurrentGame={setCurrentGame} />;
-    return <CustomLibrary setCurrentGame={setCurrentGame} />;
-  }, [newType]);
+      return (
+        <SteamLibrary
+          setCurrentGame={setCurrentGame}
+          currentType={currentType}
+          presetId={presetId}
+        />
+      );
+    return (
+      <CustomLibrary
+        setCurrentGame={setCurrentGame}
+        currentType={currentType}
+        presetId={presetId}
+      />
+    );
+  }, [newType, currentType]);
 
   return (
     <main className="flex h-full w-full flex-col items-center">

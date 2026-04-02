@@ -16,6 +16,7 @@ import {
   WindowLoader,
 } from "@/components/shared/loader.component";
 import {
+  Calendar,
   ExternalLink,
   NetworkIcon,
   NotebookPen,
@@ -338,6 +339,18 @@ function GameLibrary({
                 >
                   <RussianRuble />
                   <span>{data?.game.score}</span>
+                </div>
+              )}
+
+              {data?.game.created && (
+                <div
+                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
+                  title="Дата добавления"
+                >
+                  <Calendar />
+                  <span>
+                    {new Date(data?.game.created).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </section>

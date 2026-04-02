@@ -1,62 +1,54 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { useQuery } from "@tanstack/react-query";
-import { NetworkIcon, Plus } from "lucide-react";
-import { memo, useState } from "react";
+import { Plus } from "lucide-react";
+import { memo, useCallback, useState } from "react";
 
-import GameApi from "@/api/games.api";
-import { WindowLoader } from "@/components/shared/loader.component";
-import { WindowError } from "@/components/shared/error.component";
 import { useUserStore } from "@/store/user.store";
 
+import { SmallLoader } from "@/components/shared/loader.component";
+import PresetsList from "../components/presets/presets.presets";
+
+import GameApi from "@/api/games.api";
 const gameApi = new GameApi();
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
 
-  const { data: _presetsData, isLoading, isError, refetch } = useQuery({
-    queryKey: ["presets"],
-    queryFn: async () => {
-      return await gameApi.getPresets();
-    },
-  });
-
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoadinng] = useState(false);
 
-  if (isLoading) return <WindowLoader />;
-  if (isError)
-    return (
-      <WindowError
-        error={new Error("Произошла ошибка")}
-        icon={<NetworkIcon />}
-        refresh={refetch}
-        button
-      />
-    );
+  const handleAddPreset = useCallback(async () => {
+    setLoadinng(true);
+    await gameApi.addPreset(searchTerm);
+    setSearchTerm("");
+    setLoadinng(false);
+  }, [searchTerm]);
 
   return (
     <main className="relative flex h-full w-full flex-col">
-      {isAdmin && (
-        <Button className="absolute right-2 bottom-2 h-8 w-8 rounded-full border">
-          <Plus />
-        </Button>
-      )}
+      <section className="flex flex-row w-full gap-2 items-center justify-center p-2">
+        <Input
+          type="text"
+          placeholder="Найти пресет"
+          className="h-10"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
 
-      <Input
-        className="border-primary"
-        placeholder="Найти пресет"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+        {isAdmin && (
+          <Button
+            variant="link"
+            className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
+            onClick={handleAddPreset}
+            disabled={!searchTerm || loading}
+          >
+            {loading ? <SmallLoader /> : <Plus />}
+          </Button>
+        )}
+      </section>
 
-      <section className="flex flex-col">
-        {/*{data
-          ?.filter((preset) =>
-            preset.label.toLowerCase().includes(searchTerm.toLowerCase()),
-          )
-          .map((preset) => (
-            <div key={preset.id}>{preset.label}</div>
-          ))}*/}
+      <section className="flex flex-col h-full w-full">
+        <PresetsList searchTerms={searchTerm} />
       </section>
     </main>
   );

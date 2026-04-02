@@ -15,8 +15,8 @@ import GameApi from "@/api/games.api";
 import { Input } from "@/components/ui/input.component";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { Button } from "@/components/ui/button.component";
-import NewGameLibrary from "../components/newGame.library";
-import GameLibrary from "../components/game.library";
+import NewGameLibrary from "../components/library/newGame.library";
+import GameLibrary from "../components/library/game.library";
 import { useUserStore } from "@/store/user.store";
 import { getStatusColor } from "@/lib/utils";
 
@@ -69,7 +69,12 @@ function LibraryTab() {
 
   const getComponent = useMemo(() => {
     if (currentGame === "newGame")
-      return <NewGameLibrary setCurrentGame={setCurrentGame} />;
+      return (
+        <NewGameLibrary
+          setCurrentGame={setCurrentGame as (gameId: string | boolean) => void}
+          currentType="library"
+        />
+      );
 
     return (
       <GameLibrary
@@ -116,7 +121,7 @@ function LibraryTab() {
                     .toUpperCase()
                     .includes(searchTerm.toUpperCase()),
                 )
-                .sort((a, b) => (a.createdAt! > b.createdAt! ? 1 : -1))
+                .sort((a, b) => (a.created! > b.created! ? 1 : -1))
                 .map((game) => (
                   <div key={game.id} className="flex w-full flex-col">
                     <Button
