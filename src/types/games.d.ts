@@ -32,6 +32,7 @@ export type GameData = {
   backgroundImage: string;
   steamLink: string;
   websiteLink: string;
+  time?: number;
 };
 export type GameStatus = "PLAYING" | "COMPLETED" | "DROPPED" | "REROLLED";
 export type ReviewRating = {

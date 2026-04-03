@@ -184,13 +184,25 @@ export default class GameApi {
   };
 
   addPresetGame = async (id: string, game: Game): Promise<Preset> => {
-    //get existing Preset
     const preset = (await this.presetsCollection.getOne(id)) as Preset;
 
     const newGames = [...(preset.games ?? []), game.data];
 
     return await this.presetsCollection.update(id, {
       games: newGames,
+    });
+  };
+
+  removePresetGame = async (
+    presetId: string,
+    gameId: number,
+  ): Promise<Preset> => {
+    const preset = (await this.presetsCollection.getOne(presetId)) as Preset;
+
+    const filteredGames = preset.games.filter((game) => game.id !== gameId);
+
+    return await this.presetsCollection.update(presetId, {
+      games: filteredGames,
     });
   };
 }

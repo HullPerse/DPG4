@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { Plus } from "lucide-react";
+import { ChevronLeft, List, LoaderPinwheel, Plus } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
 import { useUserStore } from "@/store/user.store";
@@ -9,6 +9,8 @@ import { SmallLoader } from "@/components/shared/loader.component";
 import PresetsList from "../components/presets/presets.presets";
 
 import GameApi from "@/api/games.api";
+import PresetSettings from "../components/presets/settings.presets";
+import NewGameLibrary from "../components/library/newGame.library";
 const gameApi = new GameApi();
 
 function PresetsTab() {
@@ -16,6 +18,14 @@ function PresetsTab() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoadinng] = useState(false);
+  const [currentPreset, setCurrentPreset] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<
+    | "presetAll"
+    | "presetWheel"
+    | "presetList"
+    | "presetSettings"
+    | "addPresetGame"
+  >("presetAll");
 
   const handleAddPreset = useCallback(async () => {
     setLoadinng(true);
@@ -24,9 +34,37 @@ function PresetsTab() {
     setLoadinng(false);
   }, [searchTerm]);
 
+  const getComponent = () => {
+    if (!currentPreset)
+      return (
+        <PresetsList
+          searchTerms={searchTerm}
+          setCurrentPreset={setCurrentPreset}
+          setCurrentTab={setCurrentTab}
+        />
+      );
+
+    const buttonMap = {
+      presetWheel: <LoaderPinwheel />,
+      presetList: <List />,
+      presetSettings: <PresetSettings id={currentPreset} />,
+      addPresetGame: (
+        <div className="flex w-full h-full pt-11">
+          <NewGameLibrary
+            setCurrentGame={setCurrentTab as (gameId: string) => void}
+            currentType="preset"
+            presetId={currentPreset}
+          />
+        </div>
+      ),
+    };
+
+    return buttonMap[currentTab as keyof typeof buttonMap];
+  };
+
   return (
-    <main className="relative flex h-full w-full flex-col">
-      <section className="flex flex-row w-full gap-2 items-center justify-center p-2">
+    <main className="relative flex flex-col h-full w-full">
+      <section className="flex flex-row w-full gap-2 items-center justify-center p-2 border-b-2 border-highlight-high">
         <Input
           type="text"
           placeholder="Найти пресет"
@@ -35,7 +73,7 @@ function PresetsTab() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        {isAdmin && (
+        {isAdmin && currentTab === "presetAll" && (
           <Button
             variant="link"
             className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
@@ -45,10 +83,41 @@ function PresetsTab() {
             {loading ? <SmallLoader /> : <Plus />}
           </Button>
         )}
+
+        <Button
+          title="Назад"
+          size="icon"
+          variant="error"
+          className="w-10 h-10"
+          hidden={currentTab === "presetAll"}
+          onClick={() => {
+            if (currentPreset && currentTab === "addPresetGame") {
+              return setCurrentTab("presetSettings");
+            }
+
+            setCurrentTab("presetAll");
+            setCurrentPreset(null);
+          }}
+        >
+          <ChevronLeft />
+        </Button>
       </section>
 
-      <section className="flex flex-col h-full w-full">
-        <PresetsList searchTerms={searchTerm} />
+      {/* TABS */}
+      <section className="flex w-full h-full bg-background pb-28">
+        <div className="absolute flex flex-row top-16 right-4 gap-1 items-center">
+          <Button
+            title="Добавить игру"
+            size="icon"
+            variant="success"
+            className="w-10 h-10"
+            hidden={currentTab !== "presetSettings"}
+            onClick={() => setCurrentTab("addPresetGame")}
+          >
+            <Plus />
+          </Button>
+        </div>
+        {getComponent()}
       </section>
     </main>
   );

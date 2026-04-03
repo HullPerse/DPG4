@@ -15,6 +15,7 @@ import GameApi from "@/api/games.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
+import { useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
 
@@ -47,6 +48,7 @@ export default function CustomLibrary({
   presetId?: string;
 }) {
   const user = useUserStore((state) => state.user);
+  const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [name, setName] = useState("");
@@ -76,29 +78,21 @@ export default function CustomLibrary({
         backgroundImage: headerImage,
         steamLink: "",
         websiteLink: "",
+        time: currentType === "preset" ? Number(time) : undefined,
       },
     };
 
     if (currentType === "library") {
       return await gameApi
         .addGame(gameData as any)
-        .then((res) => setCurrentGame?.(String(res.id)))
-        .finally(() => {
-          setName("");
-          setHeaderImage("");
-          setTime("");
-          setStatus("В ПРОЦЕССЕ");
-        });
+        .then((res) => setCurrentGame?.(String(res.id)));
     }
 
     return await gameApi
       .addPresetGame(String(presetId), gameData as any)
-      .then(() => setCurrentGame("presetSettings"))
-      .finally(() => {
-        setName("");
-        setHeaderImage("");
-        setTime("");
-        setStatus("В ПРОЦЕССЕ");
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
+        setCurrentGame("presetSettings");
       });
   }, [name, headerImage, time, status, gameApi]);
 
@@ -176,7 +170,7 @@ export default function CustomLibrary({
           <Image
             src={headerImage ?? ""}
             alt="image"
-            className="aspect-video h-38 rounded border-2 object-cover"
+            className="aspect-video h-38 w-fit rounded border-2 object-cover"
           />
         )}
 

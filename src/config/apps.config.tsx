@@ -29,6 +29,7 @@ export const APPS = [
     label: "Библиотека",
     icon: <LibraryBig className="size-7" />,
     component: <Library />,
+
     priority: 2,
   },
   {
@@ -88,6 +89,7 @@ export const WINDOWS = [
     id: "library",
     title: "Библиотека",
     icon: <LibraryBig className="size-7" />,
+    // overflow: true,
     size: {
       minWidth: 840,
       minHeight: 680,

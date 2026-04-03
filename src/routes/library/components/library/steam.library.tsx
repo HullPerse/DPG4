@@ -17,6 +17,7 @@ import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
+import { useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
 
@@ -49,6 +50,7 @@ export default function SteamLibrary({
   presetId?: string;
 }) {
   const user = useUserStore((state) => state.user);
+  const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [appId, setAppId] = useState("");
@@ -80,6 +82,7 @@ export default function SteamLibrary({
         backgroundImage: game.library_background,
         steamLink: `https://store.steampowered.com/app/${game.game.steam_appid}`,
         websiteLink: game.game.website ?? "",
+        time: currentType === "preset" ? Number(time) : undefined,
       },
     };
 
@@ -89,9 +92,10 @@ export default function SteamLibrary({
         .then((res) => setCurrentGame(String(res.id)));
     }
 
-    return await gameApi
-      .addPresetGame(String(presetId), gameData)
-      .then(() => setCurrentGame("presetSettings"));
+    return await gameApi.addPresetGame(String(presetId), gameData).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
+      setCurrentGame("presetSettings");
+    });
   }, [game, time, appId, status]);
 
   return (
@@ -99,6 +103,7 @@ export default function SteamLibrary({
       <section className="flex h-full w-1/2 flex-col gap-2 px-1">
         <div className="flex flex-row items-center justify-center gap-1">
           <Input
+            autoFocus
             type="number"
             placeholder="ID игры"
             className="h-12"
@@ -177,7 +182,7 @@ export default function SteamLibrary({
             <Image
               src={game?.game.header_image}
               alt="image"
-              className="aspect-video h-38 rounded border-2 object-cover"
+              className="aspect-video h-38 w-fit border-2 object-cover"
             />
 
             <Button

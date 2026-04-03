@@ -243,7 +243,6 @@ function Window(props: WindowProps) {
       boxShadow:
         props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
       cursor: isDragging ? "grabbing" : "default",
-      willChange: isDragging || isResizing ? "transform" : "auto",
       border: "2px solid var(--color-highlight-high)",
     }),
     [
@@ -328,7 +327,7 @@ function Window(props: WindowProps) {
 
       {/* Body */}
       <section
-        className={`flex w-full flex-1 min-h-0 flex-col ${props.overflow ? "overflow-auto" : ""}`}
+        className={`flex w-full min-h-0 h-full flex-col ${props.overflow ? "overflow-y-auto" : ""}`}
       >
         <Suspense fallback={<WindowLoader />}>
           {isRefreshing ? <WindowLoader /> : getChildren()}
