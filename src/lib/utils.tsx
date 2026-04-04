@@ -66,3 +66,23 @@ export function getStatusColor(status: GameStatus) {
   };
   return colorMap[status as keyof typeof colorMap] ?? "yellow";
 }
+
+export const highlightText = (text: string, query: string) => {
+  if (!query) return text;
+  const regex = new RegExp(
+    `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+    "gi",
+  );
+
+  return text.split(regex).map((part, index) => {
+    if (!regex.test(part)) return part;
+    return (
+      <span
+        key={index}
+        className="bg-amber-500/20 text-white rounded font-bold"
+      >
+        {part}
+      </span>
+    );
+  });
+};

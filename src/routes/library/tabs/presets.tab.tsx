@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { ChevronLeft, List, LoaderPinwheel, Plus } from "lucide-react";
+import { ChevronLeft, LoaderPinwheel, Plus } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
 import { useUserStore } from "@/store/user.store";
@@ -9,7 +9,7 @@ import { SmallLoader } from "@/components/shared/loader.component";
 import PresetsList from "../components/presets/presets.presets";
 
 import GameApi from "@/api/games.api";
-import PresetSettings from "../components/presets/settings.presets";
+import PresetSettings from "../components/presets/list.presets";
 import NewGameLibrary from "../components/library/newGame.library";
 const gameApi = new GameApi();
 
@@ -20,11 +20,7 @@ function PresetsTab() {
   const [loading, setLoadinng] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<
-    | "presetAll"
-    | "presetWheel"
-    | "presetList"
-    | "presetSettings"
-    | "addPresetGame"
+    "presetAll" | "presetWheel" | "presetList" | "addPresetGame"
   >("presetAll");
 
   const handleAddPreset = useCallback(async () => {
@@ -46,16 +42,13 @@ function PresetsTab() {
 
     const buttonMap = {
       presetWheel: <LoaderPinwheel />,
-      presetList: <List />,
-      presetSettings: <PresetSettings id={currentPreset} />,
+      presetList: <PresetSettings id={currentPreset} />,
       addPresetGame: (
-        <div className="flex w-full h-full pt-11">
-          <NewGameLibrary
-            setCurrentGame={setCurrentTab as (gameId: string) => void}
-            currentType="preset"
-            presetId={currentPreset}
-          />
-        </div>
+        <NewGameLibrary
+          setCurrentGame={setCurrentTab as (gameId: string) => void}
+          currentType="preset"
+          presetId={currentPreset}
+        />
       ),
     };
 
@@ -85,6 +78,22 @@ function PresetsTab() {
         )}
 
         <Button
+          title="Добавить игру"
+          size="icon"
+          variant="success"
+          className="w-10 h-10"
+          hidden={
+            !isAdmin ||
+            currentTab === "addPresetGame" ||
+            currentTab === "presetAll" ||
+            currentTab === "presetWheel"
+          }
+          onClick={() => setCurrentTab("addPresetGame")}
+        >
+          <Plus />
+        </Button>
+
+        <Button
           title="Назад"
           size="icon"
           variant="error"
@@ -92,7 +101,7 @@ function PresetsTab() {
           hidden={currentTab === "presetAll"}
           onClick={() => {
             if (currentPreset && currentTab === "addPresetGame") {
-              return setCurrentTab("presetSettings");
+              return setCurrentTab("presetList");
             }
 
             setCurrentTab("presetAll");
@@ -104,19 +113,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex w-full h-full bg-background pb-28">
-        <div className="absolute flex flex-row top-16 right-4 gap-1 items-center">
-          <Button
-            title="Добавить игру"
-            size="icon"
-            variant="success"
-            className="w-10 h-10"
-            hidden={currentTab !== "presetSettings"}
-            onClick={() => setCurrentTab("addPresetGame")}
-          >
-            <Plus />
-          </Button>
-        </div>
+      <section className="flex w-full h-full bg-background">
         {getComponent()}
       </section>
     </main>

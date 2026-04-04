@@ -1,8 +1,9 @@
 import PocketBase from "pocketbase";
 
-export const URL = "http://127.0.0.1:8090/";
+export const URL = import.meta.env.VITE_POCKETBASE;
+export const steamAPI = import.meta.env.VITE_STEAM_API;
 
-export const client = new PocketBase(URL);
+export const client = new PocketBase(import.meta.env.VITE_POCKETBASE);
 
 export const image = {
   game: `${URL}api/files/pbc_879072730/`,

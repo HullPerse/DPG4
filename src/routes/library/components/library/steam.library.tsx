@@ -94,7 +94,7 @@ export default function SteamLibrary({
 
     return await gameApi.addPresetGame(String(presetId), gameData).then(() => {
       queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
-      setCurrentGame("presetSettings");
+      setCurrentGame("presetList");
     });
   }, [game, time, appId, status]);
 

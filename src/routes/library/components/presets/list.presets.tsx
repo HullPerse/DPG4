@@ -74,7 +74,7 @@ function PresetSettings({ id }: { id: string }) {
   };
 
   return (
-    <main className="flex flex-col gap-2 pt-14 p-2 w-full overflow-y-auto">
+    <main className="flex flex-col gap-2 p-2 w-full overflow-y-auto pb-30">
       {data?.games &&
         data.games.map((game) => (
           <div

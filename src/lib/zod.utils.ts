@@ -11,6 +11,7 @@ export const userSchema = z.object({
     .string()
     .min(4, "Пароль должен содержать минимум 8 символов")
     .trim(),
+  steam: z.string().trim(),
   avatar: z.string().min(1, "Выберите аватар"),
   color: z.string().min(1, "Выберите цвет"),
 });

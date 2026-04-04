@@ -92,7 +92,7 @@ export default function CustomLibrary({
       .addPresetGame(String(presetId), gameData as any)
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
-        setCurrentGame("presetSettings");
+        setCurrentGame("presetList");
       });
   }, [name, headerImage, time, status, gameApi]);
 
