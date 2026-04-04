@@ -3,6 +3,7 @@ import { createWindow } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { ExternalLink } from "lucide-react";
 import { memo } from "react";
 
 function AppDesktop({
@@ -24,7 +25,7 @@ function AppDesktop({
   return (
     <button
       key={name}
-      className="flex h-20 w-20 flex-col items-center justify-center rounded border-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] hover:bg-primary/20"
+      className="relative flex h-20 w-20 flex-col items-center justify-center rounded border-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] shadow-sharp-sm hover:bg-primary/20"
       style={{
         cursor: isOpening ? "wait" : "pointer",
       }}
@@ -43,6 +44,8 @@ function AppDesktop({
         return setTimeout(() => setIsOpening(false), 1000);
       }}
     >
+      {link && <ExternalLink className="absolute top-1 right-1 size-4" />}
+
       {icon}
       <span className="text-center text-xs leading-tight font-bold text-text">
         {label}

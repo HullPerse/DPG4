@@ -1,3 +1,4 @@
+import SteamSvg from "@/components/svg/steam.component";
 import {
   ArrowDown,
   Clock,
@@ -37,7 +38,13 @@ export const APPS = [
     label: "Колесо Игр",
     link: "https://gamegauntlets.com/",
     icon: <Star className="size-7" />,
-    component: <Tabletop />,
+    priority: 10,
+  },
+  {
+    name: "steamwheel",
+    label: "Колесо STEAM",
+    link: "https://pickaga.me/",
+    icon: <SteamSvg className="size-7" />,
     priority: 10,
   },
 ];
@@ -89,7 +96,6 @@ export const WINDOWS = [
     id: "library",
     title: "Библиотека",
     icon: <LibraryBig className="size-7" />,
-    // overflow: true,
     size: {
       minWidth: 840,
       minHeight: 680,

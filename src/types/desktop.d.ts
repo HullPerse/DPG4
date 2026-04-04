@@ -3,7 +3,7 @@ export type AppProps = {
   label: string;
   icon: ReactNode;
   link?: string | null;
-  component: ReactNode;
+  component?: ReactNode;
 };
 
 export type WallpaperProps = {

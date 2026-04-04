@@ -9,6 +9,5 @@ export interface User {
   isAdmin?: boolean;
   position: number;
   money: number;
-  steam: string;
   currentAction: "MOVE" | "GAMEADD" | "GAMEFINISH";
 }

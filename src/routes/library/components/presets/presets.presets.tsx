@@ -6,7 +6,6 @@ import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { type Preset } from "@/types/games";
-import {} from "@/store/user.store";
 import PresetComponent from "@/components/shared/preset.component";
 
 const gameApi = new GameApi();
@@ -26,7 +25,9 @@ export default function PresetsList({
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsList"],
-    queryFn: async (): Promise<Preset[]> => await gameApi.getPresets(),
+    queryFn: async (): Promise<Preset[]> => {
+      return await gameApi.getPresets();
+    },
   });
 
   const invalidateQuery = useCallback(() => {
@@ -54,6 +55,7 @@ export default function PresetsList({
   return (
     <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
       {data
+
         ?.sort((a, b) => a.label.localeCompare(b.label))
         .filter((preset) =>
           preset.label.toUpperCase().includes(searchTerms.toUpperCase()),

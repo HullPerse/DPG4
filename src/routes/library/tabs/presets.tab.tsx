@@ -42,12 +42,15 @@ function PresetsTab() {
 
     const buttonMap = {
       presetWheel: <LoaderPinwheel />,
-      presetList: <PresetSettings id={currentPreset} />,
+      presetList: (
+        <PresetSettings id={currentPreset} searchTerms={searchTerm} />
+      ),
       addPresetGame: (
         <NewGameLibrary
           setCurrentGame={setCurrentTab as (gameId: string) => void}
           currentType="preset"
           presetId={currentPreset}
+          existingId={searchTerm}
         />
       ),
     };
@@ -113,7 +116,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex w-full h-full bg-background">
+      <section className="flex w-full h-full bg-background pb-28">
         {getComponent()}
       </section>
     </main>

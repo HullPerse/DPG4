@@ -44,16 +44,18 @@ export default function SteamLibrary({
   setCurrentGame,
   currentType,
   presetId,
+  existingId,
 }: {
   setCurrentGame: (gameId: string) => void;
   currentType: "library" | "preset";
   presetId?: string;
+  existingId?: string;
 }) {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
-  const [appId, setAppId] = useState("");
+  const [appId, setAppId] = useState(existingId ?? "");
   const [time, setTime] = useState("");
 
   const [game, setGame] = useState<any>();

@@ -7,10 +7,12 @@ export default function NewGameLibrary({
   currentType,
   setCurrentGame,
   presetId,
+  existingId,
 }: {
   currentType: "library" | "preset";
   setCurrentGame: (gameId: string) => void;
   presetId?: string;
+  existingId?: string;
 }) {
   const [newType, setNewType] = useState<"game" | "custom">("game");
 
@@ -21,6 +23,7 @@ export default function NewGameLibrary({
           setCurrentGame={setCurrentGame}
           currentType={currentType}
           presetId={presetId}
+          existingId={existingId}
         />
       );
     return (

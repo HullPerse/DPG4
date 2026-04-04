@@ -43,6 +43,10 @@ export const cellsConfig = {
       label: "Пресет",
     },
     {
+      name: "steam",
+      label: "Стим",
+    },
+    {
       name: "watch",
       label: "Просмотр",
     },

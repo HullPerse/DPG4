@@ -44,27 +44,3 @@ export type GameReview = {
   comment: string;
   votes?: ReviewRating[];
 };
-
-export interface SteamOwnedGamesResponse {
-  response: {
-    game_count: number;
-    games: SteamOwnedGame[];
-  };
-}
-export interface SteamOwnedGame {
-  appid: number;
-  name: string;
-  img_icon_url: string;
-  img_logo_url: string;
-  playtime_forever: number;
-}
-export interface FamilyGroupResponse {
-  family_groupid: string;
-}
-export interface SharedLibraryAppsResponse {
-  apps: Array<{
-    appid: number;
-    name: string;
-    playtime?: number;
-  }>;
-}

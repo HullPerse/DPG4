@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button.component";
 import LadderSvg from "@/components/svg/ladder.component";
 import SnakeSvg from "@/components/svg/snake.component";
+import SteamSvg from "@/components/svg/steam.component";
 
 function CellComponent({
   cell,
@@ -63,6 +64,7 @@ function CellComponent({
     const cellTypeMap = {
       Игра: <Sword />,
       Пресет: <Swords />,
+      Стим: <SteamSvg />,
       Просмотр: <TrafficCone />,
     };
 
