@@ -9,6 +9,7 @@ import GameApi from "@/api/games.api";
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
+import { highlightText } from "@/lib/utils";
 
 const gameApi = new GameApi();
 
@@ -106,7 +107,7 @@ function PresetSettings({
                   />
                 </div>
                 <span className="font-bold truncate line-clamp-1">
-                  {game.name} [{game.time ?? 1} ч.]
+                  {highlightText(game.name, searchTerms)} [{game.time ?? 1} ч.]
                 </span>
               </section>
 

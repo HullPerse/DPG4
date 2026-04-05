@@ -25,7 +25,7 @@ function EditReview({
   setContent,
 }: {
   id: string;
-  setContent: (value: "general" | "review" | "editGame") => void;
+  setContent: (value: "general" | "review") => void;
 }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);

@@ -40,7 +40,6 @@ import UserApi from "@/api/user.api";
 
 import ReviewComponent from "@/components/shared/review.component";
 import EditReview from "./edit.library";
-import SettingsLibrary from "./settings.library";
 import { image } from "@/api/client.api";
 import { User } from "@/types/user";
 
@@ -56,9 +55,7 @@ function GameLibrary({
 }) {
   const queryClient = useQueryClient();
 
-  const [content, setContent] = useState<"general" | "review" | "editGame">(
-    "general",
-  );
+  const [content, setContent] = useState<"general" | "review">("general");
   const [loading, setLoading] = useState<
     { button: GameStatus; loading: boolean }[]
   >(gameButtons.map((item) => ({ button: item.value, loading: false })));
@@ -110,7 +107,6 @@ function GameLibrary({
     if (!id) return null;
 
     const componentMap = {
-      editGame: <SettingsLibrary />,
       review: <EditReview id={id} setContent={setContent} />,
       general: (
         <ReviewComponent

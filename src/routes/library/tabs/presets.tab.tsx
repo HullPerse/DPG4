@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { ChevronLeft, LoaderPinwheel, Plus } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
 import { useUserStore } from "@/store/user.store";
@@ -11,6 +11,7 @@ import PresetsList from "../components/presets/presets.presets";
 import GameApi from "@/api/games.api";
 import PresetSettings from "../components/presets/list.presets";
 import NewGameLibrary from "../components/library/newGame.library";
+import PresetsWheel from "../components/presets/wheel.presets";
 const gameApi = new GameApi();
 
 function PresetsTab() {
@@ -41,7 +42,7 @@ function PresetsTab() {
       );
 
     const buttonMap = {
-      presetWheel: <LoaderPinwheel />,
+      presetWheel: <PresetsWheel id={currentPreset} />,
       presetList: (
         <PresetSettings id={currentPreset} searchTerms={searchTerm} />
       ),
