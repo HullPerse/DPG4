@@ -10,7 +10,8 @@ import Image from "@/components/shared/image.component";
 import GameApi from "@/api/games.api";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
-import Wheel from "@/components/shared/wheel.componennt";
+import Wheel from "@/components/shared/wheel.component";
+import { WheelItem } from "@/types/wheel";
 const gameApi = new GameApi();
 
 export default function PresetsWheel({ id }: { id: string }) {
@@ -75,14 +76,27 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
+  const handleSpin = async (item: WheelItem | null) => {
+    const gameId = Number(item?.id);
+    console.log(data?.games.find((game) => game.id === gameId));
+  };
+
+  const visibleGames =
+    data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
+
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
+
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
-        <Wheel items={[]} type="games" />
-        <Button variant="success" className="w-1/2">
-          КРУТИТЬ
-        </Button>
+        <Wheel
+          list={visibleGames.map((game) => ({
+            id: String(game.id),
+            label: game.name,
+            image: game.capsuleImage ?? "https://placehold.co/16x10",
+          }))}
+          onResult={handleSpin}
+        />
       </section>
       {/* LIST */}
       <section className="flex flex-col w-full h-full border-t-2 border-highlight-high p-2 gap-2 overflow-y-auto">
