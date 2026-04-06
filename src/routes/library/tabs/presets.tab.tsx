@@ -68,6 +68,7 @@ function PresetsTab() {
           className="h-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          disabled={loading || currentTab === "presetWheel"}
         />
 
         {isAdmin && currentTab === "presetAll" && (

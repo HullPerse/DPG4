@@ -9,7 +9,6 @@ import {
 } from "react";
 
 import { Button } from "../ui/button.component";
-import { shuffleArray } from "@/lib/utils";
 import { AnimationState, WheelItem, WheelRoll } from "@/types/wheel";
 import {
   getCenteredItem,
@@ -140,12 +139,6 @@ function Wheel({
     },
     [updateCenterHighlight, selectCenteredPreview],
   );
-
-  useEffect(() => {
-    if (list.length > 0) {
-      setShuffled(shuffleArray(list));
-    }
-  }, [list]);
 
   useEffect(() => {
     return () => {
