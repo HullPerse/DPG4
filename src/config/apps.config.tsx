@@ -30,7 +30,6 @@ export const APPS = [
     label: "Библиотека",
     icon: <LibraryBig className="size-7" />,
     component: <Library />,
-
     priority: 2,
   },
   {

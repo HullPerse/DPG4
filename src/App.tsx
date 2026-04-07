@@ -1,10 +1,8 @@
 import { useUserStore } from "./store/user.store";
 import { useNavigate } from "@tanstack/react-router";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Desktop from "./routes/desktop/desktop.root";
-import Window from "./components/shared/window.component";
 import { WindowProps } from "./types/window";
-import { WindowLoader } from "./components/shared/loader.component";
 import { useDataStore } from "./store/data.store";
 import { invoke } from "@tauri-apps/api/core";
 import Selection from "./routes/desktop/components/selection.desktop";
@@ -17,6 +15,7 @@ import {
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
 import { selectionMouse } from "./lib/utils";
+import Window from "./components/shared/window.component";
 
 function App() {
   //routing
@@ -157,7 +156,7 @@ function App() {
           setIsOpening={setIsOpening}
           {...app}
         >
-          <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
+          {app.children}
         </Window>
       ))}
 

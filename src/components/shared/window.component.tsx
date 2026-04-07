@@ -12,6 +12,7 @@ import {
   useMemo,
   RefObject,
   isValidElement,
+  memo,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
@@ -347,4 +348,4 @@ function Window(props: WindowProps) {
   );
 }
 
-export default Window;
+export default memo(Window);

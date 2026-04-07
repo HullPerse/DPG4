@@ -21,7 +21,7 @@ export interface Game {
   status: GameStatus;
   review?: GameReview;
   image?: File;
-  created?: string;
+  created: string;
 }
 
 export type GameData = {

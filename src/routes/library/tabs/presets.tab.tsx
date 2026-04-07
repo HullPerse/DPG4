@@ -64,7 +64,7 @@ function PresetsTab() {
       <section className="flex flex-row w-full gap-2 items-center justify-center p-2 border-b-2 border-highlight-high">
         <Input
           type="text"
-          placeholder="Найти пресет"
+          placeholder="Поиск пресетов"
           className="h-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -81,7 +81,6 @@ function PresetsTab() {
             {loading ? <SmallLoader /> : <Plus />}
           </Button>
         )}
-
         <Button
           title="Добавить игру"
           size="icon"
@@ -97,7 +96,6 @@ function PresetsTab() {
         >
           <Plus />
         </Button>
-
         <Button
           title="Назад"
           size="icon"

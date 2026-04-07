@@ -73,6 +73,7 @@ function PresetSettings({
         steamLink: `https://store.steampowered.com/app/${game.id}`,
         websiteLink: game.websiteLink ?? "",
       },
+      created: new Date().toISOString(),
     };
 
     return await gameApi.addGame(gameData).then(() => {

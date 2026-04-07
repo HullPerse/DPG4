@@ -103,6 +103,7 @@ function LibraryTab() {
           placeholder="Поиск игр"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-10"
         />
 
         <Button
@@ -121,27 +122,28 @@ function LibraryTab() {
                     .toUpperCase()
                     .includes(searchTerm.toUpperCase()),
                 )
-                .sort((a, b) => (a.created! > b.created! ? 1 : -1))
+                .sort((a, b) => (a.created > b.created ? 1 : -1))
                 .map((game) => (
-                  <div key={game.id} className="flex w-full flex-col">
-                    <Button
-                      variant="link"
-                      className="relative border border-text text-text disabled:opacity-45 active:translate-x-0 active:translate-y-0"
-                      disabled={currentGame === game.id}
-                      onClick={() => setCurrentGame(game.id as string)}
+                  <Button
+                    key={game.id}
+                    variant="link"
+                    className="relative border border-text text-text disabled:opacity-45 active:translate-x-0 active:translate-y-0 w-full"
+                    disabled={currentGame === game.id}
+                    onClick={() => setCurrentGame(game.id as string)}
+                  >
+                    <span
+                      className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
+                      style={{ backgroundColor: getStatusColor(game.status) }}
                     >
-                      <span
-                        className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
-                        style={{ backgroundColor: getStatusColor(game.status) }}
-                      >
-                        {currentGame === game.id && (
-                          <ChevronRight className="mr-8" />
-                        )}
-                      </span>
+                      {currentGame === game.id && (
+                        <ChevronRight className="mr-8" />
+                      )}
+                    </span>
 
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap ml-4">
                       {game.data.name}
-                    </Button>
-                  </div>
+                    </span>
+                  </Button>
                 ))
             : null}
         </div>

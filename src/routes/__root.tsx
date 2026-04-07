@@ -36,7 +36,6 @@ const authRoute = createRoute({
 const errorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/error",
-  pendingComponent: BigLoader,
   component: () => (
     <BigError
       error={new Error("Произошла ошибка")}

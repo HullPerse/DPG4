@@ -86,6 +86,7 @@ export default function SteamLibrary({
         websiteLink: game.game.website ?? "",
         time: currentType === "preset" ? Number(time) : undefined,
       },
+      created: new Date().toISOString(),
     };
 
     if (currentType === "library") {

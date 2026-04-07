@@ -44,6 +44,12 @@ export default class GameApi {
     });
   };
 
+  getAllUserGames = async (userId: string): Promise<Game[]> => {
+    return await this.gamesCollection.getFullList({
+      filter: `user.id = "${userId}"`,
+    });
+  };
+
   getGameInfo = async (id: string): Promise<Game> => {
     return await this.gamesCollection.getOne(id);
   };

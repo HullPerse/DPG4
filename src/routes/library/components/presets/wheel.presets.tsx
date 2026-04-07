@@ -1,7 +1,7 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { GameStatus, Preset } from "@/types/games";
+import { GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
 import { startTransition, useCallback, useState } from "react";
@@ -19,6 +19,7 @@ export default function PresetsWheel({ id }: { id: string }) {
   const user = useUserStore((state) => state.user);
 
   const [hiddenGames, setHiddenGames] = useState<string[]>([]);
+  const [result, setResult] = useState<GameData | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetWheel", id],
@@ -69,6 +70,7 @@ export default function PresetsWheel({ id }: { id: string }) {
         steamLink: `https://store.steampowered.com/app/${game.id}`,
         websiteLink: game.websiteLink ?? "",
       },
+      created: new Date().toISOString(),
     };
 
     return await gameApi.addGame(gameData).then(() => {
@@ -78,7 +80,9 @@ export default function PresetsWheel({ id }: { id: string }) {
 
   const handleSpin = async (item: WheelItem | null) => {
     const gameId = Number(item?.id);
-    console.log(data?.games.find((game) => game.id === gameId));
+    return setResult(
+      data?.games.find((game) => game.id === gameId) as GameData,
+    );
   };
 
   const visibleGames =
@@ -97,6 +101,40 @@ export default function PresetsWheel({ id }: { id: string }) {
           }))}
           onResult={handleSpin}
         />
+
+        {result && (
+          <div
+            key={result.id}
+            className="flex flex-row w-3xl min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
+          >
+            {/* LABEL */}
+            <section className="flex flex-row w-full h-full items-center gap-2">
+              <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
+                <Image
+                  src={result.capsuleImage ?? "https://placehold.co/16x10"}
+                  alt={result.name}
+                />
+              </div>
+              <span className="font-bold truncate line-clamp-1">
+                {`${result.name} [${result.time ?? 1} ч.]`}
+              </span>
+            </section>
+
+            {/* BUTTONS */}
+            <section className="flex flex-row items-center gap-1">
+              <Button
+                title="Добавить в библиотеку"
+                variant="success"
+                size="icon"
+                onClick={async () =>
+                  await handleAddGame(result.id).then(() => setResult(null))
+                }
+              >
+                <Plus />
+              </Button>
+            </section>
+          </div>
+        )}
       </section>
       {/* LIST */}
       <section className="flex flex-col w-full h-full border-t-2 border-highlight-high p-2 gap-2 overflow-y-auto">
