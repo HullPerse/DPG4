@@ -17,6 +17,7 @@ import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
 import GameApi from "@/api/games.api";
+import Games from "../components/profile/games.profile";
 const userApi = new UserApi();
 const gameApi = new GameApi();
 
@@ -44,7 +45,7 @@ function ProfileTab({ id }: { id?: string }) {
         refetchType: "all",
       });
     });
-  }, [queryClient]);
+  }, [queryClient, id]);
 
   useSubscription("users", `*`, invalidateQuery);
   useSubscription("games", `*`, invalidateQuery);
@@ -63,14 +64,10 @@ function ProfileTab({ id }: { id?: string }) {
   const getComponent = () => {
     const tabMap = {
       profile: (
-        <Profile
-          user={data?.user as User}
-          games={data?.games as Game[]}
-          setProfileTab={setProfileTab}
-        />
+        <Profile user={data?.user as User} games={data?.games as Game[]} />
       ),
       inventory: <>2</>,
-      library: <>3</>,
+      library: <Games games={data?.games as Game[]} />,
       trade: <>4</>,
       reviews: <>5</>,
       chat: <>6</>,

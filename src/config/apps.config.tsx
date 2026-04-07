@@ -96,9 +96,9 @@ export const WINDOWS = [
     title: "Библиотека",
     icon: <LibraryBig className="size-7" />,
     size: {
-      minWidth: 840,
+      minWidth: 910,
       minHeight: 680,
-      width: 840,
+      width: 910,
       height: 680,
     },
   },

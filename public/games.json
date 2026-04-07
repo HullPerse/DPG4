@@ -1,0 +1,2253 @@
+[
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.647Z",
+    "data": {
+      "title": "Alien Shooter 2: Reloaded",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/33120/header.jpg?t=1731075321",
+      "score": 2313,
+      "steam": "https://store.steampowered.com/app/33120",
+      "website": "http://www.sigma-team.net/games/special-offers/alien-sooter-gold-pack.html",
+      "time": 5,
+      "price": "4,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/33120/header.jpg?t=1731075321"
+    },
+    "id": "y5bzaqevvtwixio",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "DROPPED",
+    "taken": true,
+    "updated": "2025-12-16 13:17:25.113Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.651Z",
+    "data": {
+      "title": "Crash Bandicoot N. Sane Trilogy",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/731490/header.jpg?t=1568841571",
+      "score": 93,
+      "steam": "https://store.steampowered.com/app/731490/Crash_Bandicoot_N_Sane_Trilogy/",
+      "time": 15,
+      "price": null,
+      "background": "https://cdn.cloudflare.steamstatic.com/steam/apps/731490/header.jpg?t=1568841571"
+    },
+    "id": "qnx1hib1vllzoli",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:11.496Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.655Z",
+    "data": {
+      "title": "Bad Caterpillar",
+      "image": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/447950/header.jpg?t=1672207073",
+      "score": 41,
+      "steam": "https://store.steampowered.com/app/447950/Bad_Caterpillar/",
+      "time": 1,
+      "price": "59",
+      "background": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/447950/header.jpg?t=1672207073"
+    },
+    "id": "ckggb8yc0wn3zyn",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:35.088Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.658Z",
+    "data": {
+      "title": "Пробуждение: Королевство гномов. Коллекционное издание",
+      "image": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/695960/header.jpg?t=1531434384",
+      "score": 23,
+      "steam": "https://store.steampowered.com/app/695960/Awakening_The_Goblin_Kingdom_Collectors_Edition/?l=russian",
+      "time": 4,
+      "price": "259",
+      "background": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/695960/header.jpg?t=1531434384"
+    },
+    "id": "pug2mgph8jl7pnj",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:37.441Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.662Z",
+    "data": {
+      "title": "Press Any Button",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1448030/header.jpg?t=1757707825",
+      "score": 201,
+      "steam": "https://store.steampowered.com/app/1448030",
+      "time": 1,
+      "price": "1,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1448030/header.jpg?t=1757707825"
+    },
+    "id": "25nie6luxtxdt9l",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:14.728Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.667Z",
+    "data": {
+      "title": "Tiny Troopers",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/216110/header.jpg?t=1725379532",
+      "score": 995,
+      "steam": "https://store.steampowered.com/app/216110",
+      "website": "http://www.iceberg-games.com",
+      "time": 3,
+      "price": "Free",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/216110/header.jpg?t=1725379532"
+    },
+    "id": "oig2zs3jzqa5aag",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:17.494Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.671Z",
+    "data": {
+      "title": "S.T.A.L.K.E.R.: Shadow of Chernobyl",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/4500/header.jpg?t=1686945417",
+      "score": 94,
+      "steam": "https://store.steampowered.com/app/4500/STALKER_Shadow_of_Chernobyl/",
+      "time": 15,
+      "price": null,
+      "background": "https://cdn.cloudflare.steamstatic.com/steam/apps/4500/header.jpg?t=1686945417"
+    },
+    "id": "5fow25n0e0wo754",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:39.712Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.674Z",
+    "data": {
+      "title": "The Fantastic Kitty Rue",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2126630/header.jpg?t=1717385342",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/2126630",
+      "website": "http://flutterstars.com/",
+      "time": 2,
+      "price": "5,89€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2126630/header.jpg?t=1717385342"
+    },
+    "id": "onxlrvy54qovkqy",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:54.855Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.686Z",
+    "data": {
+      "title": "Zombotron",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/664830/header.jpg?t=1700323566",
+      "score": 2746,
+      "steam": "https://store.steampowered.com/app/664830",
+      "time": 6,
+      "price": "12,49€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/664830/header.jpg?t=1700323566"
+    },
+    "id": "oao750vix1m6t9f",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "Движок хуйня",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:49.735Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.693Z",
+    "data": {
+      "title": "Borderlands Game of the Year Enhanced",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/729040/header.jpg?t=1750080828",
+      "score": 17126,
+      "steam": "https://store.steampowered.com/app/729040",
+      "time": 22,
+      "price": "29,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/729040/header.jpg?t=1750080828"
+    },
+    "id": "eavkgjtc698axe8",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "Зароллить кооп лутер шутер ☑\r\nЗаставить Дюху проходить его ☑\r\nВОЗВРАЩАЙТЕСЬ ",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:25.233Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.697Z",
+    "data": {
+      "title": "Shoot 'm Up",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/657170/header.jpg?t=1617373633",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/657170",
+      "website": "https://www.shootmup.com/",
+      "time": 1.5,
+      "price": "4,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/657170/header.jpg?t=1617373633"
+    },
+    "id": "64irbn4okayixca",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "вот бы было больше сюжета....",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:57.805Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.702Z",
+    "data": {
+      "title": "Blasphemous",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/774361/header.jpg?t=1753974290",
+      "score": 46337,
+      "steam": "https://store.steampowered.com/app/774361",
+      "website": "http://blasphemousgame.com/",
+      "time": 14,
+      "price": "24,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/774361/header.jpg?t=1753974290"
+    },
+    "id": "0wokc9g1w0m17ta",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:41.705Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.705Z",
+    "data": {
+      "title": "Assassin’s Creed® Liberation HD",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/260210/header.jpg?t=1747655342",
+      "score": 2851,
+      "steam": "https://store.steampowered.com/app/260210",
+      "website": "http://www.assassinscreed.com/liberationhd",
+      "time": 8,
+      "price": "19,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/260210/header.jpg?t=1747655342"
+    },
+    "id": "pav9ianb3bbj82h",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "Эту игру делали нигеры и пидорасы 2/10",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:25.333Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.710Z",
+    "data": {
+      "title": "Born of Bread",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1555140/header.jpg?t=1744982436",
+      "score": 382,
+      "steam": "https://store.steampowered.com/app/1555140",
+      "website": "https://www.wildartsgames.com/bornofbread",
+      "time": 14,
+      "price": "6,24€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1555140/header.jpg?t=1744982436"
+    },
+    "id": "hp3n3sjf7y4fci2",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "бредик зачетный, класс",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:43.623Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.713Z",
+    "data": {
+      "title": "Ys IX: Monstrum Nox",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1351630/header.jpg?t=1732665686",
+      "score": 1623,
+      "steam": "https://store.steampowered.com/app/1351630",
+      "time": 28,
+      "price": "59,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1351630/header.jpg?t=1732665686"
+    },
+    "id": "7wgxfwglv7hmzry",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "В какой-то момент меня даже начало затягивать, но это было под самый конец. Я бы не стал сам начинать в это играть, но если бы каким-то чудом начал, то, скорее всего, мне бы понравилось. Как слэшер норм, но точно не как комбо-ебля",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:27.585Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.716Z",
+    "data": {
+      "title": "Borderlands Game of the Year Enhanced",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/729040/header.jpg?t=1750080828",
+      "score": 17135,
+      "steam": "https://store.steampowered.com/app/729040",
+      "time": 22,
+      "price": "29,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/729040/header.jpg?t=1750080828"
+    },
+    "id": "e4l4cxaidi0jy1p",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "Городской Гопник X-17 получен, начинается HELLDIVERS 3",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:45.486Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.720Z",
+    "data": {
+      "title": "INDIKA",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1373960/header.jpg?t=1758883679",
+      "score": 5600,
+      "steam": "https://store.steampowered.com/app/1373960",
+      "website": "http://www.indikathegame.com/",
+      "time": 4,
+      "price": "24,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1373960/header.jpg?t=1758883679"
+    },
+    "id": "6q0a2dusiz7qoq1",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "Прикольно",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:51.672Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.724Z",
+    "data": {
+      "title": "Stranded Sails - Explorers of the Cursed Islands",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/943260/header.jpg?t=1732804088",
+      "score": 766,
+      "steam": "https://store.steampowered.com/app/943260",
+      "website": "http://www.stranded-sails.com",
+      "time": 13,
+      "price": "24,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/943260/header.jpg?t=1732804088"
+    },
+    "id": "kzup2zv9wacgvta",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "ONE PISS",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:47.472Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.727Z",
+    "data": {
+      "title": "Kathy Rain",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/370910/header.jpg?t=1726577236",
+      "score": 1727,
+      "steam": "https://store.steampowered.com/app/370910",
+      "website": "http://kathyraingame.com",
+      "time": 6,
+      "price": "9,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/370910/header.jpg?t=1726577236"
+    },
+    "id": "kvnulbog2ekb4q6",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "Хороший, грамотный сюжет",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:53.437Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.731Z",
+    "data": {
+      "title": "Sunrider Legends Tactics",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3854880/7cbefa94bf91702098c1f48fcd0d1f56a57807aa/header.jpg?t=1754075168",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/3854880",
+      "time": 30,
+      "price": "28,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3854880/7cbefa94bf91702098c1f48fcd0d1f56a57807aa/header.jpg?t=1754075168"
+    },
+    "id": "3tsaax4iib6eyce",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "ЛУЧШАЯ ИГРА НА ДПГ (НЕИРОНИЧНО)",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:26.938Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.734Z",
+    "data": {
+      "title": "Home Path",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2736350/header.jpg?t=1752689449",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/2736350",
+      "website": "https://lilithguild.com/2023/11/11/home-path-game/",
+      "time": 1,
+      "price": "Free",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2736350/header.jpg?t=1752689449"
+    },
+    "id": "8xtdhjwtt6wepcd",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "Лучшее, во что я играл",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:29.668Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.738Z",
+    "data": {
+      "title": "Endoparasitic 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2990640/header.jpg?t=1754084552",
+      "score": 535,
+      "steam": "https://store.steampowered.com/app/2990640",
+      "website": "https://www.deeproot.dev/",
+      "time": 5.5,
+      "price": "8,84€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2990640/header.jpg?t=1754084552"
+    },
+    "id": "9pl1xpzjbpcldbj",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "Норм, но очень затянули с 30 уровнями",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:31.736Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.741Z",
+    "data": {
+      "title": "Hauntii",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2060790/header.jpg?t=1750079178",
+      "score": 313,
+      "steam": "https://store.steampowered.com/app/2060790",
+      "website": "https://www.moonloop.games/hauntii",
+      "time": 8,
+      "price": "9,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2060790/header.jpg?t=1750079178"
+    },
+    "id": "6jta8gj9mnolmgm",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:57.074Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.745Z",
+    "data": {
+      "title": "DOOM II",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2300/header.jpg?t=1723132744",
+      "score": 7905,
+      "steam": "https://store.steampowered.com/app/2300",
+      "time": 7,
+      "price": "Free",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2300/header.jpg?t=1723132744"
+    },
+    "id": "souu9zoetekcgtd",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "https://youtu.be/j0FFPiX2MsY",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:49.235Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.749Z",
+    "data": {
+      "title": "TROLEU",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2731330/07cf5d90bb310bedb7172805280b63119fe434a5/header.jpg?t=1760973061",
+      "score": 287,
+      "steam": "https://store.steampowered.com/app/2731330",
+      "time": 3,
+      "price": "9,75€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2731330/07cf5d90bb310bedb7172805280b63119fe434a5/header.jpg?t=1760973061"
+    },
+    "id": "sgtjaaao46isj5w",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "дать пинка бабке под жопу ням",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:59.997Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.752Z",
+    "data": {
+      "title": "Shadow Man Remastered",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1413870/header.jpg?t=1669836016",
+      "score": 96,
+      "steam": "https://store.steampowered.com/app/1413870/Shadow_Man_Remastered/",
+      "time": 20,
+      "price": null,
+      "background": "https://cdn.cloudflare.steamstatic.com/steam/apps/1413870/header.jpg?t=1669836016"
+    },
+    "id": "t3f53nju1thmdut",
+    "reviewImage": "shadownig_f1fkszdqhl.webp",
+    "reviewRating": 2,
+    "reviewText": "Если б не было столько бектрекинга то мб и норм...\r\nМузыка местами в голову въедается, и вообще игра имеет свойство вызывать головокружения/головную боль.",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-08 08:09:50.407Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.756Z",
+    "data": {
+      "title": "Contraband Police: Prologue",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1396240/18d980a530540d58324982aa4538edfabc182b59/header.jpg?t=1758625097",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/1396240",
+      "website": "https://www.crazyrocksstudios.com/",
+      "time": 4,
+      "price": "Free",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1396240/18d980a530540d58324982aa4538edfabc182b59/header.jpg?t=1758625097"
+    },
+    "id": "i2xnqbokdngis8w",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "Великая игра. Фулл игра тоже заебись уверен",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:33.620Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.760Z",
+    "data": {
+      "title": "IS Defense",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/448370/header.jpg?t=1713951885",
+      "score": 1407,
+      "steam": "https://store.steampowered.com/app/448370",
+      "website": "http://www.isdefensegame.com",
+      "time": 3.5,
+      "price": "5,24€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/448370/header.jpg?t=1713951885"
+    },
+    "id": "7n9j1jx17a3fsp0",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "В другие rail шутеры не играл, но этот пиздец скудный. Буквально по часу на каждом уровне сиди по сто раз перепроходи, чтобы нафармить ХУЙНЮ",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:14:35.815Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.764Z",
+    "data": {
+      "title": "Rogue Singularity",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/419710/header.jpg?t=1565875128",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/419710",
+      "website": "http://www.roguesingularity.com",
+      "time": 5,
+      "price": "14,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/419710/header.jpg?t=1565875128"
+    },
+    "id": "u0ff6hdgypqjot7",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "акулья пизда я скоро приеду",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:51.565Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.768Z",
+    "data": {
+      "title": "9 Monkeys of Shaolin",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/739080/header.jpg?t=1695299504",
+      "score": null,
+      "steam": "https://store.steampowered.com/app/739080/9_Monkeys_of_Shaolin/",
+      "time": 4,
+      "price": null,
+      "background": "https://cdn.cloudflare.steamstatic.com/steam/apps/739080/header.jpg?t=1695299504"
+    },
+    "id": "8zivyxis5egirf6",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "9 обезьян Шаолиня bp из 10",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:28.793Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.772Z",
+    "data": {
+      "title": "Rock of Ages",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/22230/header.jpg?t=1667563022",
+      "score": 3154,
+      "steam": "https://store.steampowered.com/app/22230",
+      "website": "http://www.atlus.com/rockofages",
+      "time": 4,
+      "price": "9,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/22230/header.jpg?t=1667563022"
+    },
+    "id": "ca61owcvqrrakrv",
+    "reviewImage": "1g4naujmv94_g2p2uxfhs7_rcf9lsxh5z.png",
+    "reviewRating": 4,
+    "reviewText": "Прикольно, динамично, шарообразно. идеально короткая игра для количества внутриигровых механик",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-17 21:41:58.461Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.775Z",
+    "data": {
+      "title": "Little Witch Academia",
+      "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21858-huBrbIOGMYXv.jpg",
+      "score": 77,
+      "steam": "https://anilist.co/anime/21858/Little-Witch-Academia-TV/",
+      "time": 2,
+      "price": "0",
+      "background": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21858-huBrbIOGMYXv.jpg"
+    },
+    "id": "t55pxzo0hs9b9f5",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "Просмотрено",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:30.577Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.779Z",
+    "data": {
+      "title": "House Party",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/611790/baa245f042e4dff2a9c140d72dfb145906c4998d/header.jpg?t=1743609114",
+      "score": 13708,
+      "steam": "https://store.steampowered.com/app/611790",
+      "website": "https://housepartygame.com",
+      "time": 6,
+      "price": "24,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/611790/baa245f042e4dff2a9c140d72dfb145906c4998d/header.jpg?t=1743609114"
+    },
+    "id": "psdje87fwej12mv",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "из-за этой игры отключили интернет в екатеринбурге, того не стоило",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:54.128Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.782Z",
+    "data": {
+      "title": "Sakamoto Days",
+      "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx177709-e5Qx6RlsBgD5.png",
+      "score": 6,
+      "steam": "https://anilist.co/anime/177709/SAKAMOTO-DAYS/",
+      "time": 2,
+      "price": "0",
+      "background": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx177709-e5Qx6RlsBgD5.png"
+    },
+    "id": "8m5xtfm8i7yfp1r",
+    "reviewImage": "",
+    "reviewRating": 2,
+    "reviewText": "жирный смешно (не оч)",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:32.535Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.786Z",
+    "data": {
+      "title": "Content",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1622470/header.jpg?t=1727467802",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/1622470",
+      "time": 1,
+      "price": "0,74€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1622470/header.jpg?t=1727467802"
+    },
+    "id": "hvj1gn74pn5yhu2",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "ГРЕГОР САМСА",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:34.495Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.789Z",
+    "data": {
+      "title": "Surgeon Simulator",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/233720/header.jpg?t=1752170105",
+      "score": 13509,
+      "steam": "https://store.steampowered.com/app/233720",
+      "website": "https://www.surgeonsim.com",
+      "time": 4,
+      "price": "1,95€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/233720/header.jpg?t=1752170105"
+    },
+    "id": "vugfh9yveif4d5e",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "лёгкие переоценены",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:36.357Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.793Z",
+    "data": {
+      "title": "Karmaflow: The Rock Opera Videogame - Act I & Act II",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/317940/header.jpg?t=1447363105",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/317940",
+      "website": "http://www.karmaflowgame.com",
+      "time": 7,
+      "price": "4,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/317940/header.jpg?t=1447363105"
+    },
+    "id": "scs0t5dk97686c0",
+    "reviewImage": "iluha_baby_9j6rzw3cz9_zm1ni11yiw.png",
+    "reviewRating": 3,
+    "reviewText": "Прикол есть, последний файт даже кайф, но левел дезигн пиздец полный 🖊️🍍🍎🖊️",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-13 21:55:53.520Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.796Z",
+    "data": {
+      "title": "Call of Duty®: WWII",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/476600/header.jpg?t=1751302904",
+      "score": 31240,
+      "steam": "https://store.steampowered.com/app/476600",
+      "website": "https://www.callofduty.com/wwii",
+      "time": 7,
+      "price": "59,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/476600/header.jpg?t=1751302904"
+    },
+    "id": "fyt754aqf0e6gox",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:55.292Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.800Z",
+    "data": {
+      "title": "Flood of Light",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/606480/header.jpg?t=1745230211",
+      "score": 247,
+      "steam": "https://store.steampowered.com/app/606480",
+      "website": "http://www.irisloft.com/en/www.irisloft.com/en",
+      "time": 5,
+      "price": "3,60€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/606480/header.jpg?t=1745230211"
+    },
+    "id": "1a2cizxrlo9zoft",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "ТУК ТУК. ОТКРОЙТЕ ДВЕРЬ! ВЫ НАС ТОПИТЕ!!!!11",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:17:38.345Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.804Z",
+    "data": {
+      "title": "Hauntii",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2060790/header.jpg?t=1750079178",
+      "score": 317,
+      "steam": "https://store.steampowered.com/app/2060790",
+      "website": "https://www.moonloop.games/hauntii",
+      "time": 8,
+      "price": "19,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2060790/header.jpg?t=1750079178"
+    },
+    "id": "fwdrw2vzkg84yqb",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "Прекрасная игра с завораживающим визуалом и звуком. Некоторые сцены настолько красивые, что заставляет задуматься почему так мало внимания дали этой игре. Сюжет простой, милый, даже грустный. Работа с перспективой чувствуется на высшем уровне, но здесь есть и проблема, в геймплее - это пиздец. Также очень много вещей для собирателей и прохождения на 100%, но большинство повторяются просто так, что не очень хочется делать.\r\nВ любом случае, рекомендую всем, это просто 10/10",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:15:56.178Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.807Z",
+    "data": {
+      "title": "Police Shootout",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1279240/header.jpg?t=1758644293",
+      "score": 410,
+      "steam": "https://store.steampowered.com/app/1279240",
+      "website": "https://games-i.com/",
+      "time": 3,
+      "price": "14,79€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1279240/header.jpg?t=1758644293"
+    },
+    "id": "mfqset9vuvu1osx",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "не всё то говно, что дешево",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 03:16:58.769Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.812Z",
+    "data": {
+      "title": "My Time at Portia",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/666140/header.jpg?t=1744872501",
+      "score": 34357,
+      "steam": "https://store.steampowered.com/app/666140",
+      "website": "http://portia.pathea.net",
+      "time": 69,
+      "price": "29,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/666140/header.jpg?t=1744872501"
+    },
+    "id": "mbstmvtvm563bzv",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "廢話",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-13 14:50:26.709Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.815Z",
+    "data": {
+      "title": "Space Elite Force",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/855850/header.jpg?t=1727960033",
+      "score": 153,
+      "steam": "https://store.steampowered.com/app/855850",
+      "website": "https://www.risingmoongames.com/our-games/space-elite-force-i",
+      "time": 1,
+      "price": "2,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/855850/header.jpg?t=1727960033"
+    },
+    "id": "wlhh2ekvchte3m9",
+    "reviewImage": "image_vldmwymt9z.jpg",
+    "reviewRating": 5,
+    "reviewText": "смотрите какой крутой илюха",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-17 20:10:43.233Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.819Z",
+    "data": {
+      "title": "Constructor Classic 1997",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/599600/header.jpg?t=1570461968",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/599600",
+      "time": 10,
+      "price": "4,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/599600/header.jpg?t=1570461968"
+    },
+    "id": "013krzykin6bmh4",
+    "reviewImage": "screenshot_3_s40vh0bng7.png",
+    "reviewRating": 1,
+    "reviewText": "",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-17 20:11:34.865Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 03:12:41.822Z",
+    "data": {
+      "title": "Jet Car Stunts",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/274880/header.jpg?t=1447360165",
+      "score": 110,
+      "steam": "https://store.steampowered.com/app/274880",
+      "time": 5,
+      "price": "2,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/274880/header.jpg?t=1447360165"
+    },
+    "id": "a4t3m6pd4ti17wl",
+    "reviewImage": "3b8b11b55a7209296490fa69afa687ba_shfeo84mcc.webp",
+    "reviewRating": 5,
+    "reviewText": "Это просто пиздец, на последних уровнях ты не машина, ты самолет",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 14:06:29.413Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 17:19:58.057Z",
+    "data": {
+      "title": "The Path",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/27000/header.jpg?t=1667032931",
+      "score": 830,
+      "steam": "https://store.steampowered.com/app/27000",
+      "website": "http://Tale-of-Tales.com/ThePath",
+      "time": 3,
+      "price": "8,49€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/27000?t=1667032931"
+    },
+    "id": "1qshzfpi97gop37",
+    "reviewImage": "image_cyitjozk1c.webp",
+    "reviewRating": 3,
+    "reviewText": "Детектор волков",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-07 19:04:41.541Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 19:12:12.952Z",
+    "data": {
+      "title": "Umurangi Generation",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1223500/header.jpg?t=1683513755",
+      "steam": "https://store.steampowered.com/app/1223500/Umurangi_Generation/",
+      "time": 2
+    },
+    "id": "4jhejexqrhzb9dh",
+    "reviewImage": "screenshot_4_iafc7k17vk.webp",
+    "reviewRating": 4,
+    "reviewText": "опа 📸, попался который кусался📸, а чего ты тут забыл 📸📸📸? Бутылка с водой есть 📸❓ А если найду 📸❓?❓ Щёлк 📸 щелк 📸 щелк 📸 У тебя есть 10 минут чтобы 📸 этот пост и выложить в канал дпг на сервере гробчики 📸. А ИНАЧЕ ⬛⬛⬛⬛⬛⬛⬛⬛",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-08 15:08:23.199Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-07 19:54:30.966Z",
+    "data": {
+      "title": "DYNASTY WARRIORS 8: Xtreme Legends Complete Edition",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/278080/header.jpg?t=1748480170",
+      "score": 11604,
+      "steam": "https://store.steampowered.com/app/278080",
+      "website": "",
+      "time": 22,
+      "price": "49,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/278080?t=1748480170"
+    },
+    "id": "n6co3mhomk9enx4",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "ебаные сука монголы блять",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-09 11:37:03.302Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-08 12:42:44.130Z",
+    "data": {
+      "title": "バッファローとエロトラップダンジョン",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3367320/cb24ad482012f9930341d2df30822583e842aab3/header.jpg?t=1757313255",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/3367320",
+      "website": "",
+      "time": 1,
+      "price": "4,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/3367320?t=1757313255"
+    },
+    "id": "u0gg5sitzhhq5km",
+    "reviewImage": "image_iib7nofcri.webp",
+    "reviewRating": 5,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-08 13:19:33.348Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-08 13:25:22.220Z",
+    "data": {
+      "title": "Frontlines™: Fuel of War™",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/9460/header.jpg?t=1727864110",
+      "score": 849,
+      "steam": "https://store.steampowered.com/app/9460",
+      "website": "http://www.frontlines.com/",
+      "time": 5.5,
+      "price": "9,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/9460?t=1727864110"
+    },
+    "id": "l1ie19dtu8baxm9",
+    "reviewImage": "1567235924_k_hdn_mn3_jd6_m_780oula1m9.jpg",
+    "reviewRating": 3,
+    "reviewText": "стрельба говна пипец",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-09 10:26:40.941Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-08 15:19:38.792Z",
+    "data": {
+      "title": "バッファローとエロトラップダンジョン",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3367320/cb24ad482012f9930341d2df30822583e842aab3/header.jpg?t=1757313255",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/3367320",
+      "website": "",
+      "time": 1,
+      "price": "4,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/3367320?t=1757313255"
+    },
+    "id": "y6erl5sml3shy84",
+    "reviewImage": "photo_2025_11_04_20_06_26_9c9gxq7ghg.webp",
+    "reviewRating": 5,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-08 15:33:47.505Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-08 15:46:35.976Z",
+    "data": {
+      "title": "Бумер: Сорванные башни",
+      "image": "http://partners.softclub.ru/ppc/img/1280/1024/upload/poster/3ae17fdef37d9db43196b0e3441414a6.jpg",
+      "score": 18,
+      "steam": "",
+      "website": "",
+      "time": 3,
+      "price": "100 рублей",
+      "background": ""
+    },
+    "id": "bes5gvtn1t999oq",
+    "reviewImage": "screenshot_5_hlyasvyfae.png",
+    "reviewRating": 1,
+    "reviewText": "получил двойную клизму в ЖОПУ",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-10 10:31:14.255Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-08 17:12:50.718Z",
+    "data": {
+      "title": "Pumpkin Jack",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1186640/header.jpg?t=1760540939",
+      "score": 6621,
+      "steam": "https://store.steampowered.com/app/1186640",
+      "website": "https://www.evilraptor.com/",
+      "time": 5,
+      "price": "29,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/1186640?t=1760540939"
+    },
+    "id": "p7lxd5d1pbhfwe6",
+    "reviewImage": "img_20251110_154659_yer38iqipi.jpg",
+    "reviewRating": 2,
+    "reviewText": "Разрабы долбоебы",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-10 13:21:40.118Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-09 10:41:40.669Z",
+    "data": {
+      "title": "18 Wheels of Steel: Across America",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/514160/header.jpg?t=1591335427",
+      "score": 153,
+      "steam": "https://store.steampowered.com/app/514160",
+      "website": "",
+      "time": 14,
+      "price": "9,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/514160?t=1591335427"
+    },
+    "id": "aoi9vv97a4qksj6",
+    "reviewImage": "police_tilpss0zc6.png",
+    "reviewRating": 5,
+    "reviewText": "быстрее некуда, на скилле вывез :)))))",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-09 11:04:13.662Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-09 11:06:48.488Z",
+    "data": {
+      "title": "Catlateral Damage",
+      "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/329860/header.jpg?t=1666983328",
+      "score": 89,
+      "steam": "https://store.steampowered.com/app/329860/Catlateral_Damage/",
+      "time": 5
+    },
+    "id": "de5z0n8v38xfqz7",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "мяу мяу блять. Мяу мяув.",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-09 14:05:28.329Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-09 14:14:05.812Z",
+    "data": {
+      "title": "Divinity: Original Sin 2 - Definitive Edition",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/435150/header.jpg?t=1725653917",
+      "score": 169478,
+      "steam": "https://store.steampowered.com/app/435150",
+      "website": "http://divinity.game",
+      "time": 59,
+      "price": "44,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/435150/page_bg_raw.jpg?t=1725653917"
+    },
+    "id": "xg0r87x6lyk2z9q",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "<p>там где надо выбрать кто лучше котик или собачик я не выбрал никого потому что просрал ошейник пёсика и в итоге не смог сказать что котик лучше, так что ран считай зафейлен :(</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2026-01-09 17:38:06.476Z",
+    "user": {
+      "id": "jcjwffmfl5sfnvg",
+      "username": "ZHERF"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-09 15:10:07.580Z",
+    "data": {
+      "title": "Gachiakuta",
+      "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx178025-cWJKEsZynkil.jpg",
+      "score": 8,
+      "steam": "https://anilist.co/anime/178025/Gachiakuta/",
+      "website": "https://anilist.co/anime/178025/Gachiakuta/",
+      "time": 2,
+      "price": "0",
+      "background": ""
+    },
+    "id": "itae4u9kciv02en",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "смотрим",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-09 15:10:16.790Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-09 15:15:47.344Z",
+    "data": {
+      "title": "Dread Delusion",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1574240/header.jpg?t=1730134758",
+      "score": 4147,
+      "steam": "https://store.steampowered.com/app/1574240",
+      "website": "https://www.dreadxp.com/dread-delusion/",
+      "time": 20,
+      "price": "16,79€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/1574240?t=1730134758"
+    },
+    "id": "wdo66viliephnj1",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "Пизда. Ку-ку",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-15 17:59:01.388Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-10 10:46:11.340Z",
+    "data": {
+      "title": "Re:Zero kara Hajimeru Isekai Seikatsu 3",
+      "image": "https://i8.imageban.ru/out/2024/10/03/2850d18563cca92de11d04c685f6e252.png",
+      "score": 0,
+      "steam": "",
+      "website": "",
+      "time": 1,
+      "price": "Free",
+      "background": ""
+    },
+    "id": "z3hm6otk0o7z47d",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-10 10:46:15.537Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-10 10:50:58.878Z",
+    "data": {
+      "title": "Alone",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/837930/header.jpg?t=1634197114",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/837930",
+      "website": "",
+      "time": 1,
+      "price": "0,79€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/837930?t=1634197114"
+    },
+    "id": "mf86mpjf32clzko",
+    "reviewImage": "b0hqv9acmc_tdhiix6unf.png",
+    "reviewRating": 1,
+    "reviewText": "if random(0, 10) > 5:\r\n print(\"ты проиграл\")",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-10 16:44:32.122Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-10 17:09:13.228Z",
+    "data": {
+      "title": "The Crew™ 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/646910/e46b164bc4bcf5751308bf5dfa1bba35c9d9625b/header_alt_assets_5.jpg?t=1762277272",
+      "score": 83776,
+      "steam": "https://store.steampowered.com/app/646910",
+      "website": "http://thecrew-game.com",
+      "time": 21,
+      "price": "29,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/646910/page_bg_raw.jpg?t=1762277272"
+    },
+    "id": "7t1jwhlnq2fp2bz",
+    "reviewImage": "uncannycat_w98uc5b6yc.png",
+    "reviewRating": 1,
+    "reviewText": "крю",
+    "status": "REROLL",
+    "taken": false,
+    "updated": "2025-11-13 16:23:18.310Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-11 04:14:55.291Z",
+    "data": {
+      "title": "Divinity: Original Sin 2 - Definitive Edition",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/435150/header.jpg?t=1725653917",
+      "score": 169500,
+      "steam": "https://store.steampowered.com/app/435150",
+      "website": "http://divinity.game",
+      "time": 59,
+      "price": "44,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/435150/page_bg_raw.jpg?t=1725653917"
+    },
+    "id": "hnox4f0hh5tc10d",
+    "reviewImage": "screenshot_5_44t7jjiua6.png",
+    "reviewRating": 5,
+    "reviewText": "22 часа настоящего кайфа. Мал клоп, да вонюч.",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-15 00:43:08.350Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-13 15:17:40.065Z",
+    "data": {
+      "title": "Kaiju Wars",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1508400/header.jpg?t=1726458171",
+      "score": 218,
+      "steam": "https://store.steampowered.com/app/1508400",
+      "website": "http://www.foolish-mortals.net/kaijuwars",
+      "time": 19,
+      "price": "16,79€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1508400/page_bg_raw.jpg?t=1726458171"
+    },
+    "id": "pdq7vf2x0frfm4p",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "PLAYING",
+    "taken": false,
+    "updated": "2025-11-13 15:17:40.065Z",
+    "user": {
+      "id": "2h7uy2g8rx20e2x",
+      "username": "GRETCHIN"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-13 16:31:24.657Z",
+    "data": {
+      "title": "Smalland: Survive the Wilds",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/768200/324de34fef42359d9ac687494c219200084deb9e/header_alt_assets_5.jpg?t=1761233200",
+      "score": 7212,
+      "steam": "https://store.steampowered.com/app/768200",
+      "website": "https://maximument.com/games/smalland-survive-the-wilds/",
+      "time": 30,
+      "price": "34,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/768200/page_bg_raw.jpg?t=1761233200"
+    },
+    "id": "y8770y90alj4jxv",
+    "reviewImage": "",
+    "reviewRating": 1,
+    "reviewText": "пашол нахуй",
+    "status": "REROLL",
+    "taken": false,
+    "updated": "2025-11-13 16:32:25.307Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-13 16:33:03.986Z",
+    "data": {
+      "title": "S.T.A.L.K.E.R.: Call of Prypiat - Enhanced Edition",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2427430/24ab390192735d4e56efc64f9135353457ac981c/header.jpg?t=1747757839",
+      "score": 2103,
+      "steam": "https://store.steampowered.com/app/2427430",
+      "website": "http://stalker-game.com/",
+      "time": 15,
+      "price": "19,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/2427430?t=1747757839"
+    },
+    "id": "9dql5rdfdd0lx08",
+    "reviewImage": "callofsnya_t9fswn2dts.jpg",
+    "reviewRating": 5,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-15 17:57:16.353Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-15 00:44:20.851Z",
+    "data": {
+      "title": "Minecraft",
+      "image": "https://preview.redd.it/5uuduk40yno71.jpg?width=640&crop=smart&auto=webp&s=0c03ed7231a045984c64038df26d0bc6887edcef",
+      "score": 100,
+      "steam": "",
+      "time": 65,
+      "price": "20"
+    },
+    "id": "sj8aer4zoxtqdxv",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "<p>Суки скелеты в броне пиздец</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-17 01:41:38.093Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-15 18:04:48.690Z",
+    "data": {
+      "title": "Factorio",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/header.jpg?t=1730307306",
+      "score": 181893,
+      "steam": "https://store.steampowered.com/app/427520",
+      "website": "https://www.factorio.com",
+      "time": 50,
+      "price": "32,--€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427520/page_bg_raw.jpg?t=1730307306"
+    },
+    "id": "rtres5c8mrm5tbr",
+    "reviewImage": "image_vffhuo9z27.png",
+    "reviewRating": 5,
+    "reviewText": "<p>Лучшая игра десятилетия</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-17 20:36:48.683Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-16 18:08:06.462Z",
+    "data": {
+      "title": "Call of Duty® (2003)",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2620/header.jpg?t=1731699308",
+      "score": 6666,
+      "steam": "https://store.steampowered.com/app/2620",
+      "time": 7,
+      "price": "19,99€"
+    },
+    "id": "xo9i37fz0fx1eah",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "<p>БУДЕШЬ КРИЧАТЬ ХАЙЛЬ ГИТЛЕР В АДУ!</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-12 06:08:56.408Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-17 21:24:46.553Z",
+    "data": {
+      "title": "DEAD RISING®",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/427190/header.jpg?t=1701219182",
+      "score": 5479,
+      "steam": "https://store.steampowered.com/app/427190",
+      "website": "http://www.facebook.com/deadrising",
+      "time": 10,
+      "price": "9,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/427190?t=1701219182"
+    },
+    "id": "31orb7u5p5bbn6e",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "<p>тереблю сосок</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-17 21:25:04.158Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-17 21:25:03.839Z",
+    "data": {
+      "title": "Keep Driving",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2756920/header.jpg?t=1763335524",
+      "score": 4075,
+      "steam": "https://store.steampowered.com/app/2756920",
+      "website": "http://www.whycjwhy.com",
+      "time": 2,
+      "price": "14,40€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2756920/page_bg_raw.jpg?t=1763335524"
+    },
+    "id": "804j8hdsx4acazv",
+    "reviewImage": "screenshot_2222_zq5bvrux3e.png",
+    "reviewRating": 5,
+    "reviewText": "<p>раздавил бабку и выпил пива</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-18 12:32:51.731Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-17 21:39:03.160Z",
+    "data": {
+      "title": "Catgirl & Doggirl Cafe",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1142270/header.jpg?t=1729778911",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/1142270",
+      "website": "https://cherrykissgames.com/",
+      "time": 2,
+      "price": "3,49€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1142270/page_bg_raw.jpg?t=1729778911"
+    },
+    "id": "ht0d190yacshjzb",
+    "reviewImage": "1u04835wvtj_3ixxptovnt.png",
+    "reviewRating": 2,
+    "reviewText": "<p>кашка жена, собака да</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-18 18:22:59.927Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-17 21:47:27.690Z",
+    "data": {
+      "title": "Children of Morta",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/330020/header.jpg?t=1733749085",
+      "score": 17163,
+      "steam": "https://store.steampowered.com/app/330020",
+      "website": "http://www.childrenofmorta.com/",
+      "time": 14,
+      "price": "21,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/330020/page_bg_raw.jpg?t=1733749085"
+    },
+    "id": "6ru5kee1l9xocrw",
+    "reviewImage": "real_3g22vod4wn.png",
+    "reviewRating": 4,
+    "reviewText": "<p>После айзека есть биас на рогалики (в плане предметов), но в целом заебись. Даже Илюха одобрил смотрите</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-20 01:24:03.098Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-18 18:27:28.845Z",
+    "data": {
+      "title": "Stellaris",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/281990/header.jpg?t=1761224518",
+      "score": 135133,
+      "steam": "https://store.steampowered.com/app/281990",
+      "website": "https://www.stellaris.com/",
+      "time": 32,
+      "price": "39,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/281990/page_bg_raw.jpg?t=1761224518"
+    },
+    "id": "jqoa6iuxo6dd2t2",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "<p>Ща, ещё раз расу создам...</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-27 19:18:31.889Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-18 19:38:01.729Z",
+    "data": {
+      "title": "The Elder Scrolls V: Skyrim",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/72850/header.jpg?t=1721923139",
+      "score": 181146,
+      "steam": "https://store.steampowered.com/app/72850",
+      "time": 33,
+      "price": "14,99€"
+    },
+    "id": "5tvsb5xbrqdzobo",
+    "reviewImage": "hteeldp5vn_ltk6u4fhx0.png",
+    "reviewRating": 5,
+    "reviewText": "<ol><li><p>у <strong><em>и</em></strong> и <strong><em>а</em></strong> и и <strong>у <em>и </em></strong>и <strong><em>а</em></strong></p></li></ol><p></p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-21 22:02:18.686Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-20 21:49:38.244Z",
+    "data": {
+      "title": "SIGNALIS",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1262350/header.jpg?t=1762193138",
+      "score": 26382,
+      "steam": "https://store.steampowered.com/app/1262350",
+      "website": "http://rose-engine.org/signalis/",
+      "time": 9,
+      "price": "19,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1262350/page_bg_raw.jpg?t=1762193138"
+    },
+    "id": "s9x56lhbml6zury",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "PLAYING",
+    "taken": false,
+    "updated": "2025-11-29 17:25:53.080Z",
+    "user": {
+      "id": "3yfqqkibyr1eiij",
+      "username": "HULLPERSE"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-21 22:11:53.587Z",
+    "data": {
+      "title": "Cuphead",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/268910/header.jpg?t=1709068852",
+      "score": 176787,
+      "steam": "https://store.steampowered.com/app/268910",
+      "website": "http://www.cupheadgame.com",
+      "time": 10,
+      "price": "19,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/268910/page_bg_raw.jpg?t=1709068852"
+    },
+    "id": "oxcxlmlxjksi69o",
+    "reviewImage": "61c8a74d_f67e_4071_a4b3_96ec639ccf05_t2ythn8b9x.png",
+    "reviewRating": 1,
+    "reviewText": "<p>гавно игра</p>",
+    "status": "DROPPED",
+    "taken": false,
+    "updated": "2025-11-22 15:49:00.967Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-22 16:12:03.456Z",
+    "data": {
+      "title": "Tomb Raider",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/203160/header.jpg?t=1729010886",
+      "score": 161083,
+      "steam": "https://store.steampowered.com/app/203160",
+      "website": "http://www.tombraider.com",
+      "time": 11,
+      "price": "14,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/203160?t=1729010886"
+    },
+    "id": "0hk4vwok14nczql",
+    "reviewImage": "dem_692432f84be3c_g3c2wosfj4.png",
+    "reviewRating": 3,
+    "reviewText": "<p>саня сдох за отвертку и гаечный ключ</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-28 13:04:58.400Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-24 10:47:15.876Z",
+    "data": {
+      "title": "Rise of the Tomb Raider™",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391220/header.jpg?t=1759170749",
+      "score": 116587,
+      "steam": "https://store.steampowered.com/app/391220",
+      "website": "http://www.tombraider.com/us/",
+      "time": 13,
+      "price": "29,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391220/page_bg_raw.jpg?t=1759170749"
+    },
+    "id": "8orvnc9dms417rf",
+    "reviewImage": "image_ipuhld9clz.png",
+    "reviewRating": 2,
+    "reviewText": "<p>жумар 2</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-28 13:06:22.173Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-28 15:28:09.717Z",
+    "data": {
+      "title": "The Planet Crafter: Prologue",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1830840/header.jpg?t=1730825572",
+      "score": 0,
+      "steam": "https://store.steampowered.com/app/1830840",
+      "website": "",
+      "time": 7,
+      "price": "Free",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/1830840?t=1730825572"
+    },
+    "id": "f38031s2wvhn70a",
+    "reviewImage": "pressf8_45cocuojpx.png",
+    "reviewRating": 3,
+    "reviewText": "<p>дрочильня</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-11-28 15:28:50.426Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-11-28 15:41:04.798Z",
+    "data": {
+      "title": "Ancestors: The Humankind Odyssey",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/536270/header.jpg?t=1738037514",
+      "score": 8676,
+      "steam": "https://store.steampowered.com/app/536270",
+      "website": "https://www.ancestorsgame.com/",
+      "time": 19,
+      "price": "7,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/536270/page_bg_raw.jpg?t=1738037514"
+    },
+    "id": "fc4suv60eu97ek4",
+    "reviewImage": "monkeybrain_kdhy46ufe7.png",
+    "reviewRating": 4,
+    "reviewText": "<p>В Death Stranding меньше ходьбы, чем тут</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-03 10:09:03.462Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-03 10:11:45.559Z",
+    "data": {
+      "title": "Hifuu Nightmare Diary ~ Violet Detector",
+      "image": "https://howlongtobeat.com/games/68306_Violet_Detector.jpg?width=250",
+      "score": 95,
+      "time": 11,
+      "price": "💩"
+    },
+    "id": "39fgv2ldtsvpenk",
+    "reviewImage": "s955f4e6d0cb143debca32b884707f4a7f_833jh4iht6.jpg_640x640.jpg",
+    "reviewRating": 2,
+    "reviewText": "<p>мне стало плохо</p>",
+    "status": "REROLL",
+    "taken": false,
+    "updated": "2025-12-04 15:27:12.250Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-03 19:08:23.277Z",
+    "data": {
+      "title": "Miss Neko",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1101450/header.jpg?t=1703481005",
+      "score": 4004,
+      "steam": "https://store.steampowered.com/app/1101450",
+      "website": "",
+      "time": 1,
+      "price": "0,99€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/1101450?t=1703481005"
+    },
+    "id": "t4jhg5pm21aenml",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "<p>YOU LOSE</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-03 19:08:34.191Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-03 19:10:52.644Z",
+    "data": {
+      "title": "ICEY",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/553640/header.jpg?t=1726730514",
+      "score": 24712,
+      "steam": "https://store.steampowered.com/app/553640",
+      "website": "",
+      "time": 2.5,
+      "price": "11,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/553640/page_bg_raw.jpg?t=1726730514"
+    },
+    "id": "vv5jjbyddwue58o",
+    "reviewImage": "",
+    "reviewRating": 3,
+    "reviewText": "<p>ледышка</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-04 18:06:00.509Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-04 15:29:36.977Z",
+    "data": {
+      "title": "Mushoku Tensei: Jobless Reincarnation Season 2 Part 2",
+      "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166873-xO0BRPkmwFll.png",
+      "score": 0,
+      "steam": "",
+      "website": "",
+      "time": 6,
+      "price": "1",
+      "background": ""
+    },
+    "id": "c22oj9gebykman5",
+    "reviewImage": "rudno_0jv9vo0d7p.png",
+    "reviewRating": 5,
+    "reviewText": "<p>впринцепе хорошо, когда вспомнил что было в прошлых</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-08 16:40:26.547Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-04 18:09:40.631Z",
+    "data": {
+      "title": "Halo: The Master Chief Collection",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/976730/header.jpg?t=1740682623",
+      "score": 228045,
+      "steam": "https://store.steampowered.com/app/976730",
+      "website": "https://www.halowaypoint.com/halo-the-master-chief-collection",
+      "time": 8,
+      "price": "39,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/976730/page_bg_raw.jpg?t=1740682623"
+    },
+    "id": "c80u9rx47k5qn1o",
+    "reviewImage": "",
+    "reviewRating": 4,
+    "reviewText": "",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-07 11:59:02.565Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-07 12:05:58.695Z",
+    "data": {
+      "title": "Portal 2",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/620/header.jpg?t=1745363004",
+      "score": 372474,
+      "steam": "https://store.steampowered.com/app/620",
+      "website": "http://www.thinkwithportals.com/",
+      "time": 8,
+      "price": "9,75€",
+      "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/620?t=1745363004"
+    },
+    "id": "uzx2kpb2shmm1i0",
+    "reviewImage": "",
+    "reviewRating": 5,
+    "reviewText": "<p>спид ран кооп тактики</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-07 15:13:04.584Z",
+    "user": {
+      "id": "3m1om44xrl1pr7e",
+      "username": "WTRNXKOT"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-08 18:37:39.813Z",
+    "data": {
+      "title": "Alien Shooter 2: Reloaded",
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/33120/header.jpg?t=1731075321",
+      "score": 2344,
+      "steam": "https://store.steampowered.com/app/33120",
+      "website": "http://www.sigma-team.net/games/special-offers/alien-sooter-gold-pack.html",
+      "time": 5,
+      "price": "4,99€",
+      "background": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/33120/page_bg_raw.jpg?t=1731075321"
+    },
+    "id": "pbfw6y2qxjafy01",
+    "reviewImage": "alientshot_lp3u5n9mot.png",
+    "reviewRating": 5,
+    "reviewText": "<p>симулятор пое, где можно улучшить свой фонарик</p>",
+    "status": "COMPLETED",
+    "taken": false,
+    "updated": "2025-12-11 19:29:13.120Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  },
+  {
+    "collectionId": "pbc_879072730",
+    "collectionName": "games",
+    "created": "2025-12-11 19:31:23.389Z",
+    "data": {
+      "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/12210/header.jpg?t=1721061564",
+      "price": "19,99€",
+      "score": 161638,
+      "steam": "https://store.steampowered.com/app/12210",
+      "time": 27,
+      "title": "Grand Theft Auto IV: The Complete Edition"
+    },
+    "id": "bwpbbdogzr2ym69",
+    "reviewImage": "",
+    "reviewRating": 0,
+    "reviewText": "",
+    "status": "PLAYING",
+    "taken": false,
+    "updated": "2025-12-11 19:31:23.389Z",
+    "user": {
+      "id": "7a1kfqc4uorpv1f",
+      "username": "DI0XA"
+    }
+  }
+]

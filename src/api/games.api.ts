@@ -68,22 +68,23 @@ export default class GameApi {
     });
   };
 
-  saveReview = async (
-    user: { id: string; username: string },
-    id: string,
-    review: GameReview,
-    image?: File | null,
-  ) => {
+  saveReview = async (id: string, review: GameReview, image?: File | null) => {
+    const currentGame = await this.gamesCollection.getOne(id, {
+      fields: "review",
+    });
+    const currentReview = (currentGame.review as GameReview) || {
+      rating: 0,
+      comment: "",
+      votes: [],
+    };
+
     return await this.gamesCollection.update(id, {
       review: {
         rating: review.rating,
         comment: review.comment,
-        votes: [
-          ...(review.votes ?? []),
-          { user: user.id, score: review.rating },
-        ],
+        votes: currentReview.votes ?? [],
       },
-      image: image,
+      image,
     });
   };
 

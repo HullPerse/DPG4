@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useRef } from "react";
 import { client } from "@/api/client.api";
 
-interface UseSubscriptionOptions {
-  maxRetries?: number;
-  retryDelay?: number;
-  debounceMs?: number;
-  enabled?: boolean;
-}
-
 export function useSubscription(
   collection: string,
   filter: string,
   callback: () => void,
-  options: UseSubscriptionOptions = {},
+  options: {
+    maxRetries?: number;
+    retryDelay?: number;
+    debounceMs?: number;
+    enabled?: boolean;
+  } = {},
 ) {
   const {
     maxRetries = 3,

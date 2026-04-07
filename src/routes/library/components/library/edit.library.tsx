@@ -93,12 +93,7 @@ function EditReview({
 
       const image = imageFile ? imageFile : remove ? null : data.game.image;
 
-      await gameApi.saveReview(
-        { id: user.id!, username: user.username },
-        id,
-        review,
-        image as File | null,
-      );
+      await gameApi.saveReview(id, review, image as File | null);
 
       invalidateQuery();
     } catch (error) {

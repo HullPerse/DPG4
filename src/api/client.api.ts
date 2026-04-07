@@ -1,7 +1,6 @@
 import PocketBase from "pocketbase";
 
 export const URL = import.meta.env.VITE_POCKETBASE;
-export const steamAPI = import.meta.env.VITE_STEAM_API;
 
 export const client = new PocketBase(import.meta.env.VITE_POCKETBASE);
 
