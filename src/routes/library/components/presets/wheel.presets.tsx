@@ -11,7 +11,6 @@ import GameApi from "@/api/games.api";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import Wheel from "@/components/shared/wheel.component";
-import { WheelItem } from "@/types/wheel";
 import { useVirtualizer } from "@tanstack/react-virtual";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
@@ -25,9 +24,6 @@ export default function PresetsWheel({ id }: { id: string }) {
 
   const [hiddenGames, setHiddenGames] = useState<string[]>([]);
   const [result, setResult] = useState<GameData | null>(null);
-
-
-
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetWheel", id],
@@ -87,10 +83,7 @@ export default function PresetsWheel({ id }: { id: string }) {
 
   const handleAddGameClick = (gameId: number) => {
     const game = data?.games.find((g) => g.id === gameId);
-
     if (!game) return;
-
-
     handleAddGame(gameId);
   };
 
@@ -125,22 +118,6 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
-  const handleWheelResultAdd = () => {
-    console.log(result)
-    if (!result) return;
-
-
-
-    handleAddGame(result.id).then(() => setResult(null));
-  };
-
-  const handleSpin = async (item: WheelItem | null) => {
-
-    return setResult(
-      data?.games.find((game) => Number(game.id) === Number(item?.id)) as GameData,
-    );
-  };
-
   const visibleGames =
     data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
 
@@ -152,12 +129,17 @@ export default function PresetsWheel({ id }: { id: string }) {
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
+          key={hiddenGames.join(",")}
           list={visibleGames.map((game) => ({
             id: String(game.id),
             label: game.name,
             image: game.capsuleImage ?? "https://placehold.co/16x10",
           }))}
-          onResult={handleSpin}
+          onResult={(item) => {
+            return setResult(
+              data?.games.find((game) => Number(game.id) === Number(item?.id)) as GameData,
+            )
+          }}
         />
 
         {result && (
@@ -184,7 +166,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
-                onClick={handleWheelResultAdd}
+                onClick={() =>  handleAddGame(result.id).then(() => setResult(null))}
               >
                 <Plus />
               </Button>
