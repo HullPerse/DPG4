@@ -32,6 +32,18 @@ export default class UserApi {
     });
   };
 
+  getAllIds = async () => {
+    return await this.usersCollection.getFullList({
+      fields: "id",
+    });
+  };
+
+  getAllUsers = async (): Promise<User[]> => {
+    return await this.usersCollection.getFullList({
+      fields: "id, username, avatar, color, money, position",
+    });
+  };
+
   //get all user positions
   getUserPositions = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({

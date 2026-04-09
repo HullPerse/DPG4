@@ -24,6 +24,7 @@ export interface DataStore {
   isConnected: boolean;
   isEditing: boolean;
   arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes";
+  userProfile: string | null;
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
@@ -33,4 +34,5 @@ export interface DataStore {
   setArrowType: (
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;
+  setUserProfile: (userProfile: string | null) => void;
 }

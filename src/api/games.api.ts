@@ -44,6 +44,18 @@ export default class GameApi {
     });
   };
 
+  getLastGame = async (userId: string[]) => {
+    let lastGamePerPlayer: Game[] = [];
+
+    for (const id of userId) {
+      const games = await this.getAllUserGames(id);
+
+      if (games.length > 0) lastGamePerPlayer.push(games[games.length - 1]);
+    }
+
+    return lastGamePerPlayer;
+  };
+
   getAllUserGames = async (userId: string): Promise<Game[]> => {
     return await this.gamesCollection.getFullList({
       filter: `user.id = "${userId}"`,

@@ -1,3 +1,4 @@
+import FriendsTab from "@/routes/library/tabs/friends.tab";
 import { GameStatus } from "@/types/games";
 import { Ban, Check, Play, RefreshCcw } from "lucide-react";
 import { lazy } from "react";
@@ -18,6 +19,12 @@ export const libraryTabs = [
     value: "profile",
     label: "Профиль",
     component: <ProfileTab />,
+    show: false,
+  },
+  {
+    value: "friends",
+    label: "Друзья",
+    component: <FriendsTab />,
     show: false,
   },
   { value: "community", label: "Сообщество", component: <></>, show: true },

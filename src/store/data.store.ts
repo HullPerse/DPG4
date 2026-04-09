@@ -12,6 +12,7 @@ export const useDataStore = create<DataStore>()(
         isConnected: false,
         isEditing: false,
         arrowType: "all",
+        userProfile: null,
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
@@ -27,6 +28,9 @@ export const useDataStore = create<DataStore>()(
         },
         setArrowType: (arrowType: DataStore["arrowType"]) => {
           set({ arrowType });
+        },
+        setUserProfile: (userProfile: string | null) => {
+          set({ userProfile });
         },
       }),
       {

@@ -68,10 +68,10 @@ export function getStatusColor(status: GameStatus) {
   if (!status) return "red";
 
   const colorMap = {
-    COMPLETED: "green",
-    PLAYING: "yellow",
-    DROPPED: "red",
-    REROLLED: "blue",
+    COMPLETED: "#7FDA72",
+    PLAYING: "#FFC94D",
+    DROPPED: "#EC7676",
+    REROLLED: "#77A8FF",
   };
   return colorMap[status as keyof typeof colorMap] ?? "yellow";
 }
