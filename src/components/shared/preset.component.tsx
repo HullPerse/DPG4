@@ -13,6 +13,7 @@ function PresetComponent({
   searchTerms,
   setCurrentPreset,
   setCurrentTab,
+  steam,
 }: {
   preset: Preset;
   searchTerms: string;
@@ -20,6 +21,7 @@ function PresetComponent({
   setCurrentTab: (
     tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
   ) => void;
+  steam?: boolean;
 }) {
   const isAdmin = useUserStore((state) => state.isAdmin);
 
@@ -54,7 +56,7 @@ function PresetComponent({
           title="Колесо пресета"
           size="icon"
           onClick={() => {
-            setCurrentPreset(preset.id);
+            setCurrentPreset(steam ? "steamPreset" : preset.id);
             setCurrentTab("presetWheel");
           }}
         >
@@ -64,7 +66,7 @@ function PresetComponent({
           title="Открыть пресет"
           size="icon"
           onClick={() => {
-            setCurrentPreset(preset.id);
+            setCurrentPreset(steam ? "steamPreset" : preset.id);
             setCurrentTab("presetList");
           }}
         >
@@ -80,7 +82,7 @@ function PresetComponent({
 
             await gameApi.removePreset(preset.id);
           }}
-          hidden={!isAdmin}
+          hidden={!isAdmin || steam}
           disabled={!isAdmin}
         >
           <Trash />

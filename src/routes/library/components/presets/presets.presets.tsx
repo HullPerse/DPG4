@@ -7,6 +7,7 @@ import { startTransition, useCallback } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { type Preset } from "@/types/games";
 import PresetComponent from "@/components/shared/preset.component";
+import { useUserStore } from "@/store/user.store";
 
 const gameApi = new GameApi();
 
@@ -22,18 +23,27 @@ export default function PresetsList({
   ) => void;
 }) {
   const queryClient = useQueryClient();
+  const user = useUserStore(state => state.user)
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsList"],
     queryFn: async (): Promise<{ presets: Preset[]; steamLibrary: any }> => {
       const presets = await gameApi.getPresets();
-      const steamLibrary = await gameApi.getSteamLibrary("76561198357288928");
+
+      const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
+
+      const steamLibrary = await gameApi.getSteamLibrary(steamId).then((res) => {
+        return {
+          id: "steamPreset",
+          label: "Библиотека STEAM",
+          games: res
+        }
+      })
 
       return { presets, steamLibrary };
     },
   });
 
-  console.log(data?.steamLibrary);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -57,8 +67,22 @@ export default function PresetsList({
       />
     );
 
+
+
   return (
     <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
+      {data?.steamLibrary && (
+        <PresetComponent
+          preset={data?.steamLibrary}
+          searchTerms={searchTerms}
+          setCurrentPreset={setCurrentPreset}
+          setCurrentTab={setCurrentTab}
+          steam={true}
+        />
+      )
+      }
+
+
       {data?.presets
 
         ?.sort((a, b) => a.label.localeCompare(b.label))

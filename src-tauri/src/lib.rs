@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -303,6 +304,164 @@ pub struct AppState {
     pub selected_font: String,
 }
 
+#[derive(serde::Deserialize, serde::Serialize)]
+struct SteamGame {
+    appid: u64,
+    name: String,
+    img_icon_url: Option<String>,
+    img_logo_url: Option<String>,
+    has_community_visible_stats: Option<bool>,
+    playtime_forever: u64,
+    playtime_windows_forever: Option<u64>,
+    playtime_mac_forever: Option<u64>,
+    playtime_linux_forever: Option<u64>,
+    rtime_last_played: Option<u64>,
+    content_descriptorids: Option<Vec<i32>>,
+}
+
+#[derive(serde::Deserialize)]
+struct SteamResponse {
+    response: SteamGamesList,
+}
+
+#[derive(serde::Deserialize)]
+struct SteamGamesList {
+    #[allow(dead_code)]
+    games: Option<Vec<SteamGame>>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GameData {
+    id: u64,
+    name: String,
+    image: String,
+    capsule_image: String,
+    background_image: String,
+    steam_link: String,
+    website_link: String,
+    source: String,
+}
+
+fn make_game_data(appid: u64, name: String) -> GameData {
+    GameData {
+        id: appid,
+        name,
+        image: format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/header.jpg",
+            appid
+        ),
+        capsule_image: format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_600x900.jpg",
+            appid
+        ),
+        background_image: format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
+            appid
+        ),
+        steam_link: format!("https://store.steampowered.com/app/{}/", appid),
+        website_link: String::new(),
+        source: "owned".to_string(),
+    }
+}
+
+#[tauri::command]
+async fn get_steam_library(steam_id: String) -> Result<String, String> {
+    dotenvy::dotenv().ok();
+
+    let api_key = env::var("VITE_STEAM_API_KEY")
+        .map_err(|_| "VITE_STEAM_API_KEY not found in .env file".to_string())?;
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let url = format!(
+        "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&include_played_free_games=1&include_appinfo=1&steamid={}",
+        api_key, steam_id
+    );
+
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Steam API request failed: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    let steam_response: SteamResponse = serde_json::from_str(&response)
+        .map_err(|e| format!("Failed to parse Steam response: {}", e))?;
+
+    let games: Vec<GameData> = steam_response
+        .response
+        .games
+        .unwrap_or_default()
+        .into_iter()
+        .map(|game| make_game_data(game.appid, game.name))
+        .collect();
+
+    serde_json::to_string(&games)
+        .map_err(|e| format!("Failed to serialize games: {}", e))
+}
+
+#[tauri::command]
+async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
+    dotenvy::dotenv().ok();
+
+    let api_key = env::var("VITE_STEAM_API_KEY")
+        .map_err(|_| "VITE_STEAM_API_KEY not found in .env file".to_string())?;
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let url = format!(
+        "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={}&vanityurl={}",
+        api_key, vanity_url
+    );
+
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Steam API request failed: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    #[derive(Deserialize)]
+    struct VanityResponse {
+        response: VanityResult,
+    }
+
+    #[derive(Deserialize)]
+    struct VanityResult {
+        success: i32,
+        #[serde(default)]
+        steamid: Option<String>,
+        #[serde(default)]
+        message: Option<String>,
+    }
+
+    let vanity_response: VanityResponse = serde_json::from_str(&response)
+        .map_err(|e| format!("Failed to parse Steam response: {}", e))?;
+
+    if vanity_response.response.success == 1 {
+        vanity_response
+            .response
+            .steamid
+            .ok_or_else(|| "No steamid returned".to_string())
+    } else {
+        Err(vanity_response
+            .response
+            .message
+            .unwrap_or_else(|| "Vanity URL not found".to_string()))
+    }
+}
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -320,7 +479,9 @@ pub fn run() {
             get_wallpaper_by_name,
             get_all_fonts,
             set_default_font,
-            get_default_font
+            get_default_font,
+            get_steam_library,
+            resolve_vanity_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

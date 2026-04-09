@@ -36,7 +36,7 @@ function Wheel({
     isRolling: false,
     hasRolled: false,
   });
-  const [shuffled, setShuffled] = useState<WheelItem[]>([]);
+  const [shuffled, setShuffled] = useState<WheelItem[]>(list);
 
   //refs
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -87,8 +87,7 @@ function Wheel({
   }, []);
 
   const selectCenteredPreview = useCallback(() => {
-    if (!containerRef.current || !rolling.hasRolled || shuffled.length === 0)
-      return;
+    if (!containerRef.current || !rolling.hasRolled || shuffled.length === 0) return;
 
     const centerIndex: number = getCenteredItem(
       scrollPositionRef.current,
@@ -155,6 +154,9 @@ function Wheel({
       if (rolling.hasRolled) selectCenteredPreview();
     }
   }, [rolling, updateCenterHighlight, selectCenteredPreview]);
+
+
+
 
   //recompute on data changes
   useEffect(() => {

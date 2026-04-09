@@ -1,4 +1,5 @@
-import { Preset, Game, GameReview, GameStatus } from "@/types/games";
+import { invoke } from "@tauri-apps/api/core";
+import { Preset, Game, GameReview, GameStatus, GameData } from "@/types/games";
 import { client } from "./client.api";
 
 import { User } from "@/types/user";
@@ -8,15 +9,15 @@ export default class GameApi {
   private readonly presetsCollection = client.collection("presets");
 
   //steam api
-  getSteamLibrary = async (steamId: string) => {
-    const apiKey = import.meta.env.VITE_STEAM_API_KEY;
-    const targetUrl =
-      "http://api.steampowered.com/IPlayerService/GetOwnedGames/" +
-      "v0001/?key=" +
-      apiKey +
-      "&include_played_free_games=1&include_appinfo=1&steamid=" +
-      steamId;
-    return await fetch("https://api.allorigins.win/raw?url=" + targetUrl);
+  resolveVanityUrl = async (username: string): Promise<string> => {
+    const response = await invoke<string>("resolve_vanity_url", { vanityUrl: username });
+    return response;
+  };
+
+  getSteamLibrary = async (steamId: string): Promise<GameData[]> => {
+    const response = await invoke<string>("get_steam_library", { steamId });
+
+    return JSON.parse(response);
   };
 
   getSteamGame = async (appId: string) => {
@@ -200,6 +201,7 @@ export default class GameApi {
   };
 
   getPresetById = async (id: string): Promise<Preset> => {
+
     return await this.presetsCollection.getOne(id);
   };
 

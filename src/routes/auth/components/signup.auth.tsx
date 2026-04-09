@@ -34,6 +34,8 @@ export default function Signup({
   const [password, setPassword] = useState<string>("");
   const [avatar, setAvatar] = useState<string>("");
   const [color, setColor] = useState<string>("");
+  const [steam, setSteam] = useState<string>("");
+
 
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,6 +67,7 @@ export default function Signup({
       password,
       avatar,
       color,
+      steam,
     });
 
     //error handling
@@ -106,11 +109,13 @@ export default function Signup({
     password,
     avatar,
     color,
+    steam,
     setRegister,
     navigate,
     setLoggedIn,
     setConnected,
     login,
+
   ]);
 
   const clearError = (field: string) => {
@@ -243,6 +248,23 @@ export default function Signup({
       </div>
 
       <div className="w-full">
+        <Input
+          type="text"
+          placeholder="Steam Логин"
+          min={4}
+          className={`w-full ${errors.steam ? "border-red-500" : ""}`}
+          value={steam}
+          onChange={(e) => {
+            setSteam(e.target.value);
+            clearError("steam");
+          }}
+        />
+        {errors.steam && (
+          <p className="mt-1 text-xs text-red-500">{errors.steam}</p>
+        )}
+      </div>
+
+      <div className="w-full">
         <section className="flex flex-row flex-wrap items-center justify-center gap-2">
           {ICONS.map((icon) => {
             const isUsed = usedItems.avatars.has(icon);
@@ -320,6 +342,7 @@ export default function Signup({
           !password ||
           !avatar ||
           !color ||
+          !steam ||
           password.length < 4 ||
           robotStep != 3
         }

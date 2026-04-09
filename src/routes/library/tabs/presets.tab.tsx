@@ -116,7 +116,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex w-full h-full bg-background pb-28">
+      <section className="flex w-full h-full bg-background pb-4">
         {getComponent()}
       </section>
     </main>
