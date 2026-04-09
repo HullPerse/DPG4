@@ -122,7 +122,9 @@ export default function Controls({
           })}
           <div className="my-1 h-0.5 w-full bg-highlight-high" />
           {(() => {
-            const statusCounts = data?.cell?.status?.reduce(
+            const status = data?.cell?.status;
+            const statusArray = Array.isArray(status) ? status : [];
+            const statusCounts = statusArray.reduce(
               (acc: { [key: string]: number }, status: string) => {
                 acc[status] = (acc[status] || 0) + 1;
                 return acc;
@@ -130,7 +132,7 @@ export default function Controls({
               {},
             );
 
-            return Object.entries(statusCounts ?? {}).map(([status, count]) => {
+            return Object.entries(statusCounts).map(([status, count]) => {
               const statusData =
                 cellsConfig.status.find((item) => item.name === status) ?? null;
 

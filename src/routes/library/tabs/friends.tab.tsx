@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useState } from "react";
+import { memo, startTransition, useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -116,4 +116,4 @@ function FriendsTab() {
     </main>
   );
 }
-export default FriendsTab;
+export default memo(FriendsTab);

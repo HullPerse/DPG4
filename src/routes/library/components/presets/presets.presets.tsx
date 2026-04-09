@@ -25,10 +25,15 @@ export default function PresetsList({
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsList"],
-    queryFn: async (): Promise<Preset[]> => {
-      return await gameApi.getPresets();
+    queryFn: async (): Promise<{ presets: Preset[]; steamLibrary: any }> => {
+      const presets = await gameApi.getPresets();
+      const steamLibrary = await gameApi.getSteamLibrary("76561198357288928");
+
+      return { presets, steamLibrary };
     },
   });
+
+  console.log(data?.steamLibrary);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -54,7 +59,7 @@ export default function PresetsList({
 
   return (
     <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
-      {data
+      {data?.presets
 
         ?.sort((a, b) => a.label.localeCompare(b.label))
         .filter((preset) =>

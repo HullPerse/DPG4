@@ -1,6 +1,6 @@
 import { useUserStore } from "./store/user.store";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Desktop from "./routes/desktop/desktop.root";
 import { WindowProps } from "./types/window";
 import { useDataStore } from "./store/data.store";
@@ -16,6 +16,7 @@ import {
 import Signpout from "./routes/auth/components/signout.component";
 import { selectionMouse } from "./lib/utils";
 import Window from "./components/shared/window.component";
+import { WindowLoader } from "./components/shared/loader.component";
 
 function App() {
   //routing
@@ -156,7 +157,7 @@ function App() {
           setIsOpening={setIsOpening}
           {...app}
         >
-          {app.children}
+          <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
         </Window>
       ))}
 

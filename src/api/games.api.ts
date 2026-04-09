@@ -8,6 +8,17 @@ export default class GameApi {
   private readonly presetsCollection = client.collection("presets");
 
   //steam api
+  getSteamLibrary = async (steamId: string) => {
+    const apiKey = import.meta.env.VITE_STEAM_API_KEY;
+    const targetUrl =
+      "http://api.steampowered.com/IPlayerService/GetOwnedGames/" +
+      "v0001/?key=" +
+      apiKey +
+      "&include_played_free_games=1&include_appinfo=1&steamid=" +
+      steamId;
+    return await fetch("https://api.allorigins.win/raw?url=" + targetUrl);
+  };
+
   getSteamGame = async (appId: string) => {
     const id = appId.trim();
 
