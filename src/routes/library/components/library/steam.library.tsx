@@ -184,7 +184,7 @@ export default function SteamLibrary({
         )}
         <Button
           variant="success"
-          className="mt-auto mb-1"
+          className="mt-auto mb-13"
           disabled={!appId || !time || !status || loading}
           onClick={handleGame}
         >

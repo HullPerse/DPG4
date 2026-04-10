@@ -70,7 +70,7 @@ function FriendsTab() {
         value={searchTerms}
         onChange={(e) => setSearchTerms(e.target.value)}
       />
-      <section className="grid grid-cols-3 gap-4 overflow-y-auto w-full pb-2 items-start justify-start">
+      <section className="flex flex-wrap gap-2  overflow-y-auto w-full pb-2 items-start justify-start">
         {data?.users
           .filter((user) =>
             user.username.toUpperCase().includes(searchTerms.toUpperCase()),
@@ -93,9 +93,9 @@ function FriendsTab() {
                 >
                   {user.avatar}
                 </section>
-                <section className="flex flex-col p-1 h-full w-full leading-tight text-start">
+                <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">
                   <span className="font-bold">{user.username}</span>
-                  <span className="truncate line-clamp-2 font-light">
+                  <span className="truncate font-light text-ellipsis">
                     {game?.data.name}
                   </span>
                 </section>

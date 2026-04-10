@@ -114,7 +114,7 @@ function LibraryTab() {
         >
           <Plus />
         </Button>
-        <div className="flex h-full flex-col gap-1 overflow-y-auto">
+        <div className="flex h-full flex-col gap-1 overflow-y-auto pb-10">
           {data?.length && data?.length > 0
             ? data
                 ?.filter((game) =>
