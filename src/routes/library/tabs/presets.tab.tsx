@@ -116,7 +116,12 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex w-full h-full bg-background pb-4">
+      <section
+        className="flex w-full h-full bg-background"
+        style={{
+          paddingBottom: currentTab === "presetAll" ? "105px" : "0px",
+        }}
+      >
         {getComponent()}
       </section>
     </main>

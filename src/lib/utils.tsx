@@ -13,15 +13,13 @@ export function cn(...inputs: ClassValue[]) {
  * @description this score calculation function will reward players to not speedrun games, but keeping an option to speedrun if user really wants to, since speedrunners will have a much sooner dice throw
  */
 export function calculateScore(realTime: number, hltbTime: number) {
-  if (isNaN(realTime) || isNaN(hltbTime) || hltbTime <= 0) return 0;
+  if (isNaN(realTime) || isNaN(hltbTime) || hltbTime <= 0) return 3;
 
   const ratio = realTime / hltbTime;
+  const multiplier = 1.0 + 0.5 * Math.max(0, ratio - 1);
 
-  const cappedRatio = Math.min(ratio, 2);
-  const multiplier = ratio <= 1 ? 0.6 + 0.4 * ratio : 0.5 + 0.5 * cappedRatio;
-
-  const score = Math.max(hltbTime * multiplier, 0.6 * hltbTime);
-  return Math.min(0.5 * hltbTime, Math.round(score * 100) / 100);
+  const score = multiplier * hltbTime;
+  return Math.max(3, Math.floor(score));
 }
 
 /**

@@ -27,7 +27,7 @@ export default function Games({ games }: { games: Game[] }) {
   return (
     <main className="flex flex-col w-full p-2 gap-2 overflow-y-auto">
       {reversedArray.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-2 pb-16">
           {reversedArray.map((game) => (
             <div
               key={game.id}
@@ -37,7 +37,7 @@ export default function Games({ games }: { games: Game[] }) {
               <section className="flex flex-row w-full h-full items-center gap-2">
                 <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
                   <ImageComponent
-                    src={game.data.capsuleImage ?? "https://placehold.co/16x10"}
+                    src={game.data.capsuleImage}
                     alt={game.data.name}
                   />
                 </div>

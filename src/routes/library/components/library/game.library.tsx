@@ -288,7 +288,10 @@ function GameLibrary({
           {/* VERTICAL IMAGE */}
           <div className="absolute bottom-4.5 left-2 h-52 w-36 overflow-hidden rounded border-2 border-highlight-high bg-background shadow-sharp-sm">
             <Image
-              src={data?.game?.data.image ?? ""}
+              src={
+                data?.game?.data.image ??
+                (data?.game.data.capsuleImage as string)
+              }
               alt="game background"
               className="h-full w-full"
             />

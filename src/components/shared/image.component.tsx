@@ -9,6 +9,7 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   height?: number;
   quality?: number;
   type?: "cover" | "contain";
+  placeholder?: string;
 }
 
 const Image = ({
@@ -19,10 +20,13 @@ const Image = ({
   height,
   type = "cover",
   quality = 80,
+  placeholder = "https://placehold.co/400x600",
   ...props
 }: ImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [imageSrc, setImageSrc] = useState(src);
+  const [usedFallback, setUsedFallback] = useState(false);
+
   const imgRef = useRef<HTMLImageElement>(null);
 
   const getWebpSrc = (originalSrc: string) => {
@@ -40,26 +44,26 @@ const Image = ({
   };
 
   useEffect(() => {
+    setImageSrc(src);
+    setUsedFallback(false);
+    setIsLoaded(false);
+  }, [src]);
+
+  useEffect(() => {
     if (imgRef.current?.complete) {
       setIsLoaded(true);
     }
-  }, []);
+  }, [imageSrc]);
 
-  if (hasError) {
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-center border border-primary/20 bg-background/40",
-          className,
-        )}
-        style={{
-          aspectRatio: width && height ? `${width}/${height}` : undefined,
-        }}
-      >
-        <span className="text-muted-foreground text-xs">Изображение</span>
-      </div>
-    );
-  }
+  const handleError = () => {
+    if (!usedFallback) {
+      setUsedFallback(true);
+      setImageSrc(placeholder);
+      setIsLoaded(false);
+      return;
+    }
+    setImageSrc("");
+  };
 
   return (
     <div
@@ -71,26 +75,32 @@ const Image = ({
         aspectRatio: width && height ? `${width}/${height}` : undefined,
       }}
     >
-      <picture>
-        <source srcSet={getWebpSrc(src)} type="image/webp" />
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt ?? ""}
-          width={width}
-          height={height}
-          className={cn(
-            "absolute inset-0 h-full w-full transition-opacity duration-300",
-            type === "cover" ? "object-cover" : "object-contain",
-            isLoaded ? "opacity-100" : "opacity-0",
-          )}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setIsLoaded(true)}
-          onError={() => setHasError(true)}
-          {...props}
-        />
-      </picture>
+      {imageSrc ? (
+        <picture>
+          <source srcSet={getWebpSrc(imageSrc)} type="image/webp" />
+          <img
+            ref={imgRef}
+            src={imageSrc}
+            alt={alt}
+            width={width}
+            height={height}
+            className={cn(
+              "absolute inset-0 h-full w-full transition-opacity duration-300",
+              type === "cover" ? "object-cover" : "object-contain",
+              isLoaded ? "opacity-100" : "opacity-0",
+            )}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setIsLoaded(true)}
+            onError={handleError}
+            {...props}
+          />
+        </picture>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center border border-primary/20 bg-background/40">
+          <span className="text-muted-foreground text-xs">Изображение</span>
+        </div>
+      )}
     </div>
   );
 };

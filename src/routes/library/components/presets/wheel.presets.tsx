@@ -133,7 +133,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
 
   return (
-    <main className="flex flex-col gap-2 w-full h-full" ref={listRef}>
+    <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
@@ -190,6 +190,10 @@ export default function PresetsWheel({ id }: { id: string }) {
       <section
         ref={listRef}
         className="relative flex flex-col w-full h-full border-t-2 border-highlight-high p-2 gap-2 overflow-y-auto"
+        style={{
+          scrollBehavior: "smooth",
+          willChange: "transform",
+        }}
       >
         {virtualItems.map((virtualItem) => {
           const item = filteredGames[virtualItem.index];

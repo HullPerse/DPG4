@@ -50,9 +50,9 @@ export default function Profile({
           </span>
         </div>
         {/* RECENT GAMES (all time hours) */}
-        {games.length > 0 && (
-          <div className="flex flex-col w-full min-h-40 h-40 max-h-40 gap-2">
-            <span className="text-3xl font-bold">{user.username}</span>
+        <div className="flex flex-col w-full min-h-40 h-40 max-h-40 gap-2">
+          <span className="text-3xl font-bold">{user.username}</span>
+          {games.length > 0 && (
             <div className=" border-2 border-highlight-high w-full h-full flex flex-row gap-2 items-center">
               <div className="relative h-full">
                 <ImageComponent
@@ -73,8 +73,8 @@ export default function Profile({
                 </span>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </section>
       <section className="flex flex-col gap-2">
         {lastReview?.review && (

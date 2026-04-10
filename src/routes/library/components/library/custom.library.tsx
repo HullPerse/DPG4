@@ -173,9 +173,7 @@ export default function CustomLibrary({
         <Button
           variant="success"
           className="mt-auto mb-1"
-          disabled={
-            !name || !headerImage || !time || !realTime || !status || loading
-          }
+          disabled={!name || !headerImage || !time || !status || loading}
           onClick={handleGame}
         >
           {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
