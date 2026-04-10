@@ -1,4 +1,3 @@
-import SteamSvg from "@/components/svg/steam.component";
 import {
   ArrowDown,
   Clock,
@@ -37,13 +36,6 @@ export const APPS = [
     label: "Колесо Игр",
     link: "https://gamegauntlets.com/",
     icon: <Star className="size-7" />,
-    priority: 10,
-  },
-  {
-    name: "steamwheel",
-    label: "Колесо STEAM",
-    link: "https://pickaga.me/",
-    icon: <SteamSvg className="size-7" />,
     priority: 10,
   },
 ];

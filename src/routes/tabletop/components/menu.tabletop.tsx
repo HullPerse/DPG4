@@ -8,15 +8,6 @@ export default function MenuTabletop() {
   const user = useUserStore((state) => state.user);
 
   return (
-    <main className="flex h-full w-full flex-col bg-background p-2">
-      <Button
-        onClick={async () => {
-          if (!user) return;
-          return await usersApi.moveUser(String(user.id), 5);
-        }}
-      >
-        Click here
-      </Button>
-    </main>
+    <main className="flex h-full w-full flex-col bg-background p-2"></main>
   );
 }
