@@ -13,10 +13,15 @@ export function cn(...inputs: ClassValue[]) {
  * @description this score calculation function will reward players to not speedrun games, but keeping an option to speedrun if user really wants to, since speedrunners will have a much sooner dice throw
  */
 export function calculateScore(realTime: number, hltbTime: number) {
-  if (isNaN(realTime) || isNaN(hltbTime)) return 0;
+  if (isNaN(realTime) || isNaN(hltbTime) || hltbTime <= 0) return 0;
 
-  const score = realTime * (1 + 0.2 * (1 - realTime / hltbTime));
-  return Math.min(2, Math.round(score));
+  const ratio = realTime / hltbTime;
+
+  const cappedRatio = Math.min(ratio, 2);
+  const multiplier = ratio <= 1 ? 0.6 + 0.4 * ratio : 0.5 + 0.5 * cappedRatio;
+
+  const score = Math.max(hltbTime * multiplier, 0.6 * hltbTime);
+  return Math.min(0.5 * hltbTime, Math.round(score * 100) / 100);
 }
 
 /**
@@ -73,7 +78,7 @@ export function getStatusColor(status: GameStatus) {
     DROPPED: "#EC7676",
     REROLLED: "#77A8FF",
   };
-  return colorMap[status as keyof typeof colorMap] ?? "yellow";
+  return colorMap[status as keyof typeof colorMap] ?? "#FFC94D";
 }
 
 export function colorToHex(color: string) {

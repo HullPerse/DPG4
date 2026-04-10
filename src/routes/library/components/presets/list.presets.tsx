@@ -4,13 +4,14 @@ import { useSubscription } from "@/hooks/subscription.hook";
 import { GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Plus, Trash } from "lucide-react";
-import { startTransition, useCallback, useMemo, useRef } from "react";
+import { startTransition, useCallback, useMemo, useRef, useState } from "react";
 import GameApi from "@/api/games.api";
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import { highlightText } from "@/lib/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Input } from "@/components/ui/input.component";
 
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
@@ -29,7 +30,11 @@ function PresetSettings({
   const listRef = useRef<HTMLDivElement>(null);
   const isSteamPreset = id === STEAM_PRESET_ID;
 
-
+  const [time, setTime] = useState<string | null>(null);
+  const [input, setInput] = useState({
+    enabled: false,
+    id: "",
+  });
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetGame", id],
@@ -59,24 +64,24 @@ function PresetSettings({
 
   useSubscription("presets", "*", invalidateQuery);
 
-
   const filteredGames = useMemo(() => {
     if (!data?.games) return [];
-    return data.games.filter(item =>
-      !searchTerms ||
-      item.name.toUpperCase().includes(searchTerms.toUpperCase()) ||
-      item.id.toString().includes(searchTerms)
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    return data.games
+      .filter(
+        (item) =>
+          !searchTerms ||
+          item.name.toUpperCase().includes(searchTerms.toUpperCase()) ||
+          item.id.toString().includes(searchTerms),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [data?.games, searchTerms]);
-
 
   const virtualizer = useVirtualizer({
     count: filteredGames.length,
     getScrollElement: () => listRef.current,
     estimateSize: () => 96,
     overscan: 10,
-    gap: 8
-
+    gap: 8,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -93,6 +98,13 @@ function PresetSettings({
     );
 
   const handleAddGame = async (id: number) => {
+    if (!time && isSteamPreset) {
+      return setInput({
+        enabled: true,
+        id: String(id),
+      });
+    }
+
     const game = data?.games.find((game) => game.id === id);
     if (!game) return;
 
@@ -108,45 +120,52 @@ function PresetSettings({
       data: {
         id: game.id,
         name: game.name,
-        image: game.image,
-        capsuleImage: game.capsuleImage,
+        image: game.capsuleImage,
+        capsuleImage: game.image,
         backgroundImage: game.backgroundImage,
         steamLink: `https://store.steampowered.com/app/${game.id}`,
         websiteLink: game.websiteLink ?? "",
+        time: Number(time),
       },
       created: new Date().toISOString(),
     };
 
-    return await gameApi.addGame(gameData).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
-    });
+    return await gameApi
+      .addGame(gameData)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
+      })
+      .then(() => {
+        setInput({ enabled: false, id: "" });
+        setTime(null);
+      });
   };
 
-
   return (
-    <main ref={listRef}
+    <main
       className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto "
+      ref={listRef}
       style={{
         scrollBehavior: "smooth",
         willChange: "transform",
-    }}>
+      }}
+    >
       <label className="text-2xl underline font-bold">
         Пресет: [{data?.label}] - {data?.games?.length ?? 0} игр
       </label>
-
       {virtualItems.map((virtualItem) => {
         const item = filteredGames[virtualItem.index];
 
         return (
           <div
             key={virtualItem.index}
+            ref={virtualizer.measureElement}
             style={{
               position: "absolute",
               transform: `translateY(${virtualItem.start}px)`,
               width: "99%",
             }}
             data-index={virtualItem.index}
-            ref={virtualizer.measureElement}
             className="flex flex-row min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
           >
             {/* LABEL */}
@@ -158,17 +177,31 @@ function PresetSettings({
                 />
               </div>
               <span className="font-bold truncate line-clamp-1">
-                {highlightText(String(item?.name), searchTerms)} [{item?.time ?? "?"} ч.]
+                {highlightText(String(item?.name), searchTerms)} [
+                {item?.time ?? "?"} ч.]
               </span>
             </section>
 
             {/* BUTTONS */}
             <section className="flex flex-row items-center gap-1">
+              {input.enabled && input.id === String(item?.id) && (
+                <Input
+                  autoFocus
+                  type="text"
+                  placeholder="Введите время"
+                  value={time ?? ""}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="h-9 w-36 ml-2 shadow-sharp-sm"
+                />
+              )}
               <Button
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
                 onClick={async () => await handleAddGame(Number(item?.id))}
+                disabled={
+                  input.enabled && input.id === String(item?.id) && !time
+                }
               >
                 <Plus />
               </Button>
@@ -185,9 +218,8 @@ function PresetSettings({
               </Button>
             </section>
           </div>
-        )
+        );
       })}
-
     </main>
   );
 }

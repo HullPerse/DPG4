@@ -8,8 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { getStatusColor } from "@/lib/utils";
-import { GameStatus } from "@/types/games";
+import { calculateScore, getStatusColor } from "@/lib/utils";
+import { Game, GameStatus } from "@/types/games";
 import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
@@ -57,6 +57,7 @@ export default function SteamLibrary({
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [appId, setAppId] = useState(existingId ?? "");
   const [time, setTime] = useState("");
+  const [realTime, setRealTime] = useState("");
 
   const [game, setGame] = useState<any>();
 
@@ -74,7 +75,9 @@ export default function SteamLibrary({
       },
       playtime: {
         hltb: Number(time),
+        user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
       },
+      score: calculateScore(Number(realTime), Number(time)),
       status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
       data: {
         id: game.game.steam_appid,
@@ -87,7 +90,7 @@ export default function SteamLibrary({
         time: currentType === "preset" ? Number(time) : undefined,
       },
       created: new Date().toISOString(),
-    };
+    } as Game;
 
     if (currentType === "library") {
       return await gameApi
@@ -141,6 +144,18 @@ export default function SteamLibrary({
             onChange={(e) => setTime(e.target.value)}
           />
         </div>
+        {status === "ПРОЙДЕНО" && (
+          <div className="leading-tight">
+            <span>Время прохождения</span>
+            <Input
+              type="number"
+              placeholder="Время прохождения"
+              className="h-12"
+              value={realTime}
+              onChange={(e) => setRealTime(e.target.value)}
+            />
+          </div>
+        )}
         {currentType === "library" && (
           <div className="leading-tight">
             <span>Сложность</span>

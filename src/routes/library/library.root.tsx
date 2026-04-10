@@ -10,6 +10,7 @@ import { useUserStore } from "@/store/user.store";
 import { LibraryTabs } from "@/types/library";
 import { ChevronDown, ChevronLeft, User } from "lucide-react";
 import { useState } from "react";
+import ProfileTab from "./tabs/profile.tab";
 
 export default function Library() {
   const user = useUserStore((state) => state.user);
@@ -31,7 +32,10 @@ export default function Library() {
                 variant="link"
                 className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 shadow-sharp-sm border"
                 disabled={tab === item.value}
-                onClick={() => setTab(item.value as LibraryTabs)}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab(item.value as LibraryTabs);
+                }}
               >
                 {item.label}
               </Button>
@@ -53,7 +57,10 @@ export default function Library() {
               <Button
                 variant="link"
                 className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
-                onClick={() => setTab("profile")}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab("profile");
+                }}
                 disabled={tab === "profile"}
               >
                 <User className="size-4" />
@@ -66,7 +73,10 @@ export default function Library() {
                 variant="link"
                 className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
                 disabled={tab === "profile"}
-                onClick={() => setTab("profile")}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab("profile");
+                }}
               >
                 Профиль
               </Button>
@@ -74,7 +84,10 @@ export default function Library() {
                 variant="link"
                 className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
                 disabled={tab === "inventory"}
-                onClick={() => setTab("inventory")}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab("inventory");
+                }}
               >
                 Инвентарь
               </Button>
@@ -82,7 +95,10 @@ export default function Library() {
                 variant="link"
                 className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
                 disabled={tab === "friends"}
-                onClick={() => setTab("friends")}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab("friends");
+                }}
               >
                 Друзья
               </Button>
@@ -92,7 +108,11 @@ export default function Library() {
       </section>
       {/* body*/}
       <section className="flex h-full w-full">
-        {libraryTabs.find((item) => item.value === tab)?.component}
+        {userProfile ? (
+          <ProfileTab id={userProfile} />
+        ) : (
+          libraryTabs.find((item) => item.value === tab)?.component
+        )}
       </section>
     </main>
   );

@@ -8,8 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { getStatusColor } from "@/lib/utils";
-import { GameStatus } from "@/types/games";
+import { calculateScore, getStatusColor } from "@/lib/utils";
+import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -54,6 +54,8 @@ export default function CustomLibrary({
   const [name, setName] = useState("");
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [time, setTime] = useState("");
+  const [realTime, setRealTime] = useState("");
+
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleGame = useCallback(async () => {
@@ -68,10 +70,12 @@ export default function CustomLibrary({
       },
       playtime: {
         hltb: Number(time),
+        user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
       },
       status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
+      score: calculateScore(Number(realTime), Number(time)),
       data: {
-        id: `${Date.now()}`,
+        id: Number(`${Date.now()}-${name}`),
         name: name,
         image: headerImage,
         capsuleImage: headerImage,
@@ -80,7 +84,8 @@ export default function CustomLibrary({
         websiteLink: "",
         time: currentType === "preset" ? Number(time) : undefined,
       },
-    };
+      created: new Date().toISOString(),
+    } as Game;
 
     if (currentType === "library") {
       return await gameApi
@@ -127,6 +132,18 @@ export default function CustomLibrary({
             onChange={(e) => setTime(e.target.value)}
           />
         </div>
+        {status === "ПРОЙДЕНО" && (
+          <div className="leading-tight">
+            <span>Время прохождения</span>
+            <Input
+              type="number"
+              placeholder="Время прохождения"
+              className="h-12"
+              value={realTime}
+              onChange={(e) => setRealTime(e.target.value)}
+            />
+          </div>
+        )}
         {currentType === "library" && (
           <div className="leading-tight">
             <span>Сложность</span>

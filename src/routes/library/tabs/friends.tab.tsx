@@ -7,11 +7,10 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { User } from "@/types/user";
-import { Game, GameStatus } from "@/types/games";
+import { Game } from "@/types/games";
 import { getStatusColor } from "@/lib/utils";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
-import ProfileTab from "./profile.tab";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -19,7 +18,6 @@ const userApi = new UserApi();
 function FriendsTab() {
   const queryClient = useQueryClient();
   const setUserProfile = useDataStore((state) => state.setUserProfile);
-  const userProfile = useDataStore((state) => state.userProfile);
 
   const [searchTerms, setSearchTerms] = useState<string>("");
 
@@ -63,16 +61,8 @@ function FriendsTab() {
       />
     );
 
-  if (userProfile) {
-    return (
-      <main className="p-2 flex flex-wrap flex-row w-full h-full">
-        <ProfileTab id={userProfile} />
-      </main>
-    );
-  }
-
   return (
-    <main className="p-2 flex flex-wrap flex-row w-full h-full gap-8">
+    <main className="p-2 flex flex-col w-full h-full gap-8">
       <Input
         autoFocus
         type="text"
@@ -80,7 +70,7 @@ function FriendsTab() {
         value={searchTerms}
         onChange={(e) => setSearchTerms(e.target.value)}
       />
-      <section className="flex flex-wrap gap-4 overflow-y-auto h-full w-full">
+      <section className="grid grid-cols-3 gap-4 overflow-y-auto w-full pb-2 items-start justify-start">
         {data?.users
           .filter((user) =>
             user.username.toUpperCase().includes(searchTerms.toUpperCase()),
@@ -92,13 +82,13 @@ function FriendsTab() {
               <button
                 key={user.id}
                 type="button"
-                className="flex flex-row max-h-18 h-18 max-w-72 w-72 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
+                className="flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
                 onClick={() => setUserProfile(String(user.id))}
               >
                 <section
                   className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl"
                   style={{
-                    borderColor: getStatusColor(game?.status as GameStatus),
+                    borderColor: getStatusColor(game?.status ?? "PLAYING"),
                   }}
                 >
                   {user.avatar}
