@@ -185,7 +185,7 @@ export default function SteamLibrary({
         <Button
           variant="success"
           className="mt-auto mb-1"
-          disabled={!appId || !time || !status || loading}
+          disabled={!appId || !time || !realTime || !status || loading}
           onClick={handleGame}
         >
           {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
