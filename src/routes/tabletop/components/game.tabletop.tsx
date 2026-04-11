@@ -5,6 +5,7 @@ import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
 import ArrowTabletop from "./arrow.tabletop";
 import { useDataStore } from "@/store/data.store";
+import MovingUserOverlay from "./moving.tabletop";
 
 function GameArea({
   cells,
@@ -28,6 +29,7 @@ function GameArea({
   const user = useUserStore((state) => state.user);
   const isAdmin = useUserStore((state) => state.isAdmin);
   const arrowType = useDataStore((state) => state.arrowType);
+  const movingUser = useDataStore((state) => state.movingUser);
 
   const userId = user?.id;
 
@@ -53,6 +55,7 @@ function GameArea({
           isAdmin={isAdmin}
           setCell={setCell}
           setControl={setControl}
+          movingUserId={movingUser?.userId}
         />
       )}
 
@@ -67,6 +70,7 @@ function GameArea({
                 isAdmin={isAdmin}
                 setCell={setCell}
                 setControl={setControl}
+                movingUserId={movingUser?.userId}
               />
             ))}
           </div>
@@ -81,10 +85,13 @@ function GameArea({
           isAdmin={isAdmin}
           setCell={setCell}
           setControl={setControl}
+          movingUserId={movingUser?.userId}
         />
       )}
 
       {arrowType !== "none" && <ArrowTabletop cells={cells} type={arrowType} />}
+
+      <MovingUserOverlay />
     </main>
   );
 }

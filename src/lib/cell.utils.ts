@@ -194,3 +194,48 @@ export function calculateArrowPath(fromCell: number, toCell: number): string {
 
   return `M ${start.x} ${start.y} Q ${ctrlX} ${ctrlY} ${end.x} ${end.y}`;
 }
+
+export function calculateMovePath(
+  startingPosition: number,
+  diceRoll: number,
+  cells: { number: number; ladderTo: number; snakeTo: number }[],
+): { path: number[]; finalPosition: number } {
+  const path: number[] = [];
+  const steps: number = diceRoll > 0 ? diceRoll : -diceRoll;
+  const direction: number = diceRoll > 0 ? 1 : -1;
+
+  let currentPosition = startingPosition;
+
+  if (startingPosition === 100 && diceRoll > 0) {
+    path.push(101);
+    return { path, finalPosition: 101 };
+  }
+
+  if (startingPosition === 101 && diceRoll > 0) {
+    return { path, finalPosition: 101 };
+  }
+
+  for (let i = 0; i < steps; i++) {
+    currentPosition += direction;
+
+    if (currentPosition < 0) currentPosition = 0;
+    if (currentPosition === 100) currentPosition = 101;
+    if (currentPosition >= 100) currentPosition = 100;
+
+    path.push(currentPosition);
+  }
+
+  const cell = cells.find((c) => c.number === currentPosition);
+
+  if (!cell) return { path, finalPosition: currentPosition };
+
+  if (cell.ladderTo > 0) {
+    currentPosition = cell.ladderTo;
+    path.push(currentPosition);
+  } else if (cell.snakeTo > 0) {
+    currentPosition = cell.snakeTo;
+    path.push(currentPosition);
+  }
+
+  return { path, finalPosition: currentPosition };
+}

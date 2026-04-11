@@ -25,6 +25,15 @@ export interface DataStore {
   isEditing: boolean;
   arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes";
   userProfile: string | null;
+  movingUser: {
+    userId: string;
+    fromPosition: number;
+    toPosition: number;
+    path: number[];
+    currentStep: number;
+    isAnimating: boolean;
+    finalPosition: number;
+  } | null;
 
   // Actions
   setWallpaper: (wallpaper: string) => void;
@@ -35,4 +44,7 @@ export interface DataStore {
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;
   setUserProfile: (userProfile: string | null) => void;
+  startMoving: (userId: string, fromPosition: number, toPosition: number, finalPosition: number, path: number[]) => void;
+  nextStep: () => void;
+  finishMoving: () => void;
 }

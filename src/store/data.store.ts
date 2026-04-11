@@ -6,13 +6,14 @@ import type { DataStore } from "@/types/store";
 export const useDataStore = create<DataStore>()(
   subscribeWithSelector(
     persist(
-      (set) => ({
+      (set, get) => ({
         wallpaper: "",
         font: "",
         isConnected: false,
         isEditing: false,
         arrowType: "all",
         userProfile: null,
+        movingUser: null,
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
@@ -31,6 +32,36 @@ export const useDataStore = create<DataStore>()(
         },
         setUserProfile: (userProfile: string | null) => {
           set({ userProfile });
+        },
+        startMoving: (userId: string, fromPosition: number, toPosition: number, finalPosition: number, path: number[]) => {
+          set({
+            movingUser: {
+              userId,
+              fromPosition,
+              toPosition,
+              path,
+              currentStep: 0,
+              isAnimating: true,
+              finalPosition,
+            },
+          });
+        },
+        nextStep: () => {
+          const { movingUser } = get();
+          if (!movingUser) return;
+          if (movingUser.currentStep >= movingUser.path.length - 1) {
+            get().finishMoving();
+            return;
+          }
+          set({
+            movingUser: {
+              ...movingUser,
+              currentStep: movingUser.currentStep + 1,
+            },
+          });
+        },
+        finishMoving: () => {
+          set({ movingUser: null });
         },
       }),
       {

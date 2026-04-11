@@ -32,12 +32,14 @@ function CellComponent({
   isAdmin,
   setCell,
   setControl,
+  movingUserId,
 }: {
   cell: CellType;
   users: User[];
   isAdmin: boolean;
   setCell: (value: any) => void;
   setControl: (value: boolean) => void;
+  movingUserId?: string;
 }) {
   const isEditing = useDataStore((state) => state.isEditing);
   const arrowType = useDataStore((state) => state.arrowType);
@@ -187,7 +189,10 @@ function CellComponent({
           {/* users */}
           <section className="flex h-full w-full flex-row flex-wrap items-start gap-2 p-1">
             {users
-              .filter((user) => user.position === cell.number)
+              .filter(
+                (user) =>
+                  user.position === cell.number && user.id !== movingUserId,
+              )
               .map((user) => (
                 <span
                   key={user.id}

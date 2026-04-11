@@ -13,6 +13,7 @@ import { Game, GameStatus } from "@/types/games";
 import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
+import UserApi from "@/api/user.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -20,6 +21,7 @@ import { useUserStore } from "@/store/user.store";
 import { useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
+const userApi = new UserApi();
 
 const STATUSES = [
   {
@@ -97,6 +99,8 @@ export default function SteamLibrary({
         .addGame(gameData)
         .then((res) => setCurrentGame(String(res.id)));
     }
+
+    await userApi.changeUserAction(String(user.id), "GAMEFINISH");
 
     return await gameApi.addPresetGame(String(presetId), gameData).then(() => {
       queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });

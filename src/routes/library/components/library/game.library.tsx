@@ -37,14 +37,17 @@ import { VariantProps } from "class-variance-authority";
 
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
+import CellApi from "@/api/cell.api";
 
 import ReviewComponent from "@/components/shared/review.component";
 import EditReview from "./edit.library";
 import { image } from "@/api/client.api";
 import { User } from "@/types/user";
+import { useUserStore } from "@/store/user.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
+const cellApi = new CellApi();
 
 function GameLibrary({
   id,
@@ -54,6 +57,7 @@ function GameLibrary({
   switchGame: () => void;
 }) {
   const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
 
   const [content, setContent] = useState<"general" | "review">("general");
   const [loading, setLoading] = useState<
@@ -169,6 +173,11 @@ function GameLibrary({
 
         if (status === "COMPLETED") {
           await userApi.scoreUser(String(data.game.user.id), Number(score));
+          await userApi.changeUserAction(String(data.game.user.id), "MOVE");
+          await cellApi.captureCell(
+            String(data.game.user.id),
+            data.user.position,
+          );
         }
 
         setInput(false);
@@ -184,7 +193,7 @@ function GameLibrary({
         );
       }
     },
-    [data, id, time, invalidateQuery],
+    [data, id, time, invalidateQuery, user],
   );
 
   if (isLoading) return <WindowLoader />;

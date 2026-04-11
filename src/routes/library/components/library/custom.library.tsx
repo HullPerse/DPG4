@@ -12,12 +12,14 @@ import { calculateScore, getStatusColor } from "@/lib/utils";
 import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
+import UserApi from "@/api/user.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
+const userApi = new UserApi();
 
 const STATUSES = [
   {
@@ -88,10 +90,14 @@ export default function CustomLibrary({
     } as Game;
 
     if (currentType === "library") {
+      await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
+
       return await gameApi
         .addGame(gameData as any)
         .then((res) => setCurrentGame?.(String(res.id)));
     }
+
+    await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
 
     return await gameApi
       .addPresetGame(String(presetId), gameData as any)
@@ -99,7 +105,7 @@ export default function CustomLibrary({
         queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
         setCurrentGame("presetList");
       });
-  }, [name, headerImage, time, status, gameApi]);
+  }, [name, headerImage, time, status, gameApi, user]);
 
   return (
     <main className="flex h-full w-full flex-row items-center">

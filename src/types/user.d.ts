@@ -10,5 +10,9 @@ export interface User {
   position: number;
   money: number;
   steam: string;
+
+  //MOVE - waiting for user to move around the map
+  //GAMEADD - waiting for user to roll a GAMEADD
+  //GAMEFINISH - waiting for user to finish the game
   currentAction: "MOVE" | "GAMEADD" | "GAMEFINISH";
 }
