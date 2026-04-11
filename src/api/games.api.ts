@@ -10,7 +10,9 @@ export default class GameApi {
 
   //steam api
   resolveVanityUrl = async (username: string): Promise<string> => {
-    const response = await invoke<string>("resolve_vanity_url", { vanityUrl: username });
+    const response = await invoke<string>("resolve_vanity_url", {
+      vanityUrl: username,
+    });
     return response;
   };
 
@@ -51,7 +53,7 @@ export default class GameApi {
   //games
   getGames = async (userId: string): Promise<Game[]> => {
     return await this.gamesCollection.getFullList({
-      fields: "id, data.name, status",
+      fields: "id, data.name, status, data.capsuleImage",
       filter: `user.id = "${userId}"`,
     });
   };
@@ -201,7 +203,6 @@ export default class GameApi {
   };
 
   getPresetById = async (id: string): Promise<Preset> => {
-
     return await this.presetsCollection.getOne(id);
   };
 
