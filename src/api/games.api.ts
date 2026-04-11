@@ -7,6 +7,7 @@ import { User } from "@/types/user";
 export default class GameApi {
   private readonly gamesCollection = client.collection("games");
   private readonly presetsCollection = client.collection("presets");
+  private readonly userCollection = client.collection("users");
 
   //steam api
   resolveVanityUrl = async (username: string): Promise<string> => {
@@ -164,6 +165,20 @@ export default class GameApi {
         votes: [...newVotes, voteData],
       },
     });
+  };
+
+  getAllReviews = async (
+    userId: string,
+  ): Promise<{ user: User | null; games: Game[] }> => {
+    const allGames = await this.getAllUserGames(userId);
+    if (!allGames) return { user: null, games: [] };
+
+    const user = (await this.userCollection.getOne(userId)) as User;
+
+    return {
+      user: user,
+      games: allGames.filter((game) => game.review || game.image),
+    };
   };
 
   addGame = async (game: Game): Promise<Game> => {

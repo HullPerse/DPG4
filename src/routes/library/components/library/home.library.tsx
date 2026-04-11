@@ -36,7 +36,7 @@ export default function HomeLibrary({
         {reversedGames.map((game) => (
           <div
             key={game.id}
-            className="flex w-full cursor-pointer flex-col"
+            className="flex w-full cursor-pointer flex-col border border-highlight-high shadow-sharp-sm"
             onClick={() => setCurrentGame(game.id as string)}
           >
             <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-highlight-medium">
@@ -58,9 +58,6 @@ export default function HomeLibrary({
                 >
                   {STATUSES.find((s) => s.name === game.status)?.label ??
                     game.status}
-                </span>
-                <span className="text-xs text-text-dimmed">
-                  {game?.playtime?.hltb ?? 1} ч.
                 </span>
               </div>
             </div>
