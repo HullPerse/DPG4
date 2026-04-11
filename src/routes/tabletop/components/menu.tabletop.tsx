@@ -7,7 +7,7 @@ const usersApi = new UserApi();
 export default function MenuTabletop() {
   const user = useUserStore((state) => state.user);
 
-  const diceRoll = 3;
+  const diceRoll = 6;
 
   const handleMove = async () => {
     if (!user?.id) return;
@@ -18,9 +18,9 @@ export default function MenuTabletop() {
   return (
     <main className="flex h-full w-full flex-col bg-background p-2">
       {user?.currentAction === "MOVE" ? (
-        <>
+        <div className="flex w-full h-full">
           <Button onClick={handleMove}>Move +{diceRoll}</Button>
-        </>
+        </div>
       ) : (
         <span className="flex items-center justify-center w-full h-full p-4 text-md font-bold">
           ДЛЯ СЛЕДУЮЩЕГО ХОДА ПРОЙДИТЕ ИГРУ

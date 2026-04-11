@@ -227,7 +227,8 @@ export function calculateMovePath(
 
   const cell = cells.find((c) => c.number === currentPosition);
 
-  if (!cell) return { path, finalPosition: currentPosition };
+  if (!cell)
+    return { path: [...path, currentPosition], finalPosition: currentPosition };
 
   if (cell.ladderTo > 0) {
     currentPosition = cell.ladderTo;
@@ -237,5 +238,5 @@ export function calculateMovePath(
     path.push(currentPosition);
   }
 
-  return { path, finalPosition: currentPosition };
+  return { path: [...path, currentPosition], finalPosition: currentPosition };
 }
