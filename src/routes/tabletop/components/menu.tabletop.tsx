@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button.component";
 import UserApi from "@/api/user.api";
 import { useUserStore } from "@/store/user.store";
+import DiceComponent from "@/components/shared/dice.component";
 
 const usersApi = new UserApi();
 
@@ -16,13 +16,12 @@ export default function MenuTabletop() {
   };
 
   return (
-    <main className="flex h-full w-full flex-col bg-background p-2">
-      {user?.currentAction === "MOVE" ? (
-        <div className="flex w-full h-full">
-          <Button onClick={handleMove}>Move +{diceRoll}</Button>
-        </div>
+    <main className="flex h-full w-full flex-col bg-background">
+      {user?.currentAction === "MOVE_POSITIVE" ||
+      user?.currentAction === "MOVE_NEGATIVE" ? (
+        <DiceComponent />
       ) : (
-        <span className="flex items-center justify-center w-full h-full p-4 text-md font-bold">
+        <span className="flex items-center justify-center w-full h-full p-6 text-md font-bold">
           ДЛЯ СЛЕДУЮЩЕГО ХОДА ПРОЙДИТЕ ИГРУ
         </span>
       )}

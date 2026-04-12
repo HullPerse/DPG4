@@ -54,10 +54,9 @@ export default function Library() {
     if (isLoading) return <SmallLoader className="text-primary size-4" />;
     if (isError) return <MailWarning className="text-primary size-4" />;
 
-    if (data?.length)
-      return (
-        <span className="text-primary animate-pulse">[{data.length}]</span>
-      );
+    if (!data || data?.length === 0) return null;
+
+    return <span className="text-primary animate-pulse">[{data.length}]</span>;
   };
 
   return (
@@ -148,7 +147,7 @@ export default function Library() {
                 <div className="flex flex-row">
                   <span className="mr-1"> Друзья</span>
                   <span className="animate-pulse text-primary">
-                    [{data?.length}]
+                    {unreadAmmount()}
                   </span>
                 </div>
               </Button>

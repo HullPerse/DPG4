@@ -19,7 +19,8 @@ export default class UserApi {
           passwordConfirm: data.password,
           email: `${data.username}@gmail.com`,
           position: 0,
-          currentAction: "MOVE",
+          currentAction: "MOVE_POSITIVE",
+          currentDice: 1,
         })
         .then((res) => {
           return res;
@@ -63,7 +64,7 @@ export default class UserApi {
 
   changeUserAction = async (
     userId: string,
-    action: "MOVE" | "GAMEADD" | "GAMEFINISH",
+    action: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH",
   ) => {
     await this.usersCollection.update(userId, { currentAction: action });
   };

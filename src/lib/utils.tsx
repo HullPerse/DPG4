@@ -255,3 +255,14 @@ export function shuffleArray<T>(array: T[]): T[] {
   }
   return shuffled;
 }
+
+export function getNextDice(realTime: number, currentCell: number): number {
+  if (currentCell >= 81) return 1;
+
+  if (realTime <= 4) return 1;
+  if (realTime <= 10) return 1;
+  if (realTime <= 16) return 2;
+  if (realTime <= 24) return 2;
+  if (realTime <= 40) return 3;
+  return 4;
+}

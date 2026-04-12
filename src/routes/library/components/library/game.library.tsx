@@ -171,9 +171,19 @@ function GameLibrary({
           Number(score),
         );
 
+        if (status === "DROPPED") {
+          await userApi.changeUserAction(
+            String(data.game.user.id),
+            "MOVE_NEGATIVE",
+          );
+        }
+
         if (status === "COMPLETED") {
           await userApi.scoreUser(String(data.game.user.id), Number(score));
-          await userApi.changeUserAction(String(data.game.user.id), "MOVE");
+          await userApi.changeUserAction(
+            String(data.game.user.id),
+            "MOVE_POSITIVE",
+          );
           await cellApi.captureCell(
             String(data.game.user.id),
             data.user.position,
