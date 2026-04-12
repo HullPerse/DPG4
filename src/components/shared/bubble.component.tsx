@@ -3,7 +3,7 @@ import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import ImageComponent from "./image.component";
 import { image } from "@/api/client.api";
-import { Trash } from "lucide-react";
+import { CheckCheck, Trash } from "lucide-react";
 
 interface ChatBubbleProps {
   item: Chat;
@@ -24,8 +24,6 @@ export default function ChatBubble({
 
   const senderColor = isAuthor ? currentUser?.color : sender.color;
   const senderAvatar = isAuthor ? currentUser?.avatar : sender.avatar;
-
-  const isEdited = item.created !== item.updated;
 
   return (
     <main
@@ -80,23 +78,14 @@ export default function ChatBubble({
         )}
 
         <section className="flex flex-row items-center gap-1 text-xs text-muted w-full">
+          {item.isRead && <CheckCheck className="size-4" />}
+
           <span>
             {new Date(item.created).toLocaleTimeString("ru-RU", {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
-
-          {isEdited && (
-            <span className="italic">
-              (изм.{" "}
-              {new Date(item.updated).toLocaleString("ru-RU", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-              )
-            </span>
-          )}
 
           {isAuthor && onEdit && (
             <button

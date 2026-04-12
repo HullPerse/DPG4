@@ -11,29 +11,41 @@ import { Game } from "@/types/games";
 import { getStatusColor } from "@/lib/utils";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
+import { Chat } from "@/types/chat";
+import ChatApi from "@/api/chat.api";
+import { useUserStore } from "@/store/user.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
+const chatApi = new ChatApi();
 
 function FriendsTab() {
   const queryClient = useQueryClient();
+
+  const currentUser = useUserStore((state) => state.user);
   const setUserProfile = useDataStore((state) => state.setUserProfile);
 
   const [searchTerms, setSearchTerms] = useState<string>("");
 
   const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["friendsTab"],
-    queryFn: async (): Promise<{ users: User[]; games: Game[] }> => {
+    queryFn: async (): Promise<{
+      users: User[];
+      games: Game[];
+      chats: Chat[];
+    }> => {
       const allIds = await userApi.getAllIds();
 
-      const [users, games] = await Promise.all([
+      const [users, games, chats] = await Promise.all([
         userApi.getAllUsers(),
         gameApi.getLastGame(allIds.map((player) => player.id)),
+        chatApi.getUnreadByReceiver(String(currentUser?.id)),
       ]);
 
       return {
         users: users,
         games: games,
+        chats: chats,
       };
     },
   });
@@ -49,6 +61,7 @@ function FriendsTab() {
 
   useSubscription("games", "*", invalidateQuery);
   useSubscription("users", "*", invalidateQuery);
+  useSubscription("chats", "*", invalidateQuery);
 
   if (isLoading || isFetching) return <WindowLoader />;
   if (isError)
@@ -77,14 +90,25 @@ function FriendsTab() {
           )
           .map((user) => {
             const game = data.games.find((g) => g.user.id === user.id);
+            const unread = data.chats?.filter(
+              (c) => c.data.sender.id === user.id,
+            );
 
             return (
               <button
                 key={user.id}
                 type="button"
-                className="flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
-                onClick={() => setUserProfile(String(user.id))}
+                className="relative flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
+                onClick={() => {
+                  setUserProfile(String(user.id));
+                }}
               >
+                {unread.length > 0 && (
+                  <span className="absolute top-0 right-1 text-primary animate-pulse">
+                    [{unread.length}]
+                  </span>
+                )}
+
                 <section
                   className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl"
                   style={{

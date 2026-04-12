@@ -94,7 +94,9 @@ function ProfileTab({ id }: { id?: string }) {
             <Button
               key={tab.value}
               className="min-w-40 w-40 max-w-4- disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
-              onClick={() => setProfileTab(tab.value as ProfileTab)}
+              onClick={() => {
+                setProfileTab(tab.value as ProfileTab);
+              }}
               disabled={profileTab === tab.value}
               hidden={tab.disabled && data?.user.id === user?.id}
             >

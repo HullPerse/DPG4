@@ -8,16 +8,57 @@ import { libraryTabs } from "@/config/library.config";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { LibraryTabs } from "@/types/library";
-import { ChevronDown, ChevronLeft, User } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronLeft, MailWarning, User } from "lucide-react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import ProfileTab from "./tabs/profile.tab";
+import { useSubscription } from "@/hooks/subscription.hook";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import ChatApi from "@/api/chat.api";
+import { Chat } from "@/types/chat";
+import { SmallLoader } from "@/components/shared/loader.component";
+const chatApi = new ChatApi();
 
 export default function Library() {
+  const queryClient = useQueryClient();
+
   const user = useUserStore((state) => state.user);
   const userProfile = useDataStore((state) => state.userProfile);
   const setUserProfile = useDataStore((state) => state.setUserProfile);
 
   const [tab, setTab] = useState<LibraryTabs>("library");
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["getUnread"],
+    queryFn: async (): Promise<Chat[]> => {
+      return await chatApi.getUnreadByReceiver(String(user?.id));
+    },
+  });
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["getUnread"],
+        refetchType: "active",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("chats", "*", invalidateQuery);
+
+  //so it doesnt open specific user profile on load
+  useEffect(() => {
+    setUserProfile(null);
+  }, []);
+
+  const unreadAmmount = () => {
+    if (isLoading) return <SmallLoader className="text-primary size-4" />;
+    if (isError) return <MailWarning className="text-primary size-4" />;
+
+    if (data?.length)
+      return (
+        <span className="text-primary animate-pulse">[{data.length}]</span>
+      );
+  };
 
   return (
     <main className="flex h-full w-full flex-col">
@@ -64,7 +105,11 @@ export default function Library() {
                 disabled={tab === "profile"}
               >
                 <User className="size-4" />
-                <span>{user?.username}</span>
+                <div className="flex flex-row items-center">
+                  <span className="mr-1">{user?.username}</span>
+
+                  {unreadAmmount()}
+                </div>
                 <ChevronDown className="size-3" />
               </Button>
             </HoverCardTrigger>
@@ -93,14 +138,19 @@ export default function Library() {
               </Button>
               <Button
                 variant="link"
-                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
+                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex flex-row gap-1"
                 disabled={tab === "friends"}
                 onClick={() => {
                   setUserProfile(null);
                   setTab("friends");
                 }}
               >
-                Друзья
+                <div className="flex flex-row">
+                  <span className="mr-1"> Друзья</span>
+                  <span className="animate-pulse text-primary">
+                    [{data?.length}]
+                  </span>
+                </div>
               </Button>
             </HoverCardContent>
           </HoverCard>

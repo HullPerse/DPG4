@@ -63,4 +63,30 @@ export default class ChatApi {
       message: newMessage,
     });
   };
+
+  getUnreadByReceiver = async (receiver: string): Promise<Chat[]> => {
+    const allMessages: Promise<Chat[]> = this.chatsCollection.getFullList({
+      filter: `data.receiver.id = "${receiver}" && isRead = False`,
+    });
+
+    return allMessages;
+  };
+
+  getUnread = async (receiver: string, sender: string) => {
+    const allMessages = this.getChatByUser(sender, receiver);
+
+    return (await allMessages).chat.filter((chat) => !chat.isRead);
+  };
+
+  marAllAsRead = async (messageIds: string[]) => {
+    messageIds.forEach(async (id) => {
+      await this.markAsRead(id);
+    });
+  };
+
+  markAsRead = async (messageId: string) => {
+    return await this.chatsCollection.update(messageId, {
+      isRead: true,
+    });
+  };
 }

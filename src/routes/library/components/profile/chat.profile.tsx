@@ -74,6 +74,21 @@ export default function ChatProfile({ id }: { id: string }) {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
+    handleReadAll();
+    queryClient.invalidateQueries({
+      queryKey: ["friendsTab"],
+      refetchType: "all",
+    });
+    invalidateQuery();
+  }, [data?.chat]);
+
+  const handleReadAll = useCallback(async () => {
+    const allIds = data?.chat
+      .filter((item) => !item.isRead && item.data.sender.id !== user?.id)
+      .map((item) => item.id);
+    if (!allIds || allIds?.length === 0) return;
+
+    await chatApi.marAllAsRead(allIds);
   }, [data?.chat]);
 
   const handleAttachement = useCallback(
