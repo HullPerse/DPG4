@@ -7,11 +7,9 @@ const usersApi = new UserApi();
 export default function MenuTabletop() {
   const user = useUserStore((state) => state.user);
 
-  const diceRoll = 6;
-
-  const handleMove = async () => {
+  const handleMove = async (dice: number) => {
     if (!user?.id) return;
-    const newPosition = (user.position ?? 0) + diceRoll;
+    const newPosition = (user.position ?? 0) + dice;
     await usersApi.moveUserAnimated(user.id, newPosition);
   };
 
@@ -19,7 +17,11 @@ export default function MenuTabletop() {
     <main className="flex h-full w-full flex-col bg-background">
       {user?.currentAction === "MOVE_POSITIVE" ||
       user?.currentAction === "MOVE_NEGATIVE" ? (
-        <DiceComponent />
+        <DiceComponent
+          minDice={user.currentDice}
+          action={user.currentAction}
+          handleMove={handleMove}
+        />
       ) : (
         <span className="flex items-center justify-center w-full h-full p-6 text-md font-bold">
           ДЛЯ СЛЕДУЮЩЕГО ХОДА ПРОЙДИТЕ ИГРУ

@@ -4,8 +4,21 @@ import { DiceItem } from "@/types/dice";
 import { Plus, Trash } from "lucide-react";
 import RunSvg from "../svg/run.component";
 
-export default function DiceComponent() {
-  const [diceGroups, setDiceGroups] = useState<number[]>([1]);
+interface DiceComponentProps {
+  minDice?: number;
+  action?: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH";
+  handleMove: (dice: number) => void;
+}
+
+export default function DiceComponent({
+  minDice = 1,
+  action,
+  handleMove,
+}: DiceComponentProps) {
+  const [diceGroups, setDiceGroups] = useState<number[]>(() => {
+    const count = Math.max(minDice, 1);
+    return Array(count).fill(1);
+  });
   const [diceItems, setDiceItems] = useState<DiceItem[]>([]);
   const [isRolling, setIsRolling] = useState(false);
   const [total, setTotal] = useState<number | null>(null);
@@ -53,6 +66,7 @@ export default function DiceComponent() {
 
   const handleReroll = useCallback((id: string | number) => {
     if (isRolling) return;
+    setIsRolling(true);
 
     setDiceItems((prev) => {
       const updated = prev.map((item) =>
@@ -79,6 +93,8 @@ export default function DiceComponent() {
           return final;
         });
       }, 800);
+
+      setIsRolling(false);
 
       return updated;
     });
@@ -117,9 +133,10 @@ export default function DiceComponent() {
           size="icon"
           variant="error"
           onClick={() => {
-            setDiceGroups([1]);
+            setDiceGroups(Array(Math.max(minDice, 1)).fill(1));
             setDiceItems([]);
           }}
+          disabled={isRolling}
         >
           <Trash />
         </Button>
@@ -128,7 +145,7 @@ export default function DiceComponent() {
           variant="default"
           size="icon"
           onClick={() => addDiceGroup()}
-          disabled={diceGroups.length >= 5}
+          disabled={diceGroups.length >= 5 || isRolling}
         >
           <Plus />
         </Button>
@@ -136,7 +153,8 @@ export default function DiceComponent() {
           title="Ходить по карте"
           variant="success"
           size="icon"
-          disabled={!total}
+          onClick={() => handleMove(total ?? 0)}
+          disabled={!total || isRolling}
         >
           <RunSvg className="size-6" />
         </Button>
@@ -151,7 +169,11 @@ export default function DiceComponent() {
             <>
               <span className="mx-2 text-primary">=</span>
               <span className="text-primary font-bold font-mono">
-                {total ?? 0}
+                {total !== null
+                  ? action === "MOVE_NEGATIVE"
+                    ? -Math.abs(total)
+                    : total
+                  : 0}
               </span>
             </>
           )}
