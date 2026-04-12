@@ -13,7 +13,7 @@ export default class ChatApi {
     receiver: string,
   ): Promise<{ chat: Chat[]; user: User }> => {
     const chats = (await this.chatsCollection.getFullList({
-      filter: `data.receiver.id = "${receiver}" && data.sender.id = "${sender}"`,
+      filter: `(data.receiver.id = "${receiver}" && data.sender.id = "${sender}") || (data.receiver.id = "${sender}" && data.sender.id = "${receiver}")`,
     })) as Chat[];
 
     const user = (await userApi.getUserById(receiver)) as User;

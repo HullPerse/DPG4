@@ -29,12 +29,25 @@ export default function ChatBubble({
 
   return (
     <main
-      className={`flex h-full min-w-30  w-full gap-2  ${isAuthor ? "justify-end" : "justify-start"}`}
+      className={cn(
+        "flex h-full min-w-30 w-full gap-2",
+        isAuthor ? "justify-end" : "justify-start",
+      )}
     >
+      {!isAuthor && (
+        <span
+          className="flex items-center justify-center text-xl w-10 h-10 border-2 self-end"
+          style={{
+            borderColor: senderColor || "var(--color-highlight-high)",
+          }}
+        >
+          {senderAvatar}
+        </span>
+      )}
       <div
         className={cn(
-          "flex flex-col max-w-[70%] min-w-64  gap-1 px-3 py-2 border-2",
-          isAuthor ? "bg-iris/20" : "bg-background",
+          "flex flex-col max-w-[70%] min-w-64 gap-1 px-3 py-2 border-2",
+          isAuthor ? "bg-iris/20" : "bg-card",
           item.image && "min-h-40",
         )}
         style={{
@@ -43,7 +56,9 @@ export default function ChatBubble({
             (isAuthor ? undefined : "var(--color-highlight-high)"),
         }}
       >
-        <span className="text-sm text-text text-end font-bold">
+        <span
+          className={`text-sm text-text text-end font-bold underline ${isAuthor ? "self-end" : "self-start"}`}
+        >
           {sender.username}
         </span>
 
@@ -101,14 +116,16 @@ export default function ChatBubble({
           )}
         </section>
       </div>
-      <span
-        className="flex items-center justify-center text-xl w-10 h-10 border-2 self-end"
-        style={{
-          borderColor: senderColor || "var(--color-highlight-high)",
-        }}
-      >
-        {senderAvatar}
-      </span>
+      {isAuthor && (
+        <span
+          className="flex items-center justify-center text-xl w-10 h-10 border-2 self-end"
+          style={{
+            borderColor: senderColor || "var(--color-highlight-high)",
+          }}
+        >
+          {senderAvatar}
+        </span>
+      )}
     </main>
   );
 }
