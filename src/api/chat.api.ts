@@ -24,4 +24,43 @@ export default class ChatApi {
 
     return { chat: chats, user };
   };
+
+  sendMessage = async (
+    sender: string,
+    receiver: string,
+    message: string,
+    image: File | null = null,
+  ) => {
+    const senderUser = await userApi.getUserById(sender);
+    const receiverUser = await userApi.getUserById(receiver);
+
+    await this.chatsCollection.create({
+      data: {
+        receiver: {
+          username: receiverUser?.username ?? "",
+          id: receiver,
+          avatar: receiverUser?.avatar ?? "",
+          color: receiverUser?.color ?? "",
+        },
+        sender: {
+          username: senderUser?.username ?? "",
+          id: sender,
+          avatar: senderUser?.avatar ?? "",
+          color: senderUser?.color ?? "",
+        },
+      },
+      message: message,
+      image: image,
+    });
+  };
+
+  removeMessage = async (messageId: string) => {
+    return await this.chatsCollection.delete(messageId);
+  };
+
+  updateMessage = async (messageId: string, newMessage: string) => {
+    await this.chatsCollection.update(messageId, {
+      message: newMessage,
+    });
+  };
 }

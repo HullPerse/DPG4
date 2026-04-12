@@ -68,11 +68,11 @@ function ProfileTab({ id }: { id?: string }) {
       profile: (
         <Profile user={data?.user as User} games={data?.games as Game[]} />
       ),
-      inventory: <>2</>,
       library: <Games games={data?.games as Game[]} />,
-      trade: <>4</>,
       reviews: <ReviewsProfile id={String(data?.user.id)} />,
       chat: <ChatProfile id={String(data?.user.id)} />,
+      trade: <>4</>,
+      inventory: <>2</>,
     };
 
     return tabMap[profileTab];
@@ -80,7 +80,7 @@ function ProfileTab({ id }: { id?: string }) {
 
   return (
     <main className="flex w-full h-full">
-      <section className="flex  w-full h-full overflow-y-auto">
+      <section className="flex w-full h-full overflow-y-auto">
         {getComponent()}
       </section>
       <section className="flex flex-col gap-2 items-center border-l-2 h-full  border-highlight-high bg-background">

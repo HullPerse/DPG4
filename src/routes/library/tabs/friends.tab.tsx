@@ -70,7 +70,7 @@ function FriendsTab() {
         value={searchTerms}
         onChange={(e) => setSearchTerms(e.target.value)}
       />
-      <section className="flex flex-wrap gap-2  overflow-y-auto w-full pb-2 items-start justify-start">
+      <section className="flex flex-wrap gap-2 overflow-y-auto w-full pb-2 items-start justify-start">
         {data?.users
           .filter((user) =>
             user.username.toUpperCase().includes(searchTerms.toUpperCase()),

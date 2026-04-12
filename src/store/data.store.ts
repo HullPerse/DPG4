@@ -73,6 +73,11 @@ export const useDataStore = create<DataStore>()(
 
 export const initializeFontStore = async () => {
   try {
+    const storedFont = useDataStore.getState().font;
+    if (storedFont) {
+      applyFont(storedFont);
+      return;
+    }
     const defaultFont = await invoke<string>("get_default_font");
     useDataStore.getState().setFont(defaultFont);
     applyFont(defaultFont);
