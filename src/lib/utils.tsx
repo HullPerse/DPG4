@@ -256,7 +256,16 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function getNextDice(realTime: number, currentCell: number): number {
+export function getNextDice(
+  realTime: number,
+  currentCell: number,
+  action: "MOVE_POSITIVE" | "MOVE_NEGATIVE",
+): number {
+  if (action === "MOVE_NEGATIVE") {
+    if (currentCell >= 81) return 2;
+    return 1;
+  }
+
   if (currentCell >= 81) return 1;
 
   if (realTime <= 4) return 1;

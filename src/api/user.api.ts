@@ -3,6 +3,7 @@ import { client } from "./client.api";
 import { useDataStore } from "@/store/data.store";
 import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
+import { getNextDice } from "@/lib/utils";
 
 const cellApi = new CellApi();
 
@@ -67,6 +68,25 @@ export default class UserApi {
     action: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH",
   ) => {
     await this.usersCollection.update(userId, { currentAction: action });
+  };
+
+  changeUserDice = async (
+    userId: string,
+    realTime: number,
+    action: "MOVE_POSITIVE" | "MOVE_NEGATIVE",
+  ) => {
+    const currentCell = await this.getUserById(userId).then(
+      (res) => res.position,
+    );
+
+    if (!currentCell)
+      await this.usersCollection.update(userId, {
+        currentDice: 1,
+      });
+
+    await this.usersCollection.update(userId, {
+      currentDice: getNextDice(realTime, currentCell, action),
+    });
   };
 
   //move user

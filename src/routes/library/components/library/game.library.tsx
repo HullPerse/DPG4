@@ -176,12 +176,22 @@ function GameLibrary({
             String(data.game.user.id),
             "MOVE_NEGATIVE",
           );
+          await userApi.changeUserDice(
+            data.game.user.id,
+            Number(time ?? 0),
+            "MOVE_NEGATIVE",
+          );
         }
 
         if (status === "COMPLETED") {
           await userApi.scoreUser(String(data.game.user.id), Number(score));
           await userApi.changeUserAction(
             String(data.game.user.id),
+            "MOVE_POSITIVE",
+          );
+          await userApi.changeUserDice(
+            data.game.user.id,
+            Number(time),
             "MOVE_POSITIVE",
           );
           await cellApi.captureCell(
@@ -194,13 +204,11 @@ function GameLibrary({
         setTime(null);
       } catch (e) {
         console.error(e);
-        setInput(false);
-        setTime(null);
       } finally {
-        invalidateQuery();
         setLoading((prev) =>
           prev.map((l) => (l.button === status ? { ...l, loading: false } : l)),
         );
+        invalidateQuery();
       }
     },
     [data, id, time, invalidateQuery, user],
