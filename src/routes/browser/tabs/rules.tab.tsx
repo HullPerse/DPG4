@@ -48,7 +48,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
     );
 
   return (
-    <main className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center">
+    <main className="flex h-full w-full flex-col gap-2 overflow-y-scroll p-2 items-center">
       {data?.category
         .filter((v, i, a) => a.indexOf(v) == i)
         .map((category, index) => {
@@ -64,7 +64,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
               <div className="border-2 border-highlight-high p-2 h-14 flex w-full font-bold items-center justify-start text-2xl bg-background text-text shadow-sharp-sm underline gap-0">
                 {index + 1}. {category}
               </div>
-              <div className="flex flex-col w-[97%] min-h-fit bg-background border-x-2 border-b-2 border-t-none border-highlight-high shadow-sharp-sm leading-relaxed divide-y divide-highlight-high/30 [&>*:nth-child(odd)]:bg-highlight-high/10">
+              <div className="flex flex-col w-[97%] min-h-fit bg-background border-x-2 border-b-2 border-t-none border-highlight-high shadow-sharp-sm leading-relaxed divide-y divide-highlight-high/30 [&>*:nth-child(odd)]:bg-highlight-high/10 overflow-hidden transition-all duration-300">
                 {rules
                   ?.filter((rule) =>
                     rule.rule.toUpperCase().includes(searchTerms.toUpperCase()),

@@ -31,15 +31,16 @@ export default function Browser() {
           value={searchTerms}
           onChange={(e) => setSearchTerms(e.target.value)}
         />
-        <Button
-          variant="error"
-          size="icon"
-          className="h-10 w-10 p-5"
-          onClick={() => setTab("home")}
-          disabled={tab === "home"}
-        >
-          <ChevronLeft />
-        </Button>
+        {tab !== "home" && (
+          <Button
+            variant="error"
+            size="icon"
+            className="h-10 w-10 p-5"
+            onClick={() => setTab("home")}
+          >
+            <ChevronLeft />
+          </Button>
+        )}
       </section>
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         {getComponent()}
