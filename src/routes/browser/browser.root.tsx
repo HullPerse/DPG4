@@ -1,3 +1,49 @@
+import { useCallback, useState } from "react";
+import HomeTab from "./tabs/home.tab";
+import RulesTab from "./tabs/rules.tab";
+import { Input } from "@/components/ui/input.component";
+import { Button } from "@/components/ui/button.component";
+import { ChevronLeft } from "lucide-react";
+
 export default function Browser() {
-  return <main className="flex h-full w-full flex-col">Browser </main>;
+  const [tab, setTab] = useState<"home" | "rules" | "list" | "items" | "store">(
+    "home",
+  );
+  const [searchTerms, setSearchTerms] = useState<string>("");
+
+  const getComponent = useCallback(() => {
+    const tabMap = {
+      home: <HomeTab setTab={setTab} searchTerms={searchTerms} />,
+      rules: <RulesTab searchTerms={searchTerms} />,
+      list: <>2</>,
+      items: <>3</>,
+      store: <>4</>,
+    };
+
+    return tabMap[(tab as keyof typeof tabMap) ?? "home"];
+  }, [tab, searchTerms]);
+
+  return (
+    <main className="flex h-full w-full flex-col p-2">
+      <section className="flex flex-row gap-1 items-center w-full">
+        <Input
+          placeholder="Поиск вкладки"
+          value={searchTerms}
+          onChange={(e) => setSearchTerms(e.target.value)}
+        />
+        <Button
+          variant="error"
+          size="icon"
+          className="h-10 w-10 p-5"
+          onClick={() => setTab("home")}
+          disabled={tab === "home"}
+        >
+          <ChevronLeft />
+        </Button>
+      </section>
+      <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
+        {getComponent()}
+      </section>
+    </main>
+  );
 }

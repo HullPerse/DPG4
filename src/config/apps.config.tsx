@@ -37,7 +37,7 @@ export const APPS = [
     name: "browser",
     label: "Браузер",
     icon: <Globe className="size-7" />,
-    compomemt: <Browser />,
+    component: <Browser />,
     priority: 3,
   },
   {
