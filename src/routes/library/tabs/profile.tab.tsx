@@ -6,7 +6,7 @@ import { useUserStore } from "@/store/user.store";
 
 import { Button } from "@/components/ui/button.component";
 import { profileTabs } from "@/config/library.config";
-import { RussianRubleIcon } from "lucide-react";
+import { Plus, RussianRubleIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -20,6 +20,7 @@ import GameApi from "@/api/games.api";
 import Games from "../components/profile/games.profile";
 import ReviewsProfile from "../components/profile/reviews.profile";
 import ChatProfile from "../components/profile/chat.profile";
+import { Input } from "@/components/ui/input.component";
 const userApi = new UserApi();
 const gameApi = new GameApi();
 
@@ -27,6 +28,7 @@ function ProfileTab({ id }: { id?: string }) {
   const user = useUserStore((state) => state.user);
 
   const [profileTab, setProfileTab] = useState<ProfileTab>("profile");
+  const [addMoney, setAddMoney] = useState<number>(0);
 
   const queryClient = useQueryClient();
 
@@ -85,8 +87,34 @@ function ProfileTab({ id }: { id?: string }) {
       </section>
       <section className="flex flex-col gap-2 items-center border-l-2 h-full  border-highlight-high bg-background">
         {/* USER INFO */}
-        <div className="flex flex-row items-center w-full border-b-2 border-highlight-high p-2 font-bold">
-          <RussianRubleIcon /> {data?.user.money} чубриков
+        <div className="flex flex-col items-center w-full border-b-2 border-highlight-high p-2 font-bold gap-2">
+          <span className="flex flex-row w-full">
+            <RussianRubleIcon /> {data?.user.money} чубриков
+          </span>
+          {data?.user.id === user?.id && (
+            <div className="flex flex-row gap-1">
+              <Input
+                arrows
+                type="number"
+                value={addMoney}
+                onChange={(e) => setAddMoney(Number(e.target.value))}
+                className="h-10"
+              />
+              <Button
+                variant="success"
+                size="icon"
+                className="h-10"
+                onClick={async () => {
+                  if (data?.user.id !== user?.id) return;
+
+                  await userApi.scoreUser(String(data?.user.id), addMoney);
+                  setAddMoney(0);
+                }}
+              >
+                <Plus />
+              </Button>
+            </div>
+          )}
         </div>
         {/* TABS */}
         <div className="flex flex-col gap-2 p-2">

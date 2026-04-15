@@ -4,6 +4,7 @@ import RulesTab from "./tabs/rules.tab";
 import { Input } from "@/components/ui/input.component";
 import { Button } from "@/components/ui/button.component";
 import { ChevronLeft } from "lucide-react";
+import ListTab from "./tabs/list.tab";
 
 export default function Browser() {
   const [tab, setTab] = useState<"home" | "rules" | "list" | "items" | "store">(
@@ -15,7 +16,7 @@ export default function Browser() {
     const tabMap = {
       home: <HomeTab setTab={setTab} searchTerms={searchTerms} />,
       rules: <RulesTab searchTerms={searchTerms} />,
-      list: <>2</>,
+      list: <ListTab searchTerms={searchTerms} />,
       items: <>3</>,
       store: <>4</>,
     };
