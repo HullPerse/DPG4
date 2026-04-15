@@ -6,6 +6,7 @@ import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
+import { highlightText } from "@/lib/utils";
 
 const rulesApi = new RulesApi();
 
@@ -71,7 +72,8 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
                   .map((rule, index) => (
                     <div key={index} className="p-2">
                       <p>
-                        {index + 1}. {rule.rule}
+                        {index + 1}.{" "}
+                        {highlightText(String(rule.rule), searchTerms)}
                       </p>
                     </div>
                   ))}
