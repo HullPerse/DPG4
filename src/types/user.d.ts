@@ -26,4 +26,8 @@ export interface User {
   //-----LAST TWO ROWS-----
   //0h+    = 1d6
   currentDice: 1;
+
+  //statuses will be in an array of strings
+  //each statuses will appear there after specific actions
+  status?: string[];
 }

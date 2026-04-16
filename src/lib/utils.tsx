@@ -276,6 +276,12 @@ export function getNextDice(
   return 4;
 }
 
+export async function fileFromUrl(url: string): Promise<File> {
+  return fetch(url)
+    .then((response) => response.blob())
+    .then((blob) => new File([blob], "image.png", { type: blob.type }));
+}
+
 export function downloadJSON(json: object[]) {
   const blob = new Blob([JSON.stringify(json)], {
     type: "application/json",
