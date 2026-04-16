@@ -6,6 +6,7 @@ import { lazy } from "react";
 const PresetsTab = lazy(() => import("@/routes/library/tabs/presets.tab"));
 const LibraryTab = lazy(() => import("@/routes/library/tabs/library.tab"));
 const ProfileTab = lazy(() => import("@/routes/library/tabs/profile.tab"));
+const InventoryTab = lazy(() => import("@/routes/library/tabs/inventory.tab"));
 
 export const libraryTabs = [
   { value: "presets", label: "Пресеты", component: <PresetsTab />, show: true },
@@ -25,6 +26,12 @@ export const libraryTabs = [
     value: "friends",
     label: "Друзья",
     component: <FriendsTab />,
+    show: false,
+  },
+  {
+    value: "inventory",
+    label: "Инвентарь",
+    component: <InventoryTab />,
     show: false,
   },
   { value: "community", label: "Сообщество", component: <></>, show: true },

@@ -20,6 +20,7 @@ import GameApi from "@/api/games.api";
 import Games from "../components/profile/games.profile";
 import ReviewsProfile from "../components/profile/reviews.profile";
 import ChatProfile from "../components/profile/chat.profile";
+import InventoryTab from "./inventory.tab";
 import { Input } from "@/components/ui/input.component";
 const userApi = new UserApi();
 const gameApi = new GameApi();
@@ -74,7 +75,7 @@ function ProfileTab({ id }: { id?: string }) {
       reviews: <ReviewsProfile id={String(data?.user.id)} />,
       chat: <ChatProfile id={String(data?.user.id)} />,
       trade: <>4</>,
-      inventory: <>2</>,
+      inventory: <InventoryTab id={String(data?.user.id)} />,
     };
 
     return tabMap[profileTab];

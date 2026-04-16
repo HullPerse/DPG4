@@ -7,7 +7,7 @@ import {
 import { libraryTabs } from "@/config/library.config";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
-import { LibraryTabs } from "@/types/library";
+import { type LibraryTabs } from "@/types/library";
 import { ChevronDown, ChevronLeft, MailWarning, User } from "lucide-react";
 import { startTransition, useCallback, useEffect, useState } from "react";
 import ProfileTab from "./tabs/profile.tab";

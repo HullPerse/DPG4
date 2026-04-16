@@ -1,4 +1,4 @@
-import { Item } from "@/types/items";
+import { Inventory, Item } from "@/types/items";
 import { client } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 
@@ -30,6 +30,12 @@ export default class ItemsApi {
 
   getItemById = async (itemId: string): Promise<Item | undefined> => {
     return await this.itemsCollection.getOne(itemId);
+  };
+
+  getInventory = async (userId: string): Promise<Inventory[]> => {
+    return await this.inventoryCollection.getFullList({
+      filter: `owner = "${userId}"`,
+    });
   };
 
   addInventory = async (userId: string, itemId: string, image: string) => {
