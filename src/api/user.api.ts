@@ -113,12 +113,16 @@ export default class UserApi {
     await this.changeUserAction(userId, "GAMEADD");
   };
 
+  getUserScore = async (userId: string): Promise<number> => {
+    const user: User = await this.usersCollection.getOne(userId);
+
+    return user.money;
+  };
+
   scoreUser = async (userId: string, score: number) => {
-    const currentScore = await this.usersCollection
-      .getOne(userId, {
-        fields: "money",
-      })
-      .then((res) => res.money);
+    const currentScore = await this.getUserScore(userId);
+
+    if (score < 0 && currentScore < -score) return;
 
     return await this.usersCollection.update(userId, {
       money: currentScore + score,

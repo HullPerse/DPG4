@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button.component";
 import { BookOpenText, ShoppingBag, ShoppingCart, Boxes } from "lucide-react";
 import { memo } from "react";
 
-export const TABS = ["store", "items", "rules", "list"];
+export const TABS = ["items", "store", "rules", "list"];
 
 function HomeBrowser({
   setTab,
@@ -21,15 +21,15 @@ function HomeBrowser({
       },
       items: {
         value: "items",
-        label: "АВИТО",
-        description: "Магазин покупки б/у предметов",
-        icon: <ShoppingBag className="size-10" />,
-      },
-      store: {
-        value: "store",
         label: "МАГАЗИН",
         description: "Магазин покупки предметов",
         icon: <ShoppingCart className="size-10" />,
+      },
+      store: {
+        value: "store",
+        label: "АВИТО",
+        description: "Магазин покупки б/у предметов",
+        icon: <ShoppingBag className="size-10" />,
       },
       list: {
         value: "list",

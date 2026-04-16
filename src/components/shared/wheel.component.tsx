@@ -23,14 +23,22 @@ import {
   MIN_ITEMS_FOR_ROLL,
 } from "@/config/wheel.config";
 import renderWheelItems from "./renderer.component";
+import { calculateCost } from "@/lib/utils";
+import { useUserStore } from "@/store/user.store";
+import UserApi from "@/api/user.api";
+const userApi = new UserApi();
 
 function Wheel({
   list,
   onResult,
+  type = "presets",
 }: {
   list: WheelItem[];
   onResult: (item: WheelItem | null) => void;
+  type?: "items" | "presets";
 }) {
+  const user = useUserStore((state) => state.user);
+
   //states
   const [rolling, setRolling] = useState<WheelRoll>({
     isRolling: false,
@@ -87,7 +95,8 @@ function Wheel({
   }, []);
 
   const selectCenteredPreview = useCallback(() => {
-    if (!containerRef.current || !rolling.hasRolled || shuffled.length === 0) return;
+    if (!containerRef.current || !rolling.hasRolled || shuffled.length === 0)
+      return;
 
     const centerIndex: number = getCenteredItem(
       scrollPositionRef.current,
@@ -155,9 +164,6 @@ function Wheel({
     }
   }, [rolling, updateCenterHighlight, selectCenteredPreview]);
 
-
-
-
   //recompute on data changes
   useEffect(() => {
     if (!rolling.isRolling) updateCenterHighlight();
@@ -173,8 +179,16 @@ function Wheel({
     return () => window.removeEventListener("resize", onResize);
   }, [rolling.isRolling, updateCenterHighlight]);
 
-  const handleRoll = useCallback(() => {
+  const handleRoll = useCallback(async () => {
     if (rolling.isRolling) return;
+
+    if (type === "items") {
+      const currentScore = await userApi.getUserScore(String(user?.id));
+
+      if (currentScore < calculateCost()) return;
+
+      await userApi.scoreUser(String(user?.id), -calculateCost());
+    }
 
     const rollItems = rollPrepare(list, MIN_ITEMS_FOR_ROLL);
 
@@ -227,11 +241,19 @@ function Wheel({
       </section>
       <Button
         variant="success"
-        disabled={rolling.isRolling || list.length === 0}
+        disabled={
+          rolling.isRolling ||
+          list.length === 0 ||
+          Number(user?.money) < calculateCost()
+        }
         className="w-md max-w-full"
         onClick={handleRoll}
       >
-        {rolling.isRolling ? "ВРАЩЕНИЕ..." : "КРУТИТЬ"}
+        {rolling.isRolling
+          ? "ВРАЩЕНИЕ..."
+          : type === "items"
+            ? `КРУТИТЬ ЗА ${calculateCost()} чб. [${user?.money} всего]`
+            : "КРУТИТЬ"}
       </Button>
     </main>
   );
