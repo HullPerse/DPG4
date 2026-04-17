@@ -22,6 +22,7 @@ export default class UserApi {
           position: 0,
           currentAction: "MOVE_POSITIVE",
           currentDice: 1,
+          place: "0",
         })
         .then((res) => {
           return res;
@@ -54,13 +55,19 @@ export default class UserApi {
   //get all user positions
   getUserPositions = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({
-      fields: "id, position, username, avatar, color",
+      fields: "id, position, username, avatar, color, place",
     });
   };
 
   //get user by id
   getUserById = async (userId: string): Promise<User> => {
     return await this.usersCollection.getOne(userId);
+  };
+
+  getUserByUsername = async (username: string): Promise<User> => {
+    return (await this.getAllUsers().then((res) =>
+      res.find((u) => u.username === username),
+    )) as User;
   };
 
   changeUserAction = async (
@@ -124,6 +131,37 @@ export default class UserApi {
 
     return await this.usersCollection.update(userId, {
       money: currentScore + score,
+    });
+  };
+
+  getAllPlaces = async () => {
+    return this.usersCollection.getFullList({
+      fields: "place",
+    });
+  };
+
+  updatePlace = async (userId: string) => {
+    const allPlaces = await this.getAllPlaces();
+    const existingPlaces = allPlaces.map((p) => p.place);
+    if (
+      existingPlaces.includes("1") &&
+      existingPlaces.includes("2") &&
+      existingPlaces.includes("3")
+    ) {
+      return;
+    }
+    const finalPlace = !existingPlaces.includes("1")
+      ? "1"
+      : !existingPlaces.includes("2")
+        ? "2"
+        : "3";
+
+    const user = await this.getUserById(userId);
+
+    if (!user) return;
+
+    return await this.usersCollection.update(String(user.id), {
+      place: finalPlace,
     });
   };
 }
