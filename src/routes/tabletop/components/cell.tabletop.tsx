@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   CircleQuestionMark,
+  Crown,
   Sword,
   Swords,
   TrafficCone,
@@ -25,6 +26,7 @@ import { Button } from "@/components/ui/button.component";
 import LadderSvg from "@/components/svg/ladder.component";
 import SnakeSvg from "@/components/svg/snake.component";
 import SteamSvg from "@/components/svg/steam.component";
+import { getPlaceColor } from "@/lib/utils";
 
 function CellComponent({
   cell,
@@ -197,11 +199,27 @@ function CellComponent({
                 <span
                   key={user.id}
                   id={`user-${user.id}`}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-highlight-low"
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-highlight-low"
                   style={{
                     backgroundColor: user.color,
                   }}
                 >
+                  {user.place !== "0" && (
+                    <div className="absolute -top-2 -right-2 rotate-45">
+                      <Crown
+                        className="relative size-4"
+                        style={{
+                          fill: getPlaceColor(user.place),
+                          color: getPlaceColor(user.place),
+                        }}
+                      />
+
+                      <span className="absolute top-1 right-1.5 text-[6px] font-bold text-black">
+                        {user.place}
+                      </span>
+                    </div>
+                  )}
+
                   {user.avatar}
                 </span>
               ))}

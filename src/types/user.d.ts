@@ -30,4 +30,6 @@ export interface User {
   //statuses will be in an array of strings
   //each statuses will appear there after specific actions
   status?: string[];
+
+  place: "0" | "1" | "2" | "3";
 }

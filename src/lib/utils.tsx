@@ -1,4 +1,5 @@
 import { GameStatus } from "@/types/games";
+import { User } from "@/types/user";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -294,4 +295,14 @@ export function downloadJSON(json: object[]) {
   link.click();
 
   URL.revokeObjectURL(link.href);
+}
+
+export function getPlaceColor(place: User["place"]) {
+  const placeMap = {
+    "1": "#FFD700",
+    "2": "#C0C0C0",
+    "3": "#CD7F32",
+  };
+
+  return placeMap[place as keyof typeof placeMap];
 }

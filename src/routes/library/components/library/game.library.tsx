@@ -198,6 +198,10 @@ function GameLibrary({
             String(data.game.user.id),
             data.user.position,
           );
+
+          if (data.user.position === 101) {
+            await userApi.updatePlace(String(data.game.user.id));
+          }
         }
 
         setInput(false);
