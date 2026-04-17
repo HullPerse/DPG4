@@ -47,7 +47,7 @@ function CommunityTab() {
   const activities = data ?? [];
 
   return (
-    <main className="flex flex-col w-full h-full gap-1 overflow-y-auto pb-15">
+    <main className="flex flex-col w-full h-full gap-1 overflow-y-auto pb-15 p-2">
       {activities.map((activity) => (
         <ActivityCard key={activity.id} activity={activity} />
       ))}
@@ -62,7 +62,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
   });
 
   return (
-    <div className="flex items-center gap-3 border border-highlight-low bg-card p-2">
+    <div className="flex items-center gap-3 border-2 border-highlight-high bg-card p-2">
       {activity.type === "image" ? (
         activity.image ? (
           <ImageComponent
@@ -76,27 +76,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
           {activity.image}
         </span>
       )}
-      {/*{activity.type === "image" ? (
-        imageSrc ? (
-          <img
-            src={imageSrc}
-            alt=""
-            className="size-12 shrink-0 rounded-sm object-cover"
-          />
-        ) : null
-      ) : activity.type === "emoji" && activity.image ? (
-        imageSrc ? (
-          <ImageComponent
-            src={imageSrc}
-            alt="activity"
-            className="size-12 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span className="size-12 flex items-center justify-center border border-highlight-high text-2xl">
-            {activity.image}
-          </span>
-        )
-      ) : null}*/}
+
       <div className="flex flex-col flex-1 min-w-0">
         <p className="truncate text-sm text-text">{activity.text}</p>
         <span className="text-xs text-muted">{timeAgo}</span>
