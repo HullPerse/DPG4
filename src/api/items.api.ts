@@ -3,6 +3,7 @@ import { client, image } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 import UserApi from "./user.api";
 import { User } from "@/types/user";
+import { Activity } from "@/types/activity";
 
 const userApi = new UserApi();
 
@@ -10,6 +11,7 @@ export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
   private readonly inventoryCollection = client.collection("inventory");
   private readonly marketCollection = client.collection("market");
+  private readonly activityCollection = client.collection("activity");
 
   getAllItems = async (): Promise<Item[]> => {
     return await this.itemsCollection.getFullList();
@@ -65,6 +67,13 @@ export default class ItemsApi {
       description: item.description,
       charge: item.charge,
     });
+
+    const user = await userApi.getUserById(userId);
+    const activityData = {
+      image: user.avatar,
+      text: `${user.username} получил предмет ${item.label}`,
+    } as Activity;
+    await this.activityCollection.create(activityData);
   };
 
   removeInventory = async (id: string) => {
@@ -115,6 +124,12 @@ export default class ItemsApi {
       image: imageFile,
       price: price,
     } as Market;
+
+    const activityData = {
+      image: userData.avatar,
+      text: `${userData.username} выставил на продажу предметт ${itemData.label} за ${price}`,
+    } as Activity;
+    await this.activityCollection.create(activityData);
 
     return await this.marketCollection.create(data).then(async () => {
       await this.removeInventory(String(itemData.id));
@@ -183,6 +198,14 @@ export default class ItemsApi {
 
     await userApi.scoreUser(newOwner, -itemData.price);
     await userApi.scoreUser(oldOwner, itemData.price);
+
+    const user = await userApi.getUserById(newOwner);
+
+    const activityData = {
+      image: user.avatar,
+      text: `${user.username} купил предмет ${itemData.label} за ${itemData.price}`,
+    } as Activity;
+    await this.activityCollection.create(activityData);
 
     return await this.inventoryCollection.create(data).then(async () => {
       await this.removeMarket(marketId);

@@ -3,11 +3,32 @@ import { Preset, Game, GameReview, GameStatus, GameData } from "@/types/games";
 import { client } from "./client.api";
 
 import { User } from "@/types/user";
+import { Activity } from "@/types/activity";
+
+const STATUSES = [
+  {
+    name: "PLAYING",
+    label: "В ПРОЦЕССЕ",
+  },
+  {
+    name: "COMPLETED",
+    label: "ПРОЙДЕНО",
+  },
+  {
+    name: "DROPPED",
+    label: "ДРОПНУТО",
+  },
+  {
+    name: "REROLLED",
+    label: "РЕРОЛЬНУТО",
+  },
+];
 
 export default class GameApi {
   private readonly gamesCollection = client.collection("games");
   private readonly presetsCollection = client.collection("presets");
   private readonly userCollection = client.collection("users");
+  private readonly activityCollection = client.collection("activity");
 
   //steam api
   resolveVanityUrl = async (username: string): Promise<string> => {
@@ -186,6 +207,13 @@ export default class GameApi {
   };
 
   addGame = async (game: Game): Promise<Game> => {
+    const activityData = {
+      image: game.data.capsuleImage,
+      text: `${game.user.username} добавил игру ${game.data.name}`,
+    } as Activity;
+
+    await this.activityCollection.create(activityData);
+
     return await this.gamesCollection.create(game);
   };
 
@@ -204,6 +232,13 @@ export default class GameApi {
   ) => {
     const newTime =
       status === "COMPLETED" ? { ...game.playtime, user: time } : game.playtime;
+
+    const activityData = {
+      image: game.data.capsuleImage,
+      text: `${game.user.username} сменил статус игры ${game.data.name} на ${STATUSES.find((s) => s.name === status)?.label}`,
+    } as Activity;
+
+    await this.activityCollection.create(activityData);
 
     return await this.gamesCollection.update(id, {
       status: status,

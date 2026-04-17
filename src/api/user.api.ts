@@ -4,11 +4,13 @@ import { useDataStore } from "@/store/data.store";
 import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
 import { getNextDice } from "@/lib/utils";
+import { Activity } from "@/types/activity";
 
 const cellApi = new CellApi();
 
 export default class UserApi {
   private readonly usersCollection = client.collection("users");
+  private readonly activityCollection = client.collection("activity");
 
   //create new user
   create = async (data: User) => {
@@ -24,7 +26,12 @@ export default class UserApi {
           currentDice: 1,
           place: "0",
         })
-        .then((res) => {
+        .then(async (res) => {
+          const activityData = {
+            image: data.avatar,
+            text: `${data.username} создал аккаунт`,
+          } as Activity;
+          await this.activityCollection.create(activityData);
           return res;
         });
     } catch (error) {
@@ -159,6 +166,12 @@ export default class UserApi {
     const user = await this.getUserById(userId);
 
     if (!user) return;
+
+    const activityData = {
+      image: user.avatar,
+      text: `${user.username} занял ${finalPlace} позицию`,
+    } as Activity;
+    await this.activityCollection.create(activityData);
 
     return await this.usersCollection.update(String(user.id), {
       place: finalPlace,
