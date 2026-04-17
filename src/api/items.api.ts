@@ -1,10 +1,15 @@
-import { Inventory, Item } from "@/types/items";
-import { client } from "./client.api";
+import { Inventory, Item, Market } from "@/types/items";
+import { client, image } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
+import UserApi from "./user.api";
+import { User } from "@/types/user";
+
+const userApi = new UserApi();
 
 export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
   private readonly inventoryCollection = client.collection("inventory");
+  private readonly marketCollection = client.collection("market");
 
   getAllItems = async (): Promise<Item[]> => {
     return await this.itemsCollection.getFullList();
@@ -38,6 +43,10 @@ export default class ItemsApi {
     });
   };
 
+  getInventoryById = async (inventoryId: string): Promise<Inventory> => {
+    return await this.inventoryCollection.getOne(inventoryId);
+  };
+
   addInventory = async (userId: string, itemId: string, image: string) => {
     const item = await this.getItemById(itemId);
 
@@ -54,9 +63,58 @@ export default class ItemsApi {
     });
   };
 
-  removeInventory = async () => {};
+  removeInventory = async (id: string) => {
+    return await this.inventoryCollection.delete(id);
+  };
+
+  sendInventory = async (inventoryId: string, newOwner: string) => {
+    return await this.inventoryCollection.update(inventoryId, {
+      owner: newOwner,
+    });
+  };
+
+  chargeInventory = async (
+    inventoryId: string,
+    oldCharge: number,
+    newCharge: number,
+  ) => {
+    if (oldCharge + newCharge === 0) {
+      return await this.removeInventory(inventoryId);
+    }
+
+    return await this.inventoryCollection.update(inventoryId, {
+      charge: oldCharge + newCharge,
+    });
+  };
+
+  sellInventory = async (inventoryId: string, owner: string, price: number) => {
+    if (!price) return;
+
+    const userData = (await userApi.getUserById(owner)) as User;
+    const itemData = await this.getInventoryById(inventoryId);
+
+    if (!userData || !itemData) return;
+
+    const imageFile = await fileFromUrl(
+      `${image.inventory}${itemData.id}/${itemData.image}`,
+    );
+    const data = {
+      owner: {
+        id: userData.id,
+        username: userData.username,
+        avatar: userData.avatar,
+      },
+      label: itemData.label,
+      description: itemData.description,
+      charge: itemData.charge,
+      image: imageFile,
+      price: price,
+    } as Market;
+
+    return await this.marketCollection.create(data).then(async () => {
+      await this.removeInventory(String(itemData.id));
+    });
+  };
 
   useInventory = async () => {};
-
-  chargeInventory = async () => {};
 }

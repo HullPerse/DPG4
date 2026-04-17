@@ -1,3 +1,5 @@
+//TODO: implemennt toasts for as much actions as possible (just add it to .api files)
+
 import { useUserStore } from "./store/user.store";
 import { useNavigate } from "@tanstack/react-router";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";

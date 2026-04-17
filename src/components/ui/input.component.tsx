@@ -14,9 +14,14 @@ export function Input({
   value = "",
   arrows,
   amount,
+  arrowsGap,
   onChange,
   ...props
-}: ComponentProps<"input"> & { arrows?: boolean; amount?: boolean }) {
+}: ComponentProps<"input"> & {
+  arrows?: boolean;
+  amount?: boolean;
+  arrowsGap?: string;
+}) {
   const [visiblePassword, setVisiblePassword] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -64,7 +69,10 @@ export function Input({
 
       {arrows && (
         <div
-          className={`absolute top-1 right-2 flex flex-col items-center justify-center text-gray-400`}
+          className={`absolute right-2 flex flex-col items-center justify-center text-gray-400`}
+          style={{
+            top: arrowsGap ? arrowsGap : "4px",
+          }}
           aria-hidden={props.disabled ? "true" : "false"}
         >
           <button
