@@ -245,7 +245,7 @@ function TradeTab({ id }: { id: string }) {
         variant="success"
         className="w-full"
         onClick={handleTrade}
-        disabled={loading}
+        disabled={loading || !selectedItems}
       >
         {loading ? <SmallLoader /> : "Отправить"}
       </Button>
