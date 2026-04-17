@@ -75,7 +75,7 @@ function InventoryTab({ id }: { id?: string }) {
         refetchType: "all",
       });
     });
-  }, [queryClient]);
+  }, [queryClient, currentId]);
 
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("market", "*", invalidateQuery);
@@ -122,6 +122,7 @@ function InventoryTab({ id }: { id?: string }) {
       invalidateQuery();
     });
   };
+
   const handleSend = async (
     index: number,
     inventoryId: string,
@@ -138,9 +139,17 @@ function InventoryTab({ id }: { id?: string }) {
         item: -1,
         type: null,
       });
-    });
 
-    invalidateQuery();
+      invalidateQuery();
+      queryClient.invalidateQueries({
+        queryKey: ["inventoryTab", userId],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inventoryTab", user?.id],
+        refetchType: "all",
+      });
+    });
   };
 
   const handleSell = async (
