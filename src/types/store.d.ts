@@ -35,9 +35,11 @@ export interface DataStore {
     isAnimating: boolean;
     finalPosition: number;
   } | null;
+  notepad: string;
 
   // Actions
   setSavedWheel: (savedWheel: string[]) => void;
+  setNotepad: (notepad: string) => void;
   setWallpaper: (wallpaper: string) => void;
   setFont: (font: string) => void;
   setConnected: (isConnected: boolean) => void;

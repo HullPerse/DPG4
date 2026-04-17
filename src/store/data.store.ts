@@ -15,9 +15,14 @@ export const useDataStore = create<DataStore>()(
         userProfile: null,
         movingUser: null,
         savedWheel: [],
+        notepad: "",
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
+        },
+
+        setNotepad: (notepad: string) => {
+          set({ notepad });
         },
 
         setWallpaper: (wallpaper: string) => {
