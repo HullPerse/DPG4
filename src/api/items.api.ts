@@ -15,6 +15,10 @@ export default class ItemsApi {
     return await this.itemsCollection.getFullList();
   };
 
+  getAllInventories = async (): Promise<Inventory[]> => {
+    return await this.inventoryCollection.getFullList();
+  };
+
   addItem = async (data: {
     label: string;
     description: string;

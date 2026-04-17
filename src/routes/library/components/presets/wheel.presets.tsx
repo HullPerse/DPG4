@@ -142,6 +142,7 @@ export default function PresetsWheel({ id }: { id: string }) {
             id: String(game.id),
             label: game.name,
             image: game.capsuleImage ?? "https://placehold.co/16x10",
+            type: "image",
           }))}
           onResult={(item) => {
             return setResult(

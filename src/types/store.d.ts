@@ -25,6 +25,7 @@ export interface DataStore {
   isEditing: boolean;
   arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes";
   userProfile: string | null;
+  savedWheel: string[];
   movingUser: {
     userId: string;
     fromPosition: number;
@@ -36,6 +37,7 @@ export interface DataStore {
   } | null;
 
   // Actions
+  setSavedWheel: (savedWheel: string[]) => void;
   setWallpaper: (wallpaper: string) => void;
   setFont: (font: string) => void;
   setConnected: (isConnected: boolean) => void;
@@ -44,7 +46,13 @@ export interface DataStore {
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;
   setUserProfile: (userProfile: string | null) => void;
-  startMoving: (userId: string, fromPosition: number, toPosition: number, finalPosition: number, path: number[]) => void;
+  startMoving: (
+    userId: string,
+    fromPosition: number,
+    toPosition: number,
+    finalPosition: number,
+    path: number[],
+  ) => void;
   nextStep: () => void;
   finishMoving: () => void;
 }

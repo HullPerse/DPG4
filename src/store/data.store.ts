@@ -14,6 +14,11 @@ export const useDataStore = create<DataStore>()(
         arrowType: "all",
         userProfile: null,
         movingUser: null,
+        savedWheel: [],
+
+        setSavedWheel: (savedWheel: string[]) => {
+          set({ savedWheel });
+        },
 
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
@@ -33,7 +38,13 @@ export const useDataStore = create<DataStore>()(
         setUserProfile: (userProfile: string | null) => {
           set({ userProfile });
         },
-        startMoving: (userId: string, fromPosition: number, toPosition: number, finalPosition: number, path: number[]) => {
+        startMoving: (
+          userId: string,
+          fromPosition: number,
+          toPosition: number,
+          finalPosition: number,
+          path: number[],
+        ) => {
           set({
             movingUser: {
               userId,

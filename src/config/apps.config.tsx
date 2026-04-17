@@ -11,12 +11,14 @@ import {
   LibraryBig,
   Star,
   Globe,
+  Volleyball,
 } from "lucide-react";
 import { lazy } from "react";
 
 const Tabletop = lazy(() => import("@/routes/tabletop/tabletop.root"));
 const Library = lazy(() => import("@/routes/library/library.root"));
 const Browser = lazy(() => import("@/routes/browser/browser.root"));
+const Wheels = lazy(() => import("@/routes/wheels/wheels.root"));
 
 export const APPS = [
   {
@@ -39,6 +41,13 @@ export const APPS = [
     icon: <Globe className="size-7" />,
     component: <Browser />,
     priority: 3,
+  },
+  {
+    name: "allWheels",
+    label: "Все Колёса",
+    icon: <Volleyball className="size-7" />,
+    component: <Wheels />,
+    priority: 4,
   },
   {
     name: "gamewheel",
@@ -107,6 +116,17 @@ export const WINDOWS = [
     id: "browser",
     title: "Браузер",
     icon: <Globe className="size-7" />,
+    size: {
+      minWidth: 910,
+      minHeight: 680,
+      width: 910,
+      height: 680,
+    },
+  },
+  {
+    id: "allWheels",
+    title: "Все Колёса",
+    icon: <Volleyball className="size-7" />,
     size: {
       minWidth: 910,
       minHeight: 680,

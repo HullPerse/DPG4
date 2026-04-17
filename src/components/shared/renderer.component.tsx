@@ -47,13 +47,17 @@ export default function renderWheelItems(
         aria-disabled={isRolling}
         tabIndex={isInteractive ? 0 : -1}
       >
-        {item.image && (
+        {item.type === "image" && item.image && (
           <Image
             src={item.image}
             alt={item.label}
             loading="lazy"
-            className="w-10 h-10 object-contain mb-1 rounded"
+            className="w-10 h-10 object-contain mb-1"
           />
+        )}
+
+        {item.type === "emoji" && (
+          <span className="w-10 h-10 mb-1">{item.image}</span>
         )}
         <div className="text-xs font-medium text-center px-1 line-clamp-1">
           {item.label}

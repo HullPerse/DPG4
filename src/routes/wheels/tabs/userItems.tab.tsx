@@ -1,49 +1,63 @@
-import { image } from "@/api/client.api";
-import ItemsApi from "@/api/items.api";
-import { WindowError } from "@/components/shared/error.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
-import { useUserStore } from "@/store/user.store";
-import { Item } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
-import { memo, startTransition, useCallback, useState } from "react";
+import { memo, startTransition, useCallback, useEffect, useState } from "react";
+import UserApi from "@/api/user.api";
+import { useSubscription } from "@/hooks/subscription.hook";
+import { WindowLoader } from "@/components/shared/loader.component";
+import { WindowError } from "@/components/shared/error.component";
+import { EyeIcon, EyeOffIcon, NetworkIcon, Plus, Send } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
-import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText } from "@/lib/utils";
+import ImageComponent from "@/components/shared/image.component";
+import { useUserStore } from "@/store/user.store";
+import { User } from "@/types/user";
+import ItemsApi from "@/api/items.api";
+import { Inventory } from "@/types/items";
+import { image } from "@/api/client.api";
 
-const itemsApi = new ItemsApi();
+const itemApi = new ItemsApi();
+const userApi = new UserApi();
 
-function ItemsTab({ searchTerms }: { searchTerms: string }) {
+function UserItems({
+  selected,
+  values,
+  setValues,
+}: {
+  selected: number;
+  values: string[];
+  setValues: (values: string[]) => void;
+}) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
-  const [result, setResult] = useState<Item | null>(null);
-
-  const [loading, setLoading] = useState<boolean>(false);
+  const [result, setResult] = useState<Inventory | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["itemsWheel"],
-    queryFn: async (): Promise<Item[]> => {
-      return await itemsApi.getAllItems();
+    queryKey: ["UserItemsWheel", selected],
+    queryFn: async (): Promise<{ items: Inventory[]; users: User[] }> => {
+      const users = await userApi.getAllUsers();
+
+      setValues(["ВСЕ", ...users.map((u) => u.username)]);
+
+      return { items: await itemApi.getAllInventories(), users };
     },
   });
+
+  useEffect(() => {
+    if (data && selected === 0 && values.length === 0) {
+      setValues(["ВСЕ", ...data.users.map((u) => u.username)]);
+    }
+  }, [selected, values.length, data?.users]);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
       queryClient.invalidateQueries({
-        queryKey: ["itemsWheel"],
+        queryKey: ["UserItemsWheel", selected],
         refetchType: "all",
       });
     });
   }, [queryClient]);
 
-  useSubscription("items", "*", invalidateQuery);
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("users", "*", invalidateQuery);
 
@@ -59,45 +73,41 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     );
 
   const handleAddItem = async (id: string) => {
-    const item = data?.find((Item) => Item.id === id);
+    const item = data?.items.find((Item) => Item.id === id);
     if (!item) return;
 
-    setLoading(true);
-
-    return await itemsApi
-      .addInventory(
-        String(user?.id),
-        String(item.id),
-        `${image?.items}${item.id}/${item.image}`,
-      )
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
-        setLoading(false);
-        setResult(null);
-      });
+    return await itemApi.sendInventory(String(item.id), String(user?.id));
   };
 
   const visibleItems =
-    data?.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
-
+    data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
-          list={visibleItems.map((item) => ({
-            id: String(item.id),
-            label: item.label,
-            image: `${image?.items}${item.id}/${item.image}`,
-            type: "image",
-          }))}
+          key={`wheel-${selected}-${hiddenItems.join(",")}`}
+          list={visibleItems
+            .filter((item) =>
+              selected === 0
+                ? item
+                : data?.users.find((u) => u.id === item.owner)?.username ===
+                  values[selected],
+            )
+
+            .map((item) => ({
+              id: String(item.id),
+              label: item.label,
+              image: `${image?.inventory}${item.id}/${item.image}`,
+              type: "image",
+            }))}
           onResult={(it) => {
             return setResult(
-              data?.find((item) => String(item.id) === String(it?.id)) as Item,
+              data?.items.find(
+                (item) => String(item.id) === String(it?.id),
+              ) as Inventory,
             );
           }}
-          type="items"
         />
 
         {result && (
@@ -106,9 +116,10 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
             className="relative p-2 flex flex-row max-w-full w-xl min-h-fit h-22 border-2 border-highlight-high items-center"
           >
             <ImageComponent
-              src={`${image?.items}${result.id}/${result.image}`}
+              src={`${image?.inventory}${result.id}/${result.image}`}
               alt={result.label}
               className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+              type="contain"
             />
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
@@ -121,7 +132,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 title="Добавить предмет в инвентарь"
                 onClick={() => handleAddItem(String(result.id))}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>
@@ -129,13 +140,12 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       </section>
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
-        {data
-          ?.filter(
-            (item) =>
-              item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-              item.description
-                .toUpperCase()
-                .includes(searchTerms.toUpperCase()),
+        {data?.items
+          .filter((item) =>
+            selected === 0
+              ? item
+              : data?.users.find((u) => u.id === item.owner)?.username ===
+                values[selected],
           )
           .map((item) => (
             <section
@@ -147,17 +157,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
               }}
             >
               <ImageComponent
-                src={`${image?.items}${item.id}/${item.image}`}
+                src={`${image?.inventory}${item.id}/${item.image}`}
                 alt={item.label}
                 className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+                type="contain"
               />
+
               <div className="flex flex-col ml-2">
-                <span className="font-bold text-xl">
-                  {highlightText(item.label, searchTerms)}
-                </span>
-                <span className="text-text/80">
-                  {highlightText(item.description, searchTerms)}
-                </span>
+                <span className="font-bold text-xl">{item.label}</span>
               </div>
               <div className="ml-auto flex flex-row gap-1">
                 <Button
@@ -181,14 +188,16 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                     <EyeOffIcon size={20} />
                   )}
                 </Button>
-                <Button
-                  variant="success"
-                  size="icon"
-                  title="Добавить предмет в инвентарь"
-                  onClick={() => handleAddItem(String(item.id))}
-                >
-                  {loading ? <SmallLoader /> : <Plus />}
-                </Button>
+                {item.owner !== user?.id && (
+                  <Button
+                    title="Добавить в библиотеку"
+                    variant="info"
+                    size="icon"
+                    onClick={() => handleAddItem(String(item.id))}
+                  >
+                    <Send />
+                  </Button>
+                )}
               </div>
             </section>
           ))}
@@ -197,4 +206,4 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   );
 }
 
-export default memo(ItemsTab);
+export default memo(UserItems);
