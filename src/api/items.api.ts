@@ -1,4 +1,4 @@
-import { Inventory, Item, Market } from "@/types/items";
+import { Inventory, Item, Market, Trade } from "@/types/items";
 import { client, image } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 import UserApi from "./user.api";
@@ -117,6 +117,34 @@ export default class ItemsApi {
     });
   };
 
+  tradeInventory = async (currentUser: Trade, otherUser: Trade) => {
+    if (currentUser.money > 0) {
+      await userApi.scoreUser(otherUser.id, currentUser.money);
+      await userApi.scoreUser(currentUser.id, -currentUser.money);
+    }
+
+    //2. send items
+    if (currentUser.items.length > 0) {
+      for (const item of currentUser.items) {
+        await this.sendInventory(item, otherUser.id);
+      }
+    }
+
+    //other user => current user
+    //1. send money
+    if (otherUser.money > 0) {
+      await userApi.scoreUser(currentUser.id, otherUser.money);
+      await userApi.scoreUser(otherUser.id, -otherUser.money);
+    }
+
+    ///2. send items
+    if (otherUser.items.length > 0) {
+      for (const item of otherUser.items) {
+        await this.sendInventory(item, currentUser.id);
+      }
+    }
+  };
+
   useInventory = async () => {};
 
   getMarket = async (): Promise<Market[]> => {
@@ -131,7 +159,7 @@ export default class ItemsApi {
     return await this.marketCollection.delete(marketId);
   };
 
-  buyMarket = async (marketId: string, newOwner: string) => {
+  buyMarket = async (marketId: string, newOwner: string, oldOwner: string) => {
     const userMoney = await userApi.getUserScore(newOwner);
     const itemData = await this.getMarketById(marketId);
 
@@ -150,6 +178,7 @@ export default class ItemsApi {
     } as Inventory;
 
     await userApi.scoreUser(newOwner, -itemData.price);
+    await userApi.scoreUser(oldOwner, itemData.price);
 
     return await this.inventoryCollection.create(data).then(async () => {
       await this.removeMarket(marketId);

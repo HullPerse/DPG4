@@ -22,6 +22,7 @@ import ReviewsProfile from "../components/profile/reviews.profile";
 import ChatProfile from "../components/profile/chat.profile";
 import InventoryTab from "./inventory.tab";
 import { Input } from "@/components/ui/input.component";
+import TradeTab from "./trade.tab";
 const userApi = new UserApi();
 const gameApi = new GameApi();
 
@@ -74,7 +75,7 @@ function ProfileTab({ id }: { id?: string }) {
       library: <Games games={data?.games as Game[]} />,
       reviews: <ReviewsProfile id={String(data?.user.id)} />,
       chat: <ChatProfile id={String(data?.user.id)} />,
-      trade: <>4</>,
+      trade: <TradeTab id={String(data?.user.id)} />,
       inventory: <InventoryTab id={String(data?.user.id)} />,
     };
 
@@ -92,6 +93,9 @@ function ProfileTab({ id }: { id?: string }) {
           <span className="flex flex-row w-full">
             <RussianRubleIcon /> {data?.user.money} чубриков
           </span>
+          {data?.user.id !== user?.id && (
+            <span className="flex flex-row w-full">Ваши: {user?.money}</span>
+          )}
           {data?.user.id === user?.id && (
             <div className="flex flex-row gap-1">
               <Input

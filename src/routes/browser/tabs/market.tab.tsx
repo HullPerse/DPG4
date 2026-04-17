@@ -57,17 +57,19 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   initialLoad = false;
 
-  const handleBuy = async (index: number, marketId: string) => {
+  const handleBuy = async (index: number, marketId: string, owner: string) => {
     setLoading(index);
 
-    await itemsApi.buyMarket(marketId, String(user?.id)).then(() => {
-      setLoading(-1);
-      invalidateQuery();
-      queryClient.invalidateQueries({
-        queryKey: ["inventoryTab", user?.id],
-        refetchType: "all",
+    await itemsApi
+      .buyMarket(marketId, String(user?.id), String(owner))
+      .then(() => {
+        setLoading(-1);
+        invalidateQuery();
+        queryClient.invalidateQueries({
+          queryKey: ["inventoryTab", user?.id],
+          refetchType: "all",
+        });
       });
-    });
   };
 
   return (
@@ -100,7 +102,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                 <Button
                   variant="success"
                   className="w-full mt-auto"
-                  onClick={() => handleBuy(index, String(item.id))}
+                  onClick={() =>
+                    handleBuy(index, String(item.id), String(item.owner))
+                  }
                   disabled={Number(user?.money) < item.price}
                 >
                   {loading === index ? (

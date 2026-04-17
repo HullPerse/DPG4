@@ -122,8 +122,6 @@ export default class UserApi {
   scoreUser = async (userId: string, score: number) => {
     const currentScore = await this.getUserScore(userId);
 
-    if (score < 0 && currentScore < -score) return;
-
     return await this.usersCollection.update(userId, {
       money: currentScore + score,
     });

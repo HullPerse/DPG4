@@ -28,3 +28,9 @@ export interface Market {
   image: File;
   price: number;
 }
+
+export type Trade = {
+  id: string;
+  money: number;
+  items: string[];
+};
