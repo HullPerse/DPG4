@@ -42,6 +42,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   }, [queryClient]);
 
   useSubscription("market", "*", invalidateQuery);
+  useSubscription("inventory", "*", invalidateQuery);
 
   if (isLoading && !initialLoad) return <WindowLoader />;
   if (isError)
@@ -56,10 +57,24 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   initialLoad = false;
 
-  const handleBuy = async () => {};
+  const handleBuy = async (index: number, marketId: string) => {
+    setLoading(index);
+
+    await itemsApi.buyMarket(marketId, String(user?.id)).then(() => {
+      setLoading(-1);
+      invalidateQuery();
+      queryClient.invalidateQueries({
+        queryKey: ["inventoryTab", user?.id],
+        refetchType: "all",
+      });
+    });
+  };
 
   return (
-    <main className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-15 p-2">
+    <main className="relative flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-15 p-2 pt-10">
+      <span className="absolute top-1 left-2 font-bold border-2 border-highlight-high w-fit min-w-18 bg-background text-center">
+        {user?.money} чубриков
+      </span>
       {data
         ?.filter(
           (item) =>
@@ -81,6 +96,19 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
             {active === index ? (
               <span className="flex flex-col w-full h-full text-ellipsis text-sm">
                 {highlightText(item.description, searchTerms)}
+
+                <Button
+                  variant="success"
+                  className="w-full mt-auto"
+                  onClick={() => handleBuy(index, String(item.id))}
+                  disabled={Number(user?.money) < item.price}
+                >
+                  {loading === index ? (
+                    <SmallLoader />
+                  ) : (
+                    `КУПИТЬ ЗА ${item.price}`
+                  )}
+                </Button>
               </span>
             ) : (
               <>
@@ -113,7 +141,6 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                 <Button
                   variant="success"
                   className="w-full mt-auto"
-                  onClick={() => handleBuy()}
                   disabled={Number(user?.money) < item.price}
                 >
                   {loading === index ? (

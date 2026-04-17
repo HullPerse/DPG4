@@ -98,6 +98,7 @@ export default class ItemsApi {
     const imageFile = await fileFromUrl(
       `${image.inventory}${itemData.id}/${itemData.image}`,
     );
+
     const data = {
       owner: {
         id: userData.id,
@@ -120,5 +121,38 @@ export default class ItemsApi {
 
   getMarket = async (): Promise<Market[]> => {
     return await this.marketCollection.getFullList();
+  };
+
+  getMarketById = async (marketId: string): Promise<Market> => {
+    return await this.marketCollection.getOne(marketId);
+  };
+
+  removeMarket = async (marketId: string) => {
+    return await this.marketCollection.delete(marketId);
+  };
+
+  buyMarket = async (marketId: string, newOwner: string) => {
+    const userMoney = await userApi.getUserScore(newOwner);
+    const itemData = await this.getMarketById(marketId);
+
+    if (!userMoney || userMoney < itemData.price) return;
+
+    const imageFile = await fileFromUrl(
+      `${image.market}${itemData.id}/${itemData.image}`,
+    );
+
+    const data = {
+      owner: newOwner,
+      label: itemData.label,
+      description: itemData.description,
+      charge: itemData.charge,
+      image: imageFile,
+    } as Inventory;
+
+    await userApi.scoreUser(newOwner, -itemData.price);
+
+    return await this.inventoryCollection.create(data).then(async () => {
+      await this.removeMarket(marketId);
+    });
   };
 }

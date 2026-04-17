@@ -56,7 +56,7 @@ function InventoryTab({ id }: { id?: string }) {
   });
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["inventoryTab", id],
+    queryKey: ["inventoryTab", currentId],
     queryFn: async (): Promise<{ inventory: Inventory[]; users: User[] }> => {
       const inventory = await itemsApi.getInventory(currentId);
       const users = await userApi.getAllUsers();
@@ -71,13 +71,14 @@ function InventoryTab({ id }: { id?: string }) {
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
       queryClient.invalidateQueries({
-        queryKey: ["inventoryTab", id],
+        queryKey: ["inventoryTab", currentId],
         refetchType: "all",
       });
     });
   }, [queryClient]);
 
   useSubscription("inventory", "*", invalidateQuery);
+  useSubscription("market", "*", invalidateQuery);
 
   if (!initialLoad && isLoading) return <WindowLoader />;
   if (isError)
@@ -163,6 +164,11 @@ function InventoryTab({ id }: { id?: string }) {
     });
 
     invalidateQuery();
+
+    queryClient.invalidateQueries({
+      queryKey: ["marketTab"],
+      refetchType: "all",
+    });
   };
 
   const handleCharge = async (
