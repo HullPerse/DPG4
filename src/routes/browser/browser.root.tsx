@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button.component";
 import { ChevronLeft } from "lucide-react";
 import ListTab from "./tabs/list.tab";
 import ItemsTab from "./tabs/items.tab";
+import MarketBrowser from "./tabs/market.tab";
 
 export default function Browser() {
   const [tab, setTab] = useState<"home" | "rules" | "list" | "items" | "store">(
@@ -19,7 +20,7 @@ export default function Browser() {
       rules: <RulesTab searchTerms={searchTerms} />,
       list: <ListTab searchTerms={searchTerms} />,
       items: <ItemsTab searchTerms={searchTerms} />,
-      store: <>4</>,
+      store: <MarketBrowser searchTerms={searchTerms} />,
     };
 
     return tabMap[(tab as keyof typeof tabMap) ?? "home"];

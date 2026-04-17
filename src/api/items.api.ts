@@ -117,4 +117,8 @@ export default class ItemsApi {
   };
 
   useInventory = async () => {};
+
+  getMarket = async (): Promise<Market[]> => {
+    return await this.marketCollection.getFullList();
+  };
 }
