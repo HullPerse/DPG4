@@ -209,6 +209,7 @@ export default class GameApi {
   addGame = async (game: Game): Promise<Game> => {
     const activityData = {
       image: game.data.capsuleImage,
+      type: "image",
       text: `${game.user.username} добавил игру ${game.data.name}`,
     } as Activity;
 
@@ -235,6 +236,7 @@ export default class GameApi {
 
     const activityData = {
       image: game.data.capsuleImage,
+      type: "image",
       text: `${game.user.username} сменил статус игры ${game.data.name} на ${STATUSES.find((s) => s.name === status)?.label}`,
     } as Activity;
 

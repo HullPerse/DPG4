@@ -27,6 +27,7 @@ export default class CellApi {
 
     const activityData = {
       image: null,
+      type: "emoji",
       text: `${username} захватил клетку ${cell}`,
     } as Activity;
     await this.activityCollection.create(activityData);

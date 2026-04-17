@@ -71,6 +71,7 @@ export default class ItemsApi {
     const user = await userApi.getUserById(userId);
     const activityData = {
       image: user.avatar,
+      type: "emoji",
       text: `${user.username} получил предмет ${item.label}`,
     } as Activity;
     await this.activityCollection.create(activityData);
@@ -127,6 +128,7 @@ export default class ItemsApi {
 
     const activityData = {
       image: userData.avatar,
+      type: "emoji",
       text: `${userData.username} выставил на продажу предметт ${itemData.label} за ${price}`,
     } as Activity;
     await this.activityCollection.create(activityData);
@@ -203,6 +205,7 @@ export default class ItemsApi {
 
     const activityData = {
       image: user.avatar,
+      type: "emoji",
       text: `${user.username} купил предмет ${itemData.label} за ${itemData.price}`,
     } as Activity;
     await this.activityCollection.create(activityData);

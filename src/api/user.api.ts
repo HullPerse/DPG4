@@ -29,6 +29,7 @@ export default class UserApi {
         .then(async (res) => {
           const activityData = {
             image: data.avatar,
+            type: "emoji",
             text: `${data.username} создал аккаунт`,
           } as Activity;
           await this.activityCollection.create(activityData);
@@ -169,6 +170,7 @@ export default class UserApi {
 
     const activityData = {
       image: user.avatar,
+      type: "emoji",
       text: `${user.username} занял ${finalPlace} позицию`,
     } as Activity;
     await this.activityCollection.create(activityData);
