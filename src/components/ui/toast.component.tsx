@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity } from "@/types/activity";
-import { image as imageConfig } from "@/api/client.api";
 import { cn } from "@/lib/utils.tsx";
 import { Button } from "./button.component";
 import ImageComponent from "../shared/image.component";
@@ -29,15 +28,6 @@ function Toast({ toast }: { toast: Activity }) {
     return () => clearTimeout(timer);
   }, [toast.id, removeToast]);
 
-  const imageSrc =
-    toast.type === "emoji" && toast.image
-      ? toast.image.startsWith("http") || toast.image.startsWith("data:")
-        ? toast.image
-        : `${imageConfig.game}${toast.id}/${toast.image}?thumb=100x100`
-      : toast.type === "image" && toast.image && toast.id
-        ? `${imageConfig.game}${toast.id}/${toast.image}?thumb=100x100`
-        : null;
-
   return (
     <div
       className={cn(
@@ -47,9 +37,9 @@ function Toast({ toast }: { toast: Activity }) {
       )}
     >
       {toast.type === "image" ? (
-        imageSrc ? (
+        toast.image ? (
           <ImageComponent
-            src={imageSrc}
+            src={toast.image}
             alt="toast image"
             className="size-10 shrink-0 object-cover"
           />

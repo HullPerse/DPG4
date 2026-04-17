@@ -3,16 +3,19 @@ import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { Activity } from "@/types/activity";
+import { formatDistanceToNow } from "date-fns";
+import { ru } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback } from "react";
+import ImageComponent from "@/components/shared/image.component";
 
 const activityApi = new ActivityApi();
 
 function CommunityTab() {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["communityTab"],
     queryFn: async (): Promise<Activity[]> => {
       return await activityApi.getActivities();
@@ -41,6 +44,65 @@ function CommunityTab() {
       />
     );
 
-  return <main className="p-2 flex flex-col w-full h-full gap-8"></main>;
+  const activities = data ?? [];
+
+  return (
+    <main className="flex flex-col w-full h-full gap-1 overflow-y-auto pb-15">
+      {activities.map((activity) => (
+        <ActivityCard key={activity.id} activity={activity} />
+      ))}
+    </main>
+  );
 }
+
+function ActivityCard({ activity }: { activity: Activity }) {
+  const timeAgo = formatDistanceToNow(new Date(activity.created), {
+    addSuffix: true,
+    locale: ru,
+  });
+
+  return (
+    <div className="flex items-center gap-3 border border-highlight-low bg-card p-2">
+      {activity.type === "image" ? (
+        activity.image ? (
+          <ImageComponent
+            src={activity.image}
+            alt="activity"
+            className="size-12 shrink-0 rounded-full object-cover"
+          />
+        ) : null
+      ) : (
+        <span className="w-10 h-10 flex items-center justify-center border border-highlight-high text-xl">
+          {activity.image}
+        </span>
+      )}
+      {/*{activity.type === "image" ? (
+        imageSrc ? (
+          <img
+            src={imageSrc}
+            alt=""
+            className="size-12 shrink-0 rounded-sm object-cover"
+          />
+        ) : null
+      ) : activity.type === "emoji" && activity.image ? (
+        imageSrc ? (
+          <ImageComponent
+            src={imageSrc}
+            alt="activity"
+            className="size-12 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="size-12 flex items-center justify-center border border-highlight-high text-2xl">
+            {activity.image}
+          </span>
+        )
+      ) : null}*/}
+      <div className="flex flex-col flex-1 min-w-0">
+        <p className="truncate text-sm text-text">{activity.text}</p>
+        <span className="text-xs text-muted">{timeAgo}</span>
+      </div>
+    </div>
+  );
+}
+
 export default memo(CommunityTab);

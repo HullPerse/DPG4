@@ -1,3 +1,4 @@
+import CommunityTab from "@/routes/library/tabs/community.tab";
 import FriendsTab from "@/routes/library/tabs/friends.tab";
 import { GameStatus } from "@/types/games";
 import { Ban, Check, Play, RefreshCcw } from "lucide-react";
@@ -34,7 +35,12 @@ export const libraryTabs = [
     component: <InventoryTab />,
     show: false,
   },
-  { value: "community", label: "Сообщество", component: <></>, show: true },
+  {
+    value: "community",
+    label: "Сообщество",
+    component: <CommunityTab />,
+    show: true,
+  },
 ];
 
 export const gameButtons: {

@@ -9,6 +9,8 @@ export default class ActivityApi {
   };
 
   getActivities = async (): Promise<Activity[]> => {
-    return await this.activityCollection.getFullList();
+    return await this.activityCollection.getFullList({
+      sort: "-created",
+    });
   };
 }
