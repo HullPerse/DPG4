@@ -1,12 +1,14 @@
 import { client } from "@/api/client.api";
 import { useToastStore } from "@/store/toast.store";
+import { useUserStore } from "@/store/user.store";
 import type { Activity } from "@/types/activity";
 
-let isInitialized = false;
+let isChatInitialized = false;
+let isActivityInitialized = false;
 
 export async function initActivitySubscription() {
-  if (isInitialized) return;
-  isInitialized = true;
+  if (isActivityInitialized) return;
+  isActivityInitialized = true;
 
   const activityCollection = client.collection("activity");
 
@@ -38,5 +40,39 @@ export async function initActivitySubscription() {
 
 export function cleanupActivitySubscription() {
   client.collection("activity").unsubscribe("*");
-  isInitialized = false;
+}
+
+export async function initChatSubscription() {
+  if (isChatInitialized) return;
+  isChatInitialized = true;
+
+  const chatsCollection = client.collection("chats");
+
+  chatsCollection.subscribe("*", async (e) => {
+    if (e.action === "create") {
+      const newChat = e.record;
+      const currentUser = useUserStore.getState().user;
+      const receiverId = newChat.data?.receiver?.id;
+
+      if (currentUser?.id && receiverId === currentUser.id) {
+        const senderName = newChat.data?.sender?.username || "Неизвестный";
+        const message = newChat.message || "Новое сообщение";
+
+        const toast: Activity = {
+          id: crypto.randomUUID(),
+          text: `${senderName}: ${message}`,
+          type: "chat",
+          image: newChat.data?.sender?.avatar,
+          created: new Date().toISOString(),
+        };
+
+        useToastStore.getState().addToast(toast);
+      }
+    }
+  });
+}
+
+export function cleanupChatSubscription() {
+  client.collection("chats").unsubscribe("*");
+  isChatInitialized = false;
 }
