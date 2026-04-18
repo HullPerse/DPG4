@@ -28,20 +28,47 @@ export async function usableItems(item: Inventory) {
 
     await cellApi.changeStatus(currentCell.id, statuses);
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} подложил свинью на клетку ${currentCell.number}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
   if (item.label === "Пакет конфеток") {
+    const currentUser = await usersApi.getUserById(item.owner);
     await usersApi.scoreUser(item.owner, 50);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} съел целый пакет конфеток`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
   if (item.label === "Конфетка") {
+    const currentUser = await usersApi.getUserById(item.owner);
+
     await usersApi.scoreUser(item.owner, 1);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} съел одну конфетку`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
@@ -57,6 +84,14 @@ export async function usableItems(item: Inventory) {
     ]);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} насрал на клетку ${currentCell.number}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
@@ -70,6 +105,14 @@ export async function usableItems(item: Inventory) {
     });
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      image: "🐀",
+      type: "emoji",
+      text: `ААА КРЫСЫ ВЫПОЛЗАЮТ ИЗ СУНДУКА`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
