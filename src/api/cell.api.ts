@@ -18,6 +18,12 @@ export default class CellApi {
     return await this.cellsCollection.getFirstListItem(`number = ${number}`);
   };
 
+  changeStatus = async (id: string, statuses: string[]) => {
+    return await this.cellsCollection.update(id, {
+      status: statuses,
+    });
+  };
+
   editCell = async (id: string, cell: Cell) => {
     return await this.cellsCollection.update(id, cell);
   };

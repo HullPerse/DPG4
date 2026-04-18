@@ -1,3 +1,4 @@
+import PigSvg from "@/components/svg/pig.component";
 import PoopSvg from "@/components/svg/poop.component";
 
 export const cellsConfig = {
@@ -56,6 +57,11 @@ export const cellsConfig = {
       name: "poop",
       icon: <PoopSvg />,
       description: "Попа",
+    },
+    {
+      name: "pig",
+      icon: <PigSvg />,
+      description: "Свинья",
     },
   ],
   arrowType: [

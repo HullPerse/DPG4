@@ -24,7 +24,7 @@ function Toast({ toast }: { toast: Activity }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       removeToast(toast.id!);
-    }, 4000);
+    }, 10000);
     return () => clearTimeout(timer);
   }, [toast.id, removeToast]);
 
@@ -49,7 +49,7 @@ function Toast({ toast }: { toast: Activity }) {
           {toast.image}
         </span>
       )}
-      <p className="flex-1 truncate text-sm text-text">{toast.text}</p>
+      <p className="flex-1  line-clamp-2 text-sm text-text">{toast.text}</p>
       <Button
         variant="error"
         size="icon"

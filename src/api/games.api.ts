@@ -2,6 +2,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { Preset, Game, GameReview, GameStatus, GameData } from "@/types/games";
 import { client } from "./client.api";
 
+import ItemsApi from "./items.api";
+const itemsApi = new ItemsApi();
+
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
 
@@ -120,24 +123,43 @@ export default class GameApi {
     });
   };
 
-  saveReview = async (id: string, review: GameReview, image?: File | null) => {
+  saveReview = async (
+    userId: string,
+    id: string,
+    review: GameReview,
+    image?: File | null,
+  ) => {
     const currentGame = await this.gamesCollection.getOne(id, {
       fields: "review",
     });
+
+    const inventory = await itemsApi.getInventory(userId);
+    const hasPoopReview = inventory.find((i) => i.label === "Хуишка");
+
     const currentReview = (currentGame.review as GameReview) || {
       rating: 0,
       comment: "",
       votes: [],
     };
 
-    return await this.gamesCollection.update(id, {
-      review: {
-        rating: review.rating,
-        comment: review.comment,
-        votes: currentReview.votes ?? [],
-      },
-      image,
-    });
+    return await this.gamesCollection
+      .update(id, {
+        review: {
+          rating: review.rating,
+          comment: hasPoopReview ? `💩 ${review.comment} 💩` : review.comment,
+          votes: currentReview.votes ?? [],
+        },
+        image,
+      })
+      .then(async () => {
+        if (hasPoopReview) {
+          await itemsApi.chargeInventory(
+            String(hasPoopReview.id),
+            hasPoopReview.charge,
+            -1,
+          );
+        }
+      });
   };
 
   voteReview = async (

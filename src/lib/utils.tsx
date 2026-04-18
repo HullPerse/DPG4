@@ -306,3 +306,8 @@ export function getPlaceColor(place: User["place"]) {
 
   return placeMap[place as keyof typeof placeMap];
 }
+
+export function removeFirst(arr: string[], value: string): string[] {
+  const index = arr.indexOf(value);
+  return index === -1 ? arr : arr.filter((_, i) => i !== index);
+}

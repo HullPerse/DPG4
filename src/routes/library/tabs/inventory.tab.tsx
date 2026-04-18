@@ -29,6 +29,7 @@ import { highlightText } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
+import { usableItems } from "@/lib/items";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -93,11 +94,13 @@ function InventoryTab({ id }: { id?: string }) {
 
   initialLoad = true;
 
-  const handleUse = (index: number) => {
+  const handleUse = (index: number, item: Inventory) => {
     setLoading({
       item: index,
       type: "use",
     });
+
+    usableItems(item);
 
     setActive(null);
     setLoading({
@@ -314,7 +317,7 @@ function InventoryTab({ id }: { id?: string }) {
                     <Button
                       variant="success"
                       className="flex-1"
-                      onClick={() => handleUse(index)}
+                      onClick={() => handleUse(index, item)}
                       hidden={currentId !== user?.id}
                       disabled={
                         loading.type === "use" && loading.item === index

@@ -8,12 +8,14 @@ interface DiceComponentProps {
   minDice?: number;
   action?: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH";
   handleMove: (dice: number) => void;
+  additional: string;
 }
 
 export default function DiceComponent({
   minDice = 1,
   action,
   handleMove,
+  additional,
 }: DiceComponentProps) {
   const [diceGroups, setDiceGroups] = useState<number[]>(() => {
     const count = Math.max(minDice, 1);
@@ -153,8 +155,8 @@ export default function DiceComponent({
           title="Ходить по карте"
           variant="success"
           size="icon"
-          onClick={() => handleMove(total ?? 0)}
-          disabled={!total || isRolling}
+          onClick={() => handleMove((total ?? 0) + Number(additional))}
+          disabled={(!total && !additional) || isRolling}
         >
           <RunSvg className="size-6" />
         </Button>
@@ -164,6 +166,11 @@ export default function DiceComponent({
         <div className="text-lg">
           <span className="text-primary font-mono">
             {diceItems.map((item) => item.value).join(" + ")}
+          </span>
+          <span className="font-mono text-text px-1 text-[16px]">
+            {Number(additional) >= 0
+              ? `(+${additional ? additional : 0})`
+              : `(${additional ? additional : 0})`}
           </span>
           {diceItems.length > 1 && (
             <>
