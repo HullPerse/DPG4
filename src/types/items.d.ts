@@ -4,6 +4,7 @@ export interface Item {
   description: string;
   charge: number;
   image: File;
+  created?: string;
 }
 
 export interface Inventory {

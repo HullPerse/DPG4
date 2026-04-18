@@ -17,10 +17,23 @@ import Image from "@/components/shared/image.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image as clientImage } from "@/api/client.api";
 import { highlightText } from "@/lib/utils";
+import type { SortMethod, SortDirection } from "../browser.root";
 
 const itemsApi = new ItemsApi();
 
-function ListBrowser({ searchTerms }: { searchTerms: string }) {
+interface ListBrowserProps {
+  searchTerms: string;
+  sortMethod: SortMethod;
+  sortDirection: SortDirection;
+  setSortMethod: (method: SortMethod) => void;
+  setSortDirection: (direction: SortDirection) => void;
+}
+
+function ListBrowser({
+  searchTerms,
+  sortMethod,
+  sortDirection,
+}: ListBrowserProps) {
   const queryClient = useQueryClient();
   const isAdmin = useUserStore((state) => state.isAdmin);
   const user = useUserStore((state) => state.user);
@@ -197,16 +210,38 @@ function ListBrowser({ searchTerms }: { searchTerms: string }) {
             item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
             item.description.toUpperCase().includes(searchTerms.toUpperCase()),
         )
+        .sort((a, b) => {
+          let comparison = 0;
+          switch (sortMethod) {
+            case "name":
+              comparison = a.label.localeCompare(b.label);
+              break;
+            case "date":
+              comparison = String(a.created || "").localeCompare(
+                String(b.created || ""),
+              );
+              break;
+            case "charges":
+              comparison = (a.charge || 0) - (b.charge || 0);
+              break;
+          }
+          return sortDirection === "asc" ? comparison : -comparison;
+        })
         .map((item) => (
           <section
             key={item.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
           >
-            <ImageComponent
-              src={`${clientImage?.items}${item.id}/${item.image}`}
-              alt={item.label}
-              className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
-            />
+            <div className="flex flex-col gap-1">
+              <ImageComponent
+                src={`${clientImage?.items}${item.id}/${item.image}`}
+                alt={item.label}
+                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+              />
+              <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
+                {item.charge}
+              </span>
+            </div>
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">
                 {highlightText(item.label, searchTerms)}
