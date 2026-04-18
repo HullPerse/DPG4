@@ -229,5 +229,77 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  if (item.label === "Вакуум") {
+    const currentUser = await usersApi.getUserById(item.owner);
+    const allUsers = await usersApi.getAllUsers();
+
+    for (const user of allUsers) {
+      if (Math.abs(currentUser.position - user.position) > 5) continue;
+
+      const inventory = await itemsApi.getInventory(String(user.id));
+      const randomIndex = Math.floor(Math.random() * inventory.length);
+
+      await itemsApi.sendInventory(
+        String(inventory[randomIndex].id),
+        item.owner,
+      );
+    }
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  if (item.label === "Налоговый инспектор") {
+    const allUsers = await usersApi.getAllUsers();
+
+    for (const user of allUsers) {
+      if (user.position === 0) continue;
+
+      const allCells = await cellApi.getCells();
+
+      if (
+        allCells
+          .find((c) => c.number === user.position)
+          ?.captured?.includes(String(user.id))
+      ) {
+        const finalValue = user.money >= 10 ? 10 : user.money;
+
+        await usersApi.scoreUser(item.owner, finalValue);
+        await usersApi.scoreUser(String(user.id), -finalValue);
+
+        const activityData = {
+          image: allUsers.find((u) => u.id === item.owner)?.avatar,
+          type: "emoji",
+          text: `${allUsers.find((u) => u.id === item.owner)?.username} украл ${finalValue} чубриков у ${user.username}`,
+        } as Activity;
+
+        await activityApi.createActivity(activityData);
+      }
+    }
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  if (item.label === "Крысталлизатор") {
+    const currentUser = await usersApi.getUserById(item.owner);
+    const inventory = await itemsApi.getInventory(item.owner);
+    const randomIndex = Math.floor(Math.random() * inventory.length);
+
+    await itemsApi.removeInventory(inventory[randomIndex].id as string);
+    await itemsApi.removeInventory(inventory[randomIndex].id as string);
+
+    const activityData = {
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} превратил ${inventory[randomIndex]} в КРЫСУ`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
   return await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 }

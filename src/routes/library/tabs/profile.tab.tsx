@@ -6,7 +6,7 @@ import { useUserStore } from "@/store/user.store";
 
 import { Button } from "@/components/ui/button.component";
 import { profileTabs } from "@/config/library.config";
-import { Plus, RussianRubleIcon } from "lucide-react";
+import { Move, Plus, RussianRubleIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -23,14 +23,18 @@ import ChatProfile from "../components/profile/chat.profile";
 import InventoryTab from "./inventory.tab";
 import { Input } from "@/components/ui/input.component";
 import TradeTab from "./trade.tab";
+import { Activity } from "@/types/activity";
+import ActivityApi from "@/api/activity.api";
 const userApi = new UserApi();
 const gameApi = new GameApi();
+const activityApi = new ActivityApi();
 
 function ProfileTab({ id }: { id?: string }) {
   const user = useUserStore((state) => state.user);
 
   const [profileTab, setProfileTab] = useState<ProfileTab>("profile");
   const [addMoney, setAddMoney] = useState<number>(0);
+  const [position, setPosition] = useState<number>(0);
 
   const queryClient = useQueryClient();
 
@@ -101,6 +105,7 @@ function ProfileTab({ id }: { id?: string }) {
               <Input
                 arrows
                 type="number"
+                placeholder="Изменить чубрики"
                 value={addMoney}
                 onChange={(e) => setAddMoney(Number(e.target.value))}
                 className="h-10"
@@ -120,6 +125,39 @@ function ProfileTab({ id }: { id?: string }) {
               </Button>
             </div>
           )}
+          <div className="flex flex-row gap-1">
+            <Input
+              arrows
+              type="number"
+              placeholder="Передвинуть"
+              value={position}
+              onChange={(e) => setPosition(Number(e.target.value))}
+              className="h-10"
+            />
+            <Button
+              variant="info"
+              size="icon"
+              className="h-10"
+              onClick={async () => {
+                await userApi.moveUserAnimated(
+                  String(data?.user.id),
+                  Number(data?.user.position) + position,
+                );
+
+                const activityData = {
+                  image: user?.avatar,
+                  type: "emoji",
+                  text: `${user?.username} передвинул игрока ${data?.user.username} на ${Number(data?.user.position) + position} клетку`,
+                } as Activity;
+
+                await activityApi.createActivity(activityData);
+
+                setPosition(0);
+              }}
+            >
+              <Move />
+            </Button>
+          </div>
         </div>
         {/* TABS */}
         <div className="flex flex-col gap-2 p-2">
