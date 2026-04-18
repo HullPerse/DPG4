@@ -100,7 +100,7 @@ export async function usableItems(item: Inventory) {
       await itemsApi.addInventory(
         item.owner,
         "a29c7tdphmwlrbc",
-        `${image?.items}${item.id}/${item.image}`,
+        `${image?.items}a29c7tdphmwlrbc/100x100_162_nkg9c7eia4_593jsogdy7.png`,
       );
     });
 
