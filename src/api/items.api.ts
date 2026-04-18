@@ -5,13 +5,17 @@ import UserApi from "./user.api";
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
 
-const userApi = new UserApi();
-
 export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
   private readonly inventoryCollection = client.collection("inventory");
   private readonly marketCollection = client.collection("market");
   private readonly activityCollection = client.collection("activity");
+
+  private get userApi() {
+    if (!this._userApi) this._userApi = new UserApi();
+    return this._userApi;
+  }
+  private _userApi?: UserApi;
 
   getAllItems = async (): Promise<Item[]> => {
     return await this.itemsCollection.getFullList();
@@ -68,7 +72,7 @@ export default class ItemsApi {
       charge: item.charge,
     });
 
-    const user = await userApi.getUserById(userId);
+    const user = await this.userApi.getUserById(userId);
     const activityData = {
       image: user.avatar,
       type: "emoji",
@@ -104,7 +108,7 @@ export default class ItemsApi {
   sellInventory = async (inventoryId: string, owner: string, price: number) => {
     if (!price) return;
 
-    const userData = (await userApi.getUserById(owner)) as User;
+    const userData = (await this.userApi.getUserById(owner)) as User;
     const itemData = await this.getInventoryById(inventoryId);
 
     if (!userData || !itemData) return;
@@ -140,8 +144,8 @@ export default class ItemsApi {
 
   tradeInventory = async (currentUser: Trade, otherUser: Trade) => {
     if (currentUser.money > 0) {
-      await userApi.scoreUser(otherUser.id, currentUser.money);
-      await userApi.scoreUser(currentUser.id, -currentUser.money);
+      await this.userApi.scoreUser(otherUser.id, currentUser.money);
+      await this.userApi.scoreUser(currentUser.id, -currentUser.money);
     }
 
     //2. send items
@@ -154,8 +158,8 @@ export default class ItemsApi {
     //other user => current user
     //1. send money
     if (otherUser.money > 0) {
-      await userApi.scoreUser(currentUser.id, otherUser.money);
-      await userApi.scoreUser(otherUser.id, -otherUser.money);
+      await this.userApi.scoreUser(currentUser.id, otherUser.money);
+      await this.userApi.scoreUser(otherUser.id, -otherUser.money);
     }
 
     ///2. send items
@@ -179,7 +183,7 @@ export default class ItemsApi {
   };
 
   buyMarket = async (marketId: string, newOwner: string, oldOwner: string) => {
-    const userMoney = await userApi.getUserScore(newOwner);
+    const userMoney = await this.userApi.getUserScore(newOwner);
     const itemData = await this.getMarketById(marketId);
 
     if (!userMoney || userMoney < itemData.price) return;
@@ -196,10 +200,10 @@ export default class ItemsApi {
       image: imageFile,
     } as Inventory;
 
-    await userApi.scoreUser(newOwner, -itemData.price);
-    await userApi.scoreUser(oldOwner, itemData.price);
+    await this.userApi.scoreUser(newOwner, -itemData.price);
+    await this.userApi.scoreUser(oldOwner, itemData.price);
 
-    const user = await userApi.getUserById(newOwner);
+    const user = await this.userApi.getUserById(newOwner);
 
     const activityData = {
       image: user.avatar,

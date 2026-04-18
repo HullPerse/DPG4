@@ -240,3 +240,12 @@ export function calculateMovePath(
 
   return { path: [...path, currentPosition], finalPosition: currentPosition };
 }
+
+export function getLastCellInRow(row: number): number {
+  return row * 10 + (row % 2 === 0 ? 10 : 1);
+}
+
+export function getFirstCellInNextRow(currentRow: number): number {
+  const nextRow = currentRow + 1;
+  return nextRow * 10 + (nextRow % 2 === 0 ? 1 : 10);
+}

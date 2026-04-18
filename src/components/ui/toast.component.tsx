@@ -49,7 +49,7 @@ function Toast({ toast }: { toast: Activity }) {
           {toast.image}
         </span>
       )}
-      <p className="flex-1  line-clamp-2 text-sm text-text">{toast.text}</p>
+      <p className="flex-1 line-clamp-3 text-sm text-text">{toast.text}</p>
       <Button
         variant="error"
         size="icon"

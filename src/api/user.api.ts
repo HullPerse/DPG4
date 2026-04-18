@@ -5,14 +5,19 @@ import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
 import { getNextDice, removeFirst } from "@/lib/utils";
 import { Activity } from "@/types/activity";
-import ItemsApi from "./items.api";
+// import ItemsApi from "./items.api";
 
 const cellApi = new CellApi();
-const itemsApi = new ItemsApi();
 
 export default class UserApi {
   private readonly usersCollection = client.collection("users");
   private readonly activityCollection = client.collection("activity");
+
+  // private get itemsApi() {
+  //   if (!this._itemsApi) this._itemsApi = new ItemsApi();
+  //   return this._itemsApi;
+  // }
+  // private _itemsApi?: ItemsApi;
 
   //create new user
   create = async (data: User) => {
@@ -113,7 +118,7 @@ export default class UserApi {
 
   moveUserAnimated = async (userId: string, newPosition: number) => {
     const currentUser = await this.getUserById(userId);
-    const userInventory = await itemsApi.getInventory(userId);
+    //const userInventory = await this.itemsApi.getInventory(userId);
 
     const { startMoving } = useDataStore.getState();
 
@@ -130,43 +135,8 @@ export default class UserApi {
 
     await this.usersCollection.update(userId, { position: finalPosition });
 
-    const currentCell = cells.find((c) => c.number === fromPosition);
+    //const currentCell = cells.find((c) => c.number === fromPosition);
     const targetCell = cells.find((c) => c.number === finalPosition);
-
-    //ЛЫЖИ
-    const skiis = userInventory.find((i) => i.label === "Говнолыжи");
-
-    if (skiis) {
-      const resultCells = () => {
-        if (!currentCell || !targetCell) return [];
-
-        if (currentCell.number < targetCell.number) {
-          return cells.filter(
-            (c) =>
-              c.number >= currentCell.number && c.number < targetCell.number,
-          );
-        }
-
-        return cells.filter(
-          (c) => c.number <= currentCell.number && c.number > targetCell.number,
-        );
-      };
-
-      for (const cell of resultCells()) {
-        if (!cell) continue;
-
-        const isPooped = cell.status?.includes("poop");
-
-        if (isPooped) continue;
-
-        await cellApi.changeStatus(
-          cell.id,
-          removeFirst(cell.status ?? [], "poop"),
-        );
-      }
-
-      await itemsApi.chargeInventory(String(skiis.id), skiis.charge, -1);
-    }
 
     //PIG
     if (targetCell?.status?.includes("pig")) {
