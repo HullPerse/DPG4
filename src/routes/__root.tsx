@@ -23,7 +23,6 @@ const indexRoute = createRoute({
   path: "/",
   component: App,
   pendingComponent: BigLoader,
-  validateSearch: () => ({ kicked: undefined }),
 });
 
 const authRoute = createRoute({
@@ -47,7 +46,6 @@ const errorRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([indexRoute, authRoute, errorRoute]);
 
-//eslint-disable-next-line
 const NotFoundRedirect = () => {
   const navigate = useNavigate();
 

@@ -1,6 +1,3 @@
-//TODO: implement usage for all items that  needs it (otherwise it should delete itself without anything else)
-//TODO: check for which items can actually be sold on market
-
 import { memo, startTransition, useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";

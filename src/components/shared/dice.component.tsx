@@ -105,7 +105,6 @@ export default function DiceComponent({
   const addDiceGroup = useCallback(() => {
     setDiceGroups([...diceGroups, 1]);
 
-    // Add placeholder dice immediately
     setDiceItems((prev) => [
       ...prev,
       { id: Date.now(), value: 0, isRolling: false, isPlaceholder: true },

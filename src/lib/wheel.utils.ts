@@ -82,29 +82,3 @@ export function rollAnimation(
     animationFrameRef.current = requestAnimationFrame(animateCallback);
   }, 50);
 }
-
-// export function useAnimationCleanup(
-//   animationFrameRef: React.RefObject<number | null>,
-// ) {
-//   return () => {
-//     if (animationFrameRef.current) {
-//       cancelAnimationFrame(animationFrameRef.current);
-//     }
-//   };
-// }
-
-// export const easeOutQuart = (t: number): number => 1 - (1 - t) ** 4;
-
-// export function calculateVelocity(progress: number): number {
-//   const eased = easeOutQuart(progress);
-//   return 25 * (1 - eased) + 0.5;
-// }
-
-// export function calculateCenteredItemIndex(
-//   scrollPosition: number,
-//   containerWidth: number,
-//   itemCount: number,
-//   itemWidth: number,
-// ): number {
-//   return getCenteredItem(scrollPosition, containerWidth, itemCount, itemWidth);
-// }
