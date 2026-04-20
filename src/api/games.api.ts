@@ -52,23 +52,21 @@ export default class GameApi {
 
     if (!id) return;
 
-    const targetURL =
-      "https://corsproxy.io/" +
-      `https://store.steampowered.com/api/appdetails?appids=${id}`;
-
     try {
-      const res = await fetch(targetURL, {});
-      if (!res.ok) return;
-
-      const json = await res.json();
-      const entry = json?.[id];
-
-      if (!entry?.success || !entry?.data) return;
+      const result = await invoke<string>("get_steam_game", { appId: id });
+      const data = JSON.parse(result);
 
       return {
-        game: entry.data,
-        library_image: `https://steamcdn-a.akamaihd.net/steam/apps/${id}/library_600x900.jpg`,
-        library_background: `https://steamcdn-a.akamaihd.net/steam/apps/${id}/library_hero.jpg`,
+        game: {
+          steam_app_id: data.id,
+          name: data.name,
+          header_image: data.image,
+          capsule_image: data.capsuleImage,
+          background: data.backgroundImage,
+          website: data.websiteLink,
+        },
+        library_image: data.capsuleImage,
+        library_background: data.backgroundImage,
       };
     } catch (e) {
       return console.error(e);

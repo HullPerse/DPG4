@@ -10,13 +10,11 @@ import { NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback } from "react";
 import ImageComponent from "@/components/shared/image.component";
 import { useDataStore } from "@/store/data.store";
-import { useUserStore } from "@/store/user.store";
 
 const activityApi = new ActivityApi();
 
 function CommunityTab() {
   const queryClient = useQueryClient();
-  const user = useUserStore((state) => state.user);
   const setUserProfile = useDataStore((state) => state.setUserProfile);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -56,7 +54,7 @@ function CommunityTab() {
         <ActivityCard
           key={activity.id}
           activity={activity}
-          clickEvent={() => setUserProfile(String(user?.id))}
+          clickEvent={() => setUserProfile(String(activity.author))}
         />
       ))}
     </main>
@@ -78,7 +76,7 @@ function ActivityCard({
   return (
     <button
       type="button"
-      className="flex items-center gap-3 border-2 border-highlight-high bg-card p-2 cursor-pointer hover:opacity-100 opacity-75"
+      className="relative flex items-center gap-3 border-2 border-highlight-high bg-card p-2 cursor-pointer hover:opacity-100 opacity-75"
       onClick={clickEvent}
     >
       {activity.type === "image" ? (
@@ -86,7 +84,8 @@ function ActivityCard({
           <ImageComponent
             src={activity.image}
             alt="activity"
-            className="size-12 shrink-0 rounded-full object-cover"
+            className="h-16 min-w-16  max-w-32 border border-highlight-high"
+            type="contain"
           />
         ) : null
       ) : (
@@ -95,8 +94,10 @@ function ActivityCard({
         </span>
       )}
 
-      <div className="flex flex-col flex-1 min-w-0">
-        <p className="truncate text-sm text-text">{activity.text}</p>
+      <p className="truncate text-sm text-text font-bold line-clamp-2">
+        {activity.text}
+      </p>
+      <div className="absolute right-1 bottom-1 flex flex-col flex-1 min-w-0">
         <span className="text-xs text-muted">{timeAgo}</span>
       </div>
     </button>

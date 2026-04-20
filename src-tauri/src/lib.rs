@@ -404,6 +404,105 @@ async fn get_steam_library(steam_id: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn get_steam_game(app_id: String) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let url = format!(
+        "https://store.steampowered.com/api/appdetails?appids={}",
+        app_id.trim()
+    );
+
+    let response = client
+        .get(&url)
+        .header("Accept-Language", "en-US,en;q=0.9")
+        .send()
+        .await
+        .map_err(|e| format!("Steam API request failed: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    let app_details: serde_json::Value = serde_json::from_str(&response)
+        .map_err(|e| format!("Failed to parse Steam response: {}", e))?;
+
+    let entry = app_details
+        .get(&app_id.trim())
+        .ok_or("App not found")?;
+
+    let success = entry
+        .get("success")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    if !success {
+        return Err("App not found or unavailable".to_string());
+    }
+
+    let data = entry
+        .get("data")
+        .ok_or("No game data available")?;
+
+    let steam_app_id = data
+        .get("steam_app_id")
+        .or_else(|| data.get("appid"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or_default();
+
+    let name = data
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+    let header_image = data
+        .get("header_image")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+    let capsule_image = data
+        .get("capsule_image")
+        .or_else(|| data.get("capsule_imagev5"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_600x900.jpg",
+            steam_app_id
+        ));
+
+    let background_image = data
+        .get("background")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!(
+            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
+            steam_app_id
+        ));
+
+    let website_link = data
+        .get("website")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+    let game_data = GameData {
+        id: steam_app_id,
+        name,
+        image: header_image,
+        capsule_image,
+        background_image,
+        steam_link: format!("https://store.steampowered.com/app/{}/", steam_app_id),
+        website_link,
+        source: "owned".to_string(),
+    };
+
+    serde_json::to_string(&game_data).map_err(|e| format!("Failed to serialize game data: {}", e))
+}
+
+#[tauri::command]
 async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
     dotenvy::dotenv().ok();
 
@@ -477,6 +576,7 @@ pub fn run() {
             set_default_font,
             get_default_font,
             get_steam_library,
+            get_steam_game,
             resolve_vanity_url
         ])
         .run(tauri::generate_context!())
