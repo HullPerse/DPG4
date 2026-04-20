@@ -69,7 +69,8 @@ export default function Profile({
               </div>
               <div className="text-xl font-bold">
                 <span className="overflow-hidden text-ellipsis whitespace-pre-wrap line-clamp-2">
-                  [{games[0]?.playtime.hltb} ч.] {games[0]?.data.name}
+                  [{games[games.length - 1]?.playtime.hltb} ч.]{" "}
+                  {games[games.length - 1]?.data.name}
                 </span>
               </div>
             </div>
