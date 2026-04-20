@@ -151,6 +151,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               ) as GameData,
             );
           }}
+          free
         />
 
         {result && (

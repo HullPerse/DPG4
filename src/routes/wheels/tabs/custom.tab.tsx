@@ -32,6 +32,7 @@ function CustomWheel() {
             type: "emoji",
           }))}
           onResult={() => {}}
+          free
         />
       </section>
 

@@ -97,7 +97,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
               data?.find((item) => String(item.id) === String(it?.id)) as Item,
             );
           }}
-          type="items"
+          free={false}
         />
 
         {result && (

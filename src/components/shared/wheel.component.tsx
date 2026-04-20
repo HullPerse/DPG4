@@ -32,11 +32,11 @@ const userApi = new UserApi();
 function Wheel({
   list,
   onResult,
-  type = "presets",
+  free = true,
 }: {
   list: WheelItem[];
   onResult: (item: WheelItem | null) => void;
-  type?: "items" | "presets";
+  free?: boolean;
 }) {
   const user = useUserStore((state) => state.user);
 
@@ -180,41 +180,38 @@ function Wheel({
     return () => window.removeEventListener("resize", onResize);
   }, [rolling.isRolling, updateCenterHighlight]);
 
-  const handleRoll = useCallback(
-    async (free: boolean) => {
-      if (rolling.isRolling) return;
+  const handleRoll = useCallback(async () => {
+    if (rolling.isRolling) return;
 
-      if (type === "items" && !free) {
-        const currentScore = await userApi.getUserScore(String(user?.id));
+    if (!free) {
+      const currentScore = await userApi.getUserScore(String(user?.id));
 
-        if (currentScore < calculateCost()) return;
+      if (currentScore < calculateCost()) return;
 
-        await userApi.scoreUser(String(user?.id), -calculateCost());
-      }
+      await userApi.scoreUser(String(user?.id), -calculateCost());
+    }
 
-      const rollItems = rollPrepare(list, MIN_ITEMS_FOR_ROLL);
+    const rollItems = rollPrepare(list, MIN_ITEMS_FOR_ROLL);
 
-      onResult(null);
-      setRolling({
-        isRolling: true,
-        hasRolled: false,
-      });
+    onResult(null);
+    setRolling({
+      isRolling: true,
+      hasRolled: false,
+    });
 
-      if (containerRef.current) {
-        scrollPositionRef.current = 0;
-        containerRef.current.style.transform = `translateX(0px)`;
-      }
+    if (containerRef.current) {
+      scrollPositionRef.current = 0;
+      containerRef.current.style.transform = `translateX(0px)`;
+    }
 
-      setShuffled(rollItems);
-      animationStateRef.current = {
-        startTime: 0,
-        velocity: 0,
-      };
+    setShuffled(rollItems);
+    animationStateRef.current = {
+      startTime: 0,
+      velocity: 0,
+    };
 
-      rollAnimation(animate, animationFrameRef);
-    },
-    [rolling.isRolling, animate],
-  );
+    rollAnimation(animate, animationFrameRef);
+  }, [rolling.isRolling, animate]);
 
   const renderedItems = useMemo(
     () => (
@@ -252,16 +249,16 @@ function Wheel({
             Number(user?.money) < calculateCost()
           }
           className="w-md flex-1 max-w-xl"
-          onClick={() => handleRoll(type === "items" ? false : true)}
+          onClick={() => handleRoll()}
         >
           {rolling.isRolling
             ? "ВРАЩЕНИЕ..."
-            : type === "items"
+            : !free
               ? `КРУТИТЬ ЗА ${calculateCost()} чб. [${user?.money} всего]`
               : "КРУТИТЬ"}
         </Button>
-        {type === "items" && (
-          <Button variant="info" size="icon" onClick={() => handleRoll(true)}>
+        {!free && (
+          <Button variant="info" size="icon" onClick={() => handleRoll()}>
             <RefreshCcw />
           </Button>
         )}

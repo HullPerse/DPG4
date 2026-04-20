@@ -164,6 +164,7 @@ function UserGames({
               ) as Game,
             );
           }}
+          free
         />
 
         {result && (

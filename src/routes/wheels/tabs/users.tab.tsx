@@ -65,6 +65,7 @@ function UsersWheel() {
             type: "emoji",
           }))}
           onResult={() => {}}
+          free
         />
       </section>
       {/* LIST */}

@@ -108,6 +108,7 @@ function UserItems({
               ) as Inventory,
             );
           }}
+          free
         />
 
         {result && (
