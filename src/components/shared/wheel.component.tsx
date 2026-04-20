@@ -246,7 +246,7 @@ function Wheel({
           disabled={
             rolling.isRolling ||
             list.length === 0 ||
-            Number(user?.money) < calculateCost()
+            (!free && Number(user?.money) < calculateCost())
           }
           className="w-md flex-1 max-w-xl"
           onClick={() => handleRoll()}
