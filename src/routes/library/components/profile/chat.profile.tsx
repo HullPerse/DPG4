@@ -260,12 +260,6 @@ export default function ChatProfile({ id }: { id: string }) {
             value={newMessage}
             disabled={loading || !!editId}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
           />
           <Button
             size="icon"

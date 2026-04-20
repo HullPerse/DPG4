@@ -74,6 +74,7 @@ export default class ItemsApi {
 
     const user = await this.userApi.getUserById(userId);
     const activityData = {
+      author: user.id,
       image: user.avatar,
       type: "emoji",
       text: `${user.username} получил предмет ${item.label}`,
@@ -131,6 +132,7 @@ export default class ItemsApi {
     } as Market;
 
     const activityData = {
+      author: userData?.id,
       image: userData.avatar,
       type: "emoji",
       text: `${userData.username} выставил на продажу предметт ${itemData.label} за ${price}`,
@@ -206,6 +208,7 @@ export default class ItemsApi {
     const user = await this.userApi.getUserById(newOwner);
 
     const activityData = {
+      author: user.id,
       image: user.avatar,
       type: "emoji",
       text: `${user.username} купил предмет ${itemData.label} за ${itemData.price}`,

@@ -196,6 +196,7 @@ function GameLibrary({
           );
           await cellApi.captureCell(
             String(data.game.user.id),
+            String(data.game.user.username),
             data.user.position,
           );
 

@@ -30,6 +30,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} подложил свинью на клетку ${currentCell.number}`,
@@ -46,6 +47,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} съел целый пакет конфеток`,
@@ -63,6 +65,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} съел одну конфетку`,
@@ -86,6 +89,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} насрал на клетку ${currentCell.number}`,
@@ -96,6 +100,8 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Запаянный Крысиный Сундук") {
+    const currentUser = await usersApi.getUserById(item.owner);
+
     Array.from({ length: 5 }, async () => {
       await itemsApi.addInventory(
         item.owner,
@@ -107,6 +113,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
+      author: currentUser.id,
       image: "🐀",
       type: "emoji",
       text: `ААА КРЫСЫ ВЫПОЛЗАЮТ ИЗ СУНДУКА`,
@@ -177,6 +184,7 @@ export async function usableItems(item: Inventory) {
     }
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} украл половину инвентаря ${randomUser.username}`,
@@ -203,6 +211,7 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Erection - NPC") {
+    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
     const firstPosition = allUsers.reduce((max, user) =>
       user.position > max.position ? user : max,
@@ -218,6 +227,7 @@ export async function usableItems(item: Inventory) {
     });
 
     const activityData = {
+      author: currentUser.id,
       image: firstPosition.avatar,
       type: "emoji",
       text: `У ${firstPosition.username} пропало 2 предмета из-за странной магии...`,
@@ -250,6 +260,7 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Налоговый инспектор") {
+    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
 
     for (const user of allUsers) {
@@ -268,6 +279,7 @@ export async function usableItems(item: Inventory) {
         await usersApi.scoreUser(String(user.id), -finalValue);
 
         const activityData = {
+          author: currentUser.id,
           image: allUsers.find((u) => u.id === item.owner)?.avatar,
           type: "emoji",
           text: `${allUsers.find((u) => u.id === item.owner)?.username} украл ${finalValue} чубриков у ${user.username}`,
@@ -290,6 +302,7 @@ export async function usableItems(item: Inventory) {
     await itemsApi.removeInventory(inventory[randomIndex].id as string);
 
     const activityData = {
+      author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} превратил ${inventory[randomIndex]} в КРЫСУ`,

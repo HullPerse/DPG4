@@ -28,11 +28,12 @@ export default class CellApi {
     return await this.cellsCollection.update(id, cell);
   };
 
-  captureCell = async (username: string, cell: number) => {
+  captureCell = async (userId: string, username: string, cell: number) => {
     const existingCaptures = await this.getCellByNumber(cell);
 
     const activityData = {
-      image: null,
+      author: userId,
+      image: "✅",
       type: "emoji",
       text: `${username} захватил клетку ${cell}`,
     } as Activity;

@@ -145,6 +145,7 @@ function ProfileTab({ id }: { id?: string }) {
                 );
 
                 const activityData = {
+                  author: user?.id,
                   image: user?.avatar,
                   type: "emoji",
                   text: `${user?.username} передвинул игрока ${data?.user.username} на ${Number(data?.user.position) + position} клетку`,

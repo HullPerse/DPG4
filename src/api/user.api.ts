@@ -35,6 +35,7 @@ export default class UserApi {
         })
         .then(async (res) => {
           const activityData = {
+            author: data.id,
             image: data.avatar,
             type: "emoji",
             text: `${data.username} создал аккаунт`,

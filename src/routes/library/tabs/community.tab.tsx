@@ -9,11 +9,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback } from "react";
 import ImageComponent from "@/components/shared/image.component";
+import { useDataStore } from "@/store/data.store";
+import { useUserStore } from "@/store/user.store";
 
 const activityApi = new ActivityApi();
 
 function CommunityTab() {
   const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
+  const setUserProfile = useDataStore((state) => state.setUserProfile);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["communityTab"],
@@ -49,20 +53,34 @@ function CommunityTab() {
   return (
     <main className="flex flex-col w-full h-full gap-1 overflow-y-auto pb-15 p-2">
       {activities.map((activity) => (
-        <ActivityCard key={activity.id} activity={activity} />
+        <ActivityCard
+          key={activity.id}
+          activity={activity}
+          clickEvent={() => setUserProfile(String(user?.id))}
+        />
       ))}
     </main>
   );
 }
 
-function ActivityCard({ activity }: { activity: Activity }) {
+function ActivityCard({
+  activity,
+  clickEvent,
+}: {
+  activity: Activity;
+  clickEvent: () => void;
+}) {
   const timeAgo = formatDistanceToNow(new Date(activity.created), {
     addSuffix: true,
     locale: ru,
   });
 
   return (
-    <div className="flex items-center gap-3 border-2 border-highlight-high bg-card p-2">
+    <button
+      type="button"
+      className="flex items-center gap-3 border-2 border-highlight-high bg-card p-2 cursor-pointer hover:opacity-100 opacity-75"
+      onClick={clickEvent}
+    >
       {activity.type === "image" ? (
         activity.image ? (
           <ImageComponent
@@ -81,7 +99,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
         <p className="truncate text-sm text-text">{activity.text}</p>
         <span className="text-xs text-muted">{timeAgo}</span>
       </div>
-    </div>
+    </button>
   );
 }
 

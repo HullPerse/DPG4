@@ -252,7 +252,7 @@ function Wheel({
             Number(user?.money) < calculateCost()
           }
           className="w-md flex-1 max-w-xl"
-          onClick={() => handleRoll(false)}
+          onClick={() => handleRoll(type === "items" ? false : true)}
         >
           {rolling.isRolling
             ? "ВРАЩЕНИЕ..."

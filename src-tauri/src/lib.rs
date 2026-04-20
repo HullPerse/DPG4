@@ -1,3 +1,4 @@
+use font_loader::system_fonts;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -5,7 +6,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri::State;
-use font_loader::system_fonts;
 
 #[derive(Serialize)]
 struct Wallpaper {
@@ -161,7 +161,6 @@ async fn save_wallpaper(
     file_name: String,
     data: String,
 ) -> Result<String, String> {
-
     if file_name.is_empty() {
         return Err("Filename cannot be empty".to_string());
     }
@@ -250,7 +249,6 @@ async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), Str
 
     Ok(())
 }
-
 
 #[derive(Serialize, Clone)]
 pub struct FontInfo {
@@ -402,8 +400,7 @@ async fn get_steam_library(steam_id: String) -> Result<String, String> {
         .map(|game| make_game_data(game.appid, game.name))
         .collect();
 
-    serde_json::to_string(&games)
-        .map_err(|e| format!("Failed to serialize games: {}", e))
+    serde_json::to_string(&games).map_err(|e| format!("Failed to serialize games: {}", e))
 }
 
 #[tauri::command]
@@ -462,13 +459,12 @@ async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
     }
 }
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-      .manage(Mutex::new(AppState {
-                  selected_font: "Segoe UI".to_string(),
-              }))
+        .manage(Mutex::new(AppState {
+            selected_font: "Segoe UI".to_string(),
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
