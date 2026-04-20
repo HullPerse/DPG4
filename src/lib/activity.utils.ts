@@ -60,6 +60,7 @@ export async function initChatSubscription() {
 
         const toast: Activity = {
           id: crypto.randomUUID(),
+          author: newChat.data?.sender?.username,
           text: `${senderName}: ${message}`,
           type: "chat",
           image: newChat.data?.sender?.avatar,
