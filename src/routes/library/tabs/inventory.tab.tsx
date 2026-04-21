@@ -213,7 +213,7 @@ function InventoryTab({ id }: { id?: string }) {
         value={searchTerms}
         onChange={(e) => setSearchTerms(e.target.value)}
       />
-      <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-15">
+      <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5">
         {data?.inventory
           .filter(
             (item) =>

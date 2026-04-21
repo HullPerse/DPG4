@@ -72,7 +72,7 @@ function PresetsTab() {
   };
 
   return (
-    <main className="relative flex flex-col h-full w-full">
+    <main className="relative flex flex-col h-full w-full overflow-hidden">
       <section className="flex flex-row w-full gap-2 items-center justify-center p-2 border-b-2 border-highlight-high">
         {addToken && (
           <Input
@@ -159,12 +159,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section
-        className="flex w-full h-full bg-background"
-        style={{
-          paddingBottom: currentTab === "presetAll" ? "105px" : "0px",
-        }}
-      >
+      <section className="flex flex-1 bg-background overflow-auto">
         {getComponent()}
       </section>
     </main>

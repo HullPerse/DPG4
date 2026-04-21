@@ -251,7 +251,7 @@ function TradeTab({ id }: { id: string }) {
       </Button>
 
       {/* ITEMS */}
-      <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-15">
+      <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-55">
         {currentUser === user?.username
           ? data?.currentInventory?.map((item) => itemComponent(item))
           : data?.inventory?.map((item) => itemComponent(item))}

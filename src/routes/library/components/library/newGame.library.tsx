@@ -36,7 +36,7 @@ export default function NewGameLibrary({
   }, [newType, currentType]);
 
   return (
-    <main className="flex h-full w-full flex-col items-center">
+    <main className="flex h-full flex-1 flex-col items-center overflow-x-hidden">
       <section className="flex w-full flex-row gap-2 py-2">
         <Button
           variant="link"

@@ -151,7 +151,7 @@ function PresetSettings({
 
   return (
     <main
-      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto "
+      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto pb-10"
       ref={listRef}
       style={{
         scrollBehavior: "smooth",

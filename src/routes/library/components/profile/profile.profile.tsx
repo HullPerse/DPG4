@@ -79,7 +79,7 @@ export default function Profile({
       </section>
       <section className="flex flex-col gap-2">
         {lastReview?.review && (
-          <div className="flex flex-col w-full h-full pb-20">
+          <div className="flex flex-col w-full h-full pb-5">
             <span className="flex w-full h-10 bg-highlight-low border-x-2 border-t-2 border-highlight-high p-1 font-bold text-xl">
               Последний отзыв:
             </span>
@@ -99,7 +99,7 @@ export default function Profile({
         )}
 
         {games.length > 0 && (
-          <div className="flex flex-col w-full h-full pb-20">
+          <div className="flex flex-col w-full h-full pb-5">
             <section className="flex w-full h-10 bg-highlight-low border-x-2 border-t-2 border-highlight-high p-1 font-bold text-xl items-center justify-between">
               Последние игры:
               <span className="text-sm opacity-75">

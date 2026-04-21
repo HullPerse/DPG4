@@ -82,8 +82,6 @@ export default function PresetsList({
       />
     );
 
-  console.log(data?.steamLibrary);
-
   return (
     <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
       {data?.steamLibrary && (

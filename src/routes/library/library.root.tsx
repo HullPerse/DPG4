@@ -156,7 +156,7 @@ export default function Library() {
         </div>
       </section>
       {/* body*/}
-      <section className="flex h-full w-full">
+      <section className="flex flex-1 w-full overflow-auto">
         {userProfile ? (
           <ProfileTab id={userProfile} />
         ) : (

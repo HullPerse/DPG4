@@ -17,8 +17,11 @@ struct Wallpaper {
 
 #[tauri::command]
 async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<String, String> {
-    //get default wallpapers
-    let default_wallpapers_dir = Path::new("assets/wallpapers");
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
+    let default_wallpapers_dir = resource_dir.join("assets/wallpapers");
 
     if default_wallpapers_dir.exists() {
         let entries = fs::read_dir(default_wallpapers_dir)
@@ -75,8 +78,11 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
 async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String> {
     let mut wallpapers = Vec::new();
 
-    //get default wallpapers
-    let default_wallpapers_dir = Path::new("assets/wallpapers");
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
+    let default_wallpapers_dir = resource_dir.join("assets/wallpapers");
 
     if default_wallpapers_dir.exists() {
         let entries = fs::read_dir(default_wallpapers_dir)

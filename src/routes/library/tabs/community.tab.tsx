@@ -49,7 +49,7 @@ function CommunityTab() {
   const activities = data ?? [];
 
   return (
-    <main className="flex flex-col w-full h-full gap-1 overflow-y-auto pb-15 p-2">
+    <main className="flex flex-col w-full h-full gap-1 overflow-y-auto p-2">
       {activities.map((activity) => (
         <ActivityCard
           key={activity.id}

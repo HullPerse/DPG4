@@ -27,7 +27,7 @@ export default function Games({ games }: { games: Game[] }) {
   return (
     <main className="flex flex-col w-full p-2 gap-2 overflow-y-auto">
       {reversedArray.length > 0 && (
-        <section className="flex flex-col gap-2 pb-16">
+        <section className="flex flex-col gap-2">
           {reversedArray.map((game) => (
             <div
               key={game.id}

@@ -32,7 +32,7 @@ export default function HomeLibrary({
 
   return (
     <main className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2">
-      <section className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 pb-16">
+      <section className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
         {reversedGames.map((game) => (
           <div
             key={game.id}

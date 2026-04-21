@@ -73,7 +73,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   };
 
   return (
-    <main className="relative flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-15 p-2 pt-10">
+    <main className="relative flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5 p-2 pt-10">
       <span className="absolute top-1 left-2 font-bold border-2 border-highlight-high w-fit min-w-18 bg-background text-center">
         {user?.money} чубриков
       </span>

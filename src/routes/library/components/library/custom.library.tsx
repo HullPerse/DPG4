@@ -178,7 +178,7 @@ export default function CustomLibrary({
         )}
         <Button
           variant="success"
-          className="mt-auto mb-13"
+          className="mt-auto mb-2"
           disabled={!name || !headerImage || !time || !status || loading}
           onClick={handleGame}
         >

@@ -110,7 +110,7 @@ function EditReview({
   };
 
   return (
-    <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-12">
+    <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-5">
       <div className="flex flex-col gap-2">
         <span className="text-lg font-bold text-text">Оценка</span>
         <Rating
