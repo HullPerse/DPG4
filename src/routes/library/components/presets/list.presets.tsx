@@ -9,10 +9,11 @@ import GameApi from "@/api/games.api";
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
-import { highlightText } from "@/lib/utils";
+import { highlightText, openWindow } from "@/lib/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
@@ -184,7 +185,24 @@ function PresetSettings({
                   alt={String(item?.name)}
                 />
               </div>
-              <span className="font-bold truncate line-clamp-1">
+              <span
+                className={`font-bold truncate line-clamp-1 ${item.steamLink && "hover:cursor-pointer hover:underline"}`}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (!item.steamLink) return;
+
+                  openUrl(item.steamLink);
+                }}
+                onClick={() => {
+                  if (!item.steamLink) return;
+
+                  openWindow(
+                    `steam-${item.id}`,
+                    item.steamLink,
+                    `Страница ${String(item.name)}`,
+                  );
+                }}
+              >
                 {highlightText(String(item?.name), searchTerms)} [
                 {item?.time ?? "?"} ч.]
               </span>

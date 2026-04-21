@@ -1,5 +1,7 @@
 import { GameStatus } from "@/types/games";
 import { User } from "@/types/user";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -310,4 +312,35 @@ export function getPlaceColor(place: User["place"]) {
 export function removeFirst(arr: string[], value: string): string[] {
   const index = arr.indexOf(value);
   return index === -1 ? arr : arr.filter((_, i) => i !== index);
+}
+
+export async function installUpdate(update: Update) {
+  if (!update) return;
+  try {
+    await update.downloadAndInstall();
+  } catch (e) {
+    console.error("Failed to install update:", e);
+  }
+}
+
+export async function checkForUpdates() {
+  try {
+    const { check } = await import("@tauri-apps/plugin-updater");
+    const update = await check();
+    return update;
+  } catch (e) {
+    console.debug("Auto-update check skipped:", e);
+  }
+}
+
+export function openWindow(id: string, url: string, title: string) {
+  const win = new WebviewWindow(id, {
+    url: url,
+    title: title,
+    focus: true,
+  });
+
+  win.once("tauri://error", (e) => {
+    console.error("Failed to open window:", e);
+  });
 }

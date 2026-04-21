@@ -14,6 +14,8 @@ import Wheel from "@/components/shared/wheel.component";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { openWindow } from "@/lib/utils";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
 
@@ -235,8 +237,26 @@ export default function PresetsWheel({ id }: { id: string }) {
                     alt={item.name}
                   />
                 </div>
-                <span className="font-bold truncate line-clamp-1">
-                  {item.name} [{item.time ?? 1} ч.]
+
+                <span
+                  className={`font-bold truncate line-clamp-1 ${item.steamLink && "hover:cursor-pointer hover:underline"}`}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (!item.steamLink) return;
+
+                    openUrl(item.steamLink);
+                  }}
+                  onClick={() => {
+                    if (!item.steamLink) return;
+
+                    openWindow(
+                      `steam-${item.id}`,
+                      item.steamLink,
+                      `Страница ${String(item.name)}`,
+                    );
+                  }}
+                >
+                  {item?.name}[{item?.time ?? "?"} ч.]
                 </span>
               </section>
 

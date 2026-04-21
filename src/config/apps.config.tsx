@@ -13,6 +13,7 @@ import {
   Globe,
   Volleyball,
   NotebookIcon,
+  Timer,
 } from "lucide-react";
 import { lazy } from "react";
 
@@ -59,10 +60,20 @@ export const APPS = [
     priority: 5,
   },
   {
+    name: "howlongtobeat",
+    label: "HLTB",
+    icon: <Timer className="size-7" />,
+    link: "https://howlongtobeat.com/",
+    type: "window" as const,
+    priority: 6,
+  },
+
+  {
     name: "gamewheel",
     label: "Колесо Игр",
     link: "https://gamegauntlets.com/",
     icon: <Star className="size-7" />,
+    type: "browser" as const,
     priority: 10,
   },
 ];

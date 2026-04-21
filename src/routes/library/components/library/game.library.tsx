@@ -17,7 +17,6 @@ import {
 } from "@/components/shared/loader.component";
 import {
   Calendar,
-  ExternalLink,
   NetworkIcon,
   NotebookPen,
   RussianRuble,
@@ -30,7 +29,7 @@ import { Button, buttonVariants } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { gameButtons } from "@/config/library.config";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { calculateScore, getStatusColor } from "@/lib/utils";
+import { calculateScore, getStatusColor, openWindow } from "@/lib/utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useClickAway } from "@uidotdev/usehooks";
 import { VariantProps } from "class-variance-authority";
@@ -44,6 +43,7 @@ import EditReview from "./edit.library";
 import { image } from "@/api/client.api";
 import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
+import ImageComponent from "@/components/shared/image.component";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -392,9 +392,31 @@ function GameLibrary({
                   variant="ghost"
                   title="Перейти на сайт"
                   className="items-center justify-center w-10 h-10 border rounded self-center"
-                  onClick={() => openUrl(data?.game?.data.websiteLink)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (!data?.game?.data.websiteLink) return;
+
+                    openUrl(data?.game?.data.websiteLink);
+                  }}
+                  onClick={() => {
+                    if (!data?.game?.data.websiteLink) return;
+
+                    openWindow(
+                      `website-${data?.game?.data.id}`,
+                      data?.game?.data.websiteLink,
+                      `Сайт ${String(data?.game?.data.name)}`,
+                    );
+                  }}
                 >
-                  <ExternalLink />
+                  {/*<ExternalLink />*/}
+                  {data?.game?.data.websiteLink && (
+                    <ImageComponent
+                      src={`${data?.game?.data.websiteLink}/favicon.ico`}
+                      alt={String(data?.game?.data.name)}
+                      className="min-w-9 min-h-9 w-9 h-9"
+                      placeholder="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzgXzfBFgv7VWysFmLfdftxjY_Hh0MmlFXaA&s"
+                    />
+                  )}
                 </Button>
               )}
               {data?.game?.data.steamLink && (
@@ -402,7 +424,21 @@ function GameLibrary({
                   variant="ghost"
                   title="Перейти в Steam"
                   className="items-center justify-center w-10 h-10 border rounded self-center"
-                  onClick={() => openUrl(data?.game?.data.steamLink)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (!data?.game?.data.steamLink) return;
+
+                    openUrl(data?.game?.data.steamLink);
+                  }}
+                  onClick={() => {
+                    if (!data?.game?.data.steamLink) return;
+
+                    openWindow(
+                      `steam-${data?.game?.data.id}`,
+                      data?.game?.data.steamLink,
+                      `Страница ${String(data?.game?.data.name)}`,
+                    );
+                  }}
                 >
                   <SteamSvg className="size-6" />
                 </Button>

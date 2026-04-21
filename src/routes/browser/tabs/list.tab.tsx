@@ -14,7 +14,6 @@ import { useUserStore } from "@/store/user.store";
 import { Input } from "@/components/ui/input.component";
 import { X } from "lucide-react";
 import Image from "@/components/shared/image.component";
-import ImageComponent from "@/components/shared/image.component";
 import { image as clientImage } from "@/api/client.api";
 import { highlightText } from "@/lib/utils";
 import type { SortMethod, SortDirection } from "../browser.root";
@@ -233,7 +232,7 @@ function ListBrowser({
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
           >
             <div className="flex flex-col gap-1">
-              <ImageComponent
+              <Image
                 src={`${clientImage?.items}${item.id}/${item.image}`}
                 alt={item.label}
                 className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "

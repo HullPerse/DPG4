@@ -9,6 +9,7 @@
     "fs:default",
     "fs:allow-read-dir",
     "fs:allow-read-file",
-    "updater:default"
+    "updater:default",
+    "core:webview:allow-create-webview-window"
   ]
 }

@@ -1,9 +1,10 @@
 import { WINDOWS } from "@/config/apps.config";
+import { openWindow } from "@/lib/utils";
 import { createWindow } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, PictureInPicture2 } from "lucide-react";
 import { memo } from "react";
 
 function AppDesktop({
@@ -11,6 +12,7 @@ function AppDesktop({
   label,
   icon,
   link,
+  type,
   component,
   activeApps,
   setActiveApps,
@@ -30,6 +32,12 @@ function AppDesktop({
         cursor: isOpening ? "wait" : "pointer",
       }}
       onDoubleClick={() => {
+        if (type && link) {
+          return type === "browser"
+            ? openUrl(link)
+            : openWindow(name, link, label);
+        }
+
         if (link) return openUrl(link);
         if (!activeApps.find((item) => item.id === name)) setIsOpening(true);
 
@@ -44,7 +52,12 @@ function AppDesktop({
         return setTimeout(() => setIsOpening(false), 1000);
       }}
     >
-      {link && <ExternalLink className="absolute top-1 right-1 size-4" />}
+      {link &&
+        (type === "browser" ? (
+          <ExternalLink className="absolute top-1 right-1 size-4" />
+        ) : (
+          <PictureInPicture2 className="absolute top-1 right-1 size-4" />
+        ))}
 
       {icon}
       <span className="text-center text-xs leading-tight font-bold text-text">

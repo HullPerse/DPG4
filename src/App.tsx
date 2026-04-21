@@ -14,13 +14,18 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
-import { selectionMouse } from "./lib/utils";
+import { checkForUpdates, installUpdate, selectionMouse } from "./lib/utils";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
+import { useToastStore } from "./store/toast.store";
+import { UpdateData } from "./types/activity";
+import { Download } from "lucide-react";
+import { Update } from "@tauri-apps/plugin-updater";
 
 function App() {
   //routing
   const navigate = useNavigate();
+  const addToast = useToastStore((s) => s.addToast);
 
   //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
@@ -71,6 +76,34 @@ function App() {
     },
     [],
   );
+
+  useEffect(() => {
+    setInterval(
+      () => {
+        checkForUpdates().then((update: Update | null | undefined) => {
+          if (!update) return;
+
+          const toastData: UpdateData = {
+            id: new Date().toISOString(),
+            author: "System",
+            image: null,
+            type: "chat",
+            text: `Версия ${update.version} доступна для скачивания`,
+            created: new Date().toISOString(),
+            timeout: Infinity,
+            showClose: false,
+            onClick: {
+              fn: () => installUpdate(update),
+              icon: <Download className="size-4" />,
+            },
+          };
+
+          addToast(toastData);
+        });
+      },
+      60 * 1000 * 10, //every 10 minutes
+    );
+  }, []);
 
   useEffect(() => {
     if (!isSelecting) return;

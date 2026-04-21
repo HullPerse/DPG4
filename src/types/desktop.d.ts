@@ -3,6 +3,7 @@ export type AppProps = {
   label: string;
   icon: ReactNode;
   link?: string | null;
+  type?: "browser" | "window" | undefined;
   component?: ReactNode;
 };
 

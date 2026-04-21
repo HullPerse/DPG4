@@ -16,8 +16,8 @@
         "title": "DPG 4",
         "width": 960,
         "height": 840,
-        "minWidth": 600,
-        "minHeight": 400
+        "minWidth": 960,
+        "minHeight": 840
       }
     ],
     "security": {

@@ -6,3 +6,12 @@ export interface Activity {
   text: string;
   created: string;
 }
+
+type UpdateData = Activity & {
+  timeout: number;
+  showClose: boolean;
+  onClick: {
+    fn: () => void;
+    icon: React.ReactNode;
+  };
+};

@@ -12,19 +12,41 @@ export function ToastContainer() {
   return (
     <div className="fixed bottom-4 right-4 z-9999 flex flex-col gap-2">
       {toasts.map((toast) => (
-        <Toast key={toast.id} toast={toast} />
+        <Toast
+          key={toast.id}
+          toast={toast}
+          timeout={(toast as any).timeout}
+          showClose={(toast as any).showClose}
+          onClick={(toast as any).onClick}
+        />
       ))}
     </div>
   );
 }
 
-function Toast({ toast }: { toast: Activity }) {
+function Toast({
+  toast,
+  timeout = 10000,
+  showClose = true,
+  onClick,
+}: {
+  toast: Activity;
+  timeout?: number;
+  showClose?: boolean;
+  onClick?: {
+    fn: () => void;
+    icon: React.ReactNode;
+  };
+}) {
   const removeToast = useToastStore((s) => s.removeToast);
 
   useEffect(() => {
+    if (timeout === Infinity) return;
+
     const timer = setTimeout(() => {
       removeToast(toast.id!);
-    }, 10000);
+    }, timeout);
+
     return () => clearTimeout(timer);
   }, [toast.id, removeToast]);
 
@@ -50,13 +72,18 @@ function Toast({ toast }: { toast: Activity }) {
         </span>
       )}
       <p className="flex-1 line-clamp-3 text-sm text-text">{toast.text}</p>
-      <Button
-        variant="error"
-        size="icon"
-        onClick={() => removeToast(String(toast.id))}
-      >
-        <X className="size-4" />
+      <Button variant="success" size="icon" onClick={onClick?.fn}>
+        {onClick?.icon}
       </Button>
+      {showClose && (
+        <Button
+          variant="error"
+          size="icon"
+          onClick={() => removeToast(String(toast.id))}
+        >
+          <X className="size-4" />
+        </Button>
+      )}
     </div>
   );
 }

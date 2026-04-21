@@ -51,6 +51,7 @@ export default function Desktop({
               name={app.name}
               icon={app.icon}
               link={app.link ?? null}
+              type={app.type ?? undefined}
               component={app.component}
               activeApps={activeApps}
               setActiveApps={setActiveApps}
