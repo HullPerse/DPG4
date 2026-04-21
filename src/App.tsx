@@ -20,7 +20,6 @@ import { WindowLoader } from "./components/shared/loader.component";
 import { useToastStore } from "./store/toast.store";
 import { UpdateData } from "./types/activity";
 import { Download } from "lucide-react";
-import { Update } from "@tauri-apps/plugin-updater";
 
 function App() {
   //routing
@@ -77,33 +76,37 @@ function App() {
     [],
   );
 
+  const handleUpdates = useCallback(async () => {
+    try {
+      const update = await checkForUpdates();
+      if (!update) return;
+
+      const toastData: UpdateData = {
+        id: new Date().toISOString(),
+        author: "System",
+        image: null,
+        type: "chat",
+        text: `Версия ${update.version} доступна для скачивания`,
+        created: new Date().toISOString(),
+        timeout: Infinity,
+        showClose: false,
+        onClick: {
+          fn: () => installUpdate(update),
+          icon: <Download className="size-4" />,
+        },
+      };
+
+      addToast(toastData);
+    } catch (e) {
+      console.error("Failed to check for updates:", e);
+    }
+  }, [addToast]);
+
   useEffect(() => {
-    setInterval(
-      () => {
-        checkForUpdates().then((update: Update | null | undefined) => {
-          if (!update) return;
-
-          const toastData: UpdateData = {
-            id: new Date().toISOString(),
-            author: "System",
-            image: null,
-            type: "chat",
-            text: `Версия ${update.version} доступна для скачивания`,
-            created: new Date().toISOString(),
-            timeout: Infinity,
-            showClose: false,
-            onClick: {
-              fn: () => installUpdate(update),
-              icon: <Download className="size-4" />,
-            },
-          };
-
-          addToast(toastData);
-        });
-      },
-      60 * 1000 * 10, //every 10 minutes
-    );
-  }, []);
+    handleUpdates();
+    const id = setInterval(handleUpdates, 60 * 1000 * 10);
+    return () => clearInterval(id);
+  }, [handleUpdates]);
 
   useEffect(() => {
     if (!isSelecting) return;

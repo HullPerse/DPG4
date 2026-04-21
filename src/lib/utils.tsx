@@ -323,13 +323,14 @@ export async function installUpdate(update: Update) {
   }
 }
 
-export async function checkForUpdates() {
+export async function checkForUpdates(): Promise<Update | null> {
   try {
     const { check } = await import("@tauri-apps/plugin-updater");
     const update = await check();
-    return update;
+    return update ?? null;
   } catch (e) {
     console.debug("Auto-update check skipped:", e);
+    return null;
   }
 }
 
