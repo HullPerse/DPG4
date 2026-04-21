@@ -15,6 +15,9 @@ export default function Signpout() {
   const setLoggedIn = useUserStore((state) => state.setLoggedIn);
   const wallpaperData = useDataStore((state) => state.wallpaper);
 
+  const clearUser = useUserStore((state) => state.clear);
+  const clearData = useDataStore((state) => state.clear);
+
   const [wallpaper, setWallpaper] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -110,6 +113,16 @@ export default function Signpout() {
           variant="link"
           className="text-xs font-bold text-text underline"
           onClick={() => {
+            localStorage.clear();
+            sessionStorage.clear();
+
+            document.cookie.split(";").forEach((c) => {
+              document.cookie =
+                c.trim().split("=")[0] +
+                "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            });
+            clearData();
+            clearUser();
             setLoggedIn(false);
             logout();
           }}

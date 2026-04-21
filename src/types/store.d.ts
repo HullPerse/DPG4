@@ -59,4 +59,5 @@ export interface DataStore {
   ) => void;
   nextStep: () => void;
   finishMoving: () => void;
+  clear: () => void;
 }

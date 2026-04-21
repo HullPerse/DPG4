@@ -48,6 +48,22 @@ export const useDataStore = create<DataStore>()(
         setUserProfile: (userProfile: string | null) => {
           set({ userProfile });
         },
+
+        clear: () => {
+          set({
+            wallpaper: "",
+            font: "",
+            isConnected: false,
+            isEditing: false,
+            arrowType: "all",
+            userProfile: null,
+            movingUser: null,
+            savedWheel: [],
+            notepad: "",
+            accessToken: "",
+          });
+        },
+
         startMoving: (
           userId: string,
           fromPosition: number,
