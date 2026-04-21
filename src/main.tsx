@@ -10,7 +10,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { QueryConfig } from "@/config/query.config";
 import { ToastContainer } from "./components/ui/toast.component";
-import { initActivitySubscription, initChatSubscription } from "./lib/activity.utils";
+import {
+  initActivitySubscription,
+  initChatSubscription,
+} from "./lib/activity.utils";
 
 const queryClient = new QueryClient(QueryConfig);
 
@@ -35,6 +38,8 @@ await import("react-dom/client").then(async ({ createRoot }) => {
   await initActivitySubscription();
   await initChatSubscription();
   await checkForUpdates();
+
+  setInterval(checkForUpdates, 600000);
 
   createRoot(rootElement).render(
     <StrictMode>

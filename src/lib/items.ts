@@ -18,6 +18,7 @@ const cellApi = new CellApi();
 const activityApi = new ActivityApi();
 
 export async function usableItems(item: Inventory) {
+  //Хрюкающая свинья
   if (item.label === "Хрюкающая свинья") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -40,6 +41,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Пакет конфеток
   if (item.label === "Пакет конфеток") {
     const currentUser = await usersApi.getUserById(item.owner);
     await usersApi.scoreUser(item.owner, 50);
@@ -57,6 +59,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Конфетка
   if (item.label === "Конфетка") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -75,6 +78,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Кал и Легендарный кал
   if (item.label === "Кал" || item.label === "Легендарный кал") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -99,6 +103,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Запаянный Крысиный Сундук
   if (item.label === "Запаянный Крысиный Сундук") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -123,6 +128,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Арбуз
   if (item.label === "Арбуз") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -139,9 +145,19 @@ export async function usableItems(item: Inventory) {
     );
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} переместился на клетку ${getLastCellInRow(currentRow)}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
+  //Арбус
   if (item.label === "Арбус") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -158,9 +174,19 @@ export async function usableItems(item: Inventory) {
     );
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} переместился на клетку ${getFirstCellInNextRow(currentRow)}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
+  //Добрая крыса
   if (item.label === "Добрая крыса") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -196,6 +222,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Курва бобер
   if (item.label === "Курва бобер") {
     const currentUser = await usersApi.getUserById(item.owner);
 
@@ -207,9 +234,19 @@ export async function usableItems(item: Inventory) {
     );
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} погнался на Курва Бобром и переместился на клетку ${newPosition < 0 ? 0 : newPosition}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
+  //Erection - NPC
   if (item.label === "Erection - NPC") {
     const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
@@ -239,6 +276,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Вакуум
   if (item.label === "Вакуум") {
     const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
@@ -256,9 +294,19 @@ export async function usableItems(item: Inventory) {
     }
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} всосал несколько предметов`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
     return;
   }
 
+  //Налоговый инспектор
   if (item.label === "Налоговый инспектор") {
     const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
@@ -293,6 +341,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Крысталлизатор
   if (item.label === "Крысталлизатор") {
     const currentUser = await usersApi.getUserById(item.owner);
     const inventory = await itemsApi.getInventory(item.owner);
