@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
@@ -407,4 +407,4 @@ function InventoryTab({ id }: { id?: string }) {
     </main>
   );
 }
-export default memo(InventoryTab);
+export default InventoryTab;

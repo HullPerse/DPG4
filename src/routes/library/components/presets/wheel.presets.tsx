@@ -106,7 +106,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     handleAddGame(gameId);
   };
 
-  const handleAddGame = async (id: number, playtime?: number) => {
+  const handleAddGame = async (id: number) => {
     if (!time && isSteamPreset) {
       return setInput({
         enabled: true,
@@ -123,7 +123,7 @@ export default function PresetsWheel({ id }: { id: string }) {
         username: String(user?.username),
       },
       playtime: {
-        hltb: playtime ?? Number(game?.time ?? 1),
+        hltb: Number(time ?? 1),
       },
       status: "PLAYING" as GameStatus,
       data: {
@@ -182,8 +182,25 @@ export default function PresetsWheel({ id }: { id: string }) {
                   alt={result.name}
                 />
               </div>
-              <span className="font-bold truncate line-clamp-1">
-                {`${result.name} [${result.time ?? 1} ч.]`}
+              <span
+                className={`font-bold truncate line-clamp-1 ${result.steamLink && "hover:cursor-pointer hover:underline"}`}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (!result.steamLink) return;
+
+                  openUrl(result.steamLink);
+                }}
+                onClick={() => {
+                  if (!result.steamLink) return;
+
+                  openWindow(
+                    `steam-${result.id}`,
+                    result.steamLink,
+                    `Страница ${String(result.name)}`,
+                  );
+                }}
+              >
+                {result?.name}[{result?.time ?? "?"} ч.]
               </span>
             </section>
 
