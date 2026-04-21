@@ -325,6 +325,18 @@ struct SteamResponse {
 }
 
 #[derive(serde::Deserialize)]
+struct VanityResponse {
+    response: VanityResult,
+}
+
+#[derive(serde::Deserialize)]
+struct VanityResult {
+    success: i32,
+    steamid: Option<String>,
+    message: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
 struct SteamGamesList {
     #[allow(dead_code)]
     games: Option<Vec<SteamGame>>,
@@ -363,6 +375,56 @@ fn make_game_data(appid: u64, name: String) -> GameData {
         website_link: String::new(),
         source: "owned".to_string(),
     }
+}
+
+#[tauri::command]
+async fn get_steam_family(access_token: String, steam_id: String) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let url = format!(
+        "https://api.steampowered.com/IFamilyGroupsService/GetFamilyGroupForUser/v1/?access_token={}&steamid={}",
+        access_token, steam_id
+    );
+
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Steam API request failed: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    let family_data: serde_json::Value =
+        serde_json::from_str(&response).map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    let family_group_id = family_data
+        .get("response")
+        .and_then(|r| r.get("family_groupid"))
+        .and_then(|v| v.as_str())
+        .ok_or("No family group found")?;
+
+    let url = format!(
+        "https://api.steampowered.com/IFamilyGroupsService/GetSharedLibraryApps/v1/?access_token={}&family_groupid={}&include_own=true&include_free=true",
+        access_token, family_group_id
+    );
+
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Steam API request failed: {}", e))?
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    let json: serde_json::Value =
+        serde_json::from_str(&response).map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    serde_json::to_string(&json).map_err(|e| format!("Failed to serialize: {}", e))
 }
 
 #[tauri::command]
@@ -520,20 +582,6 @@ async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
         .await
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
-    #[derive(Deserialize)]
-    struct VanityResponse {
-        response: VanityResult,
-    }
-
-    #[derive(Deserialize)]
-    struct VanityResult {
-        success: i32,
-        #[serde(default)]
-        steamid: Option<String>,
-        #[serde(default)]
-        message: Option<String>,
-    }
-
     let vanity_response: VanityResponse = serde_json::from_str(&response)
         .map_err(|e| format!("Failed to parse Steam response: {}", e))?;
 
@@ -594,6 +642,7 @@ pub fn run() {
             set_default_font,
             get_default_font,
             get_steam_library,
+            get_steam_family,
             get_steam_game,
             resolve_vanity_url,
             update
