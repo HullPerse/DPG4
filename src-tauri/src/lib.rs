@@ -9,50 +9,6 @@ use tauri_plugin_updater::UpdaterExt;
 
 static STEAM_API_KEY: &str = "A860B0E16AC5F330EA23DE1D61B37F85";
 
-static EMBEDDED_WALLPAPERS: &[(&str, &[u8])] = &[
-    (
-        "wallpaper 1.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 1.jpg"),
-    ),
-    (
-        "wallpaper 2.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 2.jpg"),
-    ),
-    (
-        "wallpaper 3.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 3.jpg"),
-    ),
-    (
-        "wallpaper 4.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 4.jpg"),
-    ),
-    (
-        "wallpaper 5.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 5.jpg"),
-    ),
-    (
-        "wallpaper 6.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 6.jpg"),
-    ),
-    (
-        "wallpaper 7.jpg",
-        include_bytes!("../assets/wallpapers/wallpaper 7.jpg"),
-    ),
-];
-
-fn get_embedded_wallpaper_data(name: &str) -> Option<&'static [u8]> {
-    for (file_name, data) in EMBEDDED_WALLPAPERS {
-        if *file_name == name || format!("Default: {}", file_name) == name {
-            return Some(*data);
-        }
-    }
-    None
-}
-
-fn get_all_embedded_wallpapers() -> Vec<(&'static str, &'static [u8])> {
-    EMBEDDED_WALLPAPERS.to_vec()
-}
-
 #[derive(Serialize)]
 struct Wallpaper {
     name: String,
@@ -61,14 +17,28 @@ struct Wallpaper {
 
 #[tauri::command]
 async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<String, String> {
-    //get default wallpapers from embedded
-    if let Some(data) = get_embedded_wallpaper_data(&name) {
-        let mime_type = mime_guess::from_path(&name)
-            .first_or_octet_stream()
-            .to_string();
-        use base64::{engine::general_purpose, Engine as _};
-        let base64_data = general_purpose::STANDARD.encode(data);
-        return Ok(format!("data:{};base64,{}", mime_type, base64_data));
+    //get default wallpapers
+    let default_wallpapers_dir = Path::new("assets/wallpapers");
+
+    if default_wallpapers_dir.exists() {
+        let entries = fs::read_dir(default_wallpapers_dir)
+            .map_err(|e| format!("Failed to read default wallpapers directory: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(file_name) = path.file_name() {
+                    if let Some(name_str) = file_name.to_str() {
+                        // Check if the name matches (with or without "Default: " prefix)
+                        if name == name_str || name == format!("Default: {}", name_str) {
+                            return Ok(path.to_string_lossy().to_string());
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //get custom wallpapers
@@ -105,12 +75,35 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
 async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String> {
     let mut wallpapers = Vec::new();
 
-    //get default wallpapers from embedded
-    for (name, _data) in get_all_embedded_wallpapers() {
-        wallpapers.push(Wallpaper {
-            name: format!("Default: {}", name),
-            path: format!("embedded:{}", name),
-        });
+    //get default wallpapers
+    let default_wallpapers_dir = Path::new("assets/wallpapers");
+
+    if default_wallpapers_dir.exists() {
+        let entries = fs::read_dir(default_wallpapers_dir)
+            .map_err(|e| format!("Failed to read default wallpapers directory: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(file_name) = path.file_name() {
+                    if let Some(name_str) = file_name.to_str() {
+                        let file_extension =
+                            path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+
+                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"]
+                            .contains(&file_extension.to_lowercase().as_str())
+                        {
+                            wallpapers.push(Wallpaper {
+                                name: format!("Default: {}", name_str),
+                                path: path.to_string_lossy().to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //get custom wallpapers
@@ -153,21 +146,6 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
 
 #[tauri::command]
 async fn get_wallpaper_data(path: String) -> Result<String, String> {
-    // Check if it's an embedded wallpaper
-    if path.starts_with("embedded:") {
-        let name = path.strip_prefix("embedded:").unwrap_or(&path);
-        if let Some(data) = get_embedded_wallpaper_data(name) {
-            let mime_type = mime_guess::from_path(name)
-                .first_or_octet_stream()
-                .to_string();
-            use base64::{engine::general_purpose, Engine as _};
-            let base64_data = general_purpose::STANDARD.encode(data);
-            return Ok(format!("data:{};base64,{}", mime_type, base64_data));
-        }
-        return Err(format!("Embedded wallpaper '{}' not found", name));
-    }
-
-    // Read from file system (custom wallpapers)
     let data = fs::read(&path).map_err(|e| format!("Failed to read wallpaper file: {}", e))?;
 
     let mime_type = mime_guess::from_path(&path)
@@ -254,7 +232,7 @@ async fn save_wallpaper(
 
 #[tauri::command]
 async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    if path.starts_with("embedded:") {
+    if path.starts_with("assets/wallpapers") {
         return Err("Cannot delete default wallpapers".to_string());
     }
 
