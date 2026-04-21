@@ -1,11 +1,35 @@
 use font_loader::system_fonts;
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri::State;
+
+static STEAM_API_KEY: &str = "A860B0E16AC5F330EA23DE1D61B37F85";
+
+static EMBEDDED_WALLPAPERS: &[(&str, &[u8])] = &[
+    ("wallpaper 1.jpg", include_bytes!("../assets/wallpapers/wallpaper 1.jpg")),
+    ("wallpaper 2.jpg", include_bytes!("../assets/wallpapers/wallpaper 2.jpg")),
+    ("wallpaper 3.jpg", include_bytes!("../assets/wallpapers/wallpaper 3.jpg")),
+    ("wallpaper 4.jpg", include_bytes!("../assets/wallpapers/wallpaper 4.jpg")),
+    ("wallpaper 5.jpg", include_bytes!("../assets/wallpapers/wallpaper 5.jpg")),
+    ("wallpaper 6.jpg", include_bytes!("../assets/wallpapers/wallpaper 6.jpg")),
+    ("wallpaper 7.jpg", include_bytes!("../assets/wallpapers/wallpaper 7.jpg")),
+];
+
+fn get_embedded_wallpaper_data(name: &str) -> Option<&'static [u8]> {
+    for (file_name, data) in EMBEDDED_WALLPAPERS {
+        if *file_name == name || format!("Default: {}", file_name) == name {
+            return Some(*data);
+        }
+    }
+    None
+}
+
+fn get_all_embedded_wallpapers() -> Vec<(&'static str, &'static [u8])> {
+    EMBEDDED_WALLPAPERS.to_vec()
+}
 
 #[derive(Serialize)]
 struct Wallpaper {
@@ -15,28 +39,14 @@ struct Wallpaper {
 
 #[tauri::command]
 async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<String, String> {
-    //get default wallpapers
-    let default_wallpapers_dir = Path::new("assets/wallpapers");
-
-    if default_wallpapers_dir.exists() {
-        let entries = fs::read_dir(default_wallpapers_dir)
-            .map_err(|e| format!("Failed to read default wallpapers directory: {}", e))?;
-
-        for entry in entries {
-            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
-            let path = entry.path();
-
-            if path.is_file() {
-                if let Some(file_name) = path.file_name() {
-                    if let Some(name_str) = file_name.to_str() {
-                        // Check if the name matches (with or without "Default: " prefix)
-                        if name == name_str || name == format!("Default: {}", name_str) {
-                            return Ok(path.to_string_lossy().to_string());
-                        }
-                    }
-                }
-            }
-        }
+    //get default wallpapers from embedded
+    if let Some(data) = get_embedded_wallpaper_data(&name) {
+        let mime_type = mime_guess::from_path(&name)
+            .first_or_octet_stream()
+            .to_string();
+        use base64::{engine::general_purpose, Engine as _};
+        let base64_data = general_purpose::STANDARD.encode(data);
+        return Ok(format!("data:{};base64,{}", mime_type, base64_data));
     }
 
     //get custom wallpapers
@@ -73,35 +83,12 @@ async fn get_wallpaper_by_name(app: tauri::AppHandle, name: String) -> Result<St
 async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String> {
     let mut wallpapers = Vec::new();
 
-    //get default wallpapers
-    let default_wallpapers_dir = Path::new("assets/wallpapers");
-
-    if default_wallpapers_dir.exists() {
-        let entries = fs::read_dir(default_wallpapers_dir)
-            .map_err(|e| format!("Failed to read default wallpapers directory: {}", e))?;
-
-        for entry in entries {
-            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
-            let path = entry.path();
-
-            if path.is_file() {
-                if let Some(file_name) = path.file_name() {
-                    if let Some(name_str) = file_name.to_str() {
-                        let file_extension =
-                            path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-
-                        if ["jpg", "jpeg", "png", "gif", "bmp", "webp"]
-                            .contains(&file_extension.to_lowercase().as_str())
-                        {
-                            wallpapers.push(Wallpaper {
-                                name: format!("Default: {}", name_str),
-                                path: path.to_string_lossy().to_string(),
-                            });
-                        }
-                    }
-                }
-            }
-        }
+    //get default wallpapers from embedded
+    for (name, _data) in get_all_embedded_wallpapers() {
+        wallpapers.push(Wallpaper {
+            name: format!("Default: {}", name),
+            path: format!("embedded:{}", name),
+        });
     }
 
     //get custom wallpapers
@@ -144,6 +131,21 @@ async fn get_wallpapers(app: tauri::AppHandle) -> Result<Vec<Wallpaper>, String>
 
 #[tauri::command]
 async fn get_wallpaper_data(path: String) -> Result<String, String> {
+    // Check if it's an embedded wallpaper
+    if path.starts_with("embedded:") {
+        let name = path.strip_prefix("embedded:").unwrap_or(&path);
+        if let Some(data) = get_embedded_wallpaper_data(name) {
+            let mime_type = mime_guess::from_path(name)
+                .first_or_octet_stream()
+                .to_string();
+            use base64::{engine::general_purpose, Engine as _};
+            let base64_data = general_purpose::STANDARD.encode(data);
+            return Ok(format!("data:{};base64,{}", mime_type, base64_data));
+        }
+        return Err(format!("Embedded wallpaper '{}' not found", name));
+    }
+
+    // Read from file system (custom wallpapers)
     let data = fs::read(&path).map_err(|e| format!("Failed to read wallpaper file: {}", e))?;
 
     let mime_type = mime_guess::from_path(&path)
@@ -230,7 +232,7 @@ async fn save_wallpaper(
 
 #[tauri::command]
 async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    if path.starts_with("assets/wallpapers") {
+    if path.starts_with("embedded:") {
         return Err("Cannot delete default wallpapers".to_string());
     }
 
@@ -365,11 +367,6 @@ fn make_game_data(appid: u64, name: String) -> GameData {
 
 #[tauri::command]
 async fn get_steam_library(steam_id: String) -> Result<String, String> {
-    dotenvy::dotenv().ok();
-
-    let api_key = env::var("VITE_STEAM_API_KEY")
-        .map_err(|_| "VITE_STEAM_API_KEY not found in .env file".to_string())?;
-
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()
@@ -377,7 +374,7 @@ async fn get_steam_library(steam_id: String) -> Result<String, String> {
 
     let url = format!(
         "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&include_played_free_games=1&include_appinfo=1&steamid={}",
-        api_key, steam_id
+        STEAM_API_KEY, steam_id
     );
 
     let response = client
@@ -428,9 +425,7 @@ async fn get_steam_game(app_id: String) -> Result<String, String> {
     let app_details: serde_json::Value = serde_json::from_str(&response)
         .map_err(|e| format!("Failed to parse Steam response: {}", e))?;
 
-    let entry = app_details
-        .get(&app_id.trim())
-        .ok_or("App not found")?;
+    let entry = app_details.get(&app_id.trim()).ok_or("App not found")?;
 
     let success = entry
         .get("success")
@@ -441,9 +436,7 @@ async fn get_steam_game(app_id: String) -> Result<String, String> {
         return Err("App not found or unavailable".to_string());
     }
 
-    let data = entry
-        .get("data")
-        .ok_or("No game data available")?;
+    let data = entry.get("data").ok_or("No game data available")?;
 
     let steam_app_id = data
         .get("steam_app_id")
@@ -468,19 +461,23 @@ async fn get_steam_game(app_id: String) -> Result<String, String> {
         .or_else(|| data.get("capsule_imagev5"))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
-        .unwrap_or_else(|| format!(
-            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_600x900.jpg",
-            steam_app_id
-        ));
+        .unwrap_or_else(|| {
+            format!(
+                "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_600x900.jpg",
+                steam_app_id
+            )
+        });
 
     let background_image = data
         .get("background")
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
-        .unwrap_or_else(|| format!(
-            "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
-            steam_app_id
-        ));
+        .unwrap_or_else(|| {
+            format!(
+                "https://steamcdn-a.akamaihd.net/steam/apps/{}/library_hero.jpg",
+                steam_app_id
+            )
+        });
 
     let website_link = data
         .get("website")
@@ -504,11 +501,6 @@ async fn get_steam_game(app_id: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
-    dotenvy::dotenv().ok();
-
-    let api_key = env::var("VITE_STEAM_API_KEY")
-        .map_err(|_| "VITE_STEAM_API_KEY not found in .env file".to_string())?;
-
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
@@ -516,7 +508,7 @@ async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
 
     let url = format!(
         "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={}&vanityurl={}",
-        api_key, vanity_url
+        STEAM_API_KEY, vanity_url
     );
 
     let response = client

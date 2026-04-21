@@ -1,8 +1,8 @@
 import PocketBase from "pocketbase";
 
-export const URL = import.meta.env.VITE_POCKETBASE;
+export const URL = "http://26.15.36.191:8090/";
 
-export const client = new PocketBase(import.meta.env.VITE_POCKETBASE);
+export const client = new PocketBase(URL);
 
 client.autoCancellation(false);
 
