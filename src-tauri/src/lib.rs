@@ -5,17 +5,39 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri::State;
+use tauri_plugin_updater::UpdaterExt;
 
 static STEAM_API_KEY: &str = "A860B0E16AC5F330EA23DE1D61B37F85";
 
 static EMBEDDED_WALLPAPERS: &[(&str, &[u8])] = &[
-    ("wallpaper 1.jpg", include_bytes!("../assets/wallpapers/wallpaper 1.jpg")),
-    ("wallpaper 2.jpg", include_bytes!("../assets/wallpapers/wallpaper 2.jpg")),
-    ("wallpaper 3.jpg", include_bytes!("../assets/wallpapers/wallpaper 3.jpg")),
-    ("wallpaper 4.jpg", include_bytes!("../assets/wallpapers/wallpaper 4.jpg")),
-    ("wallpaper 5.jpg", include_bytes!("../assets/wallpapers/wallpaper 5.jpg")),
-    ("wallpaper 6.jpg", include_bytes!("../assets/wallpapers/wallpaper 6.jpg")),
-    ("wallpaper 7.jpg", include_bytes!("../assets/wallpapers/wallpaper 7.jpg")),
+    (
+        "wallpaper 1.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 1.jpg"),
+    ),
+    (
+        "wallpaper 2.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 2.jpg"),
+    ),
+    (
+        "wallpaper 3.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 3.jpg"),
+    ),
+    (
+        "wallpaper 4.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 4.jpg"),
+    ),
+    (
+        "wallpaper 5.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 5.jpg"),
+    ),
+    (
+        "wallpaper 6.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 6.jpg"),
+    ),
+    (
+        "wallpaper 7.jpg",
+        include_bytes!("../assets/wallpapers/wallpaper 7.jpg"),
+    ),
 ];
 
 fn get_embedded_wallpaper_data(name: &str) -> Option<&'static [u8]> {
@@ -550,6 +572,31 @@ async fn resolve_vanity_url(vanity_url: String) -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+    if let Some(update) = app.updater()?.check().await? {
+        let mut downloaded = 0;
+
+        // alternatively we could also call update.download() and update.install() separately
+        update
+            .download_and_install(
+                |chunk_length, content_length| {
+                    downloaded += chunk_length;
+                    println!("downloaded {downloaded} from {content_length:?}");
+                },
+                || {
+                    println!("download finished");
+                },
+            )
+            .await?;
+
+        println!("update installed");
+        app.restart();
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -558,6 +605,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             get_wallpapers,
             get_wallpaper_data,
@@ -569,7 +617,8 @@ pub fn run() {
             get_default_font,
             get_steam_library,
             get_steam_game,
-            resolve_vanity_url
+            resolve_vanity_url,
+            update
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -14,6 +14,18 @@ import { initActivitySubscription, initChatSubscription } from "./lib/activity.u
 
 const queryClient = new QueryClient(QueryConfig);
 
+async function checkForUpdates() {
+  try {
+    const { check } = await import("@tauri-apps/plugin-updater");
+    const update = await check();
+    if (update) {
+      await update.downloadAndInstall();
+    }
+  } catch (e) {
+    console.debug("Auto-update check skipped:", e);
+  }
+}
+
 await import("react-dom/client").then(async ({ createRoot }) => {
   const rootElement = document.getElementById("root");
   if (!rootElement) throw new Error("Root element not found");
@@ -22,6 +34,7 @@ await import("react-dom/client").then(async ({ createRoot }) => {
   await initializeFontStore();
   await initActivitySubscription();
   await initChatSubscription();
+  await checkForUpdates();
 
   createRoot(rootElement).render(
     <StrictMode>
