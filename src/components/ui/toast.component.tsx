@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity } from "@/types/activity";
 import { cn } from "@/lib/utils.tsx";
 import { Button } from "./button.component";
 import ImageComponent from "../shared/image.component";
+import { SmallLoader } from "../shared/loader.component";
 
 export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
@@ -40,6 +41,8 @@ function Toast({
 }) {
   const removeToast = useToastStore((s) => s.removeToast);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (timeout === Infinity) return;
 
@@ -67,14 +70,25 @@ function Toast({
           />
         ) : null
       ) : (
-        <span className="w-10 h-10 flex items-center justify-center border border-highlight-high text-xl">
+        <span className="min-w-10 min-h-10 w-10 h-10 flex items-center justify-center border border-highlight-high text-xl">
           {toast.image}
         </span>
       )}
       <p className="flex-1 line-clamp-3 text-sm text-text">{toast.text}</p>
       {onClick?.fn && (
-        <Button variant="success" size="icon" onClick={onClick?.fn}>
-          {onClick?.icon}
+        <Button
+          variant="success"
+          size="icon"
+          onClick={() => {
+            setLoading(true);
+            onClick?.fn();
+
+            setTimeout(() => {
+              setLoading(false);
+            }, 2000);
+          }}
+        >
+          {loading ? <SmallLoader /> : onClick?.icon}
         </Button>
       )}
       {showClose && (
@@ -83,7 +97,7 @@ function Toast({
           size="icon"
           onClick={() => removeToast(String(toast.id))}
         >
-          <X className="size-4" />
+          <X className="size-4 pointer-events-none" />
         </Button>
       )}
     </div>
