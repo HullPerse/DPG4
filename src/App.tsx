@@ -84,8 +84,8 @@ function App() {
       const toastData: UpdateData = {
         id: new Date().toISOString(),
         author: "System",
-        image: null,
-        type: "chat",
+        image: "⚠️",
+        type: "emoji",
         text: `Версия ${update.version} доступна для скачивания`,
         created: new Date().toISOString(),
         timeout: Infinity,

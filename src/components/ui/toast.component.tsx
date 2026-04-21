@@ -72,9 +72,11 @@ function Toast({
         </span>
       )}
       <p className="flex-1 line-clamp-3 text-sm text-text">{toast.text}</p>
-      <Button variant="success" size="icon" onClick={onClick?.fn}>
-        {onClick?.icon}
-      </Button>
+      {onClick?.fn && (
+        <Button variant="success" size="icon" onClick={onClick?.fn}>
+          {onClick?.icon}
+        </Button>
+      )}
       {showClose && (
         <Button
           variant="error"
