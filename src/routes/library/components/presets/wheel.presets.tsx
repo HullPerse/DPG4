@@ -34,6 +34,7 @@ export default function PresetsWheel({ id }: { id: string }) {
   const [input, setInput] = useState({
     enabled: false,
     id: "",
+    type: "",
   });
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -100,17 +101,12 @@ export default function PresetsWheel({ id }: { id: string }) {
       />
     );
 
-  const handleAddGameClick = (gameId: number) => {
-    const game = data?.games.find((g) => g.id === gameId);
-    if (!game) return;
-    handleAddGame(gameId);
-  };
-
-  const handleAddGame = async (id: number) => {
+  const handleAddGame = async (id: number, type: "list" | "result") => {
     if (!time && isSteamPreset) {
       return setInput({
         enabled: true,
         id: String(id),
+        type: type,
       });
     }
 
@@ -141,6 +137,8 @@ export default function PresetsWheel({ id }: { id: string }) {
 
     return await gameApi.addGame(gameData).then(() => {
       queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
+      setInput({ enabled: false, id: "", type: "" });
+      setTime(null);
     });
   };
 
@@ -173,6 +171,7 @@ export default function PresetsWheel({ id }: { id: string }) {
           <div
             key={result.id}
             className="flex flex-row w-3xl min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
+            onClick={() => console.log(result)}
           >
             {/* LABEL */}
             <section className="flex flex-row w-full h-full items-center gap-2">
@@ -206,13 +205,23 @@ export default function PresetsWheel({ id }: { id: string }) {
 
             {/* BUTTONS */}
             <section className="flex flex-row items-center gap-1">
+              {input.enabled &&
+                input.type === "result" &&
+                input.id === String(result?.id) && (
+                  <Input
+                    autoFocus
+                    type="text"
+                    placeholder="Введите время"
+                    value={time ?? ""}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="h-9 w-36 ml-2 shadow-sharp-sm"
+                  />
+                )}
               <Button
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
-                onClick={() =>
-                  handleAddGame(result.id).then(() => setResult(null))
-                }
+                onClick={() => handleAddGame(result.id, "result")}
               >
                 <Plus />
               </Button>
@@ -300,21 +309,22 @@ export default function PresetsWheel({ id }: { id: string }) {
                     <EyeOffIcon size={20} />
                   )}
                 </Button>
-                {input.enabled && input.id === String(item?.id) && (
-                  <Input
-                    autoFocus
-                    type="text"
-                    placeholder="Введите время"
-                    value={time ?? ""}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="h-9 w-36 ml-2 shadow-sharp-sm"
-                  />
-                )}
+                {input.enabled &&
+                  input.type === "list" &&
+                  input.id === String(item?.id) && (
+                    <Input
+                      type="text"
+                      placeholder="Введите время"
+                      value={time ?? ""}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="h-9 w-36 ml-2 shadow-sharp-sm"
+                    />
+                  )}
                 <Button
                   title="Добавить в библиотеку"
                   variant="success"
                   size="icon"
-                  onClick={() => handleAddGameClick(item.id)}
+                  onClick={() => handleAddGame(item.id, "list")}
                 >
                   <Plus />
                 </Button>

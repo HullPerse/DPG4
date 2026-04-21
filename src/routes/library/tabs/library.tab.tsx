@@ -47,10 +47,7 @@ function LibraryTab() {
 
     const currentIndex = data.findIndex((game) => game.id === currentGame);
 
-    if (currentIndex === -1 || currentIndex === data.length - 1) {
-      return data[0]?.id;
-    }
-    return data[currentIndex + 1]?.id;
+    return data[currentIndex - 1]?.id;
   };
 
   const getComponent = useMemo(() => {
