@@ -8,6 +8,7 @@ import { useSubscription } from "@/hooks/subscription.hook";
 import { type Preset } from "@/types/games";
 import PresetComponent from "@/components/shared/preset.component";
 import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 
@@ -23,7 +24,8 @@ export default function PresetsList({
   ) => void;
 }) {
   const queryClient = useQueryClient();
-  const user = useUserStore(state => state.user)
+  const user = useUserStore((state) => state.user);
+  const accessToken = useDataStore((state) => state.accessToken);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsList"],
@@ -32,18 +34,31 @@ export default function PresetsList({
 
       const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
 
-      const steamLibrary = await gameApi.getSteamLibrary(steamId).then((res) => {
-        return {
-          id: "steamPreset",
-          label: "Библиотека STEAM",
-          games: res
-        }
-      })
+      let games: Preset[] = [];
 
-      return { presets, steamLibrary };
+      if (accessToken) {
+        games = (await gameApi
+          .getSteamFamily(steamId, accessToken)
+          .then((res) => {
+            return {
+              id: "steamPreset",
+              label: "Библиотека STEAM",
+              games: res,
+            };
+          })) as Preset[];
+      } else {
+        games = (await gameApi.getSteamLibrary(steamId).then((res) => {
+          return {
+            id: "steamPreset",
+            label: "Библиотека STEAM",
+            games: res,
+          };
+        })) as Preset[];
+      }
+
+      return { presets, steamLibrary: games };
     },
   });
-
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -67,7 +82,7 @@ export default function PresetsList({
       />
     );
 
-
+  console.log(data?.steamLibrary);
 
   return (
     <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
@@ -79,9 +94,7 @@ export default function PresetsList({
           setCurrentTab={setCurrentTab}
           steam={true}
         />
-      )
-      }
-
+      )}
 
       {data?.presets
 

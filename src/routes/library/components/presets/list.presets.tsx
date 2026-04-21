@@ -1,7 +1,7 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { GameStatus, Preset } from "@/types/games";
+import { GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Plus, Trash } from "lucide-react";
 import { startTransition, useCallback, useMemo, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import { useUserStore } from "@/store/user.store";
 import { highlightText } from "@/lib/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
@@ -26,6 +27,7 @@ function PresetSettings({
   const queryClient = useQueryClient();
   const isAdmin = useUserStore((state) => state.isAdmin);
   const user = useUserStore((state) => state.user);
+  const accessToken = useDataStore((state) => state.accessToken);
 
   const listRef = useRef<HTMLDivElement>(null);
   const isSteamPreset = id === STEAM_PRESET_ID;
@@ -41,7 +43,13 @@ function PresetSettings({
     queryFn: async (): Promise<Preset> => {
       if (isSteamPreset) {
         const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
-        const games = await gameApi.getSteamLibrary(steamId);
+        let games: GameData[] = [];
+
+        if (accessToken) {
+          games = await gameApi.getSteamFamily(steamId, accessToken);
+        } else {
+          games = await gameApi.getSteamLibrary(steamId);
+        }
 
         return {
           id: STEAM_PRESET_ID,

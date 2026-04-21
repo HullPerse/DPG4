@@ -13,12 +13,14 @@ import { useUserStore } from "@/store/user.store";
 import Wheel from "@/components/shared/wheel.component";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
+import { useDataStore } from "@/store/data.store";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
 
 export default function PresetsWheel({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const accessToken = useDataStore((state) => state.accessToken);
 
   const isSteamPreset = id === STEAM_PRESET_ID;
   const listRef = useRef<HTMLDivElement>(null);
@@ -37,11 +39,22 @@ export default function PresetsWheel({ id }: { id: string }) {
     queryFn: async (): Promise<Preset> => {
       if (isSteamPreset) {
         const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
-        const games = await gameApi.getSteamLibrary(steamId);
+
+        let games: GameData[] = [];
+
+        if (accessToken) {
+          games = (await gameApi.getSteamFamily(
+            steamId,
+            accessToken,
+          )) as GameData[];
+        } else {
+          games = (await gameApi.getSteamLibrary(steamId)) as GameData[];
+        }
+
         return {
           id: STEAM_PRESET_ID,
           label: "Библиотека STEAM",
-          games,
+          games: games,
         };
       }
       return await gameApi.getPresetById(id);

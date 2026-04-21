@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { ChevronLeft, Plus } from "lucide-react";
+import {
+  Braces,
+  CheckCheck,
+  ChevronLeft,
+  ExternalLink,
+  Plus,
+} from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
 import { useUserStore } from "@/store/user.store";
@@ -12,10 +18,16 @@ import GameApi from "@/api/games.api";
 import PresetSettings from "../components/presets/list.presets";
 import NewGameLibrary from "../components/library/newGame.library";
 import PresetsWheel from "../components/presets/wheel.presets";
+import { useDataStore } from "@/store/data.store";
+import { openUrl } from "@tauri-apps/plugin-opener";
 const gameApi = new GameApi();
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
+  const accessToken = useDataStore((state) => state.accessToken);
+  const setAccessToken = useDataStore((state) => state.setAccessToken);
+
+  const [addToken, setAddToken] = useState<boolean>(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoadinng] = useState(false);
@@ -62,6 +74,37 @@ function PresetsTab() {
   return (
     <main className="relative flex flex-col h-full w-full">
       <section className="flex flex-row w-full gap-2 items-center justify-center p-2 border-b-2 border-highlight-high">
+        {addToken && (
+          <Input
+            placeholder="Токен"
+            type="text"
+            value={accessToken}
+            onChange={(e) => setAccessToken(e.target.value)}
+          />
+        )}
+
+        {addToken && (
+          <Button
+            variant="link"
+            className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
+            onClick={() =>
+              openUrl(
+                "https://store.steampowered.com/pointssummary/ajaxgetasyncconfig",
+              )
+            }
+          >
+            <ExternalLink />
+          </Button>
+        )}
+
+        <Button
+          variant="link"
+          className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
+          onClick={() => setAddToken(!addToken)}
+        >
+          {addToken ? <CheckCheck /> : <Braces />}
+        </Button>
+
         <Input
           type="text"
           placeholder="Поиск пресетов"

@@ -45,3 +45,10 @@ export type GameReview = {
   comment: string;
   votes?: ReviewRating[];
 };
+
+export type FamilyGame = {
+  app_type: number;
+  appid: number;
+  capsule_filename: string;
+  name: string;
+};

@@ -16,9 +16,14 @@ export const useDataStore = create<DataStore>()(
         movingUser: null,
         savedWheel: [],
         notepad: "",
+        accessToken: "",
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
+        },
+
+        setAccessToken: (accessToken: string) => {
+          set({ accessToken });
         },
 
         setNotepad: (notepad: string) => {

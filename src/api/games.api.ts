@@ -1,5 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
-import { Preset, Game, GameReview, GameStatus, GameData } from "@/types/games";
+import {
+  Preset,
+  Game,
+  GameReview,
+  GameStatus,
+  GameData,
+  FamilyGame,
+} from "@/types/games";
 import { client } from "./client.api";
 
 import ItemsApi from "./items.api";
@@ -45,6 +52,31 @@ export default class GameApi {
     const response = await invoke<string>("get_steam_library", { steamId });
 
     return JSON.parse(response);
+  };
+
+  getSteamFamily = async (
+    steamId: string,
+    accessToken: string,
+  ): Promise<GameData[]> => {
+    const response = await invoke<string>("get_steam_family", {
+      accessToken,
+      steamId,
+    });
+
+    const data: FamilyGame[] = JSON.parse(response).response
+      .apps as FamilyGame[];
+
+    const mappedData = data.map((g) => ({
+      id: g.appid,
+      name: g.name,
+      image: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
+      capsuleImage: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
+      backgroundImage: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
+      steamLink: "",
+      websiteLink: "",
+    }));
+
+    return mappedData as GameData[];
   };
 
   getSteamGame = async (appId: string) => {

@@ -35,6 +35,7 @@ export interface DataStore {
     isAnimating: boolean;
     finalPosition: number;
   } | null;
+  accessToken: string;
   notepad: string;
 
   // Actions
@@ -48,6 +49,7 @@ export interface DataStore {
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;
   setUserProfile: (userProfile: string | null) => void;
+  setAccessToken: (accessToken: string) => void;
   startMoving: (
     userId: string,
     fromPosition: number,
