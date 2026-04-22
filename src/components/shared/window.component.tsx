@@ -36,6 +36,7 @@ function Window(props: WindowProps) {
   );
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [localRefreshKey, setLocalRefreshKey] = useState(0);
 
   const [oldData, setOldData] = useState<{
     position: WindowPosition;
@@ -204,10 +205,10 @@ function Window(props: WindowProps) {
   };
 
   const handleRefresh = useCallback(() => {
+    setLocalRefreshKey((prev) => prev + 1);
     setIsRefreshing(true);
     props.onRefresh?.();
 
-    //reset refresh state for visual feedback
     setTimeout(() => setIsRefreshing(false), 300);
   }, [props.onRefresh]);
 
@@ -230,10 +231,10 @@ function Window(props: WindowProps) {
 
     return Children.map(props.children, (child, index) =>
       isValidElement(child)
-        ? cloneElement(child, { key: `${refreshKeyRef.current}-${index}` })
+        ? cloneElement(child, { key: `${refreshKeyRef.current}-${localRefreshKey}-${index}` })
         : child,
     );
-  }, [isConnected, props.children]);
+  }, [isConnected, props.children, localRefreshKey]);
 
   const windowStyle = useMemo(
     () => ({

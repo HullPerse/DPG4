@@ -72,6 +72,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       )
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
+        queryClient.invalidateQueries({ queryKey: ["inventoryTab", user?.id] });
         setLoading(false);
         setResult(null);
       });

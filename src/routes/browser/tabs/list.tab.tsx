@@ -264,6 +264,11 @@ function ListBrowser({
                     `${clientImage?.items}${item.id}/${item.image}`,
                   );
 
+                  queryClient.invalidateQueries({
+                    queryKey: ["inventoryTab", user.id],
+                    refetchType: "all",
+                  });
+
                   setLoading(false);
                 }}
               >
