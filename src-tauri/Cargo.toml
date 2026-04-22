@@ -1,6 +1,6 @@
 [package]
 name = "DPG4"
-version = "1.4.4"
+version = "1.4.6"
 description = "DPG 4"
 authors = ["HullPerse"]
 edition = "2021"

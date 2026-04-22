@@ -41,29 +41,38 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
-  //Пакет конфеток
-  if (item.label === "Пакет конфеток") {
+  if (item.label === "Тупорылый кот") {
     const currentUser = await usersApi.getUserById(item.owner);
-    await usersApi.scoreUser(item.owner, 50);
 
+    const currentCell =
+      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+
+    const statuses = [...(currentCell.status ?? []), "cat"];
+
+    await cellApi.changeStatus(currentCell.id, statuses);
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
     const activityData = {
       author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
-      text: `${currentUser.username} съел целый пакет конфеток`,
+      text: `${currentUser.username} потерял кота на клетке ${currentCell.number}`,
     } as Activity;
 
     await activityApi.createActivity(activityData);
     return;
   }
 
-  //Конфетка
-  if (item.label === "Конфетка") {
+  //Пакет конфеток или Пакет лимонных конфеток
+  if (
+    item.label === "Пакет конфеток" ||
+    item.label === "Пакет лимонных конфеток"
+  ) {
     const currentUser = await usersApi.getUserById(item.owner);
-
-    await usersApi.scoreUser(item.owner, 1);
+    await usersApi.scoreUser(
+      item.owner,
+      item.label === "Пакет лимонных конфеток" ? 100 : 50,
+    );
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
@@ -71,7 +80,26 @@ export async function usableItems(item: Inventory) {
       author: currentUser.id,
       image: currentUser.avatar,
       type: "emoji",
-      text: `${currentUser.username} съел одну конфетку`,
+      text: `${currentUser.username} съел целый пакет ${item.label === "Пакет лимонных конфеток" ? "Лимонных конфеток" : "конфеток"}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+    return;
+  }
+
+  //Конфетка и Лимонная конфетка
+  if (item.label === "Конфетка" || item.label === "Лимонная конфетка") {
+    const currentUser = await usersApi.getUserById(item.owner);
+
+    await usersApi.scoreUser(item.owner, item.label === "Конфетка" ? 2 : 1);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} съел одну ${item.label === "Лимонная конфетка" ? "Лимонную конфетку" : "конфетку"}`,
     } as Activity;
 
     await activityApi.createActivity(activityData);

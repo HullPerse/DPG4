@@ -1,5 +1,6 @@
 import PigSvg from "@/components/svg/pig.component";
 import PoopSvg from "@/components/svg/poop.component";
+import CatSvg from "@/components/svg/cat.component";
 
 export const cellsConfig = {
   difficulty: [
@@ -62,6 +63,11 @@ export const cellsConfig = {
       name: "pig",
       icon: <PigSvg />,
       description: "Свинья",
+    },
+    {
+      name: "cat",
+      icon: <CatSvg />,
+      description: "Котик",
     },
   ],
   arrowType: [

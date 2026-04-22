@@ -151,6 +151,18 @@ export default class UserApi {
       );
     }
 
+    //CAT
+    if (targetCell?.status?.includes("cat")) {
+      const audio = new Audio("/audio/cat.mp3");
+      audio.volume = 0.1;
+      audio.play();
+
+      await cellApi.changeStatus(
+        targetCell.id,
+        removeFirst(targetCell.status ?? [], "cat"),
+      );
+    }
+
     await this.changeUserAction(userId, "GAMEADD");
   };
 
