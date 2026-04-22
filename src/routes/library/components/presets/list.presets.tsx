@@ -134,7 +134,6 @@ function PresetSettings({
         backgroundImage: game.backgroundImage,
         steamLink: `https://store.steampowered.com/app/${game.id}`,
         websiteLink: game.websiteLink ?? "",
-        time: Number(time),
       },
       created: new Date().toISOString(),
     };

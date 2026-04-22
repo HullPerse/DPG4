@@ -16,18 +16,20 @@ export default function PresetsList({
   searchTerms,
   setCurrentPreset,
   setCurrentTab,
+  refetchPresetsRef,
 }: {
   searchTerms: string;
   setCurrentPreset: (preset: string) => void;
   setCurrentTab: (
     tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
   ) => void;
+  refetchPresetsRef?: React.RefObject<(() => void) | null>;
 }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
   const accessToken = useDataStore((state) => state.accessToken);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ["presetsList"],
     queryFn: async (): Promise<{ presets: Preset[]; steamLibrary: any }> => {
       const presets = await gameApi.getPresets();
@@ -60,6 +62,10 @@ export default function PresetsList({
     },
   });
 
+  if (refetchPresetsRef) {
+    refetchPresetsRef.current = refetch;
+  }
+
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
       queryClient.invalidateQueries({
@@ -71,7 +77,7 @@ export default function PresetsList({
 
   useSubscription("presets", "*", invalidateQuery);
 
-  if (isLoading) return <WindowLoader />;
+  if (isLoading || isRefetching) return <WindowLoader />;
   if (isError)
     return (
       <WindowError

@@ -7,7 +7,7 @@ import {
   ExternalLink,
   Plus,
 } from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 
 import { useUserStore } from "@/store/user.store";
 
@@ -28,6 +28,7 @@ function PresetsTab() {
   const setAccessToken = useDataStore((state) => state.setAccessToken);
 
   const [addToken, setAddToken] = useState<boolean>(false);
+  const refetchPresetsRef = useRef<(() => void) | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoadinng] = useState(false);
@@ -50,6 +51,7 @@ function PresetsTab() {
           searchTerms={searchTerm}
           setCurrentPreset={setCurrentPreset}
           setCurrentTab={setCurrentTab}
+          refetchPresetsRef={refetchPresetsRef}
         />
       );
 
@@ -100,7 +102,10 @@ function PresetsTab() {
         <Button
           variant="link"
           className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
-          onClick={() => setAddToken(!addToken)}
+          onClick={() => {
+            setAddToken(!addToken);
+            refetchPresetsRef.current?.();
+          }}
         >
           {addToken ? <CheckCheck /> : <Braces />}
         </Button>
