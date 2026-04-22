@@ -103,8 +103,8 @@ function PresetsTab() {
           variant="link"
           className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
           onClick={() => {
+            if (addToken) refetchPresetsRef.current?.();
             setAddToken(!addToken);
-            refetchPresetsRef.current?.();
           }}
         >
           {addToken ? <CheckCheck /> : <Braces />}
