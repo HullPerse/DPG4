@@ -171,7 +171,6 @@ export default function PresetsWheel({ id }: { id: string }) {
           <div
             key={result.id}
             className="flex flex-row w-3xl min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
-            onClick={() => console.log(result)}
           >
             {/* LABEL */}
             <section className="flex flex-row w-full h-full items-center gap-2">
@@ -182,19 +181,22 @@ export default function PresetsWheel({ id }: { id: string }) {
                 />
               </div>
               <span
-                className={`font-bold truncate line-clamp-1 ${result.steamLink && "hover:cursor-pointer hover:underline"}`}
+                className={`font-bold truncate line-clamp-1 hover:cursor-pointer hover:underline`}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  if (!result.steamLink) return;
+                  const link = `https://store.steampowered.com/app/${result.id}`;
+                  if (!link) return;
 
-                  openUrl(result.steamLink);
+                  openUrl(link);
                 }}
                 onClick={() => {
-                  if (!result.steamLink) return;
+                  const link = `https://store.steampowered.com/app/${result.id}`;
+
+                  if (!link) return;
 
                   openWindow(
                     `steam-${result.id}`,
-                    result.steamLink,
+                    link,
                     `Страница ${String(result.name)}`,
                   );
                 }}
@@ -265,7 +267,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                 </div>
 
                 <span
-                  className={`font-bold truncate line-clamp-1 ${item.steamLink && "hover:cursor-pointer hover:underline"}`}
+                  className={`font-bold truncate line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     if (!item.steamLink) return;

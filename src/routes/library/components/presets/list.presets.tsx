@@ -186,7 +186,7 @@ function PresetSettings({
                 />
               </div>
               <span
-                className={`font-bold truncate line-clamp-1 ${item.steamLink && "hover:cursor-pointer hover:underline"}`}
+                className={`font-bold truncate line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (!item.steamLink) return;
