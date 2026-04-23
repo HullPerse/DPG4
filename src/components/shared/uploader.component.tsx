@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, X } from "lucide-react";
+import { ImagePlus, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
 import Image from "@/components/shared/image.component";
@@ -112,7 +112,9 @@ export function ImageUploader({
           type="button"
           className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 p-4 transition-colors hover:bg-muted/30"
           onClick={() => inputRef.current?.click()}
-        ></button>
+        >
+          <ImagePlus />
+        </button>
       )}
       <input
         ref={inputRef}

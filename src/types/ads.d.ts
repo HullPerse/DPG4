@@ -4,7 +4,7 @@ export interface Ads {
     username: string;
     id: string;
   };
-  image: File;
+  image: File | string;
   text: string;
   created?: string;
 }

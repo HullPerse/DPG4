@@ -12,6 +12,7 @@ export const image = {
   items: `${URL}api/files/pbc_710432678/`,
   inventory: `${URL}api/files/pbc_3573984430/`,
   market: `${URL}api/files/pbc_1556084869/`,
+  ads: `${URL}api/files/pbc_1911549009/`,
 };
 
 export const checkConnection = async () => {

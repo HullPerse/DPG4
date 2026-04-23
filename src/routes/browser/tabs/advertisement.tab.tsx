@@ -1,31 +1,39 @@
 import { memo, startTransition, useCallback, useState } from "react";
 import AdsApi from "@/api/ads.api";
-import { Ads } from "@/types/ads";
+import { Ads } from "@/types/ads.d";
 import { useUserStore } from "@/store/user.store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { WindowLoader } from "@/components/shared/loader.component";
+import {
+  SmallLoader,
+  WindowLoader,
+} from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import { NetworkIcon, Plus } from "lucide-react";
+import { NetworkIcon, Plus, Image as ImageIcon, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog.component";
+import { Input } from "@/components/ui/input.component";
+import { ImageUploader } from "@/components/shared/uploader.component";
+import ImageComponent from "@/components/shared/image.component";
+import { image } from "@/api/client.api";
 
 const adsApi = new AdsApi();
 
-//Моя реклама
-//Новая реклама ->
-// 1. выбрать картинку
-// 2. выбрать текст
-// 3. оплата публикации + публикация
-//
-// 1. в главном меню рандомный попап рекламный с рекламой
-// 2. закрыть можно только через 10 секунд (показать таймер)
-//
 function AdTab() {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [image, setImage] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [text, setText] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -57,20 +65,29 @@ function AdTab() {
       />
     );
 
-  const handleAdd = async () => {
+  const handleRemove = async (id: string) => {
     setLoading(true);
 
-    const addData = {
+    await adsApi.removeAd(id);
+
+    setLoading(false);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    const adData = {
       owner: {
         username: user?.username,
         id: user?.id,
       },
-      image: image,
+      image: imageFile,
       text: text,
     } as Ads;
 
-    await adsApi.createAd(addData);
+    await adsApi.createAd(adData);
 
+    setIsOpen(false);
     setLoading(false);
   };
 
@@ -79,7 +96,7 @@ function AdTab() {
       <Button
         variant="ghost"
         className="w-full h-18 border-2 border-highlight-high flex flex-row items-center justify-start"
-        onClick={() => {}}
+        onClick={() => setIsOpen(true)}
       >
         <Plus className="size-10" />
         <div className="flex flex-col w-full items-start overflow-hidden">
@@ -90,11 +107,82 @@ function AdTab() {
         </div>
       </Button>
 
-      <section className="flex flex-col border-t-4 border-highlight-high w-full overflow-y-auto">
-        {data?.map((item) => (
-          <div>{item.text}</div>
-        ))}
+      <section className="flex flex-col w-full overflow-y-auto gap-2">
+        {data?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted">
+            <ImageIcon className="size-12 mb-2 opacity-50" />
+            <span>Реклама отсутствует</span>
+          </div>
+        ) : (
+          data?.map((item) => (
+            <div
+              key={item.id}
+              className="w-full h-18 border-2 border-highlight-high flex flex-row items-center justify-start"
+            >
+              {item.image && (
+                <ImageComponent
+                  src={`${image.ads}${item.id}/${item.image}`}
+                  alt="ad image"
+                  className="h-16 w-16 min-w-16 min-h-16 border-2 border-highlight-high ml-1"
+                />
+              )}
+              <span className="ml-2 truncate line-clamp-2">{item.text}</span>
+
+              <Button
+                variant="error"
+                size="icon"
+                className="ml-auto mr-2 size-13"
+                onClick={() => handleRemove(String(item.id))}
+              >
+                {loading ? <SmallLoader /> : <Trash />}
+              </Button>
+            </div>
+          ))
+        )}
       </section>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Создать рекламу</DialogTitle>
+            <DialogDescription>
+              Загрузите изображение и добавьте текст рекламы
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            <ImageUploader
+              value={imageFile}
+              onChange={setImageFile}
+              className="w-full"
+            />
+
+            <Input
+              placeholder="Текст рекламы..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={200}
+            />
+          </div>
+
+          <DialogFooter className="bg-card">
+            <Button
+              variant="error"
+              onClick={() => setIsOpen(false)}
+              disabled={loading}
+            >
+              {loading ? <SmallLoader /> : "ОТМЕНИТЬ"}
+            </Button>
+            <Button
+              variant="success"
+              onClick={handleSubmit}
+              disabled={!text || !imageFile}
+            >
+              {loading ? <SmallLoader /> : "СОЗДАТЬ"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
