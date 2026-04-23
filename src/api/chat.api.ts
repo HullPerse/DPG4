@@ -72,6 +72,37 @@ export default class ChatApi {
     return allMessages;
   };
 
+  getUnreadGroupedBySender = async (
+    receiver: string,
+  ): Promise<{ sender: User; lastMessage: Chat; unreadCount: number }[]> => {
+    const allMessages = (await this.chatsCollection.getFullList({
+      filter: `data.receiver.id = "${receiver}" && isRead = False`,
+      sort: "-created",
+    })) as Chat[];
+
+    const grouped = new Map<string, Chat[]>();
+
+    for (const msg of allMessages) {
+      const senderId = msg.data.sender.id;
+      const existing = grouped.get(senderId) || [];
+      existing.push(msg);
+      grouped.set(senderId, existing);
+    }
+
+    const result: { sender: User; lastMessage: Chat; unreadCount: number }[] = [];
+
+    for (const [senderId, messages] of grouped) {
+      const senderUser = await userApi.getUserById(senderId);
+      result.push({
+        sender: senderUser as User,
+        lastMessage: messages[0],
+        unreadCount: messages.length,
+      });
+    }
+
+    return result;
+  };
+
   getUnread = async (receiver: string, sender: string) => {
     const allMessages = this.getChatByUser(sender, receiver);
 

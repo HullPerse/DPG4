@@ -19,6 +19,7 @@ import NetworkHover from "./components/network.desktop";
 import CalendarDesktop from "./components/calendar.desktop";
 import FontDesktop from "./components/font.desktop";
 import ContextDesktop from "./components/context.desktop";
+import MessagesDesktop from "./components/messages.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -96,6 +97,9 @@ export default function Desktop({
         </div>
         <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
+            {/* MESSAGES */}
+            <MessagesDesktop />
+
             {/* NETWORK */}
             <HoverCard>
               <HoverCardTrigger>
