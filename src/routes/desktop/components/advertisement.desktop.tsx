@@ -27,9 +27,11 @@ function AdvertisementApp() {
     queryFn: async (): Promise<Ads[]> => await adsApi.getAds(),
   });
 
-  const [isVisible, setIsVisible] = useState(true);
-  const [canClose, setCanClose] = useState(false);
-  const [remaining, setRemaining] = useState(CLOSE_TIME);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
+  const [canClose, setCanClose] = useState<boolean>(false);
+  const [remaining, setRemaining] = useState<number>(CLOSE_TIME);
+
+  const [confirm, setConfirm] = useState<boolean>(false);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -66,17 +68,25 @@ function AdvertisementApp() {
   if (!isVisible || !randomAd) return null;
 
   return (
-    <main className="absolute top-2 right-2 z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm">
+    <main className="absolute top-2 right-2 z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm transition-all duration-300">
       <section className="flex flex-row items-center justify-between border-b-2 border-highlight-high px-2 py-1">
-        <span>Объявление</span>
+        <span>Реклама</span>
         <Button
           variant="error"
           size="icon"
-          className="h-7 w-7 transition-all duration-200"
-          onClick={() => setIsVisible(false)}
+          className="h-7 min-w-7 w-fit px-1 transition-all duration-200"
+          onClick={() => {
+            if (!confirm) return setConfirm(true);
+
+            return setIsVisible(false);
+          }}
           disabled={!canClose}
         >
-          <X className="size-4" />
+          {!confirm ? (
+            <X className="size-4" />
+          ) : (
+            <span className="pointer-events-none">Вы уверены?</span>
+          )}
         </Button>
       </section>
 
