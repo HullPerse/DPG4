@@ -65,7 +65,7 @@ function AdvertisementApp() {
 
   const progress = ((CLOSE_TIME - remaining) / CLOSE_TIME) * 100;
 
-  if (!isVisible || !randomAd) return null;
+  if (!isVisible || !randomAd || !data || data.length === 0) return null;
 
   return (
     <main className="absolute top-2 right-2 z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm transition-all duration-300">
