@@ -39,8 +39,14 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  rendered = true,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> & {
+    rendered?: boolean;
+  }) {
+  if (!rendered) return;
+
   return (
     <ButtonPrimitive
       data-slot="button"

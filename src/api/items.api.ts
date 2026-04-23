@@ -181,7 +181,17 @@ export default class ItemsApi {
   };
 
   removeMarket = async (marketId: string) => {
-    return await this.marketCollection.delete(marketId);
+    const existing = await this.getMarketById(marketId);
+
+    if (!existing) return;
+
+    //remove market
+    await this.marketCollection.delete(String(existing.id));
+    //score user
+    await this.userApi.scoreUser(
+      existing.owner.id,
+      existing.discount ? existing.price : existing.price,
+    );
   };
 
   buyMarket = async (marketId: string, newOwner: string, oldOwner: string) => {
@@ -202,8 +212,14 @@ export default class ItemsApi {
       image: imageFile,
     } as Inventory;
 
-    await this.userApi.scoreUser(newOwner, -itemData.price);
-    await this.userApi.scoreUser(oldOwner, itemData.price);
+    await this.userApi.scoreUser(
+      newOwner,
+      itemData.discount ? -itemData.discount : -itemData.price,
+    );
+    await this.userApi.scoreUser(
+      oldOwner,
+      itemData.discount ? itemData.discount : itemData.price,
+    );
 
     const user = await this.userApi.getUserById(newOwner);
 
@@ -211,7 +227,7 @@ export default class ItemsApi {
       author: user.id,
       image: user.avatar,
       type: "emoji",
-      text: `${user.username} купил предмет ${itemData.label} за ${itemData.price}`,
+      text: `${user.username} купил предмет ${itemData.label} за ${itemData.discount ? itemData.discount : itemData.price}`,
     } as Activity;
     await this.activityCollection.create(activityData);
 
@@ -220,9 +236,17 @@ export default class ItemsApi {
     });
   };
 
-  discountMarket = async (marketId: string, discountPrice: number) => {
-    return await this.marketCollection.update(marketId, {
+  discountMarket = async (
+    marketId: string,
+    owner: string,
+    price: number,
+    discountPrice: number,
+  ) => {
+    //set discount
+    await this.marketCollection.update(marketId, {
       discount: discountPrice,
     });
+
+    await this.userApi.scoreUser(owner, price - discountPrice);
   };
 }
