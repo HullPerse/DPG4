@@ -1,17 +1,23 @@
 import { Button } from "@/components/ui/button.component";
-import { BookOpenText, ShoppingBag, ShoppingCart, Boxes } from "lucide-react";
+import {
+  BookOpenText,
+  ShoppingBag,
+  ShoppingCart,
+  Boxes,
+  Megaphone,
+} from "lucide-react";
 import { memo } from "react";
 
-export const TABS = ["items", "store", "rules", "list"];
+export const TABS = ["items", "store", "rules", "list", "ads"];
 
 function HomeBrowser({
   setTab,
   searchTerms,
 }: {
-  setTab: (tab: "home" | "rules" | "items" | "store" | "list") => void;
+  setTab: (tab: "home" | "rules" | "items" | "store" | "list" | "ads") => void;
   searchTerms: string;
 }) {
-  const getTab = (value: "rules" | "items" | "store" | "list") => {
+  const getTab = (value: "rules" | "items" | "store" | "list" | "ads") => {
     const tabMap = {
       rules: {
         value: "rules",
@@ -36,6 +42,12 @@ function HomeBrowser({
         label: "ПРЕДМЕТЫ",
         description: "Список всех предметов",
         icon: <Boxes className="size-10" />,
+      },
+      ads: {
+        value: "ads",
+        label: "РЕКЛАМА",
+        description: "Заказать рекламу",
+        icon: <Megaphone className="size-10" />,
       },
     };
 

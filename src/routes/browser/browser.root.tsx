@@ -18,6 +18,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
+import AdvertisementTab from "./tabs/advertisement.tab";
 
 export type SortMethod = "name" | "date" | "charges";
 export type SortDirection = "asc" | "desc";
@@ -37,9 +38,9 @@ const sortMethodLabels = {
 export default function Browser() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [sortMethod, setSortMethod] = useState<SortMethod>("date");
-  const [tab, setTab] = useState<"home" | "rules" | "list" | "items" | "store">(
-    "home",
-  );
+  const [tab, setTab] = useState<
+    "home" | "rules" | "list" | "items" | "store" | "ads"
+  >("home");
   const [searchTerms, setSearchTerms] = useState<string>("");
 
   const getComponent = useCallback(() => {
@@ -57,6 +58,7 @@ export default function Browser() {
       ),
       items: <ItemsTab searchTerms={searchTerms} />,
       store: <MarketBrowser searchTerms={searchTerms} />,
+      ads: <AdvertisementTab />,
     };
 
     return tabMap[(tab as keyof typeof tabMap) ?? "home"];
@@ -67,11 +69,13 @@ export default function Browser() {
   return (
     <main className="flex h-full w-full flex-col p-2">
       <section className="flex flex-row gap-1 items-center w-full">
-        <Input
-          placeholder="Поиск вкладки"
-          value={searchTerms}
-          onChange={(e) => setSearchTerms(e.target.value)}
-        />
+        {tab !== "ads" && (
+          <Input
+            placeholder="Поиск вкладки"
+            value={searchTerms}
+            onChange={(e) => setSearchTerms(e.target.value)}
+          />
+        )}
         {tab === "list" && (
           <HoverCard>
             <HoverCardTrigger delay={0}>
@@ -115,7 +119,7 @@ export default function Browser() {
           <Button
             variant="error"
             size="icon"
-            className="h-10 w-10 p-5"
+            className="h-10 w-10 p-5 ml-auto"
             onClick={() => setTab("home")}
           >
             <ChevronLeft />
