@@ -7,12 +7,14 @@ import {
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
+import { Input } from "@/components/ui/input.component";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { highlightText } from "@/lib/utils";
 import { useUserStore } from "@/store/user.store";
 import { Market } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { NetworkIcon } from "lucide-react";
+import { setDate } from "date-fns";
+import { Check, NetworkIcon, Trash } from "lucide-react";
 import { memo, startTransition, useCallback, useState } from "react";
 
 const itemsApi = new ItemsApi();
@@ -25,6 +27,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   const [loading, setLoading] = useState<number>(-1);
   const [active, setActive] = useState<number>(-1);
+  const [inputDiscount, setInputDiscount] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["marketTab"],
@@ -72,6 +75,19 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       });
   };
 
+  const handleDiscount = async (
+    index: number,
+    marketId: string,
+    discountPrice: number,
+  ) => {
+    setLoading(index);
+    await itemsApi.discountMarket(marketId, discountPrice).then(() => {
+      setLoading(-1);
+      invalidateQuery();
+      setInputDiscount("");
+    });
+  };
+
   return (
     <main className="relative flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5 p-2 pt-10">
       <span className="absolute top-1 left-2 font-bold border-2 border-highlight-high w-fit min-w-18 bg-background text-center">
@@ -99,20 +115,51 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
               <span className="flex flex-col w-full h-full text-ellipsis text-sm">
                 {highlightText(item.description, searchTerms)}
 
-                <Button
-                  variant="success"
-                  className="w-full mt-auto"
-                  onClick={() =>
-                    handleBuy(index, String(item.id), String(item.owner))
-                  }
-                  disabled={Number(user?.money) < item.price}
-                >
-                  {loading === index ? (
-                    <SmallLoader />
-                  ) : (
-                    `КУПИТЬ ЗА ${item.price}`
+                <section className="mt-auto w-full flex flex-col gap-1">
+                  {item.owner.id === user?.id && (
+                    <div className="flex flex-row gap-1 w-full">
+                      <Input
+                        type="text"
+                        value={inputDiscount}
+                        onChange={(e) => setInputDiscount(e.target.value)}
+                        placeholder="Скидочная цена"
+                        min={0}
+                        className="flex-1 h-9"
+                      />
+                      <Button
+                        variant="success"
+                        size="icon"
+                        className="w-9 h-9"
+                        onClick={() =>
+                          handleDiscount(
+                            index,
+                            String(item.id),
+                            Number(inputDiscount),
+                          )
+                        }
+                        disabled={
+                          !inputDiscount || Number(inputDiscount) === item.price
+                        }
+                      >
+                        {loading === index ? <SmallLoader /> : <Check />}
+                      </Button>
+                    </div>
                   )}
-                </Button>
+                  <Button
+                    variant="success"
+                    className="w-full"
+                    onClick={() =>
+                      handleBuy(index, String(item.id), String(item.owner))
+                    }
+                    disabled={Number(user?.money) < item.price}
+                  >
+                    {loading === index ? (
+                      <SmallLoader />
+                    ) : (
+                      `КУПИТЬ ЗА ${item.price}`
+                    )}
+                  </Button>
+                </section>
               </span>
             ) : (
               <>
@@ -141,18 +188,47 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                     {item.charge}
                   </span>
                 </div>
-
-                <Button
-                  variant="success"
-                  className="w-full mt-auto"
-                  disabled={Number(user?.money) < item.price}
-                >
-                  {loading === index ? (
-                    <SmallLoader />
-                  ) : (
-                    `КУПИТЬ ЗА ${item.price}`
+                <div className="flex flex-row w-full gap-1 mt-auto">
+                  <Button
+                    variant="success"
+                    className="flex-1"
+                    disabled={Number(user?.money) < item.price}
+                  >
+                    {loading === index ? (
+                      <SmallLoader />
+                    ) : item.discount ? (
+                      <div className="relative flex flex-row items-center justify-center gap-1">
+                        <span className="absolute -top-2 -right-7 text-xs font-light">
+                          {Math.floor((item.discount * 100) / item.price)}%
+                        </span>
+                        <span>КУПИТЬ ЗА</span>
+                        <div className="flex flex-row gap-1 items-end justify-center">
+                          <span className="font-bold">{item.discount}</span>
+                          <span className="line-through text-xs font-light">
+                            {item.price}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-row items-center justify-center gap-1">
+                        <span>КУПИТЬ ЗА</span>
+                        <div className="flex flex-row gap-1 items-end justify-center">
+                          <span className="font-bold">{item.price}</span>
+                        </div>
+                      </div>
+                    )}
+                  </Button>
+                  {item.owner.id === user?.id && (
+                    <Button
+                      variant="error"
+                      size="icon"
+                      className="w-9 h-9"
+                      disabled={loading === index}
+                    >
+                      <Trash />
+                    </Button>
                   )}
-                </Button>
+                </div>
               </>
             )}
           </div>

@@ -7,9 +7,9 @@ export interface Activity {
   created: string;
 }
 
-type UpdateData = Activity & {
+export type UpdateData = Activity & {
   timeout: number;
-  showClose: boolean;
+  showClose?: boolean;
   onClick: {
     fn: () => void;
     icon: React.ReactNode;

@@ -1,15 +1,17 @@
 import { checkConnection } from "@/api/client.api";
 import { useQuery } from "@tanstack/react-query";
-import { Loader, Wifi, WifiOff, WifiSync } from "lucide-react";
+import { Download, Loader, Wifi, WifiOff, WifiSync } from "lucide-react";
 import { useCallback, useEffect } from "react";
-import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "@/store/data.store";
-import { cn, networkClass } from "@/lib/utils";
+import { cn, networkClass, checkForUpdates, installUpdate } from "@/lib/utils";
 import { useNetworkState } from "@uidotdev/usehooks";
+import { useToastStore } from "@/store/toast.store";
+import type { UpdateData } from "@/types/activity";
 
 export default function NetworkConnection() {
   const network = useNetworkState();
   const setConnected = useDataStore((state) => state.setConnected);
+  const addToast = useToastStore((s) => s.addToast);
 
   //checking for connection
   const { data, isLoading, isError, refetch, isRefetching, isRefetchError } =
@@ -26,7 +28,7 @@ export default function NetworkConnection() {
         }
 
         try {
-          const update = await check();
+          const update = await checkForUpdates();
           updateAvailable = !!update;
         } catch {
           updateAvailable = false;
@@ -43,19 +45,40 @@ export default function NetworkConnection() {
     });
   }, [refetch]);
 
+  const handleUpdateClick = useCallback(() => {
+    checkForUpdates().then((update) => {
+      if (!update) return;
+
+      const toastData: UpdateData = {
+        id: "update",
+        author: "System",
+        image: "⚠️",
+        type: "emoji",
+        text: `Версия ${update.version} доступна для скачивания`,
+        created: new Date().toISOString(),
+        timeout: Infinity,
+        showClose: true,
+        onClick: {
+          fn: () => installUpdate(update),
+          icon: <Download className="size-4" />,
+        },
+      };
+
+      addToast(toastData);
+    });
+  }, [addToast]);
+
   //refetch every 5 minutes
   useEffect(() => {
-    return () => {
-      clearInterval(
-        setInterval(
-          () => {
-            handleRefetch();
-          },
-          1000 * 60 * 5,
-        ),
-      );
-    };
-  }, []);
+    const interval = setInterval(
+      () => {
+        handleRefetch();
+      },
+      1000 * 60 * 5,
+    );
+
+    return () => clearInterval(interval);
+  }, [handleRefetch]);
 
   //connection loading
   if (isLoading || isRefetching)
@@ -82,7 +105,7 @@ export default function NetworkConnection() {
     return (
       <WifiSync
         className="h-4 w-4 animate-pulse cursor-pointer text-yellow-700/60 hover:text-yellow-700"
-        onClick={() => {}}
+        onClick={handleUpdateClick}
       />
     );
 

@@ -82,14 +82,14 @@ function App() {
       if (!update) return;
 
       const toastData: UpdateData = {
-        id: new Date().toISOString(),
+        id: "update",
         author: "System",
         image: "⚠️",
         type: "emoji",
         text: `Версия ${update.version} доступна для скачивания`,
         created: new Date().toISOString(),
         timeout: Infinity,
-        showClose: false,
+        showClose: true,
         onClick: {
           fn: () => installUpdate(update),
           icon: <Download className="size-4" />,
@@ -104,9 +104,7 @@ function App() {
 
   useEffect(() => {
     handleUpdates();
-    const id = setInterval(handleUpdates, 60 * 1000 * 10);
-    return () => clearInterval(id);
-  }, [handleUpdates]);
+  }, []);
 
   useEffect(() => {
     if (!isSelecting) return;

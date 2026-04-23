@@ -219,4 +219,10 @@ export default class ItemsApi {
       await this.removeMarket(marketId);
     });
   };
+
+  discountMarket = async (marketId: string, discountPrice: number) => {
+    return await this.marketCollection.update(marketId, {
+      discount: discountPrice,
+    });
+  };
 }

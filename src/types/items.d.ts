@@ -28,6 +28,7 @@ export interface Market {
   charge: number;
   image: File;
   price: number;
+  discount?: number;
 }
 
 export type Trade = {

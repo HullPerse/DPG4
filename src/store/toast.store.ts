@@ -14,9 +14,18 @@ export const useToastStore = create<ToastState>()((set) => ({
   lastCreated: null,
 
   addToast: (toast) =>
-    set((state) => ({
-      toasts: [toast, ...state.toasts].slice(0, 5),
-    })),
+    set((state) => {
+      if (
+        toast &&
+        toast.id === "update" &&
+        state.toasts.some((t) => t.id === toast.id)
+      )
+        return state;
+
+      return {
+        toasts: [toast, ...state.toasts].slice(0, 5),
+      };
+    }),
 
   removeToast: (id) =>
     set((state) => ({
