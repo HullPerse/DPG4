@@ -119,6 +119,7 @@ export default class ItemsApi {
     );
 
     const data = {
+      originalId: itemData.id,
       owner: {
         id: userData.id,
         username: userData.username,
@@ -185,8 +186,16 @@ export default class ItemsApi {
 
     if (!existing) return;
 
+    //add item to inventory
+    await this.addInventory(
+      existing.owner.id,
+      existing.originalId,
+      `${image.market}${existing.id}/${existing.image}`,
+    );
+
     //remove market
     await this.marketCollection.delete(String(existing.id));
+
     //score user
     await this.userApi.scoreUser(
       existing.owner.id,
@@ -244,7 +253,7 @@ export default class ItemsApi {
   ) => {
     //set discount
     await this.marketCollection.update(marketId, {
-      discount: discountPrice,
+      discount: discountPrice !== price ? discountPrice : null,
     });
 
     await this.userApi.scoreUser(owner, price - discountPrice);

@@ -18,6 +18,7 @@ export interface Inventory {
 
 export interface Market {
   id?: string;
+  originalId: string;
   owner: {
     id: string;
     username: string;

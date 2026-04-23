@@ -113,13 +113,13 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
             onMouseOver={() => setActive(index)}
             onMouseLeave={() => setActive(-1)}
           >
-            {item.discount && (
+            {item.discount && item.discount !== item.price && (
               <span className="absolute top-2 right-2 bg-highlight-low w-fit min-w-8 px-1 border-highlight-high border-2">
-                -{Math.floor(((item.price - item.discount) / item.price) * 100)}
+                -{Math.round(((item.price - item.discount) / item.price) * 100)}
                 %
               </span>
             )}
-            <section>
+            <section className="flex flex-col items-center justify-center">
               {active === index ? (
                 <span className="flex flex-col w-full h-full text-ellipsis text-sm mt-8">
                   {highlightText(item.description, searchTerms)}
@@ -210,11 +210,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                         <span className="font-bold">
                           {item.discount ? item.discount : item.price}
                         </span>
-                        {item.discount && (
-                          <span className="line-through text-xs font-light">
-                            {item.price}
-                          </span>
-                        )}
+                        <span className="line-through text-xs font-light">
+                          {item.discount! > 0 ? item.price : null}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -239,41 +237,3 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 }
 
 export default memo(MarketBrowser);
-
-//           <div
-
-//           >
-//             {active === index ? (
-//
-//
-
-//                 <section className="mt-auto w-full flex flex-col gap-1">
-//                   {item.owner.id === user?.id && (
-//
-//                   )}
-//                   <Button
-//                     variant="success"
-//                     className="w-full"
-//                     onClick={() =>
-//                       handleBuy(index, String(item.id), String(item.owner))
-//                     }
-//                     disabled={Number(user?.money) < item.price}
-//                   >
-//                     {loading === index ? (
-//                       <SmallLoader />
-//                     ) : (
-//                       `КУПИТЬ ЗА ${item.price}`
-//                     )}
-//                   </Button>
-//                 </section>
-//
-//             ) : (
-
-//             )}
-//           </div>
-//         ))}
-//     </main>
-//   );
-// }
-
-// export default memo(MarketBrowser);
