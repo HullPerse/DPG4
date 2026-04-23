@@ -8,7 +8,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
-import { getStatusColor } from "@/lib/utils";
+import { getOnlineStatusColor, getStatusColor } from "@/lib/utils";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { Chat } from "@/types/chat";
@@ -110,11 +110,12 @@ function FriendsTab() {
                 )}
 
                 <section
-                  className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl"
+                  className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl relative"
                   style={{
                     borderColor: getStatusColor(game?.status ?? "PLAYING"),
                   }}
                 >
+                  <span className="absolute top-1 left-1 w-3 h-3 rounded-full border border-highlight-high" style={{ backgroundColor: getOnlineStatusColor(user.online) }} />
                   {user.avatar}
                 </section>
                 <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">

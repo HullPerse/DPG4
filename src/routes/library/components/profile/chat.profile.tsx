@@ -23,8 +23,11 @@ import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import ChatBubble from "@/components/shared/bubble.component";
 import ImageComponent from "@/components/shared/image.component";
+import { getOnlineStatusColor } from "@/lib/utils";
+import UserApi from "@/api/user.api";
 
 const chatApi = new ChatApi();
+const userApi = new UserApi();
 
 export default function ChatProfile({ id }: { id: string }) {
   const queryClient = useQueryClient();
@@ -47,6 +50,14 @@ export default function ChatProfile({ id }: { id: string }) {
       return await chatApi.getChatByUser(String(user?.id), id);
     },
     enabled: !!user?.id && !!id,
+  });
+
+  const { data: chatUser } = useQuery({
+    queryKey: ["user", id],
+    queryFn: async () => {
+      return await userApi.getUserById(id);
+    },
+    enabled: !!id,
   });
 
   const isInitialLoad = useMemo(
@@ -157,6 +168,14 @@ export default function ChatProfile({ id }: { id: string }) {
 
   return (
     <main className="flex flex-col h-0 min-h-full w-full">
+      <div className="flex items-center gap-2 px-2 py-1 border-b-2 border-highlight-high bg-highlight-low">
+        <span
+          className="w-3 h-3 rounded-full border border-highlight-high"
+          style={{ backgroundColor: getOnlineStatusColor(chatUser?.online) }}
+          title={chatUser?.online ? "Онлайн" : "Оффлайн"}
+        />
+        <span className="font-bold">{chatUser?.username}</span>
+      </div>
       <div className="flex-1 w-full min-h-0 bg-background p-2 gap-4 overflow-y-auto">
         <section className="flex flex-col gap-2">
           {data?.chat.map((item) => (

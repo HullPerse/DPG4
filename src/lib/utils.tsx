@@ -309,6 +309,10 @@ export function getPlaceColor(place: User["place"]) {
   return placeMap[place as keyof typeof placeMap];
 }
 
+export function getOnlineStatusColor(online: boolean | undefined) {
+  return online ? "#7FDA72" : "#EC7676";
+}
+
 export function removeFirst(arr: string[], value: string): string[] {
   const index = arr.indexOf(value);
   return index === -1 ? arr : arr.filter((_, i) => i !== index);

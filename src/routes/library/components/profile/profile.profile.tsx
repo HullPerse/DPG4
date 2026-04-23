@@ -1,7 +1,7 @@
 import { image } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import ReviewComponent from "@/components/shared/review.component";
-import { colorToHex, getStatusColor } from "@/lib/utils";
+import { colorToHex, getOnlineStatusColor, getStatusColor } from "@/lib/utils";
 import { Game, GameReview } from "@/types/games";
 import { User } from "@/types/user";
 
@@ -51,7 +51,14 @@ export default function Profile({
         </div>
         {/* RECENT GAMES (all time hours) */}
         <div className="flex flex-col w-full min-h-40 h-40 max-h-40 gap-2">
-          <span className="text-3xl font-bold">{user.username}</span>
+          <div className="flex flex-row items-center gap-2">
+            <span className="text-3xl font-bold">{user.username}</span>
+            <span
+              className="w-3 h-3 rounded-full border border-highlight-high"
+              style={{ backgroundColor: getOnlineStatusColor(user.online) }}
+              title={user.online ? "Онлайн" : "Оффлайн"}
+            />
+          </div>
           {games.length > 0 && (
             <div className=" border-2 border-highlight-high w-full h-full flex flex-row gap-2 items-center">
               <div className="relative h-full">
