@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use tauri::Emitter;
 use tauri::Manager;
 use tauri::State;
 use tauri_plugin_updater::UpdaterExt;
@@ -632,12 +633,31 @@ async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            app.emit("app:initialize", ()).ok();
+
+            let handle = app.handle().clone();
+            if let Some(window) = app.get_webview_window("main") {
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Focused(true) = event {
+                        handle.emit("app:open", ()).ok();
+                    }
+                });
+            }
+
+            Ok(())
+        })
         .manage(Mutex::new(AppState {
             selected_font: "Segoe UI".to_string(),
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                window.emit("app:close", ()).ok();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             get_wallpapers,
             get_wallpaper_data,

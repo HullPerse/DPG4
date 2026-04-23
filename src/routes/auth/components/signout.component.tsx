@@ -2,7 +2,7 @@ import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
-import { useUserStore } from "@/store/user.store";
+import { updateOnlineStatus, useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -113,6 +113,7 @@ export default function Signpout() {
           variant="link"
           className="text-xs font-bold text-text underline"
           onClick={() => {
+            updateOnlineStatus(false);
             localStorage.clear();
             sessionStorage.clear();
 

@@ -5,19 +5,12 @@ import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
 import { getNextDice, removeFirst } from "@/lib/utils";
 import { Activity } from "@/types/activity";
-// import ItemsApi from "./items.api";
 
 const cellApi = new CellApi();
 
 export default class UserApi {
   private readonly usersCollection = client.collection("users");
   private readonly activityCollection = client.collection("activity");
-
-  // private get itemsApi() {
-  //   if (!this._itemsApi) this._itemsApi = new ItemsApi();
-  //   return this._itemsApi;
-  // }
-  // private _itemsApi?: ItemsApi;
 
   //create new user
   create = async (data: User) => {
@@ -32,6 +25,7 @@ export default class UserApi {
           currentAction: "MOVE_POSITIVE",
           currentDice: 1,
           place: "0",
+          online: false,
         })
         .then(async (res) => {
           const activityData = {
@@ -64,7 +58,7 @@ export default class UserApi {
 
   getAllUsers = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({
-      fields: "id, username, avatar, color, money, position",
+      fields: "id, username, avatar, color, money, position, online",
     });
   };
 
