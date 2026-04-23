@@ -251,6 +251,8 @@ function GameLibrary({
               autoFocus
               data-time-input="true"
               type="text"
+              min={0}
+              max={1000}
               placeholder="Введите время"
               value={time ?? ""}
               onChange={(e) => setTime(e.target.value)}
