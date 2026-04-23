@@ -20,6 +20,7 @@ import CalendarDesktop from "./components/calendar.desktop";
 import FontDesktop from "./components/font.desktop";
 import ContextDesktop from "./components/context.desktop";
 import MessagesDesktop from "./components/messages.desktop";
+import AnnouncementAd from "./components/advertisement.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 
@@ -61,6 +62,8 @@ export default function Desktop({
             />
           ))}
         </div>
+
+        <AnnouncementAd />
 
         {openCalendar && (
           <CalendarDesktop
