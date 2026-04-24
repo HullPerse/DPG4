@@ -8,7 +8,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
-import { getOnlineStatusColor, getStatusColor } from "@/lib/utils";
+import { getStatusColor } from "@/lib/utils";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { Chat } from "@/types/chat";
@@ -115,7 +115,6 @@ function FriendsTab() {
                     borderColor: getStatusColor(game?.status ?? "PLAYING"),
                   }}
                 >
-                  <span className="absolute top-1 left-1 w-3 h-3 rounded-full border border-highlight-high" style={{ backgroundColor: getOnlineStatusColor(user.online) }} />
                   {user.avatar}
                 </section>
                 <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">

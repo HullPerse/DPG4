@@ -25,7 +25,6 @@ export default class UserApi {
           currentAction: "MOVE_POSITIVE",
           currentDice: 1,
           place: "0",
-          online: false,
         })
         .then(async (res) => {
           const activityData = {
@@ -58,7 +57,7 @@ export default class UserApi {
 
   getAllUsers = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({
-      fields: "id, username, avatar, color, money, position, online",
+      fields: "id, username, avatar, color, money, position",
     });
   };
 

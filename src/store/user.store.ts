@@ -4,7 +4,6 @@ import { persist, subscribeWithSelector } from "zustand/middleware";
 import { client } from "@/api/client.api";
 import type { UserStore } from "@/types/store";
 import type { User } from "@/types/user";
-import { listen } from "@tauri-apps/api/event";
 
 const usersCollection = client.collection("users");
 
@@ -21,34 +20,6 @@ const handleUserUpdate = (
   } else if (data.action === "delete") {
     get().clear();
   }
-};
-
-export const updateOnlineStatus = async (online: boolean) => {
-  const { user } = useUserStore.getState();
-  if (!user?.id) return;
-
-  try {
-    await usersCollection.update(user.id, { online });
-  } catch (error) {
-    console.error("Failed to update online status:", error);
-  }
-};
-
-export const initializeAppListeners = () => {
-  listen("app:open", () => {
-    updateOnlineStatus(true);
-  });
-
-  listen("app:close", () => {
-    updateOnlineStatus(false);
-  });
-
-  listen("app:initialize", () => {
-    const { user } = useUserStore.getState();
-    if (user?.id) {
-      updateOnlineStatus(true);
-    }
-  });
 };
 
 export const useUserStore = create<UserStore>()(
@@ -96,11 +67,9 @@ export const useUserStore = create<UserStore>()(
           });
 
           get().subscribeToUserUpdates();
-          await updateOnlineStatus(true);
         },
 
         logout: async () => {
-          await updateOnlineStatus(false);
           client.authStore.clear();
           get().unsubscribeFromUserUpdates();
           get().clear();
