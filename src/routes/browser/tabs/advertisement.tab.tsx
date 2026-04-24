@@ -39,7 +39,8 @@ function AdTab() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["adsTab"],
     queryFn: async (): Promise<Ads[]> => {
-      return await adsApi.getAds();
+      const data = await adsApi.getAds();
+      return data.filter((i) => i.owner.id === user?.id);
     },
   });
 
