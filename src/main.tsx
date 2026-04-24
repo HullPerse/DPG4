@@ -3,7 +3,7 @@ import "@/index.css";
 
 import { router } from "@/routes/__root";
 import { RouterProvider } from "@tanstack/react-router";
-import { initializeAppListeners, initializeAuthStore } from "./store/user.store";
+import { initializeAuthStore } from "./store/user.store";
 import { initializeFontStore } from "./store/data.store";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -25,7 +25,6 @@ await import("react-dom/client").then(async ({ createRoot }) => {
   await initializeFontStore();
   await initActivitySubscription();
   await initChatSubscription();
-  initializeAppListeners();
 
   createRoot(rootElement).render(
     <StrictMode>
