@@ -10,10 +10,15 @@ import {
 import { client } from "./client.api";
 
 import ItemsApi from "./items.api";
+import UsersApi from "./user.api";
+
 const itemsApi = new ItemsApi();
+const usersApi = new UsersApi();
+const adsApi = new AdsApi();
 
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
+import AdsApi, { SUBSCRIPTION_COST } from "./ads.api";
 
 const STATUSES = [
   {
@@ -295,6 +300,28 @@ export default class GameApi {
     } as Activity;
 
     await this.activityCollection.create(activityData);
+
+    //check for sub
+    const currentUser = await usersApi.getUserById(game.user.id);
+
+    if (currentUser.subscribed) {
+      if (currentUser.money >= SUBSCRIPTION_COST) {
+        return await usersApi.scoreUser(
+          String(currentUser.id),
+          -SUBSCRIPTION_COST,
+        );
+      }
+
+      const activityData = {
+        author: currentUser.id,
+        image: currentUser.avatar,
+        text: `${currentUser.username} не хватило денег на подписку`,
+      } as Activity;
+
+      await this.activityCollection.create(activityData);
+
+      await adsApi.unsubscribedAd(String(currentUser.id));
+    }
 
     return await this.gamesCollection.update(id, {
       status: status,

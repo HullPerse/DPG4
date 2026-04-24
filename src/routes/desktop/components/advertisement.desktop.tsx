@@ -8,19 +8,28 @@ import {
   useMemo,
   useState,
 } from "react";
-import AdsApi from "@/api/ads.api";
+import AdsApi, { SUBSCRIPTION_COST } from "@/api/ads.api";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.component";
+import { useUserStore } from "@/store/user.store";
 
 const adsApi = new AdsApi();
 const CLOSE_TIME = 10;
 
 function AdvertisementApp() {
   const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
 
   const { data } = useQuery({
     queryKey: ["annoyingAds"],
@@ -32,6 +41,7 @@ function AdvertisementApp() {
   const [remaining, setRemaining] = useState<number>(CLOSE_TIME);
 
   const [confirm, setConfirm] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -71,23 +81,34 @@ function AdvertisementApp() {
     <main className="absolute top-2 right-2 z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm transition-all duration-300">
       <section className="flex flex-row items-center justify-between border-b-2 border-highlight-high px-2 py-1">
         <span>Реклама</span>
-        <Button
-          variant="error"
-          size="icon"
-          className="h-7 min-w-7 w-fit px-1 transition-all duration-200"
-          onClick={() => {
-            if (!confirm) return setConfirm(true);
 
-            return setIsVisible(false);
-          }}
-          disabled={!canClose}
-        >
-          {!confirm ? (
-            <X className="size-4" />
-          ) : (
-            <span className="pointer-events-none">Вы уверены?</span>
-          )}
-        </Button>
+        <div className="flex flex-row px-1 gap-1 items-center">
+          <Button
+            variant="success"
+            className="h-7 min-w-7 w-fit px-1 transition-all duration-200"
+            onClick={() => setOpen(true)}
+          >
+            подписка
+          </Button>
+
+          <Button
+            variant="error"
+            size="icon"
+            className="h-7 min-w-7 w-fit px-1 transition-all duration-200"
+            onClick={() => {
+              if (!confirm) return setConfirm(true);
+
+              return setIsVisible(false);
+            }}
+            disabled={!canClose}
+          >
+            {!confirm ? (
+              <X className="size-4" />
+            ) : (
+              <span className="pointer-events-none">Вы уверены?</span>
+            )}
+          </Button>
+        </div>
       </section>
 
       <section className="flex flex-col items-center p-2">
@@ -127,6 +148,44 @@ function AdvertisementApp() {
           </span>
         </div>
       </section>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="flex flex-col sm:max-w-md gap-2">
+          <DialogHeader>
+            <DialogTitle>Купить подписку</DialogTitle>
+            <DialogDescription>
+              Купите подписку за {SUBSCRIPTION_COST} чубрика. Подписка
+              оплачивается после каждого прохождния игры. !ПОДПИСКУ НЕЛЬЗЯ БУДЕТ
+              ОТМЕНИТЬ САМОСТОЯТЕЛЬНО (для этого необходимо обратиться в
+              поддержку)!
+            </DialogDescription>
+          </DialogHeader>
+
+          <section className="mt-auto flex flex-row gap-2 w-full">
+            <Button
+              variant="error"
+              className="flex-1"
+              onClick={() => setOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
+              variant="success"
+              className="flex-1"
+              onClick={async () => {
+                if (!user?.money || user?.money < SUBSCRIPTION_COST) return;
+
+                await adsApi
+                  .subscribeAd(String(user?.id))
+                  .then(() => setOpen(false));
+              }}
+              disabled={!user?.money || user?.money < SUBSCRIPTION_COST}
+            >
+              Купить
+            </Button>
+          </section>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

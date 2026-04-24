@@ -32,4 +32,6 @@ export interface User {
   status?: string[];
 
   place: "0" | "1" | "2" | "3";
+
+  subscribed: boolean;
 }

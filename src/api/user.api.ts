@@ -25,6 +25,7 @@ export default class UserApi {
           currentAction: "MOVE_POSITIVE",
           currentDice: 1,
           place: "0",
+          subscribed: false,
         })
         .then(async (res) => {
           const activityData = {
@@ -176,6 +177,12 @@ export default class UserApi {
   getAllPlaces = async () => {
     return this.usersCollection.getFullList({
       fields: "place",
+    });
+  };
+
+  updateSubsription = async (userId: string, state: boolean) => {
+    return await this.usersCollection.update(userId, {
+      subscribed: state,
     });
   };
 

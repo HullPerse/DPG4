@@ -38,6 +38,7 @@ export default function Desktop({
   setIsOpening: (value: boolean) => void;
 }) {
   const setLoggedIn = useUserStore((state) => state.setLoggedIn);
+  const user = useUserStore((state) => state.user);
 
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
   const [openLanguage, setOpenLanguage] = useState<boolean>(false);
@@ -63,7 +64,7 @@ export default function Desktop({
           ))}
         </div>
 
-        <AnnouncementAd />
+        {!user?.subscribed && <AnnouncementAd />}
 
         {openCalendar && (
           <CalendarDesktop
