@@ -1,5 +1,5 @@
 import { image } from "@/api/client.api";
-import ItemsApi from "@/api/items.api";
+import ItemsApi, { NON_WHEEL_ITEMS } from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import {
   SmallLoader,
@@ -30,7 +30,8 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["itemsWheel"],
     queryFn: async (): Promise<Item[]> => {
-      return await itemsApi.getAllItems();
+      const res = await itemsApi.getAllItems();
+      return res.filter((i) => !NON_WHEEL_ITEMS.includes(i.id ?? ""));
     },
   });
 

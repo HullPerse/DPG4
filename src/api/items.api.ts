@@ -5,6 +5,13 @@ import UserApi from "./user.api";
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
 
+export const NON_WHEEL_ITEMS = [
+  "qzxaogavs6iorfx",
+  "4o7dzih0jdftqz1",
+  "w8ajf5mhh121nb0",
+  "olvbzslxz9xbtr9",
+];
+
 export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
   private readonly inventoryCollection = client.collection("inventory");
