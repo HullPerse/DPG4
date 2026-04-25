@@ -66,6 +66,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       queryKey: ["inventoryTab", user?.id],
       refetchType: "all",
     });
+
     setLoading(-1);
   };
 
@@ -113,12 +114,6 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
             onMouseOver={() => setActive(index)}
             onMouseLeave={() => setActive(-1)}
           >
-            {item.discount && item.discount !== item.price && (
-              <span className="absolute top-2 right-2 bg-highlight-low w-fit min-w-8 px-1 border-highlight-high border-2">
-                -{Math.round(((item.price - item.discount) / item.price) * 100)}
-                %
-              </span>
-            )}
             <section className="flex flex-col items-center justify-center">
               {active === index ? (
                 <span className="flex flex-col w-full h-full text-ellipsis text-sm mt-8">
@@ -155,9 +150,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
               )}
             </section>
 
-            <section className="flex flex-col gap-1 mt-auto w-full">
+            <section className="flex flex-col gap-1 mt-auto w-full pb-1">
               {/* DISCOUNT ITEM */}
-              {active === index && (
+              {active === index && item.owner.id === user?.id && (
                 <div className="flex flex-row w-full gap-1">
                   <Input
                     placeholder="Скидочная цена"
@@ -167,9 +162,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                     onChange={(e) => setInputDiscount(e.target.value)}
                     className="h-9"
                     disabled={
-                      loading === index ||
-                      Number(inputDiscount) === item.price ||
-                      Number(inputDiscount) > item.price
+                      loading === index || Number(inputDiscount) === item.price
                     }
                   />
                   <Button
@@ -185,7 +178,11 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                         Number(inputDiscount),
                       )
                     }
-                    disabled={loading === index || !inputDiscount}
+                    disabled={
+                      loading === index ||
+                      !inputDiscount ||
+                      Number(inputDiscount) > item.price
+                    }
                   >
                     <Check />
                   </Button>
@@ -197,7 +194,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                   variant="success"
                   className="flex-1"
                   onClick={() =>
-                    handleBuy(index, String(item.id), String(item.owner))
+                    handleBuy(index, String(item.id), String(item.owner.id))
                   }
                   disabled={Number(user?.money) < item.price}
                 >

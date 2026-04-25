@@ -143,7 +143,7 @@ export default class ItemsApi {
       author: userData?.id,
       image: userData.avatar,
       type: "emoji",
-      text: `${userData.username} выставил на продажу предметт ${itemData.label} за ${price}`,
+      text: `${userData.username} выставил на продажу предмет ${itemData.label} за ${price}`,
     } as Activity;
     await this.activityCollection.create(activityData);
 
@@ -193,12 +193,18 @@ export default class ItemsApi {
 
     if (!existing) return;
 
-    //add item to inventory
-    await this.addInventory(
-      existing.owner.id,
-      existing.originalId,
+    const imageFile = await fileFromUrl(
       `${image.market}${existing.id}/${existing.image}`,
     );
+
+    //add item to inventory
+    await this.inventoryCollection.create({
+      owner: existing.owner.id,
+      image: imageFile,
+      label: existing.label,
+      description: existing.description,
+      charge: existing.charge,
+    });
 
     //remove market
     await this.marketCollection.delete(String(existing.id));
@@ -206,7 +212,8 @@ export default class ItemsApi {
     //score user
     await this.userApi.scoreUser(
       existing.owner.id,
-      existing.discount ? existing.price : existing.price,
+
+      existing.price - (existing.discount ?? 0),
     );
   };
 
@@ -220,21 +227,13 @@ export default class ItemsApi {
       `${image.market}${itemData.id}/${itemData.image}`,
     );
 
-    const data = {
-      owner: newOwner,
-      label: itemData.label,
-      description: itemData.description,
-      charge: itemData.charge,
-      image: imageFile,
-    } as Inventory;
-
     await this.userApi.scoreUser(
       newOwner,
-      itemData.discount ? -itemData.discount : -itemData.price,
+      -itemData.price - (itemData.discount ?? 0),
     );
     await this.userApi.scoreUser(
       oldOwner,
-      itemData.discount ? itemData.discount : itemData.price,
+      itemData.price - (itemData.discount ?? 0),
     );
 
     const user = await this.userApi.getUserById(newOwner);
@@ -243,13 +242,19 @@ export default class ItemsApi {
       author: user.id,
       image: user.avatar,
       type: "emoji",
-      text: `${user.username} купил предмет ${itemData.label} за ${itemData.discount ? itemData.discount : itemData.price}`,
+      text: `${user.username} купил предмет ${itemData.label} за ${itemData.price - (itemData.discount ?? 0)}`,
     } as Activity;
     await this.activityCollection.create(activityData);
 
-    return await this.inventoryCollection.create(data).then(async () => {
-      await this.removeMarket(marketId);
+    await this.inventoryCollection.create({
+      owner: newOwner,
+      image: imageFile,
+      label: itemData.label,
+      description: itemData.description,
+      charge: itemData.charge,
     });
+
+    await this.marketCollection.delete(marketId);
   };
 
   discountMarket = async (

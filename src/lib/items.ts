@@ -71,7 +71,7 @@ export async function usableItems(item: Inventory) {
     const currentUser = await usersApi.getUserById(item.owner);
     await usersApi.scoreUser(
       item.owner,
-      item.label === "Пакет лимонных конфеток" ? 100 : 50,
+      item.label === "Пакет лимонных конфеток" ? 15 : 10,
     );
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
