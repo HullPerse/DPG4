@@ -35,7 +35,7 @@ export default function Profile({
     const onlyReviews = games?.filter((game) =>
       game.review ? game.review !== undefined : false,
     );
-    return onlyReviews[0];
+    return onlyReviews[onlyReviews.length - 1];
   };
 
   const lastReview = getLastReview();
