@@ -391,5 +391,70 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  if (item.label === "Ведро") {
+    const currentUser = await usersApi.getUserById(item.owner);
+    const allUsers = await usersApi.getAllUsers().then((res) =>
+      res
+        .filter((u) => u.id !== currentUser.id)
+        .map((u) => ({
+          user: u,
+          distance: Math.abs(u.position - currentUser.position),
+        })),
+    );
+
+    if (!currentUser || !allUsers) return;
+
+    const minDistance = Math.min(...allUsers.map((d) => d.distance));
+    const closest = allUsers.filter((d) => d.distance === minDistance)[
+      Math.floor(Math.random() * allUsers.length)
+    ];
+
+    const randomIndex = Math.floor(Math.random() * 2);
+    const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt"][randomIndex]; //1 - моча 2 - конча
+
+    const itemData = await itemsApi.getItemById(finalItem);
+
+    await itemsApi.addInventory(
+      String(currentUser.id),
+      String(itemData?.id),
+      `${image.items}${itemData?.id}/${itemData?.image}`,
+    );
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} подоил игрока ${closest.user.username} и получил ${itemData?.label}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  if (item.label === "Ведро с Польпо") {
+    const currentUser = await usersApi.getUserById(item.owner);
+
+    if (!currentUser) return;
+
+    const randomIndex = Math.floor(Math.random() * 2);
+    const finalMoney = [10, -10][randomIndex];
+
+    await usersApi.scoreUser(String(currentUser.id), finalMoney);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} ${finalMoney > 0 ? "получил" : "потерял"} 10 чубриков из-за Польпо`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
   return await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 }
