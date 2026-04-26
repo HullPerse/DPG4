@@ -39,7 +39,8 @@ function CommunityTab() {
         ...activity.map((a) => ({ ...a, itemType: "activity" as const })),
         ...reviews.map((r) => ({ ...r, itemType: "review" as const })),
       ].sort(
-        (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime(),
+        (a, b) =>
+          new Date(b.updated!).getTime() - new Date(a.updated!).getTime(),
       );
 
       return combined;

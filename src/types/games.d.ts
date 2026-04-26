@@ -22,7 +22,7 @@ export interface Game {
   review?: GameReview;
   image?: File;
   created: string;
-  updated: string;
+  updated?: string;
 }
 
 export type GameData = {
