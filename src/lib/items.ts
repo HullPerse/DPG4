@@ -410,7 +410,9 @@ export async function usableItems(item: Inventory) {
     ];
 
     const randomIndex = Math.floor(Math.random() * 2);
-    const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt"][randomIndex]; //1 - моча 2 - конча
+    const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt", "qqr2upqkuli51ea"][
+      randomIndex
+    ]; //1 - моча 2 - конча 3 - польпо
 
     const itemData = await itemsApi.getItemById(finalItem);
 

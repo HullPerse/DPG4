@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Quote,
-  Heading1,
-  Heading2,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
 
@@ -39,31 +30,6 @@ const createFormatAction = (tag: string): ((selection: Selection) => void) => {
   };
 };
 
-const createBlockAction = (tag: string): ((selection: Selection) => void) => {
-  return (selection: Selection) => {
-    if (!selection.rangeCount) return;
-    const range = selection.getRangeAt(0);
-    let block = range.commonAncestorContainer.parentElement;
-
-    while (block && block.parentElement !== document.body) {
-      if (block.tagName === "DIV" || block.tagName === "P") break;
-      block = block.parentElement;
-    }
-
-    if (block) {
-      const newBlock = document.createElement(tag);
-      const fragment = range.extractContents();
-      newBlock.appendChild(fragment);
-      block.parentNode?.replaceChild(newBlock, block);
-
-      const newRange = document.createRange();
-      newRange.selectNodeContents(newBlock);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
-    }
-  };
-};
-
 const toolbarButtons: Command[] = [
   {
     icon: <Bold />,
@@ -84,21 +50,6 @@ const toolbarButtons: Command[] = [
     icon: <Strikethrough />,
     action: createFormatAction("s"),
     ariaLabel: "Зачёркнутый",
-  },
-  {
-    icon: <Heading1 />,
-    action: createBlockAction("h2"),
-    ariaLabel: "Заголовок 1",
-  },
-  {
-    icon: <Heading2 />,
-    action: createBlockAction("h3"),
-    ariaLabel: "Заголовок 2",
-  },
-  {
-    icon: <Quote />,
-    action: createBlockAction("blockquote"),
-    ariaLabel: "Цитата",
   },
 ];
 
@@ -204,16 +155,6 @@ export function RichTextEditor({
           className="hidden"
           onChange={handleImageUpload}
         />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 opacity-70 hover:opacity-100"
-          onClick={() => fileInputRef.current?.click()}
-          title="Добавить изображение"
-          type="button"
-        >
-          <ImageIcon />
-        </Button>
       </div>
       <div
         ref={editorRef}
