@@ -102,7 +102,11 @@ export default function Desktop({
         <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* MESSAGES */}
-            <MessagesDesktop />
+            <MessagesDesktop
+              app={APPS.find((a) => a.name === "library") as AppProps}
+              activeApps={activeApps}
+              setActiveApps={setActiveApps}
+            />
 
             {/* NETWORK */}
             <HoverCard>

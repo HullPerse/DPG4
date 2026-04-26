@@ -54,7 +54,12 @@ function CommunityTab() {
         <ActivityCard
           key={activity.id}
           activity={activity}
-          clickEvent={() => setUserProfile(String(activity.author))}
+          clickEvent={() =>
+            setUserProfile({
+              type: "profile",
+              id: String(activity.author),
+            })
+          }
         />
       ))}
     </main>

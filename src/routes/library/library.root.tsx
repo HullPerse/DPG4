@@ -47,7 +47,9 @@ export default function Library() {
 
   //so it doesnt open specific user profile on load
   useEffect(() => {
-    setUserProfile(null);
+    if (userProfile?.type !== "chat") {
+      setUserProfile(null);
+    }
   }, []);
 
   const unreadAmmount = () => {
@@ -158,7 +160,7 @@ export default function Library() {
       {/* body*/}
       <section className="flex flex-1 w-full overflow-auto">
         {userProfile ? (
-          <ProfileTab id={userProfile} />
+          <ProfileTab id={userProfile.id} />
         ) : (
           libraryTabs.find((item) => item.value === tab)?.component
         )}

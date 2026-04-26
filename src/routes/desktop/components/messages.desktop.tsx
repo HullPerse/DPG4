@@ -4,12 +4,26 @@ import { useState, useCallback, startTransition } from "react";
 import { Mail } from "lucide-react";
 import ChatApi from "@/api/chat.api";
 import { useSubscription } from "@/hooks/subscription.hook";
+import { WindowProps } from "@/types/window";
+import { WINDOWS } from "@/config/apps.config";
+import { createWindow } from "@/lib/window.utils";
+import { AppProps } from "@/types/desktop";
+import { useDataStore } from "@/store/data.store";
 
 const chatApi = new ChatApi();
 
-export default function MessagesDesktop() {
+export default function MessagesDesktop({
+  activeApps,
+  setActiveApps,
+  app,
+}: {
+  activeApps: WindowProps[];
+  setActiveApps: (value: WindowProps[]) => void;
+  app: AppProps;
+}) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const setUserProfile = useDataStore((state) => state.setUserProfile);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -59,6 +73,20 @@ export default function MessagesDesktop() {
               <button
                 key={item.sender.id}
                 className="flex w-full items-center gap-2 border-b border-highlight-high p-2 text-start hover:bg-background/80"
+                onClick={() => {
+                  setUserProfile({
+                    type: "chat",
+                    id: String(item.sender.id),
+                  });
+
+                  setActiveApps(
+                    createWindow(
+                      activeApps,
+                      WINDOWS.find((w) => w.id === app.name) as WindowProps,
+                      app.component,
+                    ),
+                  );
+                }}
               >
                 <div
                   className="flex size-8 min-w-8 items-center justify-center border border-highlight-high text-xl"

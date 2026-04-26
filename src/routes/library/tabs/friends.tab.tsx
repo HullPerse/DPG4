@@ -100,7 +100,10 @@ function FriendsTab() {
                 type="button"
                 className="relative flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
                 onClick={() => {
-                  setUserProfile(String(user.id));
+                  setUserProfile({
+                    type: "profile",
+                    id: String(user.id),
+                  });
                 }}
               >
                 {unread.length > 0 && (

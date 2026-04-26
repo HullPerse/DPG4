@@ -1,6 +1,7 @@
 import { WINDOWS } from "@/config/apps.config";
 import { openWindow } from "@/lib/utils";
 import { createWindow } from "@/lib/window.utils";
+import { useDataStore } from "@/store/data.store";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -24,6 +25,8 @@ function AppDesktop({
   isOpening: boolean;
   setIsOpening: (value: boolean) => void;
 }) {
+  const setUserProfile = useDataStore((state) => state.setUserProfile);
+
   return (
     <button
       key={name}
@@ -40,6 +43,8 @@ function AppDesktop({
 
         if (link) return openUrl(link);
         if (!activeApps.find((item) => item.id === name)) setIsOpening(true);
+
+        if (name === "library") setUserProfile(null);
 
         setActiveApps(
           createWindow(
