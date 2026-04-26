@@ -9,6 +9,8 @@ import Image from "./image.component";
 
 import GameApi from "@/api/games.api";
 import { parseReviewText } from "@/lib/review.utils";
+import { formatDistanceToNow } from "date-fns";
+import { ru } from "date-fns/locale";
 
 const gameApi = new GameApi();
 
@@ -18,12 +20,14 @@ function Review({
   review,
   image,
   user,
+  updated,
 }: {
   id: string;
   title: string;
   review: GameReview;
   image: string | null;
   user: User;
+  updated?: string;
 }) {
   const handleVote = useCallback(
     async (type: "up" | "down") => {
@@ -47,6 +51,11 @@ function Review({
 
   const reviewText = review?.comment;
   const reviewParts = reviewText ? parseReviewText(reviewText) : [];
+
+  const timeAgo = formatDistanceToNow(new Date(updated ?? 0), {
+    addSuffix: true,
+    locale: ru,
+  });
 
   return (
     <main className="flex flex-row w-full h-full border-2 border-highlight-high">
@@ -110,7 +119,7 @@ function Review({
       </section>
 
       {/* REVIEW */}
-      <section className="flex flex-col w-full">
+      <section className="relative flex flex-col w-full">
         {/* RATING */}
         <div className="flex flex-row w-full h-12 min-h-12 items-center justify-between px-1 border-b-2 border-highlight-high">
           <span className="font-bold text-xl max-w-70 text-center truncate">
@@ -149,6 +158,12 @@ function Review({
             </div>
           )}
         </div>
+
+        {updated && (
+          <div className="absolute right-1 bottom-1 flex flex-col flex-1 min-w-0">
+            <span className="text-xs text-muted">{timeAgo}</span>
+          </div>
+        )}
       </section>
     </main>
   );

@@ -5,6 +5,7 @@ export interface Activity {
   type: "image" | "emoji" | "chat";
   text: string;
   created: string;
+  updated: string;
 }
 
 export type UpdateData = Activity & {
