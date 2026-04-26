@@ -18,10 +18,10 @@ const cellApi = new CellApi();
 const activityApi = new ActivityApi();
 
 export async function usableItems(item: Inventory) {
+  const currentUser = await usersApi.getUserById(item.owner);
+
   //Хрюкающая свинья
   if (item.label === "Хрюкающая свинья") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const currentCell =
       (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
@@ -42,8 +42,6 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Тупорылый кот") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const currentCell =
       (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
@@ -68,7 +66,6 @@ export async function usableItems(item: Inventory) {
     item.label === "Пакет конфеток" ||
     item.label === "Пакет лимонных конфеток"
   ) {
-    const currentUser = await usersApi.getUserById(item.owner);
     await usersApi.scoreUser(
       item.owner,
       item.label === "Пакет лимонных конфеток" ? 15 : 10,
@@ -89,8 +86,6 @@ export async function usableItems(item: Inventory) {
 
   //Конфетка и Лимонная конфетка
   if (item.label === "Конфетка" || item.label === "Лимонная конфетка") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     await usersApi.scoreUser(item.owner, item.label === "Конфетка" ? 2 : 1);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
@@ -108,8 +103,6 @@ export async function usableItems(item: Inventory) {
 
   //Кал и Легендарный кал
   if (item.label === "Кал" || item.label === "Легендарный кал") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const currentCell =
       (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
@@ -133,8 +126,6 @@ export async function usableItems(item: Inventory) {
 
   //Запаянный Крысиный Сундук
   if (item.label === "Запаянный Крысиный Сундук") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     Array.from({ length: 5 }, async () => {
       await itemsApi.addInventory(
         item.owner,
@@ -158,8 +149,6 @@ export async function usableItems(item: Inventory) {
 
   //Арбуз
   if (item.label === "Арбуз") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const currentRow = getGridPosition(currentUser.position).row;
 
     await usersApi.moveUser(
@@ -187,8 +176,6 @@ export async function usableItems(item: Inventory) {
 
   //Арбус
   if (item.label === "Арбус") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const currentRow = getGridPosition(currentUser.position).row;
 
     await usersApi.moveUser(
@@ -216,8 +203,6 @@ export async function usableItems(item: Inventory) {
 
   //Добрая крыса
   if (item.label === "Добрая крыса") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const allUsers = await usersApi.getAllUsers();
     const randomIndex = Math.floor(Math.random() * allUsers.length);
     const randomUser = allUsers[randomIndex];
@@ -252,8 +237,6 @@ export async function usableItems(item: Inventory) {
 
   //Курва бобер
   if (item.label === "Курва бобер") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     const newPosition = currentUser.position - 4;
 
     await usersApi.moveUser(
@@ -276,7 +259,6 @@ export async function usableItems(item: Inventory) {
 
   //Erection - NPC
   if (item.label === "Erection - NPC") {
-    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
     const firstPosition = allUsers.reduce((max, user) =>
       user.position > max.position ? user : max,
@@ -306,7 +288,6 @@ export async function usableItems(item: Inventory) {
 
   //Вакуум
   if (item.label === "Вакуум") {
-    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
 
     for (const user of allUsers) {
@@ -336,7 +317,6 @@ export async function usableItems(item: Inventory) {
 
   //Налоговый инспектор
   if (item.label === "Налоговый инспектор") {
-    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers();
 
     for (const user of allUsers) {
@@ -371,7 +351,6 @@ export async function usableItems(item: Inventory) {
 
   //Крысталлизатор
   if (item.label === "Крысталлизатор") {
-    const currentUser = await usersApi.getUserById(item.owner);
     const inventory = await itemsApi.getInventory(item.owner);
     const randomIndex = Math.floor(Math.random() * inventory.length);
 
@@ -392,7 +371,6 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Ведро") {
-    const currentUser = await usersApi.getUserById(item.owner);
     const allUsers = await usersApi.getAllUsers().then((res) =>
       res
         .filter((u) => u.id !== currentUser.id)
@@ -436,8 +414,6 @@ export async function usableItems(item: Inventory) {
   }
 
   if (item.label === "Ведро с Польпо") {
-    const currentUser = await usersApi.getUserById(item.owner);
-
     if (!currentUser) return;
 
     const randomIndex = Math.floor(Math.random() * 2);
@@ -457,6 +433,15 @@ export async function usableItems(item: Inventory) {
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
     return;
   }
+
+  const activityData = {
+    author: currentUser.id,
+    image: currentUser.avatar,
+    type: "emoji",
+    text: `${currentUser.username} использовал предмет ${item.label}`,
+  } as Activity;
+
+  await activityApi.createActivity(activityData);
 
   return await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 }
