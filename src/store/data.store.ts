@@ -45,7 +45,12 @@ export const useDataStore = create<DataStore>()(
         setArrowType: (arrowType: DataStore["arrowType"]) => {
           set({ arrowType });
         },
-        setUserProfile: (userProfile: string | null) => {
+        setUserProfile: (
+          userProfile: {
+            type: "chat" | "profile";
+            id: string;
+          } | null,
+        ) => {
           set({ userProfile });
         },
 

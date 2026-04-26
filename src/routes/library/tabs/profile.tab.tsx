@@ -25,12 +25,14 @@ import { Input } from "@/components/ui/input.component";
 import TradeTab from "./trade.tab";
 import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
+import { useDataStore } from "@/store/data.store";
 const userApi = new UserApi();
 const gameApi = new GameApi();
 const activityApi = new ActivityApi();
 
 function ProfileTab({ id }: { id?: string }) {
   const user = useUserStore((state) => state.user);
+  const userProfile = useDataStore((state) => state.userProfile);
 
   const [profileTab, setProfileTab] = useState<ProfileTab>("profile");
   const [addMoney, setAddMoney] = useState<number>(0);
@@ -72,6 +74,9 @@ function ProfileTab({ id }: { id?: string }) {
     );
 
   const getComponent = () => {
+    if (userProfile?.type === "chat")
+      return <ChatProfile id={String(data?.user.id)} />;
+
     const tabMap = {
       profile: (
         <Profile user={data?.user as User} games={data?.games as Game[]} />
