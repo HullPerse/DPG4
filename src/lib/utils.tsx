@@ -19,7 +19,7 @@ export function calculateScore(realTime: number, hltbTime: number) {
   if (isNaN(realTime) || isNaN(hltbTime) || hltbTime <= 0) return 3;
 
   const ratio = realTime / hltbTime;
-  const multiplier = Math.min(1.5, 1.0 + 0.5 * Math.max(0, ratio - 1));
+  const multiplier = Math.max(0.5, Math.min(1.5, 0.5 + 0.5 * ratio));
 
   const score = multiplier * hltbTime;
   return Math.max(3, Math.floor(score));
