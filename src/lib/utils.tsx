@@ -29,7 +29,7 @@ export function calculateScore(realTime: number, hltbTime: number) {
  * @description this cost calculation finction will return the cost of the item roll depending on user progress around the map
  */
 export function calculateCost(): number {
-  const BASE_VALUE = 4;
+  const BASE_VALUE = 3;
 
   return BASE_VALUE;
 }
