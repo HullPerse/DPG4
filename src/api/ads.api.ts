@@ -5,6 +5,7 @@ import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
 
 export const SUBSCRIPTION_COST = 2;
+export const SUBSCRIPTION_CONTINUE = SUBSCRIPTION_COST / 2;
 
 export default class AdsApi {
   private readonly adsCollection = client.collection("ads");

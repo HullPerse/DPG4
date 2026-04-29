@@ -32,7 +32,7 @@ const GlobalChatApp = lazy(() => import("@/routes/desktop/apps/chat.app"));
 export const APPS = [
   {
     name: "tabletop",
-    label: "Подвал",
+    label: "Карта",
     icon: <Dices className="size-7" />,
     component: <Tabletop />,
     priority: 1,
@@ -137,7 +137,7 @@ export const WINDOWS = [
   },
   {
     id: "tabletop",
-    title: "Подвал",
+    title: "Карта",
     icon: <Dices className="size-7" />,
     overflow: true,
     size: {

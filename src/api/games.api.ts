@@ -18,7 +18,7 @@ const adsApi = new AdsApi();
 
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
-import AdsApi, { SUBSCRIPTION_COST } from "./ads.api";
+import AdsApi, { SUBSCRIPTION_CONTINUE } from "./ads.api";
 
 const STATUSES = [
   {
@@ -305,8 +305,11 @@ export default class GameApi {
     const currentUser = await usersApi.getUserById(game.user.id);
 
     if (currentUser.subscribed) {
-      if (currentUser.money >= SUBSCRIPTION_COST) {
-        await usersApi.scoreUser(String(currentUser.id), -SUBSCRIPTION_COST);
+      if (currentUser.money >= SUBSCRIPTION_CONTINUE) {
+        await usersApi.scoreUser(
+          String(currentUser.id),
+          -SUBSCRIPTION_CONTINUE,
+        );
       } else {
         const activityData = {
           author: currentUser.id,

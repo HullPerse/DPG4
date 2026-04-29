@@ -8,13 +8,16 @@ import {
   useMemo,
   useState,
 } from "react";
-import AdsApi, { SUBSCRIPTION_COST } from "@/api/ads.api";
+import AdsApi, {
+  SUBSCRIPTION_CONTINUE,
+  SUBSCRIPTION_COST,
+} from "@/api/ads.api";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
-import { cn, openWindow } from "@/lib/utils";
+import { cn, getAdPosition, getAdPositionIcon, openWindow } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.component";
 import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
 
 const adsApi = new AdsApi();
 const CLOSE_TIME = 10;
@@ -30,6 +34,7 @@ const CLOSE_TIME = 10;
 function AdvertisementApp() {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const { adPosition, setAdPosition } = useDataStore();
 
   const { data } = useQuery({
     queryKey: ["annoyingAds"],
@@ -78,9 +83,24 @@ function AdvertisementApp() {
   if (!isVisible || !randomAd || !data || data.length === 0) return null;
 
   return (
-    <main className="absolute top-2 right-2 z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm transition-all duration-300">
+    <main
+      className={`absolute ${getAdPosition(adPosition)} z-1000 flex w-72 flex-col border-2 border-highlight-high bg-card shadow-sharp-sm transition-all duration-300`}
+    >
       <section className="flex flex-row items-center justify-between border-b-2 border-highlight-high px-2 py-1">
-        <span>Реклама</span>
+        <div className="flex flex-row gap-1 items-center">
+          <Button
+            size="icon"
+            variant="link"
+            className="h-4 w-4 px-1 p-2 transition-all duration-200"
+            onClick={() => {
+              if (adPosition === 4) return setAdPosition(1);
+              else return setAdPosition((adPosition + 1) as typeof adPosition);
+            }}
+          >
+            {getAdPositionIcon(adPosition)}
+          </Button>
+          <span>Реклама</span>
+        </div>
 
         <div className="flex flex-row px-1 gap-1 items-center">
           <Button
@@ -162,9 +182,11 @@ function AdvertisementApp() {
             <DialogTitle>Купить подписку</DialogTitle>
             <DialogDescription>
               Купите подписку за {SUBSCRIPTION_COST} чубрика. Подписка
-              оплачивается после каждого прохождния игры. !ПОДПИСКУ НЕЛЬЗЯ БУДЕТ
+              продливается после каждого прохождния игры за половину стоимости
+              подписки ({SUBSCRIPTION_CONTINUE}). !ПОДПИСКУ НЕЛЬЗЯ БУДЕТ
               ОТМЕНИТЬ САМОСТОЯТЕЛЬНО (для этого необходимо обратиться в
-              поддержку)!
+              поддержку ЛИБО не иметь средств для продления подписки, в связи с
+              чем она будет отменена автоматически)!
             </DialogDescription>
           </DialogHeader>
 

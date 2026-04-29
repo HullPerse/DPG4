@@ -50,6 +50,7 @@ export interface DataStore {
   accessToken: string;
   notepad: string;
   noAction: boolean;
+  adPosition: 1 | 2 | 3 | 4;
 
   // Actions
   setSavedWheel: (savedWheel: string[]) => void;
@@ -71,6 +72,7 @@ export interface DataStore {
   ) => void;
   setNoAction: (noAction: boolean) => void;
   setAccessToken: (accessToken: string) => void;
+  setAdPosition: (adPosition: 1 | 2 | 3 | 4) => void;
   startMoving: (
     userId: string,
     fromPosition: number,

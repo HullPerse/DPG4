@@ -3,6 +3,12 @@ import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -344,4 +350,26 @@ export function openWindow(id: string, url: string, title: string) {
   win.once("tauri://error", (e) => {
     console.error("Failed to open window:", e);
   });
+}
+
+export function getAdPosition(position: 1 | 2 | 3 | 4) {
+  const positionMap = {
+    1: "top-2 right-2", //top right
+    2: "bottom-2 right-2", //bottom right
+    3: "bottom-2 left-2", //bottom left
+    4: "top-2 left-2", //top left
+  };
+
+  return positionMap[position as keyof typeof positionMap];
+}
+
+export function getAdPositionIcon(position: 1 | 2 | 3 | 4) {
+  const positionMap = {
+    1: <ChevronDown />, //go bottom
+    2: <ChevronLeft />, //go left
+    3: <ChevronUp />, //go up
+    4: <ChevronRight />, //go right
+  };
+
+  return positionMap[position as keyof typeof positionMap];
 }

@@ -19,6 +19,7 @@ export const useDataStore = create<DataStore>()(
         notepad: "",
         accessToken: "",
         noAction: false,
+        adPosition: 1,
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
@@ -32,6 +33,10 @@ export const useDataStore = create<DataStore>()(
           set((state) => ({
             wheelHistory: [item, ...state.wheelHistory],
           }));
+        },
+
+        setAdPosition: (adPosition: 1 | 2 | 3 | 4) => {
+          set({ adPosition });
         },
 
         setAccessToken: (accessToken: string) => {
