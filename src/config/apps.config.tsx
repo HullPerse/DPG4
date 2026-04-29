@@ -131,6 +131,8 @@ export const WINDOWS = [
     title: "Обои",
     icon: <ImageIcon className="size-7" />,
     size: {
+      minWidth: 840,
+      minHeight: 680,
       width: 840,
       height: 680,
     },
