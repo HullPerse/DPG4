@@ -21,6 +21,18 @@ import { useToastStore } from "./store/toast.store";
 import { UpdateData } from "./types/activity";
 import { Download } from "lucide-react";
 
+const dataURLtoBlob = (dataURL: string): Blob => {
+  const [header, data] = dataURL.split(",");
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch?.[1] || "application/octet-stream";
+  const binary = atob(data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    array[i] = binary.charCodeAt(i);
+  }
+  return new Blob([array], { type: mime });
+};
+
 function App() {
   //routing
   const navigate = useNavigate();
@@ -35,12 +47,18 @@ function App() {
   //compute combined CSS filter from individual values for wallpaper only
   const wallpaperFilter = (() => {
     const filters = [];
-    if (wallpaperFilters.brightness !== 100) filters.push(`brightness(${wallpaperFilters.brightness}%)`);
-    if (wallpaperFilters.contrast !== 100) filters.push(`contrast(${wallpaperFilters.contrast}%)`);
-    if (wallpaperFilters.saturate !== 100) filters.push(`saturate(${wallpaperFilters.saturate}%)`);
-    if (wallpaperFilters.blur > 0) filters.push(`blur(${wallpaperFilters.blur}px)`);
-    if (wallpaperFilters.hueRotate > 0) filters.push(`hue-rotate(${wallpaperFilters.hueRotate}deg)`);
-    if (wallpaperFilters.filter !== "none") filters.push(wallpaperFilters.filter);
+    if (wallpaperFilters.brightness !== 100)
+      filters.push(`brightness(${wallpaperFilters.brightness}%)`);
+    if (wallpaperFilters.contrast !== 100)
+      filters.push(`contrast(${wallpaperFilters.contrast}%)`);
+    if (wallpaperFilters.saturate !== 100)
+      filters.push(`saturate(${wallpaperFilters.saturate}%)`);
+    if (wallpaperFilters.blur > 0)
+      filters.push(`blur(${wallpaperFilters.blur}px)`);
+    if (wallpaperFilters.hueRotate > 0)
+      filters.push(`hue-rotate(${wallpaperFilters.hueRotate}deg)`);
+    if (wallpaperFilters.filter !== "none")
+      filters.push(wallpaperFilters.filter);
     return filters.length > 0 ? filters.join(" ") : "none";
   })();
 
@@ -136,9 +154,9 @@ function App() {
     };
   }, [isSelecting]);
 
-  //initialize wallpaper data
   useEffect(() => {
     let mounted = true;
+    let currentObjectUrl: string | null = null;
 
     const getWallpaper = async () => {
       try {
@@ -150,7 +168,13 @@ function App() {
         });
 
         if (mounted && dataUrl) {
-          setWallpaper(dataUrl);
+          if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+          }
+
+          const blob = dataURLtoBlob(dataUrl);
+          currentObjectUrl = URL.createObjectURL(blob);
+          setWallpaper(currentObjectUrl);
         }
       } catch (e) {
         console.error(e);
@@ -161,6 +185,9 @@ function App() {
 
     return () => {
       mounted = false;
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
     };
   }, [wallpaperData]);
 
@@ -183,7 +210,7 @@ function App() {
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >
-      {/* WALLPAPER - separate layer so filters don't affect other elements */}
+      {/* WALLPAPER */}
       <div
         className="absolute inset-0 z-0 bg-background bg-no-repeat"
         style={{
@@ -208,7 +235,9 @@ function App() {
             onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
             onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
             onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
-            onInactive={() => setActiveApps(deactivateWindow(activeApps, app.id))}
+            onInactive={() =>
+              setActiveApps(deactivateWindow(activeApps, app.id))
+            }
             onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
             setIsOpening={setIsOpening}
             {...app}

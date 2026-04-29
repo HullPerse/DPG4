@@ -81,6 +81,7 @@ export default function WallpaperApp({
   const [showFilters, setShowFilters] = useState(false);
   const [compressEnabled, setCompressEnabled] = useState(false);
   const [compressQuality, setCompressQuality] = useState(100);
+  const [webpEnabled, setWebpEnabled] = useState(false);
 
   const loadWallpapers = async () => {
     try {
@@ -103,8 +104,8 @@ export default function WallpaperApp({
     }
   };
 
-  const compressImage = useCallback(
-    (dataUrl: string, quality: number): Promise<string> => {
+  const convertImage = useCallback(
+    (dataUrl: string, format: 'jpeg' | 'webp', quality: number): Promise<string> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -114,7 +115,7 @@ export default function WallpaperApp({
           const ctx = canvas.getContext("2d");
           if (!ctx) return reject(new Error("Failed to get canvas context"));
           ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/jpeg", quality / 100));
+          resolve(canvas.toDataURL(`image/${format}`, quality / 100));
         };
         img.onerror = reject;
         img.src = dataUrl;
@@ -199,12 +200,17 @@ export default function WallpaperApp({
             throw new Error("Неверный формат данных изображения");
           }
 
-          if (compressEnabled && compressQuality < 100) {
-            dataUrl = await compressImage(dataUrl, compressQuality);
+          const timestamp = Date.now();
+          let extension = file.name.split(".").pop() || "jpg";
+
+          if (webpEnabled) {
+            extension = "webp";
+            const quality = compressEnabled ? compressQuality : 100;
+            dataUrl = await convertImage(dataUrl, "webp", quality);
+          } else if (compressEnabled && compressQuality < 100) {
+            dataUrl = await convertImage(dataUrl, "jpeg", compressQuality);
           }
 
-          const timestamp = Date.now();
-          const extension = file.name.split(".").pop() || "jpg";
           const fileName = `custom_${timestamp}.${extension}`;
 
           await invoke<string>("save_wallpaper", {
@@ -453,34 +459,41 @@ export default function WallpaperApp({
              </div>
            </div>
 
-           <div className="border-t-2 pt-2">
-             <h4 className="mb-2 text-sm font-semibold">Сжатие при загрузке</h4>
-             <div className="flex flex-col gap-2">
-               <div className="flex items-center justify-between">
-                 <label className="text-sm">Включить сжатие</label>
-                 <Switch
-                   checked={compressEnabled}
-                   onCheckedChange={setCompressEnabled}
-                 />
-               </div>
-               {compressEnabled && (
-                 <div className="flex flex-col gap-1">
-                   <div className="flex justify-between text-sm">
-                     <label className="font-semibold">Качество</label>
-                     <span className="text-muted">{compressQuality}%</span>
-                   </div>
-                   <Slider
-                     min={1}
-                     max={100}
-                     value={[compressQuality]}
-                     onValueChange={(val) =>
-                       setCompressQuality(Array.isArray(val) ? val[0] : val)
-                     }
-                   />
-                 </div>
-               )}
-             </div>
-           </div>
+<div className="border-t-2 pt-2">
+              <h4 className="mb-2 text-sm font-semibold">Сжатие при загрузке</h4>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Включить сжатие</label>
+                  <Switch
+                    checked={compressEnabled}
+                    onCheckedChange={setCompressEnabled}
+                  />
+                </div>
+                {compressEnabled && (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between text-sm">
+                      <label className="font-semibold">Качество</label>
+                      <span className="text-muted">{compressQuality}%</span>
+                    </div>
+                    <Slider
+                      min={1}
+                      max={100}
+                      value={[compressQuality]}
+                      onValueChange={(val) =>
+                        setCompressQuality(Array.isArray(val) ? val[0] : val)
+                      }
+                    />
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-2 border-t border-highlight-high">
+                  <label className="text-sm">Конвертировать в WebP</label>
+                  <Switch
+                    checked={webpEnabled}
+                    onCheckedChange={setWebpEnabled}
+                  />
+                </div>
+              </div>
+            </div>
          </section>
       )}
 

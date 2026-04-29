@@ -10,6 +10,7 @@ export type AppProps = {
 export type WallpaperProps = {
   name: string;
   path: string;
+  size?: number;
 };
 
 export type WallpaperFilters = {
