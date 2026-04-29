@@ -199,11 +199,23 @@ function CellComponent({
                 <span
                   key={user.id}
                   id={`user-${user.id}`}
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-highlight-low"
+                  title={user.username}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-highlight-low overflow-hidden"
                   style={{
                     backgroundColor: user.color,
                   }}
                 >
+                  {user.status?.includes("poop") && (
+                    <span
+                      className={`absolute -top-0.5 -right-0.5`}
+                      style={{
+                        fontSize: `${8 + 2 * user.status.filter((s) => s === "poop").length}px`,
+                      }}
+                    >
+                      💩
+                    </span>
+                  )}
+
                   {user.place !== "0" && (
                     <div className="absolute -top-2 -right-2 rotate-45">
                       <Crown

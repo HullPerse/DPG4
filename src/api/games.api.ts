@@ -306,21 +306,18 @@ export default class GameApi {
 
     if (currentUser.subscribed) {
       if (currentUser.money >= SUBSCRIPTION_COST) {
-        return await usersApi.scoreUser(
-          String(currentUser.id),
-          -SUBSCRIPTION_COST,
-        );
+        await usersApi.scoreUser(String(currentUser.id), -SUBSCRIPTION_COST);
+      } else {
+        const activityData = {
+          author: currentUser.id,
+          image: currentUser.avatar,
+          text: `${currentUser.username} не хватило денег на подписку`,
+        } as Activity;
+
+        await this.activityCollection.create(activityData);
+
+        await adsApi.unsubscribedAd(String(currentUser.id));
       }
-
-      const activityData = {
-        author: currentUser.id,
-        image: currentUser.avatar,
-        text: `${currentUser.username} не хватило денег на подписку`,
-      } as Activity;
-
-      await this.activityCollection.create(activityData);
-
-      await adsApi.unsubscribedAd(String(currentUser.id));
     }
 
     return await this.gamesCollection.update(id, {

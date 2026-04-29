@@ -154,7 +154,11 @@ export default function DiceComponent({
           title="Ходить по карте"
           variant="success"
           size="icon"
-          onClick={() => handleMove((total ?? 0) + Number(additional))}
+          onClick={() => {
+            const finalValue =
+              action === "MOVE_NEGATIVE" ? -Math.abs(total ?? 0) : (total ?? 0);
+            handleMove(finalValue + Number(additional));
+          }}
           disabled={(!total && !additional) || isRolling}
         >
           <RunSvg className="size-6" />
@@ -171,13 +175,13 @@ export default function DiceComponent({
               ? `(+${additional ? additional : 0})`
               : `(${additional ? additional : 0})`}
           </span>
-          {diceItems.length > 1 && (
+          {diceItems.length > 0 && (
             <>
               <span className="mx-2 text-primary">=</span>
               <span className="text-primary font-bold font-mono">
                 {total !== null
                   ? action === "MOVE_NEGATIVE"
-                    ? -Math.abs(total)
+                    ? -Math.abs(total) + Number(additional)
                     : total
                   : 0}
               </span>

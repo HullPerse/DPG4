@@ -5,6 +5,7 @@ import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
 import { getNextDice, removeFirst } from "@/lib/utils";
 import { Activity } from "@/types/activity";
+import { usableCell } from "@/lib/cell.effects";
 
 const cellApi = new CellApi();
 
@@ -65,7 +66,7 @@ export default class UserApi {
   //get all user positions
   getUserPositions = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({
-      fields: "id, position, username, avatar, color, place",
+      fields: "id, position, username, avatar, color, place, status",
     });
   };
 
@@ -80,10 +81,33 @@ export default class UserApi {
     )) as User;
   };
 
+  changeUserStatus = async (
+    userId: string,
+    status: string,
+    type: "add" | "remove",
+  ) => {
+    const existing = await this.getUserById(userId);
+    if (!existing) return;
+
+    if (type === "remove") {
+      const newStatuses = removeFirst(existing.status ?? [], status);
+
+      return await this.usersCollection.update(userId, { status: newStatuses });
+    }
+
+    const newStatuses = [...(existing.status ?? []), status];
+
+    return await this.usersCollection.update(userId, { status: newStatuses });
+  };
+
   changeUserAction = async (
     userId: string,
     action: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH",
   ) => {
+    const { noAction } = useDataStore.getState();
+
+    if (noAction) return;
+
     await this.usersCollection.update(userId, { currentAction: action });
   };
 
@@ -133,29 +157,7 @@ export default class UserApi {
     //const currentCell = cells.find((c) => c.number === fromPosition);
     const targetCell = cells.find((c) => c.number === finalPosition);
 
-    //PIG
-    if (targetCell?.status?.includes("pig")) {
-      const audio = new Audio("/audio/pig.mp3");
-      audio.volume = 0.1;
-      audio.play();
-
-      await cellApi.changeStatus(
-        targetCell.id,
-        removeFirst(targetCell.status ?? [], "pig"),
-      );
-    }
-
-    //CAT
-    if (targetCell?.status?.includes("cat")) {
-      const audio = new Audio("/audio/cat.mp3");
-      audio.volume = 0.1;
-      audio.play();
-
-      await cellApi.changeStatus(
-        targetCell.id,
-        removeFirst(targetCell.status ?? [], "cat"),
-      );
-    }
+    if (targetCell) await usableCell(targetCell, userId);
 
     await this.changeUserAction(userId, "GAMEADD");
   };

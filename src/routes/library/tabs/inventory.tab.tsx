@@ -26,7 +26,7 @@ import { highlightText } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
-import { usableItems } from "@/lib/items";
+import { usableItems } from "@/lib/items.effects";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();

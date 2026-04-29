@@ -95,12 +95,11 @@ export default function SteamLibrary({
     } as Game;
 
     if (currentType === "library") {
-      return await gameApi
+      await gameApi
         .addGame(gameData)
         .then((res) => setCurrentGame(String(res.id)));
+      return await userApi.changeUserAction(String(user.id), "GAMEFINISH");
     }
-
-    await userApi.changeUserAction(String(user.id), "GAMEFINISH");
 
     return await gameApi.addPresetGame(String(presetId), gameData).then(() => {
       queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });

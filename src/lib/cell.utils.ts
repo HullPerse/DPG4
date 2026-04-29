@@ -225,6 +225,10 @@ export function calculateMovePath(
     path.push(currentPosition);
   }
 
+  if (diceRoll < 0) {
+    return { path, finalPosition: currentPosition };
+  }
+
   const cell = cells.find((c) => c.number === currentPosition);
 
   if (!cell)

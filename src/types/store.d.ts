@@ -40,6 +40,7 @@ export interface DataStore {
   } | null;
   accessToken: string;
   notepad: string;
+  noAction: boolean;
 
   // Actions
   setSavedWheel: (savedWheel: string[]) => void;
@@ -57,6 +58,7 @@ export interface DataStore {
       id: string;
     } | null,
   ) => void;
+  setNoAction: (noAction: boolean) => void;
   setAccessToken: (accessToken: string) => void;
   startMoving: (
     userId: string,

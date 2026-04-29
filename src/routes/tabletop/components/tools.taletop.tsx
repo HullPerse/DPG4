@@ -45,6 +45,14 @@ export default function ToolsTaletop({
               onCheckedChange={setEditing}
             />
           </div>
+          <div className="flex flex-row items-center justify-between gap-2">
+            Не изменять статус:
+            <Switch
+              className="cursor-pointer"
+              checked={dataStore.noAction}
+              onCheckedChange={(e) => dataStore.setNoAction(e)}
+            />
+          </div>
         </section>
       )}
 

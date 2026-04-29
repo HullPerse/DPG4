@@ -200,6 +200,14 @@ function GameLibrary({
             data.user.position,
           );
 
+          if (data.user.status?.includes("poop")) {
+            await userApi.changeUserStatus(
+              String(data.user.id),
+              "poop",
+              "remove",
+            );
+          }
+
           if (data.user.position === 101) {
             await userApi.updatePlace(String(data.game.user.id));
           }

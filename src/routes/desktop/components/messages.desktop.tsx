@@ -9,6 +9,7 @@ import { WINDOWS } from "@/config/apps.config";
 import { createWindow } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { useDataStore } from "@/store/data.store";
+import { SmallLoader } from "@/components/shared/loader.component";
 
 const chatApi = new ChatApi();
 
@@ -46,10 +47,12 @@ export default function MessagesDesktop({
 
   useSubscription("chats", "*", invalidateQuery);
 
+  if (isLoading) return <SmallLoader className="size-4" />;
+
   return (
     <main className="relative">
       <button
-        className={`relative flex items-center gap-1 hover:text-iris ${
+        className={`relative flex items-center gap-1 hover:text-iris hover:cursor-pointer ${
           data && data.length > 0 ? "animate-pulse text-iris" : "text-muted"
         }`}
         onClick={() => setIsOpen(!isOpen)}
@@ -63,12 +66,12 @@ export default function MessagesDesktop({
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-2 w-72 max-h-80 overflow-y-auto border-2 border-highlight-high bg-background shadow-sharp-sm">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4 text-muted">
-              Загрузка...
-            </div>
-          ) : data && data.length > 0 ? (
+        <div className="absolute bottom-8 -right-50 mb-2 w-72 max-h-80 overflow-y-auto border-2 border-highlight-high bg-background shadow-sharp-sm">
+          {!data || data.length === 0 ? (
+            <section className="flex items-center justify-center p-4 text-muted">
+              Нет новых сообщений
+            </section>
+          ) : (
             data.map((item) => (
               <button
                 key={item.sender.id}
@@ -111,10 +114,6 @@ export default function MessagesDesktop({
                 </div>
               </button>
             ))
-          ) : (
-            <div className="flex items-center justify-center p-4 text-muted">
-              Нет новых сообщений
-            </div>
           )}
         </div>
       )}

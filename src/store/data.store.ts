@@ -17,6 +17,7 @@ export const useDataStore = create<DataStore>()(
         savedWheel: [],
         notepad: "",
         accessToken: "",
+        noAction: false,
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
@@ -38,6 +39,9 @@ export const useDataStore = create<DataStore>()(
         },
         setConnected: (isConnected: boolean) => {
           set({ isConnected });
+        },
+        setNoAction: (noAction: boolean) => {
+          set({ noAction });
         },
         setEditing: (isEditing: boolean) => {
           set({ isEditing });

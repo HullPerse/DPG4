@@ -92,12 +92,11 @@ export default function CustomLibrary({
     if (currentType === "library") {
       await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
 
-      return await gameApi
+      await gameApi
         .addGame(gameData as any)
         .then((res) => setCurrentGame?.(String(res.id)));
+      return await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
     }
-
-    await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
 
     return await gameApi
       .addPresetGame(String(presetId), gameData as any)
