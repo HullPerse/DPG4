@@ -1,7 +1,8 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button.component";
 import { Slider } from "@/components/ui/slider.component";
+import { Switch } from "@/components/ui/switch.component";
 import { Plus, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { WallpaperProps } from "@/types/desktop";
@@ -78,6 +79,8 @@ export default function WallpaperApp({
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [compressEnabled, setCompressEnabled] = useState(false);
+  const [compressQuality, setCompressQuality] = useState(100);
 
   const loadWallpapers = async () => {
     try {
@@ -99,6 +102,26 @@ export default function WallpaperApp({
       setLoading(false);
     }
   };
+
+  const compressImage = useCallback(
+    (dataUrl: string, quality: number): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("Failed to get canvas context"));
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/jpeg", quality / 100));
+        };
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     loadWallpapers();
@@ -170,10 +193,14 @@ export default function WallpaperApp({
 
       reader.onload = async (event) => {
         try {
-          const dataUrl = event.target?.result as string;
+          let dataUrl = event.target?.result as string;
 
           if (!dataUrl || !dataUrl.startsWith("data:")) {
             throw new Error("Неверный формат данных изображения");
+          }
+
+          if (compressEnabled && compressQuality < 100) {
+            dataUrl = await compressImage(dataUrl, compressQuality);
           }
 
           const timestamp = Date.now();
@@ -422,10 +449,39 @@ export default function WallpaperApp({
                   <option value="repeat-x">По горизонтали</option>
                   <option value="repeat-y">По вертикали</option>
                 </select>
-              </div>
-            </div>
-          </div>
-        </section>
+               </div>
+             </div>
+           </div>
+
+           <div className="border-t-2 pt-2">
+             <h4 className="mb-2 text-sm font-semibold">Сжатие при загрузке</h4>
+             <div className="flex flex-col gap-2">
+               <div className="flex items-center justify-between">
+                 <label className="text-sm">Включить сжатие</label>
+                 <Switch
+                   checked={compressEnabled}
+                   onCheckedChange={setCompressEnabled}
+                 />
+               </div>
+               {compressEnabled && (
+                 <div className="flex flex-col gap-1">
+                   <div className="flex justify-between text-sm">
+                     <label className="font-semibold">Качество</label>
+                     <span className="text-muted">{compressQuality}%</span>
+                   </div>
+                   <Slider
+                     min={1}
+                     max={100}
+                     value={[compressQuality]}
+                     onValueChange={(val) =>
+                       setCompressQuality(Array.isArray(val) ? val[0] : val)
+                     }
+                   />
+                 </div>
+               )}
+             </div>
+           </div>
+         </section>
       )}
 
       <section className="flex w-full cursor-pointer flex-row flex-wrap items-center justify-center gap-2 overflow-auto">
