@@ -1,7 +1,7 @@
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
 import { memo, useCallback, useMemo } from "react";
-import { Trash, History } from "lucide-react";
+import { Trash } from "lucide-react";
 
 function WheelHistoryApp() {
   const wheelHistory = useDataStore((state) => state.wheelHistory);
