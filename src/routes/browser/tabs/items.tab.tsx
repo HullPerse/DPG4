@@ -14,7 +14,7 @@ import { memo, startTransition, useCallback, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText } from "@/lib/utils";
+import { highlightText, openWindow } from "@/lib/utils";
 
 const itemsApi = new ItemsApi();
 
@@ -110,7 +110,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
             <ImageComponent
               src={`${image?.items}${result.id}/${result.image}`}
               alt={result.label}
-              className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+              className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+              onClick={() => {
+                openWindow(
+                  String(result.id),
+                  `${image?.items}${result.id}/${result.image}`,
+                  "Изображение",
+                );
+              }}
             />
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
@@ -151,7 +158,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
               <ImageComponent
                 src={`${image?.items}${item.id}/${item.image}`}
                 alt={item.label}
-                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                onClick={() => {
+                  openWindow(
+                    String(item.id),
+                    `${image?.items}${item.id}/${item.image}`,
+                    "Изображение",
+                  );
+                }}
               />
               <div className="flex flex-col ml-2">
                 <span className="font-bold text-xl">

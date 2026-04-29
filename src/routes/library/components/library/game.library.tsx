@@ -43,7 +43,6 @@ import EditReview from "./edit.library";
 import { image } from "@/api/client.api";
 import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
-import ImageComponent from "@/components/shared/image.component";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -335,7 +334,15 @@ function GameLibrary({
                 (data?.game.data.capsuleImage as string)
               }
               alt="game background"
-              className="h-full w-full"
+              className="h-full w-full hover:cursor-pointer"
+              onClick={() => {
+                openWindow(
+                  String(data?.game.id),
+                  data?.game?.data.image ??
+                    (data?.game.data.capsuleImage as string),
+                  "Изображение",
+                );
+              }}
             />
             <div
               className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high"
@@ -420,7 +427,7 @@ function GameLibrary({
                 >
                   {/*<ExternalLink />*/}
                   {data?.game?.data.websiteLink && (
-                    <ImageComponent
+                    <Image
                       src={`${data?.game?.data.websiteLink}/favicon.ico`}
                       alt={String(data?.game?.data.name)}
                       className="min-w-9 min-h-9 w-9 h-9"

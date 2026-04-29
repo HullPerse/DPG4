@@ -46,7 +46,7 @@ export default function Desktop({
   return (
     <main className="flex h-full w-full flex-col">
       <section className="relative flex flex-1">
-        <div className="absolute top-6 left-6 grid grid-cols-1 gap-2">
+        <div className="absolute top-6 left-6 flex flex-col flex-wrap w-fit h-full gap-2 pb-10">
           {APPS.sort((a, b) => a.priority - b.priority).map((app: AppProps) => (
             <AppDesktop
               key={app.name}

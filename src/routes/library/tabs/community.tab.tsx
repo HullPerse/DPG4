@@ -10,6 +10,7 @@ import { NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback } from "react";
 import ImageComponent from "@/components/shared/image.component";
 import { useDataStore } from "@/store/data.store";
+import { openWindow } from "@/lib/utils";
 
 const activityApi = new ActivityApi();
 
@@ -74,6 +75,15 @@ function CommunityTab() {
                   alt="activity"
                   className="h-16 min-w-16 max-w-32 border border-highlight-high"
                   type="contain"
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    openWindow(
+                      String(activityItem.id),
+                      String(activityItem.image),
+                      "Изображение",
+                    );
+                  }}
                 />
               ) : null
             ) : (

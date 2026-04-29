@@ -397,7 +397,7 @@ function InventoryTab({ id }: { id?: string }) {
                   </Button>
                 </div>
 
-                <span className="line-clamp-4 text-xs leading-tight">
+                <span className="line-clamp-4 hover:line-clamp-none hover:overflow-y-auto text-xs leading-tight h-20 max-h-20">
                   {highlightText(item.description, searchTerms)}
                 </span>
               </div>

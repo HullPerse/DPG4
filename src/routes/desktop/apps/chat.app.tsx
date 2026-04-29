@@ -21,6 +21,7 @@ import { NetworkIcon, Send, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import ChatBubble from "@/components/shared/bubble.component";
+import ImageComponent from "@/components/shared/image.component";
 
 const chatApi = new ChatApi();
 
@@ -115,7 +116,12 @@ export default function GlobalChatApp() {
     setLoading(true);
 
     try {
-      await chatApi.sendMessage(String(user?.id), GLOBAL_CHAT_ID, newMessage, image);
+      await chatApi.sendMessage(
+        String(user?.id),
+        GLOBAL_CHAT_ID,
+        newMessage,
+        image,
+      );
 
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
@@ -141,13 +147,6 @@ export default function GlobalChatApp() {
 
   return (
     <main className="flex flex-col h-full w-full">
-      <div className="flex items-center gap-2 px-2 py-1 border-b-2 border-highlight-high bg-highlight-low">
-        <span className="font-bold">Глобальный чат</span>
-        <span className="text-xs text-muted ml-auto">
-          {data?.chat.length || 0} сообщений
-        </span>
-      </div>
-
       <div className="flex-1 w-full min-h-0 bg-background p-2 gap-4 overflow-y-auto">
         <section className="flex flex-col gap-2">
           {data?.chat.map((item) => (
@@ -204,18 +203,21 @@ export default function GlobalChatApp() {
 
       <section className="flex flex-col w-full border-t-2 border-highlight-high p-2">
         {image && (
-          <div className="relative inline-block self-start min-w-20 mb-2">
-            <img
+          <div className="relative inline-block self-start min-w-20">
+            <ImageComponent
               src={URL.createObjectURL(image)}
-              alt="preview"
-              className="h-20 w-full object-cover border border-highlight-high"
+              alt="image preview"
+              className="h-20 w-full border border-highlight-high"
+              type="contain"
             />
+
             <Button
               variant="error"
               size="icon"
               className="absolute -top-2 -right-2 size-6"
               onClick={() => {
                 setImage(null);
+
                 if (imageInputRef.current) {
                   imageInputRef.current.value = "";
                 }

@@ -1,7 +1,7 @@
 import { image } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import ReviewComponent from "@/components/shared/review.component";
-import { colorToHex, getStatusColor } from "@/lib/utils";
+import { getStatusColor, openWindow } from "@/lib/utils";
 import { Game, GameReview } from "@/types/games";
 import { User } from "@/types/user";
 
@@ -60,12 +60,13 @@ export default function Profile({
                 <ImageComponent
                   src={games[games.length - 1]?.data.capsuleImage}
                   alt={games[games.length - 1]?.data.name}
-                  className="w-50 h-28 max-h-28 min-h-28 max-w-50 min-w-50 aspect-video border-r-2 border-highlight-high"
-                />
-                <div
-                  className="absolute top-0 w-50 h-full opacity-50"
-                  style={{
-                    background: `linear-gradient(to left, ${colorToHex(getStatusColor(games[0]?.status))}cc, transparent)`,
+                  className="w-50 h-28 max-h-28 min-h-28 max-w-50 min-w-50 aspect-video border-r-2 border-highlight-high hover:cursor-pointer"
+                  onClick={() => {
+                    openWindow(
+                      String(games[games.length - 1]?.data.id),
+                      String(games[games.length - 1]?.data.capsuleImage),
+                      "Изображение",
+                    );
                   }}
                 />
               </div>

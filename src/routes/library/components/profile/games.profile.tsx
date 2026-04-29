@@ -1,5 +1,5 @@
 import ImageComponent from "@/components/shared/image.component";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor, openWindow } from "@/lib/utils";
 import { Game } from "@/types/games";
 
 const STATUSES = [
@@ -35,10 +35,17 @@ export default function Games({ games }: { games: Game[] }) {
             >
               {/* LABEL */}
               <section className="flex flex-row w-full h-full items-center gap-2">
-                <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
+                <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden hover:cursor-pointer">
                   <ImageComponent
                     src={game.data.capsuleImage}
                     alt={game.data.name}
+                    onClick={() => {
+                      openWindow(
+                        String(game.data.id),
+                        game.data.capsuleImage,
+                        "Изображение",
+                      );
+                    }}
                   />
                 </div>
                 <span className="font-bold truncate line-clamp-1">

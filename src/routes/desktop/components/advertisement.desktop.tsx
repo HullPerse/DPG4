@@ -14,7 +14,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
-import { cn } from "@/lib/utils";
+import { cn, openWindow } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -115,8 +115,15 @@ function AdvertisementApp() {
         <ImageComponent
           src={`${image.ads}${randomAd.id}/${randomAd.image}`}
           alt={randomAd.text}
-          className="min-h-42 h-42 max-h-42 border border-highlight-high"
+          className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer"
           type="contain"
+          onClick={() => {
+            openWindow(
+              String(randomAd.id),
+              `${image?.ads}${randomAd.id}/${randomAd.image}`,
+              "Изображение",
+            );
+          }}
         />
 
         <span className="mt-2 line-clamp-2 text-center text-xs text-text">

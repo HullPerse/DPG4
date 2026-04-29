@@ -1,6 +1,6 @@
 import { Chat } from "@/types/chat";
 import { User } from "@/types/user";
-import { cn } from "@/lib/utils";
+import { cn, openWindow } from "@/lib/utils";
 import ImageComponent from "./image.component";
 import { image } from "@/api/client.api";
 import { CheckCheck, Trash } from "lucide-react";
@@ -66,7 +66,14 @@ export default function ChatBubble({
               src={`${image.chat}${item.id}/${item.image}`}
               alt={item.message || "Изображение"}
               type="contain"
-              className="h-full w-full"
+              className="h-full w-full cursor-pointer"
+              onClick={() => {
+                openWindow(
+                  item.id,
+                  `${image.chat}${item.id}/${item.image}`,
+                  "Изображение",
+                );
+              }}
             />
           </section>
         )}
