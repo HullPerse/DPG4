@@ -17,6 +17,14 @@ export interface UserStore {
   unsubscribeFromUserUpdates: () => void;
 }
 
+export interface WheelHistoryItem {
+  id: string;
+  label: string;
+  image: string;
+  type: "image" | "emoji";
+  timestamp: string;
+}
+
 export interface DataStore {
   // State
   wallpaper: string;
@@ -29,6 +37,7 @@ export interface DataStore {
     id: string;
   } | null;
   savedWheel: string[];
+  wheelHistory: WheelHistoryItem[];
   movingUser: {
     userId: string;
     fromPosition: number;
@@ -44,6 +53,8 @@ export interface DataStore {
 
   // Actions
   setSavedWheel: (savedWheel: string[]) => void;
+  setWheelHistory: (wheelHistory: WheelHistoryItem[]) => void;
+  addWheelHistory: (item: WheelHistoryItem) => void;
   setNotepad: (notepad: string) => void;
   setWallpaper: (wallpaper: string) => void;
   setFont: (font: string) => void;

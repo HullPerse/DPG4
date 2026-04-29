@@ -25,6 +25,7 @@ import {
 import renderWheelItems from "./renderer.component";
 import { calculateCost } from "@/lib/utils";
 import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
 import UserApi from "@/api/user.api";
 import { RefreshCcw } from "lucide-react";
 const userApi = new UserApi();
@@ -95,6 +96,8 @@ function Wheel({
     }
   }, []);
 
+  const addWheelHistory = useDataStore((state) => state.addWheelHistory);
+
   const selectCenteredPreview = useCallback(() => {
     if (!containerRef.current || !rolling.hasRolled || shuffled.length === 0)
       return;
@@ -106,12 +109,23 @@ function Wheel({
       ITEM_WIDTH,
     );
 
-    if (centerIndex >= 0 && centerIndex < shuffled.length) {
-      return onResult(shuffled[centerIndex]);
+    const selectedItem =
+      centerIndex >= 0 && centerIndex < shuffled.length
+        ? shuffled[centerIndex]
+        : shuffled[0];
+
+    if (selectedItem) {
+      addWheelHistory({
+        id: selectedItem.id,
+        label: selectedItem.label,
+        image: selectedItem.image,
+        type: selectedItem.type,
+        timestamp: new Date().toISOString(),
+      });
     }
 
-    return onResult(shuffled[0]);
-  }, [shuffled, rolling.hasRolled]);
+    return onResult(selectedItem);
+  }, [shuffled, rolling.hasRolled, addWheelHistory]);
 
   //animate function
   const animate = useCallback(

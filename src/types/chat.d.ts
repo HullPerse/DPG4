@@ -15,7 +15,7 @@ export interface Chat {
     };
   };
   message: string;
-  image: File | null;
+  image: string | null;
   isRead: boolean;
   created: string;
   updated: string;

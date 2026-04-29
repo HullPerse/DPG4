@@ -32,16 +32,25 @@ export default class ChatApi {
     image: File | null = null,
   ) => {
     const senderUser = await userApi.getUserById(sender);
-    const receiverUser = await userApi.getUserById(receiver);
+
+    const isGlobal = receiver === "global";
+    const receiverUser = isGlobal ? null : await userApi.getUserById(receiver);
 
     await this.chatsCollection.create({
       data: {
-        receiver: {
-          username: receiverUser?.username ?? "",
-          id: receiver,
-          avatar: receiverUser?.avatar ?? "",
-          color: receiverUser?.color ?? "",
-        },
+        receiver: isGlobal
+          ? {
+              username: "Глобальный чат",
+              id: "global",
+              avatar: "🌐",
+              color: "#f6c177",
+            }
+          : {
+              username: receiverUser?.username ?? "",
+              id: receiver,
+              avatar: receiverUser?.avatar ?? "",
+              color: receiverUser?.color ?? "",
+            },
         sender: {
           username: senderUser?.username ?? "",
           id: sender,
@@ -119,5 +128,14 @@ export default class ChatApi {
     return await this.chatsCollection.update(messageId, {
       isRead: true,
     });
+  };
+
+  getGlobalChat = async (): Promise<Chat[]> => {
+    const messages = (await this.chatsCollection.getFullList({
+      filter: `data.receiver.id = "global"`,
+      sort: "created",
+    })) as Chat[];
+
+    return messages;
   };
 }

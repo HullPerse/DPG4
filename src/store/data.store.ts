@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, subscribeWithSelector } from "zustand/middleware";
 import { invoke } from "@tauri-apps/api/core";
-import type { DataStore } from "@/types/store";
+import type { DataStore, WheelHistoryItem } from "@/types/store";
 
 export const useDataStore = create<DataStore>()(
   subscribeWithSelector(
@@ -15,12 +15,23 @@ export const useDataStore = create<DataStore>()(
         userProfile: null,
         movingUser: null,
         savedWheel: [],
+        wheelHistory: [],
         notepad: "",
         accessToken: "",
         noAction: false,
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
+        },
+
+        setWheelHistory: (wheelHistory: WheelHistoryItem[]) => {
+          set({ wheelHistory });
+        },
+
+        addWheelHistory: (item: WheelHistoryItem) => {
+          set((state) => ({
+            wheelHistory: [item, ...state.wheelHistory],
+          }));
         },
 
         setAccessToken: (accessToken: string) => {
@@ -68,6 +79,7 @@ export const useDataStore = create<DataStore>()(
             userProfile: null,
             movingUser: null,
             savedWheel: [],
+            wheelHistory: [],
             notepad: "",
             accessToken: "",
           });
