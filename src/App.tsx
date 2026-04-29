@@ -28,8 +28,21 @@ function App() {
 
   //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
+  const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
   const isAuth = useUserStore((state) => state.isAuth);
   const loggedIn = useUserStore((state) => state.loggedIn);
+
+  //compute combined CSS filter from individual values for wallpaper only
+  const wallpaperFilter = (() => {
+    const filters = [];
+    if (wallpaperFilters.brightness !== 100) filters.push(`brightness(${wallpaperFilters.brightness}%)`);
+    if (wallpaperFilters.contrast !== 100) filters.push(`contrast(${wallpaperFilters.contrast}%)`);
+    if (wallpaperFilters.saturate !== 100) filters.push(`saturate(${wallpaperFilters.saturate}%)`);
+    if (wallpaperFilters.blur > 0) filters.push(`blur(${wallpaperFilters.blur}px)`);
+    if (wallpaperFilters.hueRotate > 0) filters.push(`hue-rotate(${wallpaperFilters.hueRotate}deg)`);
+    if (wallpaperFilters.filter !== "none") filters.push(wallpaperFilters.filter);
+    return filters.length > 0 ? filters.join(" ") : "none";
+  })();
 
   //app states
   const [wallpaper, setWallpaper] = useState<string | null>(null);
@@ -166,43 +179,53 @@ function App() {
   return (
     <main
       ref={desktopRef}
-      className="relative h-screen w-screen bg-background bg-cover bg-center bg-no-repeat text-text select-none"
-      style={{
-        backgroundImage: `url(${wallpaper})`,
-        cursor: isOpening ? "wait" : "default",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="relative h-screen w-screen overflow-hidden text-text select-none"
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >
-      {/* SELECTION */}
-      <Selection ref={selectionRef} visible={isSelecting} />
-
-      {/* WINDOWS */}
-      {activeApps.map((app) => (
-        <Window
-          key={app.id}
-          onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
-          onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
-          onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
-          onInactive={() => setActiveApps(deactivateWindow(activeApps, app.id))}
-          onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
-          setIsOpening={setIsOpening}
-          {...app}
-        >
-          <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
-        </Window>
-      ))}
-
-      {/* DESKTOP */}
-      <Desktop
-        activeApps={activeApps}
-        setActiveApps={setActiveApps}
-        setWallpaper={setWallpaper}
-        isOpening={isOpening}
-        setIsOpening={setIsOpening}
+      {/* WALLPAPER - separate layer so filters don't affect other elements */}
+      <div
+        className="absolute inset-0 z-0 bg-background bg-no-repeat"
+        style={{
+          backgroundImage: `url(${wallpaper})`,
+          backgroundSize: wallpaperFilters.backgroundSize,
+          backgroundPosition: wallpaperFilters.backgroundPosition,
+          backgroundRepeat: wallpaperFilters.backgroundRepeat,
+          filter: wallpaperFilter,
+          cursor: isOpening ? "wait" : "default",
+        }}
       />
+
+      {/* CONTENT LAYER */}
+      <div className="relative z-10 h-full w-full">
+        {/* SELECTION */}
+        <Selection ref={selectionRef} visible={isSelecting} />
+
+        {/* WINDOWS */}
+        {activeApps.map((app) => (
+          <Window
+            key={app.id}
+            onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
+            onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
+            onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
+            onInactive={() => setActiveApps(deactivateWindow(activeApps, app.id))}
+            onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
+            setIsOpening={setIsOpening}
+            {...app}
+          >
+            <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
+          </Window>
+        ))}
+
+        {/* DESKTOP */}
+        <Desktop
+          activeApps={activeApps}
+          setActiveApps={setActiveApps}
+          setWallpaper={setWallpaper}
+          isOpening={isOpening}
+          setIsOpening={setIsOpening}
+        />
+      </div>
     </main>
   );
 }

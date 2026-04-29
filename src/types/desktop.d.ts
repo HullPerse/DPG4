@@ -11,3 +11,15 @@ export type WallpaperProps = {
   name: string;
   path: string;
 };
+
+export type WallpaperFilters = {
+  backgroundSize: "cover" | "contain" | "auto" | "fill" | string;
+  backgroundPosition: string;
+  backgroundRepeat: "no-repeat" | "repeat" | "repeat-x" | "repeat-y";
+  filter: string;
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  blur: number;
+  hueRotate: number;
+};

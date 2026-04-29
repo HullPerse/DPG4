@@ -8,6 +8,17 @@ export const useDataStore = create<DataStore>()(
     persist(
       (set, get) => ({
         wallpaper: "",
+        wallpaperFilters: {
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: "none",
+          brightness: 100,
+          contrast: 100,
+          saturate: 100,
+          blur: 0,
+          hueRotate: 0,
+        },
         font: "",
         isConnected: false,
         isEditing: false,
@@ -50,6 +61,11 @@ export const useDataStore = create<DataStore>()(
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
         },
+        setWallpaperFilters: (filters: Partial<DataStore["wallpaperFilters"]>) => {
+          set((state) => ({
+            wallpaperFilters: { ...state.wallpaperFilters, ...filters },
+          }));
+        },
         setFont: (font: string) => {
           set({ font });
         },
@@ -77,6 +93,17 @@ export const useDataStore = create<DataStore>()(
         clear: () => {
           set({
             wallpaper: "",
+            wallpaperFilters: {
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              filter: "none",
+              brightness: 100,
+              contrast: 100,
+              saturate: 100,
+              blur: 0,
+              hueRotate: 0,
+            },
             font: "",
             isConnected: false,
             isEditing: false,

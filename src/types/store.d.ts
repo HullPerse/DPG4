@@ -25,9 +25,22 @@ export interface WheelHistoryItem {
   timestamp: string;
 }
 
+export interface WallpaperFilters {
+  backgroundSize: "cover" | "contain" | "auto" | "fill" | string;
+  backgroundPosition: string;
+  backgroundRepeat: "no-repeat" | "repeat" | "repeat-x" | "repeat-y";
+  filter: string;
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  blur: number;
+  hueRotate: number;
+}
+
 export interface DataStore {
   // State
   wallpaper: string;
+  wallpaperFilters: WallpaperFilters;
   font: string;
   isConnected: boolean;
   isEditing: boolean;
@@ -53,6 +66,7 @@ export interface DataStore {
   adPosition: 1 | 2 | 3 | 4;
 
   // Actions
+  setWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
   setSavedWheel: (savedWheel: string[]) => void;
   setWheelHistory: (wheelHistory: WheelHistoryItem[]) => void;
   addWheelHistory: (item: WheelHistoryItem) => void;

@@ -1,11 +1,65 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button.component";
-import { Plus } from "lucide-react";
+import { Slider } from "@/components/ui/slider.component";
+import { Plus, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { WallpaperProps } from "@/types/desktop";
 import WallpaperComponent from "../components/wallpaper.component";
 import { useDataStore } from "@/store/data.store";
+
+const FILTER_PRESETS = [
+  {
+    label: "Обычный",
+    filters: {
+      brightness: 100,
+      contrast: 100,
+      saturate: 100,
+      blur: 0,
+      hueRotate: 0,
+    },
+  },
+  {
+    label: "Тёмный",
+    filters: {
+      brightness: 70,
+      contrast: 100,
+      saturate: 100,
+      blur: 0,
+      hueRotate: 0,
+    },
+  },
+  {
+    label: "Яркий",
+    filters: {
+      brightness: 130,
+      contrast: 110,
+      saturate: 120,
+      blur: 0,
+      hueRotate: 0,
+    },
+  },
+  {
+    label: "Сепия",
+    filters: {
+      brightness: 100,
+      contrast: 90,
+      saturate: 60,
+      blur: 0,
+      hueRotate: 30,
+    },
+  },
+  {
+    label: "Размытие",
+    filters: {
+      brightness: 100,
+      contrast: 100,
+      saturate: 100,
+      blur: 5,
+      hueRotate: 0,
+    },
+  },
+];
 
 export default function WallpaperApp({
   setWallpaper,
@@ -13,12 +67,17 @@ export default function WallpaperApp({
   setWallpaper: (path: string) => void;
 }) {
   const setData = useDataStore((state) => state.setWallpaper);
+  const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
+  const setWallpaperFilters = useDataStore(
+    (state) => state.setWallpaperFilters,
+  );
 
   const [wallpapers, setWallpapers] = useState<WallpaperProps[]>([]);
   const [wallUrls, setWallUrls] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const loadWallpapers = async () => {
     try {
@@ -153,15 +212,22 @@ export default function WallpaperApp({
   };
 
   return (
-    <main className="flex h-full w-full flex-col gap-2 overflow-auto p-2">
-      <section>
+    <main className="flex h-full w-full flex-col gap-2 p-2">
+      <section className="flex gap-2">
         <Button
-          className="h-16 w-full"
+          className="h-10 flex-1"
           onClick={() => {
             document.getElementById("imageInput")?.click();
           }}
         >
           <Plus />
+        </Button>
+        <Button
+          className="h-10 w-10"
+          variant="default"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <SlidersHorizontal />
         </Button>
         <input
           id="imageInput"
@@ -173,7 +239,196 @@ export default function WallpaperApp({
         />
       </section>
 
-      <section className="flex w-full cursor-pointer flex-row flex-wrap items-center justify-center gap-2">
+      {showFilters && (
+        <section className="flex flex-col gap-3 rounded border-2 border-highlight-high bg-background p-3 overflow-auto">
+          <div className="flex flex-wrap gap-1 items-center">
+            <Button
+              title="Сбросить"
+              size="icon"
+              variant="error"
+              className="w-8 h-8"
+              onClick={() =>
+                setWallpaperFilters({
+                  brightness: 100,
+                  contrast: 100,
+                  saturate: 100,
+                  blur: 0,
+                  hueRotate: 0,
+                })
+              }
+            >
+              <RotateCcw className="size-4" />
+            </Button>
+
+            {FILTER_PRESETS.map((preset) => (
+              <Button
+                key={preset.label}
+                size="sm"
+                variant="link"
+                className="text-xs w-22 h-8 border-2 bg-background text-text border-iris hover:bg-iris/20 hover:text-text active:bg-iris/40"
+                onClick={() => setWallpaperFilters(preset.filters)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <label className="font-semibold">Яркость</label>
+                <span className="text-muted">
+                  {wallpaperFilters.brightness}%
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={200}
+                value={[wallpaperFilters.brightness]}
+                onValueChange={(val) =>
+                  setWallpaperFilters({
+                    brightness: Array.isArray(val) ? val[0] : val,
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <label className="font-semibold">Контраст</label>
+                <span className="text-muted">{wallpaperFilters.contrast}%</span>
+              </div>
+              <Slider
+                min={0}
+                max={200}
+                value={[wallpaperFilters.contrast]}
+                onValueChange={(val) =>
+                  setWallpaperFilters({
+                    contrast: Array.isArray(val) ? val[0] : val,
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <label className="font-semibold">Насыщенность</label>
+                <span className="text-muted">{wallpaperFilters.saturate}%</span>
+              </div>
+              <Slider
+                min={0}
+                max={200}
+                value={[wallpaperFilters.saturate]}
+                onValueChange={(val) =>
+                  setWallpaperFilters({
+                    saturate: Array.isArray(val) ? val[0] : val,
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <label className="font-semibold">Размытие</label>
+                <span className="text-muted">{wallpaperFilters.blur}px</span>
+              </div>
+              <Slider
+                min={0}
+                max={20}
+                value={[wallpaperFilters.blur]}
+                onValueChange={(val) =>
+                  setWallpaperFilters({
+                    blur: Array.isArray(val) ? val[0] : val,
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex justify-between text-sm">
+                <label className="font-semibold">Оттенок</label>
+                <span className="text-muted">
+                  {wallpaperFilters.hueRotate}°
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={360}
+                value={[wallpaperFilters.hueRotate]}
+                onValueChange={(val) =>
+                  setWallpaperFilters({
+                    hueRotate: Array.isArray(val) ? val[0] : val,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="border-t-2 pt-2">
+            <h4 className="mb-2 text-sm font-semibold">Позиционирование</h4>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm">Размер:</label>
+                <select
+                  className="rounded border bg-background p-1 text-sm"
+                  value={wallpaperFilters.backgroundSize}
+                  onChange={(e) =>
+                    setWallpaperFilters({ backgroundSize: e.target.value })
+                  }
+                >
+                  <option value="cover">Заполнить</option>
+                  <option value="contain">Вместить</option>
+                  <option value="auto">Авто</option>
+                  <option value="fill">Растянуть</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-sm">Позиция:</label>
+                <select
+                  className="rounded border bg-background p-1 text-sm"
+                  value={wallpaperFilters.backgroundPosition}
+                  onChange={(e) =>
+                    setWallpaperFilters({ backgroundPosition: e.target.value })
+                  }
+                >
+                  <option value="center">Центр</option>
+                  <option value="top">Сверху</option>
+                  <option value="bottom">Снизу</option>
+                  <option value="left">Слева</option>
+                  <option value="right">Справа</option>
+                  <option value="top left">Сверху слева</option>
+                  <option value="top right">Сверху справа</option>
+                  <option value="bottom left">Снизу слева</option>
+                  <option value="bottom right">Снизу справа</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-sm">Повтор:</label>
+                <select
+                  className="rounded border bg-background p-1 text-sm"
+                  value={wallpaperFilters.backgroundRepeat}
+                  onChange={(e) =>
+                    setWallpaperFilters({
+                      backgroundRepeat: e.target.value as
+                        | "no-repeat"
+                        | "repeat"
+                        | "repeat-x"
+                        | "repeat-y",
+                    })
+                  }
+                >
+                  <option value="no-repeat">Нет</option>
+                  <option value="repeat">Повтор</option>
+                  <option value="repeat-x">По горизонтали</option>
+                  <option value="repeat-y">По вертикали</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="flex w-full cursor-pointer flex-row flex-wrap items-center justify-center gap-2 overflow-auto">
         {wallpapers.map((wallpaper) => {
           if (loading)
             return (
