@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { memo, useCallback, useEffect, useState } from "react";
-import { Palette, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 
 type ThemeColor = {
   name: string;
@@ -70,11 +70,6 @@ function ThemeApp() {
 
   return (
     <main className="flex flex-col h-full w-full p-4 gap-3 bg-background overflow-y-auto">
-      <header className="flex items-center gap-2 border-b-2 border-highlight-high pb-2">
-        <Palette className="size-5 text-primary" />
-        <h1 className="text-lg font-bold text-text">Редактор темы</h1>
-      </header>
-
       <section className="flex flex-col gap-3 flex-1">
         {themeColors.map(({ name, variable }) => (
           <div key={variable} className="flex flex-row items-center gap-2">
@@ -99,12 +94,11 @@ function ThemeApp() {
       <footer className="flex flex-row gap-2 border-t-2 border-highlight-high pt-2">
         <Button
           variant="error"
-          size="sm"
+          size="icon"
           onClick={handleReset}
           className="gap-1"
         >
           <RotateCcw className="size-3" />
-          Сброс
         </Button>
         <Button
           variant="success"
