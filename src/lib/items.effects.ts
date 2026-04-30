@@ -41,6 +41,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Тупорылый кот
   if (item.label === "Тупорылый кот") {
     const currentCell =
       (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
@@ -370,6 +371,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Ведро
   if (item.label === "Ведро") {
     const allUsers = await usersApi.getAllUsers().then((res) =>
       res
@@ -413,6 +415,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Ведро с Польпо
   if (item.label === "Ведро с Польпо") {
     if (!currentUser) return;
 
@@ -434,6 +437,132 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Светлое нефильтрованное
+  if (item.label === "Светлое нефильтрованное") {
+    if (!currentUser) return;
+
+    await usersApi.scoreUser(String(currentUser.id), 20);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} выпил пива и нашел 20 чубриков на полу`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  //Крысиный тапок
+  if (item.label === "Крысиный тапок") {
+    if (!currentUser) return;
+
+    //удалить случайный предмет
+    const allItems = await itemsApi.getInventory(String(currentUser.id));
+    const randomIndex = Math.floor(Math.random() * allItems.length);
+    const finalItem = allItems[randomIndex];
+
+    await itemsApi.removeInventory(String(finalItem.id));
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} потерял ${finalItem.label}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  //Глюк матрицы
+  if (item.label === "Глюк матрицы") {
+    if (!currentUser) return;
+
+    const allItems = await itemsApi.getInventory(String(currentUser.id));
+    const randomIndex = Math.floor(Math.random() * allItems.length);
+    const finalItem = allItems[randomIndex];
+
+    await itemsApi.addInventory(
+      String(currentUser.id),
+      String(finalItem.id),
+      `${image.items}${finalItem?.id}/${finalItem?.image}`,
+    );
+
+    //10% chance of getting a rat
+    if (Math.random() * 100 <= 10) {
+      const ratId = "dswpfvayiqxul1b";
+      const ratImage = `${image.items}${ratId}/100x100_723bzyfzkql6_or7gvv38ny_ltkzx8ac9i.png`;
+
+      await itemsApi.addInventory(String(currentUser.id), ratId, ratImage);
+
+      const activityData = {
+        author: currentUser.id,
+        image: currentUser.avatar,
+        type: "emoji",
+        text: `${currentUser.username} получил внезапную крысу`,
+      } as Activity;
+
+      await activityApi.createActivity(activityData);
+    }
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} создал дубликат ${finalItem.label}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  //Крыса наркоманка
+  if (item.label === "Крыса наркоманка") {
+    if (!currentUser) return;
+
+    const allUsers = await usersApi.getAllUsers();
+    const randomUser = Math.floor(Math.random() * allUsers.length);
+    const finalUser = allUsers[randomUser];
+
+    const allItems = await itemsApi.getInventory(String(finalUser.id));
+    const randomItem = Math.floor(Math.random() * allItems.length);
+    const finalItem = allItems[randomItem];
+
+    await itemsApi.addInventory(
+      String(currentUser.id),
+      String(finalItem.id),
+      `${image.items}${finalItem?.id}/${finalItem?.image}`,
+    );
+    await itemsApi.addInventory(
+      String(finalUser.id),
+      "diy82ugngg95mek",
+      `${image.items}diy82ugngg95mek/100x100_219_pv55hb1082_lkevce5l2t.png`,
+    );
+
+    await itemsApi.removeInventory(String(finalItem.id));
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} украл ${finalItem.label} у ${finalUser.username}, оставив после себя лишь кал`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  //Любой другой предмет
   const activityData = {
     author: currentUser.id,
     image: currentUser.avatar,
