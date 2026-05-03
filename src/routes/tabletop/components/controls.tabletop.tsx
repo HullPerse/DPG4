@@ -155,7 +155,7 @@ export default function Controls({
             });
           })()}
 
-          {userHistory.length > 0 && (
+          {userHistory.length !== 0 && (
             <div>
               <span className="font-bold">Захват:</span>
               {Object.entries(userHistory).map(([user, count]) => (

@@ -28,7 +28,11 @@ export function calculateScore(realTime: number, hltbTime: number) {
   const multiplier = Math.max(0.5, Math.min(1.5, 0.5 + 0.5 * ratio));
 
   const score = multiplier * hltbTime;
-  return Math.max(3, Math.floor(score));
+
+  const finalScore = Math.max(3, Math.floor(score));
+  const bonus = Math.floor(finalScore / 3);
+
+  return finalScore + bonus;
 }
 
 /**

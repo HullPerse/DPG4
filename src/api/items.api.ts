@@ -12,6 +12,46 @@ export const NON_WHEEL_ITEMS = [
   "olvbzslxz9xbtr9",
 ];
 
+export const CELL_CONDITION_ITEMS = [
+  "0reqwx9hzpoq90x",
+  "ww2xpb1p3u6ezvc",
+  "fjknxuyft8huggg",
+  "8ao8zdi86q5mxhu",
+  "fxmrvtzkp5wxag2",
+  "5b4n56x6ce10j1c",
+  "pbjvwna0qmooq3m",
+  "f8viz96eckpmt6y",
+  "b8go87zv8wy9yn5",
+  "vi8kii8bixh5q92",
+  "wf5xu136qpb6hl8",
+  "gl3yonazgnlrt2z",
+  "z76y1ea82nj3x3x",
+  "6qbbs2s2mb7grrl",
+  "sxx0ntuvyfqbi67",
+  "vz2wofx0nyx9q6e",
+  "027ekqu3xpqvn6w",
+  "u78rxj5f02uvvi4",
+  "ap8xz9w7x7ul5o3",
+  "pahafdlmwkse1uo",
+  "izx9vo3x38tn71s",
+  "y0089n0ywjkwjqa",
+  "c54i0bblpx05rio",
+  "4o7dzih0jdftqz1",
+  "hzr3jcd3qbh71vn",
+  "y9lfht59ohaju5v",
+  "skqar0qgbzxokm8",
+  "e5n2ehfy6ol996u",
+  "5b07f7euipak144",
+  "jgsr77em710wy2v",
+  "953dqv22seejo5w",
+  "qzxaogavs6iorfx",
+  "jgew0bwjc69xo0g",
+  "cwxeyjt6ghhfgza",
+  "quyhj9knb8gqizt",
+  "e07bif9uq10vhp0",
+  "q8x77cswxp99qt1",
+];
+
 export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
   private readonly inventoryCollection = client.collection("inventory");

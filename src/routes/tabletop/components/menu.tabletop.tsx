@@ -23,7 +23,7 @@ export default function MenuTabletop() {
       {user?.currentAction === "MOVE_POSITIVE" ||
       user?.currentAction === "MOVE_NEGATIVE" ? (
         <div className="flex flex-col w-full p-2">
-          {user.position === 101 ? (
+          {user.currentAction === "MOVE_POSITIVE" && user.position === 101 ? (
             <Button
               variant="success"
               onClick={async () => await usersApi.moveUser(String(user.id), 0)}

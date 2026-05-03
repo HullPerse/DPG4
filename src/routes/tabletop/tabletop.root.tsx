@@ -2,7 +2,7 @@ import CellApi from "@/api/cell.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleX, Menu, ToolCase } from "lucide-react";
+import { CircleX, Globe, Menu, ToolCase } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
@@ -11,6 +11,7 @@ import { startTransition, useCallback, useRef, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
+import ShowCell from "./components/showCell.tabletop";
 import { useDataStore } from "@/store/data.store";
 import ToolsTaletop from "./components/tools.taletop";
 
@@ -24,6 +25,7 @@ export default function Tabletop() {
   const [cell, setCell] = useState<number | null>(null);
   const [control, setControl] = useState<boolean>(false);
   const [showTools, setShowTools] = useState<boolean>(false);
+  const [showCell, setShowCell] = useState<boolean>(false);
 
   const initialMount = useRef<boolean>(true);
   const zoomToUserRef = useRef<{ userId: string } | null>(null);
@@ -106,29 +108,39 @@ export default function Tabletop() {
       )}
 
       {/* CONTROLS */}
-      {control ? (
+      {control && (
         <Controls setControls={setControl} cell={cell} setCell={setCell} />
-      ) : (
-        <>
-          <button
-            className="absolute top-2 left-2 z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
-            title="Меню"
-            onClick={() => setControl(true)}
-          >
-            <Menu />
-          </button>
-
-          {!showTools && (
-            <button
-              className="absolute top-11 left-2 z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
-              title="Инструменты"
-              onClick={() => setShowTools(true)}
-            >
-              <ToolCase />
-            </button>
-          )}
-        </>
       )}
+
+      {/* CELL */}
+      {showCell && <ShowCell setShowCell={setShowCell} />}
+      <section className="absolute top-2 left-2 flex flex-col gap-1 z-500">
+        <button
+          className="cursor-pointer rounded border p-1 text-muted hover:text-text"
+          title="Клетка"
+          onClick={() => setShowCell(true)}
+        >
+          <Globe />
+        </button>
+
+        <button
+          className="cursor-pointer rounded border p-1 text-muted hover:text-text"
+          title="Меню"
+          onClick={() => setControl(true)}
+        >
+          <Menu />
+        </button>
+
+        {!showTools && (
+          <button
+            className="z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
+            title="Инструменты"
+            onClick={() => setShowTools(true)}
+          >
+            <ToolCase />
+          </button>
+        )}
+      </section>
 
       {/* GAME AREA */}
       <TransformWrapper
