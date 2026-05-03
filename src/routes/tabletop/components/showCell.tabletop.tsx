@@ -9,7 +9,7 @@ import { Cell } from "@/types/cell";
 import { Inventory } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, CircleX, X } from "lucide-react";
-import { startTransition, useCallback, useState } from "react";
+import { startTransition, useEffect, useCallback, useState } from "react";
 
 const cellApi = new CellApi();
 const itemsApi = new ItemsApi();
@@ -36,7 +36,7 @@ export default function ShowCell({
       const inventoryData = await itemsApi
         .getInventory(String(user?.id))
         .then((res) =>
-          res.filter((i) => CELL_CONDITION_ITEMS.includes(String(i.id))),
+          res.filter((i) => CELL_CONDITION_ITEMS.includes(String(i.label))),
         );
 
       return {
@@ -54,6 +54,14 @@ export default function ShowCell({
       });
     });
   }, [queryClient]);
+
+  useEffect(() => {
+    if (!data?.inventory || data.inventory.length === 0) {
+      setCurrentItem(0);
+    } else if (currentItem >= data.inventory.length) {
+      setCurrentItem(data.inventory.length - 1);
+    }
+  }, [data?.inventory, currentItem]);
 
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("cells", "*", invalidateQuery);
@@ -122,38 +130,46 @@ export default function ShowCell({
         </section>
       ) : (
         <section className="flex h-full w-full flex-col bg-background p-2 gap-1">
-          <div className="flex flex-row gap-1 border-b-2 border-highlight-high">
-            <span className="truncate h-fit">
-              [{currentItem + 1}/{data?.inventory.length}]{" "}
-              {data?.inventory ? data?.inventory[currentItem].label : ""}
-            </span>
-            <div className="flex flex-row ml-auto items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30 mb-2"
-                onClick={() => setCurrentItem((prev) => prev - 1)}
-                disabled={currentItem === 0}
+          {data?.inventory && data.inventory.length > 0 ? (
+            <>
+              <div className="flex flex-row gap-1 border-b-2 border-highlight-high">
+                <span className="truncate h-fit">
+                  [{currentItem + 1}/{data.inventory.length}]{" "}
+                  {data.inventory[currentItem].label}
+                </span>
+                <div className="flex flex-row ml-auto items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30 mb-2"
+                    onClick={() => setCurrentItem((prev) => prev - 1)}
+                    disabled={currentItem === 0}
+                  >
+                    <ChevronLeft />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30 mb-2"
+                    onClick={() => setCurrentItem((prev) => prev + 1)}
+                    disabled={currentItem === data.inventory.length - 1}
+                  >
+                    <ChevronRight />
+                  </Button>
+                </div>
+              </div>
+              <span
+                className="text-[14px] min-w-0 flex-1 font-mono wrap-break-word text-muted"
+                style={{ whiteSpace: "pre-line" }}
               >
-                <ChevronLeft />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6 opacity-75 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30 mb-2"
-                onClick={() => setCurrentItem((prev) => prev + 1)}
-                disabled={currentItem === (data?.inventory.length ?? 1) - 1}
-              >
-                <ChevronRight />
-              </Button>
+                {data.inventory[currentItem].description}
+              </span>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted">
+              Инвентарь пуст
             </div>
-          </div>
-          <span
-            className="text-md min-w-0 flex-1 font-mono wrap-break-word text-muted"
-            style={{ whiteSpace: "pre-line" }}
-          >
-            {data?.inventory[currentItem].description}
-          </span>
+          )}
         </section>
       )}
     </main>
