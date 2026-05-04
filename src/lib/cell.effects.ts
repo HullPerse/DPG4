@@ -37,6 +37,18 @@ export async function usableCell(cell: Cell, userId: string) {
     await cellApi.changeStatus(cell.id, removeFirst(cell.status ?? [], "cat"));
   }
 
+  //CHAIR
+  if (cell?.status?.includes("chair")) {
+    const audio = new Audio("/audio/trump.mp3");
+    audio.volume = 0.1;
+    audio.play();
+
+    await cellApi.changeStatus(
+      cell.id,
+      removeFirst(cell.status ?? [], "chair"),
+    );
+  }
+
   //POOP
   if (cell?.status?.includes("poop")) {
     await userApi.changeUserStatus(userId, "poop", "add");

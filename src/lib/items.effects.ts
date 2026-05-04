@@ -566,6 +566,7 @@ export async function usableItems(item: Inventory) {
     return;
   }
 
+  //Крыса гой
   if (item.label === "Крыса гой") {
     const allUsers = await usersApi
       .getAllUsers()
@@ -585,6 +586,29 @@ export async function usableItems(item: Inventory) {
       image: currentUser.avatar,
       type: "emoji",
       text: `У ${currentUser.username} выпали из кармана все чубрики, пока он воровал ${finalItem.label} у ${finalUser.username}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  //Стул Трампа
+  if (item.label === "Стул Трампа") {
+    const currentCell =
+      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+
+    await cellApi.changeStatus(currentCell.id, [
+      ...(currentCell.status ?? []),
+      "chair",
+    ]);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} выкинул стул на клетку ${currentCell.number}`,
     } as Activity;
 
     await activityApi.createActivity(activityData);
