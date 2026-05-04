@@ -204,7 +204,9 @@ export async function usableItems(item: Inventory) {
 
   //Добрая крыса
   if (item.label === "Добрая крыса") {
-    const allUsers = await usersApi.getAllUsers();
+    const allUsers = await usersApi
+      .getAllUsers()
+      .then((res) => res.filter((u) => u.id !== currentUser.id));
     const randomIndex = Math.floor(Math.random() * allUsers.length);
     const randomUser = allUsers[randomIndex];
 
@@ -389,7 +391,7 @@ export async function usableItems(item: Inventory) {
       Math.floor(Math.random() * allUsers.length)
     ];
 
-    const randomIndex = Math.floor(Math.random() * 2);
+    const randomIndex = Math.floor(Math.random() * 3);
     const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt", "qqr2upqkuli51ea"][
       randomIndex
     ]; //1 - моча 2 - конча 3 - польпо
@@ -528,7 +530,9 @@ export async function usableItems(item: Inventory) {
   if (item.label === "Крыса наркоманка") {
     if (!currentUser) return;
 
-    const allUsers = await usersApi.getAllUsers();
+    const allUsers = await usersApi
+      .getAllUsers()
+      .then((res) => res.filter((u) => u.id !== currentUser.id));
     const randomUser = Math.floor(Math.random() * allUsers.length);
     const finalUser = allUsers[randomUser];
 
@@ -554,6 +558,33 @@ export async function usableItems(item: Inventory) {
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} украл ${finalItem.label} у ${finalUser.username}, оставив после себя лишь кал`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+
+  if (item.label === "Крыса гой") {
+    const allUsers = await usersApi
+      .getAllUsers()
+      .then((res) => res.filter((u) => u.id !== currentUser.id));
+    const randomUser = Math.floor(Math.random() * allUsers.length);
+    const finalUser = allUsers[randomUser];
+    const allItems = await itemsApi.getInventory(String(finalUser.id));
+    const randomItem = Math.floor(Math.random() * allItems.length);
+
+    const finalItem = allItems[randomItem];
+
+    await usersApi.scoreUser(String(currentUser.id), -currentUser.money);
+    await itemsApi.sendInventory(String(finalItem.id), String(currentUser.id));
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `У ${currentUser.username} выпали из кармана все чубрики, пока он воровал ${finalItem.label} у ${finalUser.username}`,
     } as Activity;
 
     await activityApi.createActivity(activityData);

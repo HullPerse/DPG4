@@ -6,10 +6,11 @@ import UsersWheel from "./tabs/users.tab";
 import CustomWheel from "./tabs/custom.tab";
 import UserGamesTab from "./tabs/userGames.tab";
 import UserItemsTab from "./tabs/userItems.tab";
+import PresetsWheel from "./tabs/presets.tab";
 
 export default function Wheels() {
   const [tab, setTab] = useState<
-    "home" | "users" | "userGames" | "userItems" | "custom"
+    "home" | "users" | "userGames" | "userItems" | "presets" | "custom"
   >("home");
 
   const [values, setValues] = useState<string[]>([]);
@@ -38,6 +39,7 @@ export default function Wheels() {
           setValues={setValues}
         />
       ),
+      presets: <PresetsWheel />,
       custom: <CustomWheel />,
     };
 

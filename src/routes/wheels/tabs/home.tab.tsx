@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button.component";
-import { Gamepad2, Pen, Swords, Users } from "lucide-react";
+import { Gamepad2, Pen, Swords, Users, Gamepad } from "lucide-react";
 import { memo, ReactNode } from "react";
 
-export const TABS = ["users", "userGames", "userItems", "custom"];
+export const TABS = ["users", "userGames", "userItems", "presets", "custom"];
 
 function HomeWheel({
   setTab,
 }: {
   setTab: (
-    tab: "home" | "users" | "userGames" | "userItems" | "custom",
+    tab: "home" | "users" | "userGames" | "userItems" | "presets" | "custom",
   ) => void;
 }) {
-  const getTab = (value: "users" | "userGames" | "userItems" | "custom") => {
+  const getTab = (
+    value: "users" | "userGames" | "userItems" | "presets" | "custom",
+  ) => {
     const tabMap = {
       users: {
         value: "users",
@@ -32,6 +34,12 @@ function HomeWheel({
           "Колесо предметов всех игроков. Можно выбрать по участнику",
         icon: <Swords className="size-10" />,
       },
+      presets: {
+        value: "presets",
+        label: "Пресеты",
+        description: "Колесо случайного пресета",
+        icon: <Gamepad className="size-10" />,
+      },
       custom: {
         value: "custom",
         label: "Своё колесоо",
@@ -48,7 +56,7 @@ function HomeWheel({
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         {TABS.map((value) => {
           const tab = getTab(
-            value as "users" | "userGames" | "userItems" | "custom",
+            value as "users" | "userGames" | "userItems" | "presets" | "custom",
           ) as {
             value: string;
             label: string;

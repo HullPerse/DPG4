@@ -3,11 +3,13 @@ import { client } from "./client.api";
 import { useDataStore } from "@/store/data.store";
 import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
+import ItemsApi from "./items.api";
 import { getNextDice, removeFirst } from "@/lib/utils";
 import { Activity } from "@/types/activity";
 import { usableCell } from "@/lib/cell.effects";
 
 const cellApi = new CellApi();
+const itemsApi = new ItemsApi();
 
 export default class UserApi {
   private readonly usersCollection = client.collection("users");
@@ -170,6 +172,23 @@ export default class UserApi {
 
   scoreUser = async (userId: string, score: number) => {
     const currentScore = await this.getUserScore(userId);
+
+    const userItems = await itemsApi.getInventory(userId);
+    const ephemerality = userItems.find((i) => i.label === "Эфемерность");
+
+    if (score > 0 && ephemerality && Math.random() >= 0.5) {
+      const currentUser = await this.getUserById(userId);
+
+      await itemsApi.removeInventory(String(ephemerality.id));
+
+      const activityData = {
+        image: currentUser.username,
+        type: "emoji",
+        text: `${currentUser.username} не смог получить ${score}`,
+      } as Activity;
+
+      return await this.activityCollection.create(activityData);
+    }
 
     return await this.usersCollection.update(userId, {
       money: currentScore + score,
