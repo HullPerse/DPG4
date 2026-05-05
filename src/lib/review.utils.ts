@@ -1,19 +1,3 @@
-export function extractYouTubeId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/watch\?.*?v=([a-zA-Z0-9_-]{11})/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = new RegExp(pattern).exec(url);
-    if (match) {
-      return match[1];
-    }
-  }
-
-  return null;
-}
-
 export function isYouTubeLink(text: string): boolean {
   return /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(
     text,
@@ -23,12 +7,10 @@ export function isYouTubeLink(text: string): boolean {
 export function parseReviewText(text: string): Array<{
   type: "text" | "youtube";
   content: string;
-  videoId?: string;
 }> {
   const result: Array<{
     type: "text" | "youtube";
     content: string;
-    videoId?: string;
   }> = [];
 
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -60,19 +42,10 @@ export function parseReviewText(text: string): Array<{
         });
       }
 
-      const videoId = extractYouTubeId(urlMatch.url);
-      if (videoId) {
-        result.push({
-          type: "youtube",
-          content: urlMatch.url,
-          videoId,
-        });
-      } else {
-        result.push({
-          type: "text",
-          content: urlMatch.url,
-        });
-      }
+      result.push({
+        type: "youtube",
+        content: urlMatch.url,
+      });
 
       lastIndex = urlMatch.endIndex;
     }

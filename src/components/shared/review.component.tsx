@@ -11,6 +11,7 @@ import GameApi from "@/api/games.api";
 import { parseReviewText } from "@/lib/review.utils";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 const gameApi = new GameApi();
 
@@ -141,13 +142,12 @@ function Review({
 
             return (
               <div key={index.toString()}>
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${part.videoId}?modestbranding=1&rel=0`}
-                  title="YouTube video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                />
+                <button
+                  onClick={() => openUrl(part.content)}
+                  className="text-blue-500 hover:text-blue-700 underline cursor-pointer"
+                >
+                  {part.content}
+                </button>
               </div>
             );
           })}
