@@ -44,18 +44,16 @@ function PresetSettings({
     queryFn: async (): Promise<Preset> => {
       if (isSteamPreset) {
         const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
+
         let games: GameData[] = [];
 
-        if (accessToken) {
-          games = await gameApi.getSteamFamily(steamId, accessToken);
-        } else {
-          games = await gameApi.getSteamLibrary(steamId);
-        }
+        if (!accessToken) games = await gameApi.getSteamLibrary(steamId);
+        else games = await gameApi.getSteamFamily(steamId, accessToken);
 
         return {
           id: STEAM_PRESET_ID,
           label: "Библиотека STEAM",
-          games,
+          games: games,
         };
       }
       return await gameApi.getPresetById(id);
@@ -114,7 +112,7 @@ function PresetSettings({
       });
     }
 
-    const game = data?.games.find((game) => game.id === id);
+    const game = data?.games.find((game) => String(game.id) === String(id));
     if (!game) return;
 
     const gameData = {

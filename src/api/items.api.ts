@@ -194,8 +194,8 @@ export default class ItemsApi {
 
   tradeInventory = async (currentUser: Trade, otherUser: Trade) => {
     if (currentUser.money > 0) {
-      await this.userApi.scoreUser(otherUser.id, currentUser.money);
-      await this.userApi.scoreUser(currentUser.id, -currentUser.money);
+      await this.userApi.scoreUser(otherUser.id, currentUser.money, true);
+      await this.userApi.scoreUser(currentUser.id, -currentUser.money, true);
     }
 
     //2. send items
@@ -208,8 +208,8 @@ export default class ItemsApi {
     //other user => current user
     //1. send money
     if (otherUser.money > 0) {
-      await this.userApi.scoreUser(currentUser.id, otherUser.money);
-      await this.userApi.scoreUser(otherUser.id, -otherUser.money);
+      await this.userApi.scoreUser(currentUser.id, otherUser.money, true);
+      await this.userApi.scoreUser(otherUser.id, -otherUser.money, true);
     }
 
     ///2. send items

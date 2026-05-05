@@ -225,14 +225,22 @@ export function calculateMovePath(
     path.push(currentPosition);
   }
 
-  if (diceRoll < 0) {
-    return { path, finalPosition: currentPosition };
+  const cell = cells.find((c) => c.number === currentPosition);
+  if (!cell) {
+    return { path: [...path, currentPosition], finalPosition: currentPosition };
   }
 
-  const cell = cells.find((c) => c.number === currentPosition);
-
-  if (!cell)
-    return { path: [...path, currentPosition], finalPosition: currentPosition };
+  if (diceRoll < 0) {
+    if (cell && cell?.snakeTo > 0) {
+      currentPosition = cell.snakeTo;
+      path.push(currentPosition);
+      return {
+        path: [...path, currentPosition],
+        finalPosition: currentPosition,
+      };
+    }
+    return { path, finalPosition: currentPosition };
+  }
 
   if (cell.ladderTo > 0) {
     currentPosition = cell.ladderTo;

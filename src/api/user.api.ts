@@ -170,13 +170,13 @@ export default class UserApi {
     return user.money;
   };
 
-  scoreUser = async (userId: string, score: number) => {
+  scoreUser = async (userId: string, score: number, trade?: boolean) => {
     const currentScore = await this.getUserScore(userId);
 
     const userItems = await itemsApi.getInventory(userId);
     const ephemerality = userItems.find((i) => i.label === "Эфемерность");
 
-    if (score > 0 && ephemerality && Math.random() >= 0.5) {
+    if (!trade && score > 0 && ephemerality && Math.random() >= 0.5) {
       const currentUser = await this.getUserById(userId);
 
       await itemsApi.removeInventory(String(ephemerality.id));

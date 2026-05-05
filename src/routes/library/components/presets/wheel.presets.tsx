@@ -45,14 +45,8 @@ export default function PresetsWheel({ id }: { id: string }) {
 
         let games: GameData[] = [];
 
-        if (accessToken) {
-          games = (await gameApi.getSteamFamily(
-            steamId,
-            accessToken,
-          )) as GameData[];
-        } else {
-          games = (await gameApi.getSteamLibrary(steamId)) as GameData[];
-        }
+        if (!accessToken) games = await gameApi.getSteamLibrary(steamId);
+        else games = await gameApi.getSteamFamily(steamId, accessToken);
 
         return {
           id: STEAM_PRESET_ID,

@@ -5,7 +5,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { type Preset } from "@/types/games";
+import { GameData, type Preset } from "@/types/games";
 import PresetComponent from "@/components/shared/preset.component";
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
@@ -31,34 +31,27 @@ export default function PresetsList({
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ["presetsList"],
-    queryFn: async (): Promise<{ presets: Preset[]; steamLibrary: any }> => {
+    queryFn: async (): Promise<{
+      presets: Preset[];
+      steamLibrary: Preset;
+    }> => {
       const presets = await gameApi.getPresets();
 
       const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
 
-      let games: Preset[] = [];
+      let games: GameData[] = [];
 
-      if (accessToken) {
-        games = (await gameApi
-          .getSteamFamily(steamId, accessToken)
-          .then((res) => {
-            return {
-              id: "steamPreset",
-              label: "Библиотека STEAM",
-              games: res,
-            };
-          })) as Preset[];
-      } else {
-        games = (await gameApi.getSteamLibrary(steamId).then((res) => {
-          return {
-            id: "steamPreset",
-            label: "Библиотека STEAM",
-            games: res,
-          };
-        })) as Preset[];
-      }
+      if (!accessToken) games = await gameApi.getSteamLibrary(steamId);
+      else games = await gameApi.getSteamFamily(steamId, accessToken);
 
-      return { presets, steamLibrary: games };
+      return {
+        presets,
+        steamLibrary: {
+          id: "steamPreset",
+          label: "Библиотека STEAM",
+          games: games,
+        },
+      };
     },
   });
 
