@@ -4,6 +4,7 @@ import {
   memo,
   startTransition,
   useCallback,
+  useRef,
   useEffect,
   useMemo,
   useState,
@@ -13,7 +14,7 @@ import AdsApi, {
   SUBSCRIPTION_COST,
 } from "@/api/ads.api";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { X } from "lucide-react";
+import { X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
@@ -47,6 +48,8 @@ function AdvertisementApp() {
 
   const [confirm, setConfirm] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
@@ -73,10 +76,23 @@ function AdvertisementApp() {
     return () => clearInterval(interval);
   }, []);
 
+  const toggleMute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
   const randomAd = useMemo(() => {
     if (!data?.length) return null;
     return data[Math.floor(Math.random() * data.length)];
   }, [data]);
+
+  useEffect(() => {
+    if (randomAd?.audio && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [randomAd]);
 
   const progress = ((CLOSE_TIME - remaining) / CLOSE_TIME) * 100;
 
@@ -131,11 +147,29 @@ function AdvertisementApp() {
         </div>
       </section>
 
-      <section className="flex flex-col items-center p-2">
+      <section className="relative flex flex-col items-center p-2">
+        {randomAd?.audio && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 right-3 h-7 min-w-7 w-fit px-1 transition-all duration-200 z-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMute();
+            }}
+          >
+            {isMuted ? (
+              <VolumeX className="size-4" />
+            ) : (
+              <Volume2 className="size-4" />
+            )}
+          </Button>
+        )}
+
         <ImageComponent
           src={`${image.ads}${randomAd.id}/${randomAd.image}`}
           alt={randomAd.text}
-          className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer"
+          className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer z-49"
           type="contain"
           onClick={() => {
             openWindow(
@@ -145,6 +179,14 @@ function AdvertisementApp() {
             );
           }}
         />
+
+        {randomAd.audio && (
+          <audio
+            ref={audioRef}
+            src={`${image.ads}${randomAd.id}/${randomAd.audio}`}
+            className="hidden"
+          />
+        )}
 
         <span className="mt-2 line-clamp-2 text-center text-xs text-text">
           {randomAd.text}

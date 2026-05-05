@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog.component";
 import { Input } from "@/components/ui/input.component";
 import { ImageUploader } from "@/components/shared/uploader.component";
+import { AudioUploader } from "@/components/shared/audio.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
 
@@ -34,6 +35,11 @@ function AdTab() {
   const [isOpen, setIsOpen] = useState(false);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioVolume, setAudioVolume] = useState<number>(1);
+  const [compressedAudioSize, setCompressedAudioSize] = useState<number | null>(
+    null,
+  );
   const [text, setText] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -52,6 +58,17 @@ function AdTab() {
       });
     });
   }, [queryClient]);
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setImageFile(null);
+      setAudioFile(null);
+      setText("");
+      setCompressedAudioSize(null);
+      setAudioVolume(1);
+    }
+    setIsOpen(open);
+  };
 
   useSubscription("ads", "*", invalidateQuery);
 
@@ -74,8 +91,115 @@ function AdTab() {
     setLoading(false);
   };
 
+  const compressAudio = async (file: File): Promise<File> => {
+    const audioContext = new AudioContext();
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    let bufferToProcess = audioBuffer;
+
+    if (audioVolume !== 1) {
+      bufferToProcess = applyVolume(audioBuffer, audioVolume);
+    }
+
+    const needsCompression = file.size > 2 * 1024 * 1024;
+    const needsReencode = audioVolume !== 1;
+
+    if (!needsCompression && !needsReencode) return file;
+
+    const offlineContext = new OfflineAudioContext(
+      bufferToProcess.numberOfChannels,
+      bufferToProcess.length,
+      needsCompression
+        ? bufferToProcess.sampleRate / 2
+        : bufferToProcess.sampleRate,
+    );
+
+    const source = offlineContext.createBufferSource();
+    source.buffer = bufferToProcess;
+    source.connect(offlineContext.destination);
+    source.start();
+
+    const renderedBuffer = await offlineContext.startRendering();
+
+    const wavBlob = audioBufferToWav(renderedBuffer);
+    const resultFile = new File([wavBlob], file.name, { type: "audio/wav" });
+    setCompressedAudioSize(resultFile.size);
+    return resultFile;
+  };
+
+  const applyVolume = (
+    audioBuffer: AudioBuffer,
+    volume: number,
+  ): AudioBuffer => {
+    const newBuffer = new AudioBuffer({
+      length: audioBuffer.length,
+      numberOfChannels: audioBuffer.numberOfChannels,
+      sampleRate: audioBuffer.sampleRate,
+    });
+
+    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+      const inputData = audioBuffer.getChannelData(channel);
+      const outputData = newBuffer.getChannelData(channel);
+      for (let i = 0; i < audioBuffer.length; i++) {
+        outputData[i] = inputData[i] * volume;
+      }
+    }
+
+    return newBuffer;
+  };
+
+  const audioBufferToWav = (buffer: AudioBuffer): Blob => {
+    const numChannels = buffer.numberOfChannels;
+    const length = buffer.length * numChannels * 2 + 44;
+    const bufferOut = new ArrayBuffer(length);
+    const view = new DataView(bufferOut);
+
+    writeString(view, 0, "RIFF");
+    view.setUint32(4, length - 8, true);
+    writeString(view, 8, "WAVE");
+    writeString(view, 12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, buffer.sampleRate, true);
+    view.setUint32(28, buffer.sampleRate * numChannels * 2, true);
+    view.setUint16(32, numChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, "data");
+    view.setUint32(40, buffer.length * numChannels * 2, true);
+
+    let offset = 44;
+    for (let i = 0; i < buffer.length; i++) {
+      for (let channel = 0; channel < numChannels; channel++) {
+        const sample = Math.max(
+          -1,
+          Math.min(1, buffer.getChannelData(channel)[i]),
+        );
+        view.setInt16(
+          offset,
+          sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+          true,
+        );
+        offset += 2;
+      }
+    }
+
+    return new Blob([bufferOut], { type: "audio/wav" });
+  };
+
+  const writeString = (view: DataView, offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
+
+    const compressedAudio = audioFile
+      ? await compressAudio(audioFile)
+      : undefined;
 
     const adData = {
       owner: {
@@ -83,12 +207,16 @@ function AdTab() {
         id: user?.id,
       },
       image: imageFile,
+      audio: compressedAudio,
       text: text,
     } as Ads;
 
     await adsApi.createAd(adData);
 
     setIsOpen(false);
+    setAudioFile(null);
+    setCompressedAudioSize(null);
+    setAudioVolume(1);
     setLoading(false);
   };
 
@@ -127,7 +255,14 @@ function AdTab() {
                   className="h-16 w-16 min-w-16 min-h-16 border-2 border-highlight-high ml-1"
                 />
               )}
-              <span className="ml-2 truncate line-clamp-2">{item.text}</span>
+              <div className="flex flex-col flex-1 min-w-0 ml-2">
+                <span className="truncate line-clamp-2">{item.text}</span>
+                {item.audio && (
+                  <span className="text-xs text-muted">
+                    {item.audio.toString()}
+                  </span>
+                )}
+              </div>
 
               <Button
                 variant="error"
@@ -142,7 +277,7 @@ function AdTab() {
         )}
       </section>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Создать рекламу</DialogTitle>
@@ -155,6 +290,18 @@ function AdTab() {
             <ImageUploader
               value={imageFile}
               onChange={setImageFile}
+              className="w-full"
+            />
+
+            <AudioUploader
+              value={audioFile}
+              onChange={(file) => {
+                setAudioFile(file);
+                setCompressedAudioSize(null);
+              }}
+              volume={audioVolume}
+              onVolumeChange={setAudioVolume}
+              compressedSize={compressedAudioSize ?? undefined}
               className="w-full"
             />
 

@@ -16,7 +16,16 @@ export default class AdsApi {
   };
 
   createAd = async (data: Ads) => {
-    return await this.adsCollection.create(data);
+    const formData = new FormData();
+    formData.append("owner", JSON.stringify(data.owner));
+    formData.append("text", data.text);
+    if (data.image instanceof File) {
+      formData.append("image", data.image);
+    }
+    if (data.audio instanceof File) {
+      formData.append("audio", data.audio);
+    }
+    return await this.adsCollection.create(formData);
   };
 
   removeAd = async (id: string) => {

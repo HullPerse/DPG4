@@ -5,6 +5,7 @@ export interface Ads {
     id: string;
   };
   image: File | string;
+  audio?: File | string;
   text: string;
   created?: string;
 }

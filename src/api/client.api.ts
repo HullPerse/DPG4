@@ -15,6 +15,10 @@ export const image = {
   ads: `${URL}api/files/pbc_1911549009/`,
 };
 
+export const audioURL = {
+  ads: `${URL}api/files/pbc_1911549009/`,
+};
+
 export const checkConnection = async () => {
   try {
     await client.health.check();
