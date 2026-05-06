@@ -206,7 +206,7 @@ function App() {
   return (
     <main
       ref={desktopRef}
-      className="relative h-screen w-screen overflow-hidden text-text select-none"
+      className="relative h-screen w-screen overflow-hidden text-text"
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >

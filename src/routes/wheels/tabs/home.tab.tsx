@@ -1,18 +1,38 @@
 import { Button } from "@/components/ui/button.component";
-import { Gamepad2, Pen, Swords, Users, Gamepad } from "lucide-react";
+import { Gamepad2, Pen, Swords, Users, Gamepad, Brain } from "lucide-react";
 import { memo, ReactNode } from "react";
 
-export const TABS = ["users", "userGames", "userItems", "presets", "custom"];
+export const TABS = [
+  "users",
+  "userGames",
+  "userItems",
+  "presets",
+  "logical",
+  "custom",
+];
 
 function HomeWheel({
   setTab,
 }: {
   setTab: (
-    tab: "home" | "users" | "userGames" | "userItems" | "presets" | "custom",
+    tab:
+      | "home"
+      | "users"
+      | "userGames"
+      | "userItems"
+      | "presets"
+      | "logical"
+      | "custom",
   ) => void;
 }) {
   const getTab = (
-    value: "users" | "userGames" | "userItems" | "presets" | "custom",
+    value:
+      | "users"
+      | "userGames"
+      | "userItems"
+      | "presets"
+      | "logical"
+      | "custom",
   ) => {
     const tabMap = {
       users: {
@@ -40,6 +60,12 @@ function HomeWheel({
         description: "Колесо случайного пресета",
         icon: <Gamepad className="size-10" />,
       },
+      logical: {
+        value: "logical",
+        label: "Головоломки",
+        description: "Колесо головоломок",
+        icon: <Brain className="size-10" />,
+      },
       custom: {
         value: "custom",
         label: "Своё колесоо",
@@ -56,7 +82,13 @@ function HomeWheel({
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         {TABS.map((value) => {
           const tab = getTab(
-            value as "users" | "userGames" | "userItems" | "presets" | "custom",
+            value as
+              | "users"
+              | "userGames"
+              | "userItems"
+              | "presets"
+              | "logical"
+              | "custom",
           ) as {
             value: string;
             label: string;

@@ -7,10 +7,17 @@ import CustomWheel from "./tabs/custom.tab";
 import UserGamesTab from "./tabs/userGames.tab";
 import UserItemsTab from "./tabs/userItems.tab";
 import PresetsWheel from "./tabs/presets.tab";
+import LogicalWheel from "./tabs/logical.tab";
 
 export default function Wheels() {
   const [tab, setTab] = useState<
-    "home" | "users" | "userGames" | "userItems" | "presets" | "custom"
+    | "home"
+    | "users"
+    | "userGames"
+    | "userItems"
+    | "presets"
+    | "logical"
+    | "custom"
   >("home");
 
   const [values, setValues] = useState<string[]>([]);
@@ -40,6 +47,13 @@ export default function Wheels() {
         />
       ),
       presets: <PresetsWheel />,
+      logical: (
+        <LogicalWheel
+          selected={selected}
+          values={values}
+          setValues={setValues}
+        />
+      ),
       custom: <CustomWheel />,
     };
 
@@ -54,6 +68,7 @@ export default function Wheels() {
             <div className="flex flex-wrap h-fit min-h-11 gap-2">
               {values?.map((v, i) => (
                 <span
+                  key={i}
                   className="bg-background h-10 min-w-32 w-fit border-2 border-highlight-high p-1 items-center justify-center flex font-bold
                opacity-65 hover:opacity-100 hover:cursor-pointer data-[selected=true]:text-primary data-[selected=true]:border-primary"
                   data-selected={i === selected}
@@ -68,6 +83,7 @@ export default function Wheels() {
                 filters &&
                 filters?.map((f, i) => (
                   <span
+                    key={i}
                     className="bg-background h-10 min-w-32 w-fit border-2 border-highlight-high p-1 items-center justify-center flex font-bold
                opacity-65 hover:opacity-100 hover:cursor-pointer data-[selected-filter=true]:text-primary data-[selected-filter=true]:border-primary"
                     data-selected-filter={i === selectedFilter}

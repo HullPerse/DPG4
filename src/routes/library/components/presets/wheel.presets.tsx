@@ -104,7 +104,7 @@ export default function PresetsWheel({ id }: { id: string }) {
       });
     }
 
-    const game = data?.games.find((game) => game.id === id);
+    const game = data?.games.find((game) => String(game.id) === String(id));
     if (!game) return;
 
     const gameData = {
