@@ -240,24 +240,82 @@ export function colorToHex(color: string) {
   return colorArray[color.toLowerCase() as keyof typeof colorArray];
 }
 
-export const highlightText = (text: string, query: string) => {
-  if (!query) return text;
-  const regex = new RegExp(
-    `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-    "gi",
-  );
+export function openUrl(url: string) {
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank");
+  }
+}
 
-  return text.split(regex).map((part, index) => {
-    if (!regex.test(part)) return part;
-    return (
-      <span
-        key={index}
-        className="bg-amber-500/20 text-white rounded font-bold"
-      >
-        {part}
-      </span>
-    );
+export const highlightText = (text: string, query: string): React.ReactNode => {
+  const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi;
+  const parts = text.split(urlRegex);
+
+  if (parts.length === 1) {
+    if (!query) return text;
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escapedQuery})`, "gi");
+
+    const result: React.ReactNode[] = [];
+    text.split(regex).forEach((part, index) => {
+      if (!part.match(regex)) {
+        result.push(part);
+      } else {
+        result.push(
+          <span
+            key={index}
+            className="bg-amber-500/20 text-white rounded font-bold"
+          >
+            {part}
+          </span>,
+        );
+      }
+    });
+    return result;
+  }
+
+  const urlMatches = text.match(urlRegex) || [];
+  const result: React.ReactNode[] = [];
+
+  parts.forEach((part, index) => {
+    if (!query) {
+      result.push(part);
+    } else {
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escapedQuery})`, "gi");
+
+      const subParts = part.split(regex);
+      subParts.forEach((subPart, subIndex) => {
+        if (!subPart.match(regex)) {
+          result.push(subPart);
+        } else {
+          result.push(
+            <span
+              key={`${index}-${subIndex}`}
+              className="bg-amber-500/20 text-white rounded font-bold"
+            >
+              {subPart}
+            </span>,
+          );
+        }
+      });
+    }
+
+    if (index < urlMatches.length) {
+      const url = urlMatches[index];
+      result.push(
+        <span
+          key={`url-${index}`}
+          className="text-blue-500 underline hover:cursor-pointer"
+          onClick={() => openWindow(`url-${Date.now()}`, url, "Ссылка")}
+        >
+          {url}
+        </span>,
+      );
+    }
   });
+
+  return result;
 };
 
 export function shuffleArray<T>(array: T[]): T[] {
