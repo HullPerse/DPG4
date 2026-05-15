@@ -17,6 +17,7 @@ import Image from "@/components/shared/image.component";
 import { image as clientImage } from "@/api/client.api";
 import { highlightText } from "@/lib/utils";
 import type { SortMethod, SortDirection } from "../browser.root";
+import { Switch } from "@/components/ui/switch.component";
 
 const itemsApi = new ItemsApi();
 
@@ -45,6 +46,7 @@ function ListBrowser({
   const [charge, setCharge] = useState<string>("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [rollable, setRollable] = useState<boolean>(true);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["listTab"],
@@ -65,21 +67,22 @@ function ListBrowser({
   const handleCreateItem = useCallback(async () => {
     if (!label.trim() || !description.trim()) return;
 
-    return await itemsApi
-      .addItem({
-        label: label.trim(),
-        description: description.trim(),
-        charge: Number(charge ?? 1),
-        image: image ?? null,
-      })
-      .finally(() => {
-        setLabel("");
-        setDescription("");
-        setCharge("");
-        setImage(null);
-        setImagePreview(null);
-        setAddItem(false);
-      });
+    const data = {
+      label: label.trim(),
+      description: description.trim(),
+      charge: Number(charge ?? 1),
+      image: image ?? null,
+      rollable: rollable,
+    } as Item;
+
+    return await itemsApi.addItem(data).finally(() => {
+      setLabel("");
+      setDescription("");
+      setCharge("");
+      setImage(null);
+      setImagePreview(null);
+      setAddItem(false);
+    });
   }, [label, description, charge, image]);
 
   if (isLoading) return <WindowLoader />;
@@ -122,6 +125,10 @@ function ListBrowser({
               placeholder="Введите заряд предмета"
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-bold">Выпадение с колеса</span>
+            <Switch checked={rollable} onCheckedChange={setRollable} />
+          </label>
 
           <label className="flex flex-col gap-1">
             <span className="font-bold">Изображение</span>
@@ -143,14 +150,15 @@ function ListBrowser({
               }}
             />
             {imagePreview && (
-              <div className="relative mt-2 w-30 max-w-50 h-50 min-h-30">
+              <div className="relative mt-2 w-fit h-fit">
                 <Image
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full"
+                  className="min-w-46 w-46 min-h-46 h-46 border border-highlight-high"
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="error"
+                  size="icon"
                   onClick={() => {
                     setImage(null);
                     setImagePreview(null);
@@ -158,7 +166,7 @@ function ListBrowser({
                   className="absolute top-0 right-0 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
                 >
                   <X size={12} />
-                </button>
+                </Button>
               </div>
             )}
           </label>

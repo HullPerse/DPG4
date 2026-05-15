@@ -3,7 +3,8 @@ export interface Item {
   label: string;
   description: string;
   charge: number;
-  image: File;
+  image: File | null;
+  rollable: boolean;
   created?: string;
 }
 

@@ -1,5 +1,5 @@
 import { image } from "@/api/client.api";
-import ItemsApi, { NON_WHEEL_ITEMS } from "@/api/items.api";
+import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import {
   SmallLoader,
@@ -31,7 +31,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     queryKey: ["itemsWheel"],
     queryFn: async (): Promise<Item[]> => {
       const res = await itemsApi.getAllItems();
-      return res.filter((i) => !NON_WHEEL_ITEMS.includes(i.id ?? ""));
+      return res.filter((i) => i.rollable);
     },
   });
 

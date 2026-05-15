@@ -16,7 +16,7 @@ export default function ReviewsProfile({ id }: { id: string }) {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, isFetching, refetch } = useQuery({
-    queryKey: ["reviewsTab"],
+    queryKey: ["reviewsTab", id],
     queryFn: async (): Promise<{ user: User | null; games: Game[] }> => {
       return await gameApi.getAllReviews(id);
     },
@@ -25,7 +25,7 @@ export default function ReviewsProfile({ id }: { id: string }) {
   const invalidateQuery = useCallback(() => {
     startTransition(() => {
       queryClient.invalidateQueries({
-        queryKey: ["reviewsTab"],
+        queryKey: ["reviewsTab", id],
         refetchType: "all",
       });
     });

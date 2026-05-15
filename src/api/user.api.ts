@@ -207,6 +207,12 @@ export default class UserApi {
     });
   };
 
+  removePlace = async (userId: string) => {
+    return await this.usersCollection.update(userId, {
+      place: "0",
+    });
+  };
+
   updatePlace = async (userId: string) => {
     const allPlaces = await this.getAllPlaces();
     const existingPlaces = allPlaces.map((p) => p.place);

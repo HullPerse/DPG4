@@ -5,13 +5,6 @@ import UserApi from "./user.api";
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
 
-export const NON_WHEEL_ITEMS = [
-  "qzxaogavs6iorfx",
-  "4o7dzih0jdftqz1",
-  "w8ajf5mhh121nb0",
-  "olvbzslxz9xbtr9",
-];
-
 export const CELL_CONDITION_ITEMS = [
   "Сужающееся колесо Фландерса",
   "Штрафная квитанция",
@@ -72,22 +65,8 @@ export default class ItemsApi {
     return await this.inventoryCollection.getFullList();
   };
 
-  addItem = async (data: {
-    label: string;
-    description: string;
-    charge: number;
-    image: File | null;
-  }): Promise<Item> => {
-    const formData = new FormData();
-    formData.append("label", data.label);
-    formData.append("description", data.description);
-    formData.append("charge", String(data.charge));
-
-    if (data.image) {
-      formData.append("image", data.image);
-    }
-
-    return await this.itemsCollection.create(formData);
+  addItem = async (data: Item): Promise<Item> => {
+    return await this.itemsCollection.create(data);
   };
 
   getItemById = async (itemId: string): Promise<Item | undefined> => {

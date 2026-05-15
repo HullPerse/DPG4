@@ -220,7 +220,6 @@ export async function usableItems(item: Inventory) {
       Math.floor(shuffledArray.length / 2),
     );
 
-    //
     for (const inv of halfItems) {
       await itemsApi.sendInventory(String(inv.id), String(currentUser.id));
     }
@@ -609,6 +608,22 @@ export async function usableItems(item: Inventory) {
       image: currentUser.avatar,
       type: "emoji",
       text: `${currentUser.username} выкинул стул на клетку ${currentCell.number}`,
+    } as Activity;
+
+    await activityApi.createActivity(activityData);
+
+    await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+    return;
+  }
+  //Минус 8 чубриков
+  if (item.label === "Минус 8 чубриков") {
+    await usersApi.scoreUser(String(currentUser.id), -1);
+
+    const activityData = {
+      author: currentUser.id,
+      image: currentUser.avatar,
+      type: "emoji",
+      text: `${currentUser.username} обманули, и он потерял 1 чубрик`,
     } as Activity;
 
     await activityApi.createActivity(activityData);
