@@ -30,7 +30,7 @@ export function calculateScore(realTime: number, hltbTime: number) {
   const score = multiplier * hltbTime;
 
   const finalScore = Math.max(3, Math.floor(score));
-  const bonus = Math.floor(finalScore / 3);
+  const bonus = Math.floor(finalScore / 4);
 
   return finalScore + bonus;
 }
