@@ -1,6 +1,6 @@
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Trash } from "lucide-react";
 
 function WheelHistoryApp() {
@@ -98,4 +98,4 @@ function WheelHistoryApp() {
   );
 }
 
-export default memo(WheelHistoryApp);
+export default WheelHistoryApp;

@@ -24,7 +24,7 @@ export const TimeDisplay = memo(function TimeDisplay({ time }: { time: Date }) {
   );
 });
 
-export default memo(function Timer({
+export default function Timer({
   onClick,
   className,
 }: {
@@ -56,4 +56,4 @@ export default memo(function Timer({
       </div>
     </div>
   );
-});
+}

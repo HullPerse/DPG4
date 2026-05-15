@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button.component";
 import { getDataUrlSizeMB } from "@/lib/utils";
 import { WallpaperProps } from "@/types/desktop";
 import { Trash } from "lucide-react";
-import { memo, useState } from "react";
+import { useState } from "react";
 
 function Wallpaper({
   wallpaper,
@@ -78,4 +78,4 @@ function Wallpaper({
   );
 }
 
-export default memo(Wallpaper);
+export default Wallpaper;

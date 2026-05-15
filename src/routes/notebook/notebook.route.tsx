@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
@@ -107,4 +107,4 @@ function Notebook() {
   );
 }
 
-export default memo(Notebook);
+export default Notebook;

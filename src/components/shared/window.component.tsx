@@ -12,7 +12,6 @@ import {
   useMemo,
   RefObject,
   isValidElement,
-  memo,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
@@ -231,7 +230,9 @@ function Window(props: WindowProps) {
 
     return Children.map(props.children, (child, index) =>
       isValidElement(child)
-        ? cloneElement(child, { key: `${refreshKeyRef.current}-${localRefreshKey}-${index}` })
+        ? cloneElement(child, {
+            key: `${refreshKeyRef.current}-${localRefreshKey}-${index}`,
+          })
         : child,
     );
   }, [isConnected, props.children, localRefreshKey]);
@@ -349,4 +350,4 @@ function Window(props: WindowProps) {
   );
 }
 
-export default memo(Window);
+export default Window;

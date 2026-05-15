@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useState } from "react";
 import AdsApi from "@/api/ads.api";
 import { Ads } from "@/types/ads.d";
 import { useUserStore } from "@/store/user.store";
@@ -335,4 +335,4 @@ function AdTab() {
   );
 }
 
-export default memo(AdTab);
+export default AdTab;

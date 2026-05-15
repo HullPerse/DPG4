@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { memo, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 type ThemeColor = {
@@ -113,4 +113,4 @@ function ThemeApp() {
   );
 }
 
-export default memo(ThemeApp);
+export default ThemeApp;

@@ -1,7 +1,6 @@
 import { Ads } from "@/types/ads";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  memo,
   startTransition,
   useCallback,
   useRef,
@@ -261,4 +260,4 @@ function AdvertisementApp() {
   );
 }
 
-export default memo(AdvertisementApp);
+export default AdvertisementApp;

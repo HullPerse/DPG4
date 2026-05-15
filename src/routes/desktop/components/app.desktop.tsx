@@ -6,7 +6,6 @@ import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ExternalLink, PictureInPicture2 } from "lucide-react";
-import { memo } from "react";
 
 function AppDesktop({
   name,
@@ -72,4 +71,4 @@ function AppDesktop({
   );
 }
 
-export default memo(AppDesktop);
+export default AppDesktop;
