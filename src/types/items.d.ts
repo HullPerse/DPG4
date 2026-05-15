@@ -1,5 +1,6 @@
 export interface Item {
   id?: string;
+  type: "effect" | "item" | "roll";
   label: string;
   description: string;
   charge: number;
