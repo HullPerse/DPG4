@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   Hash,
+  Section,
 } from "lucide-react";
 import ListTab from "./tabs/list.tab";
 import ItemsTab from "./tabs/items.tab";
@@ -20,19 +21,21 @@ import {
 } from "@/components/ui/hover.component";
 import AdvertisementTab from "./tabs/advertisement.tab";
 
-export type SortMethod = "name" | "date" | "charges";
+export type SortMethod = "name" | "date" | "charges" | "type";
 export type SortDirection = "asc" | "desc";
 
 const sortMethodIcons = {
   name: Hash,
   date: Calendar,
   charges: Battery,
+  type: Section,
 };
 
 const sortMethodLabels = {
   name: "По имени",
   date: "По дате",
   charges: "По зарядам",
+  type: "По типу",
 };
 
 export default function Browser() {

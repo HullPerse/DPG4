@@ -14,24 +14,17 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
-import { checkForUpdates, installUpdate, selectionMouse } from "./lib/utils";
+import {
+  checkForUpdates,
+  dataURLtoBlob,
+  installUpdate,
+  selectionMouse,
+} from "./lib/utils";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
 import { useToastStore } from "./store/toast.store";
 import { UpdateData } from "./types/activity";
 import { Download } from "lucide-react";
-
-const dataURLtoBlob = (dataURL: string): Blob => {
-  const [header, data] = dataURL.split(",");
-  const mimeMatch = header.match(/:(.*?);/);
-  const mime = mimeMatch?.[1] || "application/octet-stream";
-  const binary = atob(data);
-  const array = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    array[i] = binary.charCodeAt(i);
-  }
-  return new Blob([array], { type: mime });
-};
 
 function App() {
   //routing
@@ -206,7 +199,7 @@ function App() {
   return (
     <main
       ref={desktopRef}
-      className="relative h-screen w-screen overflow-hidden text-text"
+      className="relative h-screen w-screen overflow-hidden text-text select-none"
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >

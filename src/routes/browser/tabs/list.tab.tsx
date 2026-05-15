@@ -104,6 +104,11 @@ function ListBrowser({
             case "charges":
               comparison = (a.charge || 0) - (b.charge || 0);
               break;
+            case "type":
+              comparison = String(a.type || "").localeCompare(
+                String(b.type || ""),
+              );
+              break;
           }
           return sortDirection === "asc" ? comparison : -comparison;
         })

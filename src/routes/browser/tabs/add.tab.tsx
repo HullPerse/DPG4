@@ -2,6 +2,14 @@ import ItemsApi from "@/api/items.api";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
 import { Switch } from "@/components/ui/switch.component";
 import { Item } from "@/types/items";
 import { X } from "lucide-react";
@@ -17,6 +25,8 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [rollable, setRollable] = useState<boolean>(true);
 
+  const [type, setType] = useState<Item["type"]>("item");
+
   const handleCreateItem = useCallback(async () => {
     if (!label.trim() || !description.trim()) return;
 
@@ -26,6 +36,7 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
       charge: Number(charge ?? 1),
       image: image ?? null,
       rollable: rollable,
+      type: type,
     } as Item;
 
     return await itemsApi.addItem(data).finally(() => {
@@ -69,6 +80,31 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
         <label className="flex flex-col gap-1">
           <span className="font-bold">Выпадение с колеса</span>
           <Switch checked={rollable} onCheckedChange={setRollable} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Тип предмета</span>
+          <Select
+            value={type}
+            onValueChange={(e) => {
+              if (!e) return;
+
+              setType(e);
+            }}
+          >
+            <SelectTrigger className="w-full py-5">
+              <SelectValue placeholder="Сложность" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {["effect", "item", "roll", "other"].map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="flex flex-col gap-1">

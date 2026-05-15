@@ -1,6 +1,10 @@
 export interface Item {
   id?: string;
-  type: "effect" | "item" | "roll";
+  // effect - status
+  // roll   - type of game wheel roll
+  // item   - usable item
+  // other  - not usable item
+  type: "effect" | "item" | "roll" | "other";
   label: string;
   description: string;
   charge: number;

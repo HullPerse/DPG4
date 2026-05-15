@@ -1,4 +1,5 @@
 import { GameStatus } from "@/types/games";
+import { Item } from "@/types/items";
 import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
@@ -441,4 +442,27 @@ export function getDataUrlSizeMB(dataUrl: string): string {
   if (!base64) return "0";
   const bytes = Math.ceil((base64.length * 3) / 4);
   return (bytes / 1024 / 1024).toFixed(2);
+}
+
+export function dataURLtoBlob(dataURL: string): Blob {
+  const [header, data] = dataURL.split(",");
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch?.[1] || "application/octet-stream";
+  const binary = atob(data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    array[i] = binary.charCodeAt(i);
+  }
+  return new Blob([array], { type: mime });
+}
+
+export function translateItemType(type: Item["type"]) {
+  const typeMap = {
+    effect: "Эффект",
+    item: "Предмет",
+    roll: "Спецролл",
+    other: "Другое",
+  };
+
+  return typeMap[type];
 }
