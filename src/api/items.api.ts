@@ -1,49 +1,9 @@
-import { Inventory, Item, Market, Trade } from "@/types/items";
+import { Inventory, Item, ItemType, Market, Trade } from "@/types/items";
 import { client, image } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 import UserApi from "./user.api";
 import { User } from "@/types/user";
 import { Activity } from "@/types/activity";
-
-export const CELL_CONDITION_ITEMS = [
-  "Сужающееся колесо Фландерса",
-  "Штрафная квитанция",
-  "Торопыжка",
-  "Йокерге здесь закон",
-  "Я здесь закон",
-  "Выбор бумера",
-  "Выбор зумера",
-  "Часовой рост",
-  "Mexican Runner",
-  "Retro Longplay",
-  "To be continued...",
-  "А у тебя что?",
-  "А я бы смог",
-  "Первопроходец",
-  "Мало букв",
-  "Много букв",
-  "Мегамужик",
-  "Микро-мошна",
-  "Мошна в мошне",
-  "Общая игра",
-  "Цифровой выбор",
-  "Любимец публики",
-  "Держусь за бедрок",
-  "Пшено",
-  "Full of PILK",
-  "Нахуя?",
-  "Посылка с алиэкспресса",
-  "Вот бы не Жека...",
-  "Карта Валет",
-  "Карта Дама",
-  "Карта Король",
-  "Колода Карт",
-  "Ну и моча!",
-  "Квантовая суперпозиция",
-  "Ведро кончи",
-  "фрешмит",
-  "Мечтательная крыса",
-];
 
 export default class ItemsApi {
   private readonly itemsCollection = client.collection("items");
@@ -83,7 +43,12 @@ export default class ItemsApi {
     return await this.inventoryCollection.getOne(inventoryId);
   };
 
-  addInventory = async (userId: string, itemId: string, image: string) => {
+  addInventory = async (
+    userId: string,
+    itemId: string,
+    image: string,
+    type: ItemType,
+  ) => {
     const item = await this.getItemById(itemId);
 
     if (!item) return;
@@ -91,6 +56,7 @@ export default class ItemsApi {
     const imageFile = await fileFromUrl(image);
 
     await this.inventoryCollection.create({
+      type: type,
       owner: userId,
       image: imageFile,
       label: item.label,
@@ -145,6 +111,7 @@ export default class ItemsApi {
     );
 
     const data = {
+      type: itemData.type,
       originalId: itemData.id,
       owner: {
         id: userData.id,
@@ -218,6 +185,7 @@ export default class ItemsApi {
 
     //add item to inventory
     await this.inventoryCollection.create({
+      type: existing.type,
       owner: existing.owner.id,
       image: imageFile,
       label: existing.label,
@@ -266,6 +234,7 @@ export default class ItemsApi {
     await this.activityCollection.create(activityData);
 
     await this.inventoryCollection.create({
+      type: itemData.type,
       owner: newOwner,
       image: imageFile,
       label: itemData.label,

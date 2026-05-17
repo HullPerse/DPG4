@@ -20,7 +20,6 @@ export interface WindowProps {
   isMinimized?: boolean;
   isMaximized?: boolean;
   isPinned?: boolean;
-
   createdAt?: Date;
   disabled?: {
     maximize?: boolean;

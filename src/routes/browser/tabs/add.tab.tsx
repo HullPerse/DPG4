@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.component";
 import { Switch } from "@/components/ui/switch.component";
-import { Item } from "@/types/items";
+import { Item, ItemType } from "@/types/items";
 import { X } from "lucide-react";
 import { useCallback, useState } from "react";
 
@@ -25,7 +25,7 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [rollable, setRollable] = useState<boolean>(true);
 
-  const [type, setType] = useState<Item["type"]>("item");
+  const [type, setType] = useState<ItemType>("item");
 
   const handleCreateItem = useCallback(async () => {
     if (!label.trim() || !description.trim()) return;

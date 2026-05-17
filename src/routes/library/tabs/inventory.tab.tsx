@@ -1,23 +1,12 @@
-import { startTransition, useCallback, useState } from "react";
+import { ReactNode, startTransition, useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { SmallLoader, WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  Minus,
-  NetworkIcon,
-  Plus,
-  Send,
-  ShoppingCart,
-  Trash,
-  X,
-} from "lucide-react";
+import { Minus, NetworkIcon, Plus, Send, ShoppingCart, Trash, X } from "lucide-react";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
-import { Inventory } from "@/types/items";
+import { Inventory, ItemType } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
@@ -27,6 +16,8 @@ import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
 import { usableItems } from "@/lib/items.effects";
+import { otherEffect, otherInterface } from "@/lib/items/other.items";
+import { CreateModal } from "@/components/shared/items.modal";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -39,12 +30,16 @@ function InventoryTab({ id }: { id?: string }) {
 
   let initialLoad = false;
 
+  const [modalItem, setModalItem] = useState<{
+    label: string;
+    body: () => ReactNode;
+    effect: () => void;
+  } | null>(null);
+
   const [searchTerms, setSearchTerms] = useState<string>("");
   const [active, setActive] = useState<number | null>(null);
   const [price, setPrice] = useState<string>("");
-  const [selectedUser, setSelectedUser] = useState<string | undefined>(
-    undefined,
-  );
+  const [selectedUser, setSelectedUser] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<{
     item: number;
     type: "use" | "delete" | "sell" | "send" | null;
@@ -97,13 +92,30 @@ function InventoryTab({ id }: { id?: string }) {
       type: "use",
     });
 
-    usableItems(item);
+    const lookup: Record<ItemType, otherInterface[]> = {
+      effect: [],
+      item: [],
+      other: otherEffect,
+      roll: [],
+    };
 
-    setActive(null);
+    const existing = lookup[item.type]?.find((e) => e.label === "Дырявый сапог");
+    // const existing = lookup[item.type]?.find((e) => e.label === item.label);
+
+    if (!existing) return console.log("no items exists"); //TODO: add later
+
+    setModalItem({
+      label: existing.label,
+      body: existing.body,
+      effect: () => existing.effect,
+    });
+
     setLoading({
       item: -1,
       type: null,
     });
+
+    // usableItems(item);
   };
 
   const handleDelete = async (index: number, inventoryId: string) => {
@@ -123,11 +135,7 @@ function InventoryTab({ id }: { id?: string }) {
     });
   };
 
-  const handleSend = async (
-    index: number,
-    inventoryId: string,
-    userId: string,
-  ) => {
+  const handleSend = async (index: number, inventoryId: string, userId: string) => {
     setLoading({
       item: index,
       type: "send",
@@ -152,11 +160,7 @@ function InventoryTab({ id }: { id?: string }) {
     });
   };
 
-  const handleSell = async (
-    index: number,
-    inventoryId: string,
-    owner: string,
-  ) => {
+  const handleSell = async (index: number, inventoryId: string, owner: string) => {
     if (!price) return;
 
     setLoading({
@@ -191,21 +195,31 @@ function InventoryTab({ id }: { id?: string }) {
       type: "send",
     });
 
-    await itemsApi
-      .chargeInventory(inventoryId, oldCharge, newCharge)
-      .then(() => {
-        setActive(null);
-        setLoading({
-          item: -1,
-          type: null,
-        });
+    await itemsApi.chargeInventory(inventoryId, oldCharge, newCharge).then(() => {
+      setActive(null);
+      setLoading({
+        item: -1,
+        type: null,
       });
+    });
 
     invalidateQuery();
   };
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
+      {modalItem && (
+        <CreateModal
+          label={modalItem.label}
+          body={modalItem.body}
+          effect={modalItem.effect}
+          open={!!modalItem}
+          setOpen={(open) => {
+            if (!open) setModalItem(null);
+          }}
+        />
+      )}
+
       <Input
         autoFocus
         type="text"
@@ -218,16 +232,13 @@ function InventoryTab({ id }: { id?: string }) {
           .filter(
             (item) =>
               item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-              item.description
-                .toUpperCase()
-                .includes(searchTerms.toUpperCase()),
+              item.description.toUpperCase().includes(searchTerms.toUpperCase()),
           )
           .map((item, index) =>
             active === index ? (
               <div
                 key={item.id}
-                className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
-              >
+                className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2">
                 <Button
                   size="icon"
                   variant="error"
@@ -235,8 +246,7 @@ function InventoryTab({ id }: { id?: string }) {
                   onClick={() => {
                     setPrice("");
                     setActive(null);
-                  }}
-                >
+                  }}>
                   <X />
                 </Button>
                 <section className="flex flex-col w-full mt-auto gap-1">
@@ -253,14 +263,11 @@ function InventoryTab({ id }: { id?: string }) {
                       onChange={setSelectedUser}
                       placeholder={selectedUser || "Пользователь"}
                       className="w-64"
-                      loading={
-                        loading.type === "send" && loading.item === index
-                      }
+                      loading={loading.type === "send" && loading.item === index}
                     />
                     <Button
                       disabled={
-                        (loading.type === "send" && loading.item === index) ||
-                        !selectedUser
+                        (loading.type === "send" && loading.item === index) || !selectedUser
                       }
                       onClick={() => {
                         if (!selectedUser) return;
@@ -268,8 +275,7 @@ function InventoryTab({ id }: { id?: string }) {
                         handleSend(index, String(item.id), selectedUser);
                       }}
                       className="my-1"
-                      size="icon"
-                    >
+                      size="icon">
                       {loading.type === "send" && loading.item === index ? (
                         <SmallLoader />
                       ) : (
@@ -279,8 +285,7 @@ function InventoryTab({ id }: { id?: string }) {
                   </div>
                   <div
                     className="flex flex-row gap-2 w-full items-center"
-                    hidden={currentId !== user?.id}
-                  >
+                    hidden={currentId !== user?.id}>
                     <Input
                       type="number"
                       placeholder="Продажа"
@@ -295,14 +300,8 @@ function InventoryTab({ id }: { id?: string }) {
                     <Button
                       size="icon"
                       variant="info"
-                      onClick={() =>
-                        handleSell(index, String(item.id), item.owner)
-                      }
-                      disabled={
-                        (loading.type === "sell" && loading.item === index) ||
-                        !price
-                      }
-                    >
+                      onClick={() => handleSell(index, String(item.id), item.owner)}
+                      disabled={(loading.type === "sell" && loading.item === index) || !price}>
                       {loading.type === "sell" && loading.item === index ? (
                         <SmallLoader />
                       ) : (
@@ -316,10 +315,7 @@ function InventoryTab({ id }: { id?: string }) {
                       className="flex-1"
                       onClick={() => handleUse(index, item)}
                       hidden={currentId !== user?.id}
-                      disabled={
-                        loading.type === "use" && loading.item === index
-                      }
-                    >
+                      disabled={loading.type === "use" && loading.item === index}>
                       {loading.type === "use" && loading.item === index ? (
                         <SmallLoader />
                       ) : (
@@ -333,10 +329,7 @@ function InventoryTab({ id }: { id?: string }) {
                         width: currentId !== user?.id ? "100%" : undefined,
                       }}
                       onClick={() => handleDelete(index, String(item.id))}
-                      disabled={
-                        loading.type === "delete" && loading.item === index
-                      }
-                    >
+                      disabled={loading.type === "delete" && loading.item === index}>
                       {loading.type === "delete" && loading.item === index ? (
                         <SmallLoader />
                       ) : (
@@ -355,8 +348,7 @@ function InventoryTab({ id }: { id?: string }) {
                 onClick={() => {
                   setPrice("");
                   setActive(index);
-                }}
-              >
+                }}>
                 <span className="font-bold text-md line-clamp-2">
                   {highlightText(item.label, searchTerms)}
                 </span>
@@ -376,8 +368,7 @@ function InventoryTab({ id }: { id?: string }) {
                       e.stopPropagation();
 
                       handleCharge(index, String(item.id), item.charge, -1);
-                    }}
-                  >
+                    }}>
                     <Minus />
                   </Button>
                   <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
@@ -391,8 +382,7 @@ function InventoryTab({ id }: { id?: string }) {
                       e.stopPropagation();
 
                       handleCharge(index, String(item.id), item.charge, 1);
-                    }}
-                  >
+                    }}>
                     <Plus />
                   </Button>
                 </div>

@@ -27,11 +27,34 @@ export interface User {
   //0h+    = 1d6
   currentDice: number;
 
-  //statuses will be in an array of strings
-  //each statuses will appear there after specific actions
-  status?: string[];
+  status?: UserStatus[];
 
   place: "0" | "1" | "2" | "3";
 
+  //TODO: MOVE TO STATUS LATER
   subscribed: boolean;
 }
+
+//TODO: write all possible types later
+export type UserStatus = {
+  type: StatusType;
+  values?: string | number;
+  count?: number;
+  item: string; //item label to remove it later
+};
+
+export type StatusType =
+  //effect types
+  | ""
+  | ""
+  | ""
+
+  //item types
+  | ""
+  | ""
+  | ""
+
+  //other types
+  | "craft"
+  | ""
+  | "";

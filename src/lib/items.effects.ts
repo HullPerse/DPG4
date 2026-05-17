@@ -132,6 +132,7 @@ export async function usableItems(item: Inventory) {
         item.owner,
         "a29c7tdphmwlrbc",
         `${image?.items}a29c7tdphmwlrbc/100x100_162_nkg9c7eia4_593jsogdy7.png`,
+        item.type,
       );
     });
 
@@ -401,6 +402,7 @@ export async function usableItems(item: Inventory) {
       String(currentUser.id),
       String(itemData?.id),
       `${image.items}${itemData?.id}/${itemData?.image}`,
+      itemData?.type ?? "other",
     );
 
     const activityData = {
@@ -493,14 +495,21 @@ export async function usableItems(item: Inventory) {
       String(currentUser.id),
       String(finalItem.id),
       `${image.items}${finalItem?.id}/${finalItem?.image}`,
+      finalItem.type,
     );
 
     //10% chance of getting a rat
     if (Math.random() * 100 <= 10) {
       const ratId = "dswpfvayiqxul1b";
       const ratImage = `${image.items}${ratId}/100x100_723bzyfzkql6_or7gvv38ny_ltkzx8ac9i.png`;
+      const ratType = "item";
 
-      await itemsApi.addInventory(String(currentUser.id), ratId, ratImage);
+      await itemsApi.addInventory(
+        String(currentUser.id),
+        ratId,
+        ratImage,
+        ratType,
+      );
 
       const activityData = {
         author: currentUser.id,
@@ -543,11 +552,13 @@ export async function usableItems(item: Inventory) {
       String(currentUser.id),
       String(finalItem.id),
       `${image.items}${finalItem?.id}/${finalItem?.image}`,
+      finalItem.type,
     );
     await itemsApi.addInventory(
       String(finalUser.id),
       "diy82ugngg95mek",
       `${image.items}diy82ugngg95mek/100x100_219_pv55hb1082_lkevce5l2t.png`,
+      "item",
     );
 
     await itemsApi.removeInventory(String(finalItem.id));

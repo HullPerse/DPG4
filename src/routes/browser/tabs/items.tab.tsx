@@ -14,7 +14,7 @@ import { memo, startTransition, useCallback, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText, openWindow } from "@/lib/utils";
+import { highlightText, openWindow, translateItemType } from "@/lib/utils";
 
 const itemsApi = new ItemsApi();
 
@@ -70,6 +70,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
         String(user?.id),
         String(item.id),
         `${image?.items}${item.id}/${item.image}`,
+        item.type,
       )
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
@@ -107,18 +108,24 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
             key={result.id}
             className="relative p-2 flex flex-row max-w-full w-xl min-h-fit h-22 border-2 border-highlight-high items-center"
           >
-            <ImageComponent
-              src={`${image?.items}${result.id}/${result.image}`}
-              alt={result.label}
-              className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
-              onClick={() => {
-                openWindow(
-                  String(result.id),
-                  `${image?.items}${result.id}/${result.image}`,
-                  "Изображение",
-                );
-              }}
-            />
+            <div className="flex flex-col gap-1">
+              <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                {translateItemType(result.type)}
+              </span>
+              <ImageComponent
+                src={`${image?.items}${result.id}/${result.image}`}
+                alt={result.label}
+                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                onClick={() => {
+                  openWindow(
+                    String(result.id),
+                    `${image?.items}${result.id}/${result.image}`,
+                    "Изображение",
+                  );
+                }}
+              />
+            </div>
+
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
               <span className="text-text/80">{result.description}</span>
@@ -155,18 +162,23 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   hiddenItems.find((h) => h === String(item.id)) && "50%",
               }}
             >
-              <ImageComponent
-                src={`${image?.items}${item.id}/${item.image}`}
-                alt={item.label}
-                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
-                onClick={() => {
-                  openWindow(
-                    String(item.id),
-                    `${image?.items}${item.id}/${item.image}`,
-                    "Изображение",
-                  );
-                }}
-              />
+              <div className="flex flex-col gap-1">
+                <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                  {translateItemType(item.type)}
+                </span>
+                <ImageComponent
+                  src={`${image?.items}${item.id}/${item.image}`}
+                  alt={item.label}
+                  className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                  onClick={() => {
+                    openWindow(
+                      String(item.id),
+                      `${image?.items}${item.id}/${item.image}`,
+                      "Изображение",
+                    );
+                  }}
+                />
+              </div>
               <div className="flex flex-col ml-2">
                 <span className="font-bold text-xl">
                   {highlightText(item.label, searchTerms)}

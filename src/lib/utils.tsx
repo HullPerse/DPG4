@@ -1,5 +1,5 @@
 import { GameStatus } from "@/types/games";
-import { Item } from "@/types/items";
+import { ItemType } from "@/types/items";
 import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
@@ -456,7 +456,7 @@ export function dataURLtoBlob(dataURL: string): Blob {
   return new Blob([array], { type: mime });
 }
 
-export function translateItemType(type: Item["type"]) {
+export function translateItemType(type: ItemType) {
   const typeMap = {
     effect: "Эффект",
     item: "Предмет",

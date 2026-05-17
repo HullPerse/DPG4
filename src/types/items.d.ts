@@ -1,10 +1,6 @@
 export interface Item {
   id?: string;
-  // effect - status
-  // roll   - type of game wheel roll
-  // item   - usable item
-  // other  - not usable item
-  type: "effect" | "item" | "roll" | "other";
+  type: ItemType;
   label: string;
   description: string;
   charge: number;
@@ -15,6 +11,7 @@ export interface Item {
 
 export interface Inventory {
   id?: string;
+  type: ItemType;
   owner: string;
   label: string;
   description: string;
@@ -24,6 +21,7 @@ export interface Inventory {
 
 export interface Market {
   id?: string;
+  type: ItemType;
   originalId: string;
   owner: {
     id: string;
@@ -43,3 +41,14 @@ export type Trade = {
   money: number;
   items: string[];
 };
+
+/**
+ * @description
+ * 1. effect - status
+ * 2. roll   - type of game wheel roll
+ * 3. item   - usable item
+ * 4. other  - not usable item
+ */
+export type ItemType = "effect" | "item" | "roll" | "other";
+
+export type ItemEffect = "";

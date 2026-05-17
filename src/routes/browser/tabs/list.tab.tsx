@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import Image from "@/components/shared/image.component";
 import { image as clientImage } from "@/api/client.api";
-import { highlightText } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/utils";
 import type { SortMethod, SortDirection } from "../browser.root";
 import AddItem from "./add.tab";
 
@@ -118,6 +118,9 @@ function ListBrowser({
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
           >
             <div className="flex flex-col gap-1">
+              <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                {translateItemType(item.type)}
+              </span>
               <Image
                 src={`${clientImage?.items}${item.id}/${item.image}`}
                 alt={item.label}
@@ -148,6 +151,7 @@ function ListBrowser({
                     String(user?.id),
                     String(item.id),
                     `${clientImage?.items}${item.id}/${item.image}`,
+                    item.type,
                   );
 
                   queryClient.invalidateQueries({

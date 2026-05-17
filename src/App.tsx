@@ -203,6 +203,14 @@ function App() {
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >
+      {/*<button
+        className="absolute z-100 bg-red-500"
+        onClick={async () => {
+          await new ItemsApi().changeItemsType();
+        }}
+      >
+        Click me
+      </button>*/}
       {/* WALLPAPER */}
       <div
         className="absolute inset-0 z-0 bg-background bg-no-repeat"

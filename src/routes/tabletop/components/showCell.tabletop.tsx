@@ -1,5 +1,5 @@
 import CellApi from "@/api/cell.api";
-import ItemsApi, { CELL_CONDITION_ITEMS } from "@/api/items.api";
+import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
@@ -33,11 +33,10 @@ export default function ShowCell({
     } | null> => {
       if (!user?.position) return null;
       const cellData = await cellApi.getCellByNumber(Number(user?.position));
+
       const inventoryData = await itemsApi
         .getInventory(String(user?.id))
-        .then((res) =>
-          res.filter((i) => CELL_CONDITION_ITEMS.includes(String(i.label))),
-        );
+        .then((res) => res.filter((i) => i.type === "roll"));
 
       return {
         cell: cellData,
