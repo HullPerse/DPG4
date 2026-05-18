@@ -6,13 +6,11 @@ import { X } from "lucide-react";
 export function CreateModal({
   label,
   body,
-  effect,
   open,
   setOpen,
 }: {
   label: string;
-  body: () => ReactNode;
-  effect: () => void;
+  body: (close: () => void) => ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
@@ -38,7 +36,9 @@ export function CreateModal({
           </section>
 
           {/* Body */}
-          <section className="flex w-full min-h-0 h-full flex-col p-1">{body()}</section>
+          <section className="flex w-full min-h-0 h-full flex-col p-1">
+            {body(() => setOpen(false))}
+          </section>
         </main>
       </DialogContent>
     </Dialog>

@@ -7,16 +7,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { useQuery } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
-import ItemsApi from "@/api/items.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useUserStore } from "@/store/user.store";
+import { image } from "@/api/client.api";
+import { Inventory } from "@/types/items";
+import { WindowLoader } from "@/components/shared/loader.component";
+import { Activity } from "@/types/activity";
+import { CircleX } from "lucide-react";
+import { WindowError } from "@/components/shared/error.component";
+
+import ItemsApi from "@/api/items.api";
+import ActivityApi from "@/api/activity.api";
+import UserApi from "@/api/user.api";
+
 const itemsApi = new ItemsApi();
+const activityApi = new ActivityApi();
+const userApi = new UserApi();
 
 export interface otherInterface {
   label: string;
-  body: () => ReactNode;
-  effect: () => void;
+  body: (close: () => void) => ReactNode;
   type: "modal" | "effect";
 }
 
@@ -24,10 +35,10 @@ export const otherEffect: otherInterface[] = [
   {
     label: "Дырявый сапог",
     type: "modal",
-    body: () => {
+    body: (close) => {
       const user = useUserStore((state) => state.user);
 
-      const { data, isLoading, isError } = useQuery({
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
         queryKey: ["modalData"],
         queryFn: async () => {
           const allItems = await itemsApi.getInventory(String(user?.id));
@@ -36,69 +47,359 @@ export const otherEffect: otherInterface[] = [
         enabled: !!user,
       });
 
-      const [item, setItem] = useState<string>("");
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const [selected, setSelected] = useState<Inventory[]>([]);
+
+      const handleApply = async () => {
+        if (!data || selected.length !== 2) return;
+
+        const itemId = "2hn5xus3bg0i6mg";
+
+        //Добавить сундук
+        await itemsApi.addInventory(
+          String(user?.id),
+          itemId,
+          `${image.items}${itemId}/100x100_214_wmbb9r0tf3_1b0q85hrha.png`,
+          "item",
+        );
+
+        //Удалить оба сапога
+        for (const item of selected) {
+          await itemsApi.removeInventory(String(item.id));
+        }
+
+        const activityData = {
+          author: user?.id,
+          image: user?.avatar,
+          text: `${user?.username} объединил два дырявых сапога и получил Крысиный сундук`,
+        } as Activity;
+
+        await activityApi.createActivity(activityData);
+
+        return close();
+      };
+
+      if (isLoading || isRefetching) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
 
       return (
         <main className="flex flex-col gap-2">
           {/* Input */}
           <label className="flex flex-col gap-1">
-            <span className="font-bold">Предмет</span>
+            <span className="font-bold">№1</span>
             <Select
-              value={item}
+              value={selected[0]?.id ?? ""}
               onValueChange={(e) => {
                 if (!e) return;
-
-                setItem(e);
+                const item = data?.find((i) => i.id === e);
+                if (item) {
+                  setSelected((prev) => {
+                    const next = [...prev];
+                    next[0] = item;
+                    return next;
+                  });
+                }
               }}>
               <SelectTrigger className="w-full py-5">
-                <SelectValue placeholder="Предмет" />
+                <SelectValue placeholder="Предмет">{selected[0]?.label}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {data?.map((item) => (
-                    <SelectItem key={item.id} value={item.label}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  {data
+                    ?.filter((item) => !selected.some((s) => s.id === item.id))
+                    .map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-bold">№2</span>
+            <Select
+              value={selected[1]?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.find((i) => i.id === e);
+                if (item) {
+                  setSelected((prev) => {
+                    const next = [...prev];
+                    next[1] = item;
+                    return next;
+                  });
+                }
+              }}>
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">{selected[1]?.label}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data
+                    ?.filter((item) => !selected.some((s) => s.id === item.id))
+                    .map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}: `} {item.label}
+                      </SelectItem>
+                    ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
           </label>
           {/* Buttons */}
           <section className="flex flex-row items-center justify-between gap-2 p-1">
-            <Button className="flex flex-1" variant="success" disabled>
+            <Button
+              className="flex flex-1"
+              variant="success"
+              onClick={handleApply}
+              disabled={selected.length !== 2}>
               Объединить
             </Button>
           </section>
         </main>
       );
     },
-    effect: async () => {},
   },
   {
     label: "Пустой пакет",
     type: "modal",
-    body: () => {
-      const idea = 123;
+    body: (close) => {
+      const user = useUserStore((state) => state.user);
 
-      return <main>{idea}</main>;
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+        queryKey: ["modalData"],
+        queryFn: async () => {
+          const allItems = await itemsApi.getInventory(String(user?.id));
+          return allItems.filter(
+            (item) =>
+              item.label === "Конфетка" ||
+              item.label === "Лимонная конфетка" ||
+              item.label === "Пустой пакет",
+          );
+        },
+        enabled: !!user,
+      });
+
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const [selected, setSelected] = useState<Inventory | null>(null);
+
+      const handleApply = async () => {
+        if (!data || !selected) return;
+
+        const itemId = selected.label === "Конфетка" ? "w8ajf5mhh121nb0" : "olvbzslxz9xbtr9";
+        const itemImage =
+          selected.label === "Конфетка"
+            ? "100x100_product_preview_my02369_1_k10elro9to_412wxiqd89.png"
+            : "2okrjiphui9_e2wfst86n4.png";
+
+        //Добавить пакет с конфетами
+        await itemsApi.addInventory(
+          String(user?.id),
+          itemId,
+          `${image.items}${itemId}/${itemImage}`,
+          "item",
+        );
+
+        //Удалить оба предмета
+        await itemsApi.removeInventory(String(selected.id));
+        await itemsApi.removeInventory(
+          String(data.find((item) => item.label === "Пустой пакет")?.id),
+        );
+
+        const activityData = {
+          author: user?.id,
+          image: user?.avatar,
+          text: `${user?.username} закинул все свои конфеты в пакет`,
+        } as Activity;
+
+        await activityApi.createActivity(activityData);
+
+        return close();
+      };
+
+      if (isLoading || isRefetching) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
+
+      return (
+        <main className="flex flex-col gap-2">
+          {/* Input */}
+          <label className="flex flex-col gap-1">
+            <span className="font-bold">Конфетка</span>
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.find((i) => i.id === e);
+                if (item) {
+                  setSelected(item);
+                }
+              }}>
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data
+                    ?.filter((item) => item.label !== "Пустой пакет")
+                    .map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </label>
+
+          {/* Buttons */}
+          <section className="flex flex-row items-center justify-between gap-2 p-1">
+            <Button
+              className="flex flex-1"
+              variant="success"
+              onClick={handleApply}
+              disabled={!selected}>
+              Объединить
+            </Button>
+          </section>
+        </main>
+      );
     },
-    effect: async () => {},
   },
   {
     label: "Таинственный предмет",
     type: "effect",
-    body: () => {
-      return <main>Hello World!</main>;
+    body: (close) => {
+      const user = useUserStore((state) => state.user);
+      const appliedRef = useRef(false);
+
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+        queryKey: ["modalData"],
+        queryFn: async () => {
+          const allItems = await itemsApi.getInventory(String(user?.id));
+          return allItems.find((item) => item.label === "Таинственный предмет");
+        },
+        enabled: !!user,
+      });
+
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const { mutate: applyEffect, isPending } = useMutation({
+        mutationFn: async () => {
+          if (!user || !data) return;
+
+          await userApi.changeUserStatus(String(user.id), "Таинственный предмет", "add");
+
+          await itemsApi.removeInventory(String(data.id));
+
+          const activityData = {
+            author: user?.id,
+            image: user?.avatar,
+            text: `${user?.username} нашел легендарный предмет`,
+          } as Activity;
+
+          await activityApi.createActivity(activityData);
+
+          return close();
+        },
+      });
+
+      useEffect(() => {
+        if (data && !isLoading && !isRefetching && !appliedRef.current) {
+          appliedRef.current = true;
+          applyEffect();
+        }
+      }, [data, isLoading, isRefetching, applyEffect]);
+
+      if (isLoading || isRefetching || isPending) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
+
+      return <main />;
     },
-    effect: async () => {},
   },
   {
     label: "Светлое нефильтрованное",
     type: "modal",
-    body: () => {
-      return <main>Hello World!</main>;
+    body: (close) => {
+      const user = useUserStore((state) => state.user);
+      const appliedRef = useRef(false);
+
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+        queryKey: ["modalData"],
+        queryFn: async () => {
+          const allItems = await itemsApi.getInventory(String(user?.id));
+          return allItems.find((item) => item.label === "Светлое нефильтрованное");
+        },
+        enabled: !!user,
+      });
+
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const { mutate: applyEffect, isPending } = useMutation({
+        mutationFn: async () => {
+          if (!user || !data) return;
+          await userApi.scoreUser(String(user.id), 20);
+
+          await itemsApi.removeInventory(String(data.id));
+
+          const activityData = {
+            author: user?.id,
+            image: user?.avatar,
+            text: `${user?.username} выпил пивка`,
+          } as Activity;
+
+          await activityApi.createActivity(activityData);
+
+          return close();
+        },
+      });
+
+      useEffect(() => {
+        if (data && !isLoading && !isRefetching && !appliedRef.current) {
+          appliedRef.current = true;
+          applyEffect();
+        }
+      }, [data, isLoading, isRefetching, applyEffect]);
+
+      if (isLoading || isRefetching || isPending) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
+      return <main />;
     },
-    effect: async () => {},
   },
 ];

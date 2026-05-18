@@ -1,20 +1,9 @@
 import Image from "@/components/shared/image.component";
 import { Game, GameReview, GameStatus } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  memo,
-  RefObject,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { memo, RefObject, startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { SmallLoader, WindowLoader } from "@/components/shared/loader.component";
 import {
   Calendar,
   NetworkIcon,
@@ -48,20 +37,14 @@ const gameApi = new GameApi();
 const userApi = new UserApi();
 const cellApi = new CellApi();
 
-function GameLibrary({
-  id,
-  switchGame,
-}: {
-  id: string;
-  switchGame: () => void;
-}) {
+function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
   const [content, setContent] = useState<"general" | "review">("general");
-  const [loading, setLoading] = useState<
-    { button: GameStatus; loading: boolean }[]
-  >(gameButtons.map((item) => ({ button: item.value, loading: false })));
+  const [loading, setLoading] = useState<{ button: GameStatus; loading: boolean }[]>(
+    gameButtons.map((item) => ({ button: item.value, loading: false })),
+  );
   const [time, setTime] = useState<string | null>(null);
   const [input, setInput] = useState(false);
 
@@ -116,11 +99,7 @@ function GameLibrary({
           id={id}
           title={data?.game.data.name as string}
           review={data?.game?.review as GameReview}
-          image={
-            data?.game?.image
-              ? `${image.game}${data?.game?.id}/${data?.game?.image}`
-              : null
-          }
+          image={data?.game?.image ? `${image.game}${data?.game?.id}/${data?.game?.image}` : null}
           user={data?.user as User}
         />
       ),
@@ -152,9 +131,7 @@ function GameLibrary({
 
       if (!data?.game) return;
 
-      setLoading((prev) =>
-        prev.map((l) => (l.button === status ? { ...l, loading: true } : l)),
-      );
+      setLoading((prev) => prev.map((l) => (l.button === status ? { ...l, loading: true } : l)));
 
       try {
         const score =
@@ -162,37 +139,17 @@ function GameLibrary({
             ? calculateScore(Number(time), data.game.playtime.hltb)
             : data.game.score;
 
-        await gameApi.changeStatus(
-          id,
-          data.game,
-          status,
-          Number(time),
-          Number(score),
-        );
+        await gameApi.changeStatus(id, data.game, status, Number(time), Number(score));
 
         if (status === "DROPPED") {
-          await userApi.changeUserAction(
-            String(data.game.user.id),
-            "MOVE_NEGATIVE",
-          );
-          await userApi.changeUserDice(
-            data.game.user.id,
-            Number(time ?? 0),
-            "MOVE_NEGATIVE",
-          );
+          await userApi.changeUserAction(String(data.game.user.id), "MOVE_NEGATIVE");
+          await userApi.changeUserDice(data.game.user.id, Number(time ?? 0), "MOVE_NEGATIVE");
         }
 
         if (status === "COMPLETED") {
           await userApi.scoreUser(String(data.game.user.id), Number(score));
-          await userApi.changeUserAction(
-            String(data.game.user.id),
-            "MOVE_POSITIVE",
-          );
-          await userApi.changeUserDice(
-            data.game.user.id,
-            Number(time),
-            "MOVE_POSITIVE",
-          );
+          await userApi.changeUserAction(String(data.game.user.id), "MOVE_POSITIVE");
+          await userApi.changeUserDice(data.game.user.id, Number(time), "MOVE_POSITIVE");
           await cellApi.captureCell(
             String(data.game.user.id),
             String(data.game.user.username),
@@ -200,11 +157,7 @@ function GameLibrary({
           );
 
           if (data.user.status?.includes("poop")) {
-            await userApi.changeUserStatus(
-              String(data.user.id),
-              "poop",
-              "remove",
-            );
+            await userApi.changeUserStatus(String(data.user.id), "poop", "remove");
           }
 
           if (data.user.position === 101) {
@@ -217,9 +170,7 @@ function GameLibrary({
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading((prev) =>
-          prev.map((l) => (l.button === status ? { ...l, loading: false } : l)),
-        );
+        setLoading((prev) => prev.map((l) => (l.button === status ? { ...l, loading: false } : l)));
         invalidateQuery();
       }
     },
@@ -229,10 +180,7 @@ function GameLibrary({
   if (isLoading) return <WindowLoader />;
   if (isError)
     return (
-      <WindowError
-        error={new Error("Произошла ошибка при загрузке игры")}
-        icon={<NetworkIcon />}
-      />
+      <WindowError error={new Error("Произошла ошибка при загрузке игры")} icon={<NetworkIcon />} />
     );
 
   return (
@@ -251,8 +199,7 @@ function GameLibrary({
           style={{
             left: input ? "0px" : "16px",
           }}
-          ref={clickAwayRef as RefObject<HTMLDivElement>}
-        >
+          ref={clickAwayRef as RefObject<HTMLDivElement>}>
           {input && (
             <Input
               autoFocus
@@ -284,8 +231,7 @@ function GameLibrary({
                   (data?.game && data?.game.status === item.value) ||
                   loading.some((l) => l.loading) ||
                   (item.value === "COMPLETED" && input && !time)
-                }
-              >
+                }>
                 {loading.find((l) => l.button === item.value)?.loading ? (
                   <SmallLoader />
                 ) : (
@@ -305,8 +251,7 @@ function GameLibrary({
               boxShadow: "0px 4px 4px 2px rgba(0, 0, 0, 0.3)",
             }}
             onClick={() => setContent("review")}
-            disabled={content === "review"}
-          >
+            disabled={content === "review"}>
             <NotebookPen />
           </Button>
           <Button
@@ -320,8 +265,7 @@ function GameLibrary({
             onClick={async () => {
               await gameApi.removeGame(id);
               switchGame();
-            }}
-          >
+            }}>
             <Trash />
           </Button>
         </div>
@@ -329,17 +273,13 @@ function GameLibrary({
           {/* VERTICAL IMAGE */}
           <div className="absolute bottom-4.5 left-2 h-52 w-36 overflow-hidden rounded border-2 border-highlight-high bg-background shadow-sharp-sm">
             <Image
-              src={
-                data?.game?.data.image ??
-                (data?.game.data.capsuleImage as string)
-              }
+              src={data?.game?.data.image ?? (data?.game.data.capsuleImage as string)}
               alt="game background"
               className="h-full w-full hover:cursor-pointer"
               onClick={() => {
                 openWindow(
                   String(data?.game.id),
-                  data?.game?.data.image ??
-                    (data?.game.data.capsuleImage as string),
+                  data?.game?.data.image ?? (data?.game.data.capsuleImage as string),
                   "Изображение",
                 );
               }}
@@ -347,9 +287,7 @@ function GameLibrary({
             <div
               className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high"
               style={{
-                backgroundColor: getStatusColor(
-                  data?.game?.status ?? "PLAYING",
-                ),
+                backgroundColor: getStatusColor(data?.game?.status ?? "PLAYING"),
                 boxShadow: "-4px 2px 10px 4px rgba(0, 0, 0, 0.67)",
               }}
             />
@@ -360,22 +298,19 @@ function GameLibrary({
             {/* DATA */}
             <section className="flex flex-row gap-2 w-full">
               {/* USER TIME */}
-              {data?.game?.playtime.user != null &&
-                Number(data?.game.playtime.user) > 0 && (
-                  <div
-                    className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                    title="Время Игрока"
-                  >
-                    <UserStar /> <span>{data?.game?.playtime.user} ч.</span>
-                  </div>
-                )}
+              {data?.game?.playtime.user != null && Number(data?.game.playtime.user) > 0 && (
+                <div
+                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
+                  title="Время Игрока">
+                  <UserStar /> <span>{data?.game?.playtime.user} ч.</span>
+                </div>
+              )}
 
               {/* HLTB TIME */}
               {data?.game?.playtime.hltb && (
                 <div
                   className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                  title="Время HLTB"
-                >
+                  title="Время HLTB">
                   <Timer /> <span>{data?.game.playtime.hltb} ч.</span>
                 </div>
               )}
@@ -383,8 +318,7 @@ function GameLibrary({
               {data?.game?.score && (
                 <div
                   className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                  title="Чубрики"
-                >
+                  title="Чубрики">
                   <RussianRuble />
                   <span>{data?.game.score}</span>
                 </div>
@@ -393,12 +327,9 @@ function GameLibrary({
               {data?.game.created && (
                 <div
                   className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                  title="Дата добавления"
-                >
+                  title="Дата добавления">
                   <Calendar />
-                  <span>
-                    {new Date(data?.game.created).toLocaleDateString()}
-                  </span>
+                  <span>{new Date(data?.game.created).toLocaleDateString()}</span>
                 </div>
               )}
             </section>
@@ -423,8 +354,7 @@ function GameLibrary({
                       data?.game?.data.websiteLink,
                       `Сайт ${String(data?.game?.data.name)}`,
                     );
-                  }}
-                >
+                  }}>
                   {/*<ExternalLink />*/}
                   {data?.game?.data.websiteLink && (
                     <Image
@@ -455,8 +385,7 @@ function GameLibrary({
                       data?.game?.data.steamLink,
                       `Страница ${String(data?.game?.data.name)}`,
                     );
-                  }}
-                >
+                  }}>
                   <SteamSvg className="size-6" />
                 </Button>
               )}

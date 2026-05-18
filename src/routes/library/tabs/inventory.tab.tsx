@@ -1,4 +1,4 @@
-import { ReactNode, startTransition, useCallback, useState } from "react";
+import { startTransition, useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { SmallLoader, WindowLoader } from "@/components/shared/loader.component";
@@ -30,11 +30,7 @@ function InventoryTab({ id }: { id?: string }) {
 
   let initialLoad = false;
 
-  const [modalItem, setModalItem] = useState<{
-    label: string;
-    body: () => ReactNode;
-    effect: () => void;
-  } | null>(null);
+  const [modal, setModal] = useState<string | null>(null);
 
   const [searchTerms, setSearchTerms] = useState<string>("");
   const [active, setActive] = useState<number | null>(null);
@@ -73,6 +69,11 @@ function InventoryTab({ id }: { id?: string }) {
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("market", "*", invalidateQuery);
 
+  const modalItem = useMemo(() => {
+    if (!modal) return null;
+    return otherEffect.find((e) => e.label === modal) ?? null;
+  }, [modal, otherEffect]);
+
   if (!initialLoad && isLoading) return <WindowLoader />;
   if (isError)
     return (
@@ -99,16 +100,11 @@ function InventoryTab({ id }: { id?: string }) {
       roll: [],
     };
 
-    const existing = lookup[item.type]?.find((e) => e.label === "Дырявый сапог");
-    // const existing = lookup[item.type]?.find((e) => e.label === item.label);
+    const existing = lookup[item.type]?.find((e) => e.label === item.label);
 
-    if (!existing) return console.log("no items exists"); //TODO: add later
+    if (!existing) return console.log("no items exists");
 
-    setModalItem({
-      label: existing.label,
-      body: existing.body,
-      effect: () => existing.effect,
-    });
+    setModal(existing.label);
 
     setLoading({
       item: -1,
@@ -212,10 +208,9 @@ function InventoryTab({ id }: { id?: string }) {
         <CreateModal
           label={modalItem.label}
           body={modalItem.body}
-          effect={modalItem.effect}
-          open={!!modalItem}
+          open={!!modal}
           setOpen={(open) => {
-            if (!open) setModalItem(null);
+            if (!open) setModal(null);
           }}
         />
       )}

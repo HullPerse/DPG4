@@ -4,12 +4,7 @@ import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -263,10 +258,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
         result.push(part);
       } else {
         result.push(
-          <span
-            key={index}
-            className="bg-amber-500/20 text-white rounded font-bold"
-          >
+          <span key={index} className="bg-amber-500/20 text-white rounded font-bold">
             {part}
           </span>,
         );
@@ -293,8 +285,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
           result.push(
             <span
               key={`${index}-${subIndex}`}
-              className="bg-amber-500/20 text-white rounded font-bold"
-            >
+              className="bg-amber-500/20 text-white rounded font-bold">
               {subPart}
             </span>,
           );
@@ -308,8 +299,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
         <span
           key={`url-${index}`}
           className="text-blue-500 underline hover:cursor-pointer"
-          onClick={() => openWindow(`url-${Date.now()}`, url, "Ссылка")}
-        >
+          onClick={() => openWindow(`url-${Date.now()}`, url, "Ссылка")}>
           {url}
         </span>,
       );

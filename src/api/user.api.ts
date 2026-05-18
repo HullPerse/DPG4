@@ -83,11 +83,7 @@ export default class UserApi {
     )) as User;
   };
 
-  changeUserStatus = async (
-    userId: string,
-    status: string,
-    type: "add" | "remove",
-  ) => {
+  changeUserStatus = async (userId: string, status: string, type: "add" | "remove") => {
     const existing = await this.getUserById(userId);
     if (!existing) return;
 
@@ -118,9 +114,7 @@ export default class UserApi {
     realTime: number,
     action: "MOVE_POSITIVE" | "MOVE_NEGATIVE",
   ) => {
-    const currentCell = await this.getUserById(userId).then(
-      (res) => res.position,
-    );
+    const currentCell = await this.getUserById(userId).then((res) => res.position);
 
     if (!currentCell)
       await this.usersCollection.update(userId, {
