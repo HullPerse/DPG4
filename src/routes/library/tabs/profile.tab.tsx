@@ -74,13 +74,10 @@ function ProfileTab({ id }: { id?: string }) {
     );
 
   const getComponent = () => {
-    if (userProfile?.type === "chat")
-      return <ChatProfile id={String(data?.user.id)} />;
+    if (userProfile?.type === "chat") return <ChatProfile id={String(data?.user.id)} />;
 
     const tabMap = {
-      profile: (
-        <Profile user={data?.user as User} games={data?.games as Game[]} />
-      ),
+      profile: <Profile user={data?.user as User} games={data?.games as Game[]} />,
       library: <Games games={data?.games as Game[]} />,
       reviews: <ReviewsProfile id={String(data?.user.id)} />,
       chat: <ChatProfile id={String(data?.user.id)} />,
@@ -93,9 +90,7 @@ function ProfileTab({ id }: { id?: string }) {
 
   return (
     <main className="flex w-full h-full">
-      <section className="flex w-full h-full overflow-y-auto">
-        {getComponent()}
-      </section>
+      <section className="flex w-full h-full overflow-y-auto">{getComponent()}</section>
       <section className="flex flex-col gap-2 items-center border-l-2 h-full  border-highlight-high bg-background">
         {/* USER INFO */}
         <div className="flex flex-col items-center w-full border-b-2 border-highlight-high p-2 font-bold gap-2">
@@ -124,8 +119,7 @@ function ProfileTab({ id }: { id?: string }) {
 
                   await userApi.scoreUser(String(data?.user.id), addMoney);
                   setAddMoney(0);
-                }}
-              >
+                }}>
                 <Plus />
               </Button>
             </div>
@@ -159,8 +153,7 @@ function ProfileTab({ id }: { id?: string }) {
                 await activityApi.createActivity(activityData);
 
                 setPosition(0);
-              }}
-            >
+              }}>
               <Move />
             </Button>
           </div>
@@ -175,8 +168,7 @@ function ProfileTab({ id }: { id?: string }) {
                 setProfileTab(tab.value as ProfileTab);
               }}
               disabled={profileTab === tab.value}
-              hidden={tab.disabled && data?.user.id === user?.id}
-            >
+              hidden={tab.disabled && data?.user.id === user?.id}>
               {tab.label}
             </Button>
           ))}

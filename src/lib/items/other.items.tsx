@@ -7,11 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/user.store";
 import { image } from "@/api/client.api";
-import { Inventory } from "@/types/items";
+import { effectInterface, Inventory } from "@/types/items";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { Activity } from "@/types/activity";
 import { CircleX } from "lucide-react";
@@ -25,13 +25,7 @@ const itemsApi = new ItemsApi();
 const activityApi = new ActivityApi();
 const userApi = new UserApi();
 
-export interface otherInterface {
-  label: string;
-  body: (close: () => void) => ReactNode;
-  type: "modal" | "effect";
-}
-
-export const otherEffect: otherInterface[] = [
+export const otherEffect: effectInterface[] = [
   {
     label: "Дырявый сапог",
     type: "modal",
@@ -68,7 +62,7 @@ export const otherEffect: otherInterface[] = [
 
         //Удалить оба сапога
         for (const item of selected) {
-          await itemsApi.removeInventory(String(item.id));
+          await itemsApi.chargeInventory(String(item.id), item.charge, -1);
         }
 
         const activityData = {
@@ -215,9 +209,11 @@ export const otherEffect: otherInterface[] = [
         );
 
         //Удалить оба предмета
-        await itemsApi.removeInventory(String(selected.id));
-        await itemsApi.removeInventory(
+        await itemsApi.chargeInventory(String(selected.id), selected.charge, -1);
+        await itemsApi.chargeInventory(
           String(data.find((item) => item.label === "Пустой пакет")?.id),
+          Number(data.find((item) => item.label === "Пустой пакет")?.charge),
+          -1,
         );
 
         const activityData = {
@@ -289,117 +285,55 @@ export const otherEffect: otherInterface[] = [
   {
     label: "Таинственный предмет",
     type: "effect",
-    body: (close) => {
-      const user = useUserStore((state) => state.user);
-      const appliedRef = useRef(false);
+    effect: async () => {
+      const user = useUserStore.getState().user;
 
-      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-        queryKey: ["modalData"],
-        queryFn: async () => {
-          const allItems = await itemsApi.getInventory(String(user?.id));
-          return allItems.find((item) => item.label === "Таинственный предмет");
-        },
-        enabled: !!user,
-      });
+      if (!user) return;
 
-      useEffect(() => {
-        refetch();
-      }, []);
+      const currentItem = await itemsApi
+        .getInventory(String(user.id))
+        .then((res) => res.find((item) => item.label === "Таинственный предмет"));
 
-      const { mutate: applyEffect, isPending } = useMutation({
-        mutationFn: async () => {
-          if (!user || !data) return;
+      if (!currentItem) return;
 
-          await userApi.changeUserStatus(String(user.id), "Таинственный предмет", "add");
+      await userApi.changeUserStatus(String(user.id), "Таинственный предмет", "add");
 
-          await itemsApi.removeInventory(String(data.id));
+      await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
 
-          const activityData = {
-            author: user?.id,
-            image: user?.avatar,
-            text: `${user?.username} нашел легендарный предмет`,
-          } as Activity;
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        text: `${user?.username} нашел легендарный предмет`,
+      } as Activity;
 
-          await activityApi.createActivity(activityData);
-
-          return close();
-        },
-      });
-
-      useEffect(() => {
-        if (data && !isLoading && !isRefetching && !appliedRef.current) {
-          appliedRef.current = true;
-          applyEffect();
-        }
-      }, [data, isLoading, isRefetching, applyEffect]);
-
-      if (isLoading || isRefetching || isPending) return <WindowLoader />;
-      if (isError)
-        return (
-          <WindowError
-            error={new Error("Произошла ошибка при соединении с сервером")}
-            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
-          />
-        );
-
-      return <main />;
+      return await activityApi.createActivity(activityData);
     },
   },
   {
     label: "Светлое нефильтрованное",
-    type: "modal",
-    body: (close) => {
-      const user = useUserStore((state) => state.user);
-      const appliedRef = useRef(false);
+    type: "effect",
+    effect: async () => {
+      const user = useUserStore.getState().user;
 
-      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-        queryKey: ["modalData"],
-        queryFn: async () => {
-          const allItems = await itemsApi.getInventory(String(user?.id));
-          return allItems.find((item) => item.label === "Светлое нефильтрованное");
-        },
-        enabled: !!user,
-      });
+      if (!user) return;
 
-      useEffect(() => {
-        refetch();
-      }, []);
+      const currentItem = await itemsApi
+        .getInventory(String(user.id))
+        .then((res) => res.find((item) => item.label === "Светлое нефильтрованное"));
 
-      const { mutate: applyEffect, isPending } = useMutation({
-        mutationFn: async () => {
-          if (!user || !data) return;
-          await userApi.scoreUser(String(user.id), 20);
+      if (!currentItem) return;
 
-          await itemsApi.removeInventory(String(data.id));
+      await userApi.scoreUser(String(user.id), 20);
 
-          const activityData = {
-            author: user?.id,
-            image: user?.avatar,
-            text: `${user?.username} выпил пивка`,
-          } as Activity;
+      await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
 
-          await activityApi.createActivity(activityData);
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        text: `${user?.username} выпил пивка`,
+      } as Activity;
 
-          return close();
-        },
-      });
-
-      useEffect(() => {
-        if (data && !isLoading && !isRefetching && !appliedRef.current) {
-          appliedRef.current = true;
-          applyEffect();
-        }
-      }, [data, isLoading, isRefetching, applyEffect]);
-
-      if (isLoading || isRefetching || isPending) return <WindowLoader />;
-      if (isError)
-        return (
-          <WindowError
-            error={new Error("Произошла ошибка при соединении с сервером")}
-            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
-          />
-        );
-      return <main />;
+      return await activityApi.createActivity(activityData);
     },
   },
 ];

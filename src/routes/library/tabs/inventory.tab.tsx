@@ -6,7 +6,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { Minus, NetworkIcon, Plus, Send, ShoppingCart, Trash, X } from "lucide-react";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
-import { Inventory, ItemType } from "@/types/items";
+import { effectInterface, Inventory, ItemType } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
@@ -16,8 +16,9 @@ import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
 import { usableItems } from "@/lib/items.effects";
-import { otherEffect, otherInterface } from "@/lib/items/other.items";
+import { otherEffect } from "@/lib/items/other.items";
 import { CreateModal } from "@/components/shared/items.modal";
+import { itemEffect } from "@/lib/items/item.items";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -71,7 +72,7 @@ function InventoryTab({ id }: { id?: string }) {
 
   const modalItem = useMemo(() => {
     if (!modal) return null;
-    return otherEffect.find((e) => e.label === modal) ?? null;
+    return [...otherEffect, ...itemEffect].find((e) => e.label === modal) ?? null;
   }, [modal, otherEffect]);
 
   if (!initialLoad && isLoading) return <WindowLoader />;
@@ -93,9 +94,9 @@ function InventoryTab({ id }: { id?: string }) {
       type: "use",
     });
 
-    const lookup: Record<ItemType, otherInterface[]> = {
+    const lookup: Record<ItemType, effectInterface[]> = {
       effect: [],
-      item: [],
+      item: itemEffect,
       other: otherEffect,
       roll: [],
     };
@@ -104,14 +105,15 @@ function InventoryTab({ id }: { id?: string }) {
 
     if (!existing) return console.log("no items exists");
 
-    setModal(existing.label);
-
-    setLoading({
-      item: -1,
-      type: null,
-    });
-
-    // usableItems(item);
+    if (existing.type === "effect") {
+      existing.effect?.();
+      setLoading({ item: -1, type: null });
+      return setActive(null);
+    } else {
+      setModal(existing.label);
+      setLoading({ item: -1, type: null });
+      return setActive(null);
+    }
   };
 
   const handleDelete = async (index: number, inventoryId: string) => {

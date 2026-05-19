@@ -10,12 +10,12 @@ export function CreateModal({
   setOpen,
 }: {
   label: string;
-  body: (close: () => void) => ReactNode;
+  body?: (close: () => void) => ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={(v) => setOpen(v)}>
+    <Dialog open={open} onOpenChange={(value) => setOpen(value)}>
       <DialogContent showCloseButton={false} className="p-0 border-0 min-w-xl max-w-full">
         <main
           style={{
@@ -37,7 +37,7 @@ export function CreateModal({
 
           {/* Body */}
           <section className="flex w-full min-h-0 h-full flex-col p-1">
-            {body(() => setOpen(false))}
+            {body && body(() => setOpen(false))}
           </section>
         </main>
       </DialogContent>

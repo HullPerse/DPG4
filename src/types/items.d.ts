@@ -51,4 +51,9 @@ export type Trade = {
  */
 export type ItemType = "effect" | "item" | "roll" | "other";
 
-export type ItemEffect = "";
+export interface effectInterface {
+  label: string;
+  type: "modal" | "effect";
+  effect?: () => void;
+  body?: (close: () => void) => ReactNode;
+}
