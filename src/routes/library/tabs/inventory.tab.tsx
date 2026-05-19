@@ -19,9 +19,12 @@ import { usableItems } from "@/lib/items.effects";
 import { otherEffect } from "@/lib/items/other.items";
 import { CreateModal } from "@/components/shared/items.modal";
 import { itemEffect } from "@/lib/items/item.items";
+import { Activity } from "@/types/activity";
+import ActivityApi from "@/api/activity.api";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
+const activityApi = new ActivityApi();
 
 function InventoryTab({ id }: { id?: string }) {
   const queryClient = useQueryClient();
@@ -88,7 +91,7 @@ function InventoryTab({ id }: { id?: string }) {
 
   initialLoad = true;
 
-  const handleUse = (index: number, item: Inventory) => {
+  const handleUse = async (index: number, item: Inventory) => {
     setLoading({
       item: index,
       type: "use",
@@ -103,16 +106,28 @@ function InventoryTab({ id }: { id?: string }) {
 
     const existing = lookup[item.type]?.find((e) => e.label === item.label);
 
-    if (!existing) return console.log("no items exists");
+    if (!existing) {
+      //Любой другой предмет
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        type: "emoji",
+        text: `${user?.username} использовал предмет ${item.label}`,
+      } as Activity;
 
-    if (existing.type === "effect") {
-      existing.effect?.();
-      setLoading({ item: -1, type: null });
-      return setActive(null);
+      await activityApi.createActivity(activityData);
+
+      return await itemsApi.chargeInventory(String(item.id), item.charge, -1);
     } else {
-      setModal(existing.label);
-      setLoading({ item: -1, type: null });
-      return setActive(null);
+      if (existing.type === "effect") {
+        existing.effect?.();
+        setLoading({ item: -1, type: null });
+        return setActive(null);
+      } else {
+        setModal(existing.label);
+        setLoading({ item: -1, type: null });
+        return setActive(null);
+      }
     }
   };
 

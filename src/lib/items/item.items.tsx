@@ -31,6 +31,8 @@ import WheelComponent from "@/components/shared/wheel.component";
 import { WheelItem } from "@/types/wheel";
 import ImageComponent from "@/components/shared/image.component";
 import { User } from "@/types/user";
+import { getFirstCellInNextRow, getGridPosition, getLastCellInRow } from "../cell.utils";
+import { se } from "react-day-picker/locale";
 
 const itemsApi = new ItemsApi();
 const activityApi = new ActivityApi();
@@ -1352,6 +1354,367 @@ export const itemEffect: effectInterface[] = [
               onClick={handleApply}
               disabled={!selected}>
               Отправить
+            </Button>
+          </section>
+        </main>
+      );
+    },
+  },
+  {
+    label: "Карта Джокер",
+    type: "modal",
+    body: (close) => {
+      const user = useUserStore((state) => state.user);
+
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+        queryKey: ["modalData"],
+        queryFn: async () => {
+          const allItems = await itemsApi.getAllInventories();
+          const allUsers = await userApi.getAllUsers();
+
+          const items = allItems.filter((i) => i.label.toUpperCase().includes("КАРТА"));
+
+          return { items, users: allUsers };
+        },
+        enabled: !!user,
+      });
+
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const [selected, setSelected] = useState<Inventory | null>(null);
+
+      const handleApply = async () => {
+        if (!user || !selected) return;
+
+        const currentItem = await itemsApi
+          .getInventory(String(user.id))
+          .then((res) => res.find((i) => i.label === "Карта Джокер"));
+
+        if (currentItem) {
+          await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
+        }
+
+        const activityData = {
+          author: user?.id,
+          image: user?.avatar,
+          text: `${user?.username} уничтожил ${selected.label}`,
+        } as Activity;
+
+        await activityApi.createActivity(activityData);
+
+        return close();
+      };
+
+      if (isLoading || isRefetching) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
+
+      return (
+        <main className="flex flex-col gap-2">
+          {/* Input */}
+          <label className="flex flex-col gap-1">
+            <span className="font-bold">Предметы</span>
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.items.find((i) => i.id === e);
+                if (item) {
+                  setSelected(item);
+                }
+              }}>
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Игрок">{selected?.label}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.items
+                    .sort((a, b) => a.owner.localeCompare(b.owner))
+                    .map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </label>
+
+          {/* Buttons */}
+          <section className="flex flex-row items-center justify-between gap-2 p-1">
+            <Button
+              className="flex flex-1"
+              variant="success"
+              onClick={handleApply}
+              disabled={!selected}>
+              Применить
+            </Button>
+          </section>
+        </main>
+      );
+    },
+  },
+  {
+    label: "Арбуз",
+    type: "effect",
+    effect: async () => {
+      const user = useUserStore.getState().user;
+
+      if (!user) return;
+
+      const currentRow = getGridPosition(user.position).row;
+
+      await userApi.moveUser(String(user.id), getLastCellInRow(currentRow));
+
+      await userApi.changeUserAction(
+        String(user.id),
+        user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD",
+      );
+
+      const currentItem = await itemsApi
+        .getInventory(String(user.id))
+        .then((res) => res.find((item) => item.label === "Арбуз"));
+
+      if (!currentItem) return;
+
+      await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
+
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        text: `${user.username} переместился на клетку ${getLastCellInRow(currentRow)}`,
+      } as Activity;
+
+      return await activityApi.createActivity(activityData);
+    },
+  },
+  {
+    label: "Арбус",
+    type: "effect",
+    effect: async () => {
+      const user = useUserStore.getState().user;
+
+      if (!user) return;
+
+      const currentRow = getGridPosition(user.position).row;
+
+      await userApi.moveUser(String(user.id), getFirstCellInNextRow(currentRow));
+
+      await userApi.changeUserAction(
+        String(user.id),
+        user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD",
+      );
+      const currentItem = await itemsApi
+        .getInventory(String(user.id))
+        .then((res) => res.find((item) => item.label === "Арбус"));
+
+      if (!currentItem) return;
+
+      await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
+
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        text: `${user.username} переместился на клетку ${getFirstCellInNextRow(currentRow)}`,
+      } as Activity;
+
+      return await activityApi.createActivity(activityData);
+    },
+  },
+  {
+    label: "Ведьмин котел",
+    type: "modal",
+    body: (close) => {
+      const user = useUserStore((state) => state.user);
+
+      const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+        queryKey: ["modalData"],
+        queryFn: async () => {
+          const allUsers = await userApi.getAllUsers();
+          const allItems = await itemsApi.getAllItems();
+          const allInventories = await itemsApi.getAllInventories();
+
+          return {
+            items: allItems.filter((i) => i.label !== "Ведьмин котел"),
+            inventories: allInventories.filter((i) => i.label !== "Ведьмин котел"),
+            users: allUsers,
+          };
+        },
+        enabled: !!user,
+      });
+
+      useEffect(() => {
+        refetch();
+      }, []);
+
+      const [selected, setSelected] = useState<Inventory[] | null>(null);
+      const [finalItem, setFinalItem] = useState<Item | null>(null);
+
+      const handleApply = async () => {
+        if (!user || !selected || !finalItem) return;
+
+        for (const item of selected) {
+          await itemsApi.removeInventory(String(item.id));
+        }
+
+        await itemsApi.addInventory(
+          String(user?.id),
+          String(finalItem.id),
+          `${image?.items}${finalItem.id}/${finalItem.image}`,
+          finalItem.type,
+        );
+
+        const currentItem = await itemsApi
+          .getInventory(String(user.id))
+          .then((res) => res.find((i) => i.label === "Ведьмин котел"));
+
+        if (currentItem) {
+          await itemsApi.chargeInventory(String(currentItem.id), currentItem.charge, -1);
+        }
+
+        const activityData = {
+          author: user?.id,
+          image: user?.avatar,
+          text: `${user?.username} уничтожил ${selected.map((i) => i.label).join(", ")} и получил ${finalItem.label}`,
+        } as Activity;
+
+        await activityApi.createActivity(activityData);
+
+        return close();
+      };
+
+      if (isLoading || isRefetching) return <WindowLoader />;
+      if (isError)
+        return (
+          <WindowError
+            error={new Error("Произошла ошибка при соединении с сервером")}
+            icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+          />
+        );
+
+      return (
+        <main className="flex flex-col gap-2">
+          {/* Final Item*/}
+          <label className="flex flex-col gap-1">
+            <span className="font-bold">Желаемый предмет</span>
+            <div className="flex flex-row gap-1">
+              <Select
+                value={finalItem?.id ?? ""}
+                onValueChange={(e) => {
+                  if (!e) return;
+                  const item = data?.items.find((i) => i.id === e);
+                  if (item) {
+                    setFinalItem(item);
+                  }
+                }}>
+                <SelectTrigger className="w-full py-5">
+                  <SelectValue placeholder="Предмет">{finalItem?.label}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {data?.items.map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <HoverCard>
+                <HoverCardTrigger delay={0} className="z-1000">
+                  <Button
+                    variant="default"
+                    size="icon"
+                    className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5">
+                    <CircleQuestionMark />
+                  </Button>
+                </HoverCardTrigger>
+                <HoverCardContent
+                  className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                  side={"top"}>
+                  <ItemHelper item={finalItem} type="item" />
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+          </label>
+
+          {/* Input */}
+          {Array.from({ length: 3 }).map((_, index) => (
+            <label key={index} className="flex flex-col gap-1">
+              <span className="font-bold">Предметы в котел</span>
+              <div className="flex flex-row gap-1">
+                <Select
+                  value={selected?.[index]?.id ?? ""}
+                  onValueChange={(e) => {
+                    if (!e) return;
+                    const item = data?.inventories.find((i) => i.id === e);
+                    if (item) {
+                      setSelected((prev) => {
+                        const next = [...(prev ?? [])];
+
+                        next[index] = item;
+
+                        return next;
+                      });
+                    }
+                  }}>
+                  <SelectTrigger className="w-full py-5">
+                    <SelectValue placeholder="Предмет">{selected?.[index]?.label}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {data?.inventories
+                        // .filter((i) => !selected?.includes(i))
+                        .map((item, index) => {
+                          if (selected?.includes(item)) return;
+                          if (selected?.some((i) => i.owner === item.owner)) return;
+
+                          return (
+                            <SelectItem key={item.id} value={item.id}>
+                              {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
+                              {item.label}
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <HoverCard>
+                  <HoverCardTrigger delay={0} className="z-1000">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5">
+                      <CircleQuestionMark />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent
+                    className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                    side={"top"}>
+                    <ItemHelper item={selected?.[index] ?? null} type="inventory" />
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+            </label>
+          ))}
+
+          {/* Buttons */}
+          <section className="flex flex-row items-center justify-between gap-2 p-1">
+            <Button
+              className="flex flex-1"
+              variant="success"
+              onClick={handleApply}
+              disabled={!selected || selected?.length < 3 || !finalItem}>
+              Применить
             </Button>
           </section>
         </main>

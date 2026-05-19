@@ -4,11 +4,7 @@ import ItemsApi from "@/api/items.api";
 import ActivityApi from "@/api/activity.api";
 import { Inventory } from "@/types/items";
 import { image } from "@/api/client.api";
-import {
-  getFirstCellInNextRow,
-  getGridPosition,
-  getLastCellInRow,
-} from "./cell.utils";
+import { getFirstCellInNextRow, getGridPosition, getLastCellInRow } from "./cell.utils";
 import { shuffleArray } from "./utils";
 import { Activity } from "@/types/activity";
 
@@ -22,8 +18,7 @@ export async function usableItems(item: Inventory) {
 
   //Хрюкающая свинья
   if (item.label === "Хрюкающая свинья") {
-    const currentCell =
-      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+    const currentCell = (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
     const statuses = [...(currentCell.status ?? []), "pig"];
 
@@ -43,8 +38,7 @@ export async function usableItems(item: Inventory) {
 
   //Тупорылый кот
   if (item.label === "Тупорылый кот") {
-    const currentCell =
-      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+    const currentCell = (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
     const statuses = [...(currentCell.status ?? []), "cat"];
 
@@ -63,14 +57,8 @@ export async function usableItems(item: Inventory) {
   }
 
   //Пакет конфеток или Пакет лимонных конфеток
-  if (
-    item.label === "Пакет конфеток" ||
-    item.label === "Пакет лимонных конфеток"
-  ) {
-    await usersApi.scoreUser(
-      item.owner,
-      item.label === "Пакет лимонных конфеток" ? 15 : 10,
-    );
+  if (item.label === "Пакет конфеток" || item.label === "Пакет лимонных конфеток") {
+    await usersApi.scoreUser(item.owner, item.label === "Пакет лимонных конфеток" ? 15 : 10);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
@@ -104,13 +92,9 @@ export async function usableItems(item: Inventory) {
 
   //Кал и Легендарный кал
   if (item.label === "Кал" || item.label === "Легендарный кал") {
-    const currentCell =
-      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+    const currentCell = (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
-    await cellApi.changeStatus(currentCell.id, [
-      ...(currentCell.status ?? []),
-      "poop",
-    ]);
+    await cellApi.changeStatus(currentCell.id, [...(currentCell.status ?? []), "poop"]);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
@@ -153,10 +137,7 @@ export async function usableItems(item: Inventory) {
   if (item.label === "Арбуз") {
     const currentRow = getGridPosition(currentUser.position).row;
 
-    await usersApi.moveUser(
-      String(currentUser.id),
-      getLastCellInRow(currentRow),
-    );
+    await usersApi.moveUser(String(currentUser.id), getLastCellInRow(currentRow));
 
     await usersApi.changeUserAction(
       String(currentUser.id),
@@ -180,10 +161,7 @@ export async function usableItems(item: Inventory) {
   if (item.label === "Арбус") {
     const currentRow = getGridPosition(currentUser.position).row;
 
-    await usersApi.moveUser(
-      String(currentUser.id),
-      getFirstCellInNextRow(currentRow),
-    );
+    await usersApi.moveUser(String(currentUser.id), getFirstCellInNextRow(currentRow));
 
     await usersApi.changeUserAction(
       String(currentUser.id),
@@ -216,10 +194,7 @@ export async function usableItems(item: Inventory) {
     if (!targetInventory) return;
 
     const shuffledArray = shuffleArray(targetInventory);
-    const halfItems = shuffledArray.slice(
-      0,
-      Math.floor(shuffledArray.length / 2),
-    );
+    const halfItems = shuffledArray.slice(0, Math.floor(shuffledArray.length / 2));
 
     for (const inv of halfItems) {
       await itemsApi.sendInventory(String(inv.id), String(currentUser.id));
@@ -242,10 +217,7 @@ export async function usableItems(item: Inventory) {
   if (item.label === "Курва бобер") {
     const newPosition = currentUser.position - 4;
 
-    await usersApi.moveUser(
-      String(currentUser.id),
-      newPosition < 0 ? 0 : newPosition,
-    );
+    await usersApi.moveUser(String(currentUser.id), newPosition < 0 ? 0 : newPosition);
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
 
@@ -267,9 +239,7 @@ export async function usableItems(item: Inventory) {
       user.position > max.position ? user : max,
     );
 
-    const targetInventory = await itemsApi.getInventory(
-      String(firstPosition.id),
-    );
+    const targetInventory = await itemsApi.getInventory(String(firstPosition.id));
     const randomIndex = Math.floor(Math.random() * targetInventory.length);
 
     Array.from({ length: 2 }, async () => {
@@ -299,10 +269,7 @@ export async function usableItems(item: Inventory) {
       const inventory = await itemsApi.getInventory(String(user.id));
       const randomIndex = Math.floor(Math.random() * inventory.length);
 
-      await itemsApi.sendInventory(
-        String(inventory[randomIndex].id),
-        item.owner,
-      );
+      await itemsApi.sendInventory(String(inventory[randomIndex].id), item.owner);
     }
 
     await itemsApi.chargeInventory(String(item.id), item.charge, -1);
@@ -327,11 +294,7 @@ export async function usableItems(item: Inventory) {
 
       const allCells = await cellApi.getCells();
 
-      if (
-        allCells
-          .find((c) => c.number === user.position)
-          ?.captured?.includes(String(user.id))
-      ) {
+      if (allCells.find((c) => c.number === user.position)?.captured?.includes(String(user.id))) {
         const finalValue = user.money >= 10 ? 10 : user.money;
 
         await usersApi.scoreUser(item.owner, finalValue);
@@ -392,9 +355,7 @@ export async function usableItems(item: Inventory) {
     ];
 
     const randomIndex = Math.floor(Math.random() * 3);
-    const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt", "qqr2upqkuli51ea"][
-      randomIndex
-    ]; //1 - моча 2 - конча 3 - польпо
+    const finalItem = ["jgew0bwjc69xo0g", "quyhj9knb8gqizt", "qqr2upqkuli51ea"][randomIndex]; //1 - моча 2 - конча 3 - польпо
 
     const itemData = await itemsApi.getItemById(finalItem);
 
@@ -504,12 +465,7 @@ export async function usableItems(item: Inventory) {
       const ratImage = `${image.items}${ratId}/100x100_723bzyfzkql6_or7gvv38ny_ltkzx8ac9i.png`;
       const ratType = "item";
 
-      await itemsApi.addInventory(
-        String(currentUser.id),
-        ratId,
-        ratImage,
-        ratType,
-      );
+      await itemsApi.addInventory(String(currentUser.id), ratId, ratImage, ratType);
 
       const activityData = {
         author: currentUser.id,
@@ -606,13 +562,9 @@ export async function usableItems(item: Inventory) {
 
   //Стул Трампа
   if (item.label === "Стул Трампа") {
-    const currentCell =
-      (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
+    const currentCell = (await cellApi.getCellByNumber(currentUser.position)) ?? 0;
 
-    await cellApi.changeStatus(currentCell.id, [
-      ...(currentCell.status ?? []),
-      "chair",
-    ]);
+    await cellApi.changeStatus(currentCell.id, [...(currentCell.status ?? []), "chair"]);
 
     const activityData = {
       author: currentUser.id,
