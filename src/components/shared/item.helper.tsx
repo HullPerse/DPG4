@@ -1,4 +1,4 @@
-import { highlightText, translateItemType } from "@/lib/utils";
+import { translateItemType } from "@/lib/utils";
 import { Inventory, Item } from "@/types/items";
 import ImageComponent from "./image.component";
 import { image } from "@/api/client.api";
