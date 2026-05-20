@@ -15,7 +15,6 @@ import { highlightText } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
-import { usableItems } from "@/lib/items.effects";
 import { otherEffect } from "@/lib/items/other.items";
 import { CreateModal } from "@/components/shared/items.modal";
 import { itemEffect } from "@/lib/items/item.items";
