@@ -64,7 +64,7 @@ export default function Desktop({
           ))}
         </div>
 
-        {!user?.subscribed && <AnnouncementAd />}
+        {!user?.status?.some((u) => u === "subscribed") && <AnnouncementAd />}
 
         {openCalendar && (
           <CalendarDesktop

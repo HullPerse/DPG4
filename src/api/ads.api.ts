@@ -41,7 +41,11 @@ export default class AdsApi {
 
     await usersApi.scoreUser(String(currentUser.id), -SUBSCRIPTION_COST);
 
-    await usersApi.updateSubsription(String(currentUser.id), true);
+    await usersApi.changeUserStatus(
+      String(currentUser.id),
+      "subscribed",
+      "add",
+    );
 
     const activityData = {
       author: currentUser.id,
@@ -59,7 +63,11 @@ export default class AdsApi {
 
     if (!currentUser) return;
 
-    await usersApi.updateSubsription(String(currentUser.id), false);
+    await usersApi.changeUserStatus(
+      String(currentUser.id),
+      "subscribed",
+      "remove",
+    );
 
     const activityData = {
       author: currentUser.id,

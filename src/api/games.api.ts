@@ -304,7 +304,7 @@ export default class GameApi {
     //check for sub
     const currentUser = await usersApi.getUserById(game.user.id);
 
-    if (currentUser.subscribed) {
+    if (currentUser.status?.find((s) => s === "subscribed")) {
       if (currentUser.money >= SUBSCRIPTION_CONTINUE) {
         await usersApi.scoreUser(
           String(currentUser.id),

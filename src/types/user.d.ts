@@ -29,7 +29,4 @@ export interface User {
   status: string[];
 
   place: "0" | "1" | "2" | "3";
-
-  //TODO: MOVE TO STATUS LATER
-  subscribed: boolean;
 }

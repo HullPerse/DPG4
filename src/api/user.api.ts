@@ -201,12 +201,6 @@ export default class UserApi {
     });
   };
 
-  updateSubsription = async (userId: string, state: boolean) => {
-    return await this.usersCollection.update(userId, {
-      subscribed: state,
-    });
-  };
-
   removePlace = async (userId: string) => {
     return await this.usersCollection.update(userId, {
       place: "0",
