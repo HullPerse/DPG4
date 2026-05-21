@@ -61,7 +61,7 @@ export default class UserApi {
 
   getAllUsers = async (): Promise<User[]> => {
     return await this.usersCollection.getFullList({
-      fields: "id, username, avatar, color, money, position",
+      fields: "id, username, avatar, color, money, position, status",
     });
   };
 

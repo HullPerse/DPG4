@@ -48,17 +48,21 @@ export default class ItemsApi {
 
     if (!item) return;
 
-    const imageLink = `${image.items}${item.id}/${item.image}`;
-    const imageFile = await fileFromUrl(imageLink);
+    if (item.type === "effect") {
+      await this.userApi.changeUserStatus(String(userId), item.label, "add");
+    } else {
+      const imageLink = `${image.items}${item.id}/${item.image}`;
+      const imageFile = await fileFromUrl(imageLink);
 
-    await this.inventoryCollection.create({
-      type: item.type,
-      owner: userId,
-      image: imageFile,
-      label: item.label,
-      description: item.description,
-      charge: item.charge,
-    });
+      await this.inventoryCollection.create({
+        type: item.type,
+        owner: userId,
+        image: imageFile,
+        label: item.label,
+        description: item.description,
+        charge: item.charge,
+      });
+    }
 
     const user = await this.userApi.getUserById(userId);
     const activityData = {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
-import { effectInterface, Inventory, ItemType } from "@/types/items";
+import { effectInterface, Inventory, Item, ItemType } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
@@ -31,6 +31,12 @@ import { CreateModal } from "@/components/shared/items.modal";
 import { itemEffect } from "@/lib/items/item.items";
 import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover.component";
+import { Dialog, DialogContent } from "@/components/ui/dialog.component";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -49,6 +55,9 @@ function InventoryTab({ id }: { id?: string }) {
   const [searchTerms, setSearchTerms] = useState<string>("");
   const [active, setActive] = useState<number | null>(null);
   const [price, setPrice] = useState<string>("");
+  const [removeStatus, setRemoveStatus] = useState<boolean>(false);
+  const [activeStatus, setActiveStatus] = useState<string>("");
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<string | undefined>(
     undefined,
   );
@@ -62,13 +71,35 @@ function InventoryTab({ id }: { id?: string }) {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["inventoryTab", currentId],
-    queryFn: async (): Promise<{ inventory: Inventory[]; users: User[] }> => {
+    queryFn: async (): Promise<{
+      inventory: Inventory[];
+      users: User[];
+      statuses: Item[];
+    }> => {
       const inventory = await itemsApi.getInventory(currentId);
       const users = await userApi.getAllUsers();
+
+      //statuses
+      let finalStatuses: Item[] = [];
+
+      const allStatuses = users.find((u) => u.id === currentId)?.status;
+
+      if (!allStatuses) finalStatuses = [];
+      else {
+        const allItems = await itemsApi.getAllItems();
+
+        for (const status of allStatuses) {
+          const item = allItems.find((i) => i.label === status);
+          if (!item) continue;
+
+          finalStatuses.push(item);
+        }
+      }
 
       return {
         inventory: inventory,
         users: users.filter((item) => item.id !== currentId),
+        statuses: finalStatuses,
       };
     },
   });
@@ -84,6 +115,7 @@ function InventoryTab({ id }: { id?: string }) {
 
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("market", "*", invalidateQuery);
+  useSubscription("users", "*", invalidateQuery);
 
   const modalItem = useMemo(() => {
     if (!modal) return null;
@@ -265,6 +297,103 @@ function InventoryTab({ id }: { id?: string }) {
         value={searchTerms}
         onChange={(e) => setSearchTerms(e.target.value)}
       />
+      {data?.statuses && data?.statuses.length > 0 && (
+        <section className="flex flex-wrap justify-start w-full min-h-32 max-h-32 h-32 pb-4 gap-2 border-b-2 border-highlight-high overflow-y-scroll">
+          <Dialog
+            open={removeStatus}
+            onOpenChange={(value) => setRemoveStatus(value)}
+          >
+            <DialogContent
+              showCloseButton={false}
+              className="p-0 border-0 min-w-xl max-w-full"
+            >
+              <main
+                style={{
+                  zIndex: 999,
+                  boxShadow: "4px 4px 0 transparent",
+                  border: "2px solid var(--color-highlight-high)",
+                  display: "grid",
+                  gridTemplateRows: "auto 1fr",
+                }}
+                className="overflow-hidden bg-card text-text transition-none"
+              >
+                {/* Head */}
+                <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
+                  <span className=" flex item-center text-md font-bold line-clamp-1">
+                    Удалить статус {activeStatus} ?
+                  </span>
+
+                  <Button
+                    variant="ghost"
+                    title="Закрыть"
+                    onClick={() => setRemoveStatus(false)}
+                  >
+                    <X />
+                  </Button>
+                </section>
+
+                {/* Body */}
+                <section className="flex w-full min-h-0 h-full flex-col p-1">
+                  <Button
+                    variant="error"
+                    onClick={async () => {
+                      if (currentId !== user?.id) return;
+                      setIsDeleting(true);
+
+                      await userApi.changeUserStatus(
+                        user?.id,
+                        activeStatus,
+                        "remove",
+                      );
+
+                      setActiveStatus("");
+                      setRemoveStatus(false);
+                      setIsDeleting(false);
+                    }}
+                  >
+                    {isDeleting ? <SmallLoader /> : "УДАЛИТЬ"}
+                  </Button>
+                </section>
+              </main>
+            </DialogContent>
+          </Dialog>
+
+          {data?.statuses?.map((status, index) => (
+            <HoverCard key={index}>
+              <HoverCardTrigger
+                delay={300}
+                className="relative flex flex-col min-w-28 min-h-28 w-28 h-28 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
+                style={{
+                  cursor: user?.id === currentId ? "pointer" : "default",
+                }}
+                onClick={() => {
+                  if (currentId === user?.id) {
+                    setActiveStatus(status.label);
+                    setRemoveStatus(true);
+                  }
+                }}
+              >
+                <span className="text-xs font-bold line-clamp-2 text-center h-10">
+                  {status.label}
+                </span>
+
+                <ImageComponent
+                  src={`${image.items}${status.id}/${status.image}`}
+                  alt={status.label}
+                  className="min-w-14 w-14 min-h-14 h-14 border border-highlight-high"
+                  type="contain"
+                />
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-30 max-h-30 mi-h-30 min-w-full w-sm"
+                side="top"
+              >
+                <span>{status.description}</span>
+              </HoverCardContent>
+            </HoverCard>
+          ))}
+        </section>
+      )}
       <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5">
         {data?.inventory
           .filter(
@@ -423,6 +552,7 @@ function InventoryTab({ id }: { id?: string }) {
                   <Button
                     variant="error"
                     size="icon"
+                    rendered={currentId === user?.id}
                     className="w-6 h-6"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -436,6 +566,7 @@ function InventoryTab({ id }: { id?: string }) {
                     {item.charge}
                   </span>
                   <Button
+                    rendered={currentId === user?.id}
                     variant="success"
                     size="icon"
                     className="w-6 h-6"
