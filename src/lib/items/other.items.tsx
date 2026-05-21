@@ -22,6 +22,24 @@ const itemsApi = new ItemsApi();
 const userApi = new UserApi();
 
 export const otherEffect: effectInterface[] = [
+  //EFFECTS
+
+  ItemFramework.effect("Таинственный предмет", async (ctx) => {
+    await userApi.changeUserStatus(
+      String(ctx.user.id),
+      "Таинственный предмет",
+      "add",
+    );
+    await ctx.consume(`${ctx.user.username} нашел легендарный предмет`);
+  }),
+
+  ItemFramework.effect("Светлое нефильтрованное", async (ctx) => {
+    await userApi.scoreUser(String(ctx.user.id), 20);
+    await ctx.consume(`${ctx.user.username} выпил пивка`);
+  }),
+
+  //MODALS
+
   ItemFramework.modal("Дырявый сапог", (ctx) => {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
@@ -244,19 +262,5 @@ export const otherEffect: effectInterface[] = [
         </section>
       </main>
     );
-  }),
-
-  ItemFramework.effect("Таинственный предмет", async (ctx) => {
-    await userApi.changeUserStatus(
-      String(ctx.user.id),
-      "Таинственный предмет",
-      "add",
-    );
-    await ctx.consume(`${ctx.user.username} нашел легендарный предмет`);
-  }),
-
-  ItemFramework.effect("Светлое нефильтрованное", async (ctx) => {
-    await userApi.scoreUser(String(ctx.user.id), 20);
-    await ctx.consume(`${ctx.user.username} выпил пивка`);
   }),
 ];

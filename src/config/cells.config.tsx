@@ -58,7 +58,7 @@ export const cellsConfig = {
     {
       name: "poop",
       icon: <PoopSvg />,
-      description: "Попа",
+      description: "Кал",
     },
     {
       name: "pig",
