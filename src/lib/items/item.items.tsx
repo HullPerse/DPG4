@@ -239,25 +239,13 @@ export const itemEffect: effectInterface[] = [
 
     if (!itemDB) return;
 
-    await itemsApi.addInventory(
-      String(ctx.user.id),
-      String(itemDB.id),
-      `${image.items}${itemDB?.id}/${itemDB?.image}`,
-      itemDB.type,
-    );
+    await itemsApi.addInventory(String(ctx.user.id), String(itemDB.id));
 
     //30% chance of getting a rat
     if (Math.random() * 100 <= 30) {
       const ratId = "dswpfvayiqxul1b";
-      const ratImage = `${image.items}${ratId}/100x100_723bzyfzkql6_or7gvv38ny_ltkzx8ac9i.png`;
-      const ratType = "item";
 
-      await itemsApi.addInventory(
-        String(ctx.user.id),
-        ratId,
-        ratImage,
-        ratType,
-      );
+      await itemsApi.addInventory(String(ctx.user.id), ratId);
 
       const activityData = {
         author: ctx.user.id,
@@ -366,12 +354,7 @@ export const itemEffect: effectInterface[] = [
 
     if (!itemData) return;
 
-    await itemsApi.addInventory(
-      String(ctx.user.id),
-      String(itemData?.id),
-      `${image.items}${itemData?.id}/${itemData?.image}`,
-      itemData?.type ?? "other",
-    );
+    await itemsApi.addInventory(String(ctx.user.id), String(itemData?.id));
 
     await ctx.consume(
       `${ctx.user.username} подоил игрока ${closest.user.username} и получил ${itemData.label}`,
@@ -493,12 +476,7 @@ export const itemEffect: effectInterface[] = [
 
   ItemFramework.effect("Запаянный Крысиный Сундук", async (ctx) => {
     Array.from({ length: 5 }, async () => {
-      await itemsApi.addInventory(
-        ctx.user.id,
-        "a29c7tdphmwlrbc",
-        `${image?.items}a29c7tdphmwlrbc/100x100_162_nkg9c7eia4_593jsogdy7.png`,
-        "item",
-      );
+      await itemsApi.addInventory(ctx.user.id, "a29c7tdphmwlrbc");
     });
 
     await ctx.consume(`ААА КРЫСЫ ВЫПОЛЗАЮТ ИЗ СУНДУКА`);
@@ -519,12 +497,7 @@ export const itemEffect: effectInterface[] = [
     //send to ctx.user
     await itemsApi.sendInventory(String(finalItem.id), ctx.user.id);
     //place poop
-    await itemsApi.addInventory(
-      String(finalItem.owner),
-      "diy82ugngg95mek",
-      `${image.items}diy82ugngg95mek/100x100_219_pv55hb1082_lkevce5l2t.png`,
-      "item",
-    );
+    await itemsApi.addInventory(String(finalItem.owner), "diy82ugngg95mek");
 
     //score user
     await userApi.scoreUser(ctx.user.id, 10);
@@ -959,8 +932,6 @@ export const itemEffect: effectInterface[] = [
               await itemsApi.addInventory(
                 String(ctx.user.id),
                 String(selected.id),
-                `${image?.items}${selected.id}/${selected.image}`,
-                selected.type,
               );
               await ctx.consume(
                 `${ctx.user.username} обменял кредитный чип на ${selected.label}`,
@@ -1368,8 +1339,6 @@ export const itemEffect: effectInterface[] = [
               await itemsApi.addInventory(
                 String(ctx.user.id),
                 String(result.id),
-                `${image?.items}${result.id}/${result.image}`,
-                "item",
               );
               await ctx.consume(
                 `${ctx.user.username} случайно выбил ${result.label}`,
@@ -1732,8 +1701,6 @@ export const itemEffect: effectInterface[] = [
               await itemsApi.addInventory(
                 String(ctx.user.id),
                 String(finalItem.id),
-                `${image?.items}${finalItem.id}/${finalItem.image}`,
-                finalItem.type,
               );
               await ctx.consume(
                 `${ctx.user.username} уничтожил ${selected.map((i) => i.label).join(", ")} и получил ${finalItem.label}`,
@@ -2290,15 +2257,8 @@ export const itemEffect: effectInterface[] = [
               await itemsApi.removeInventory(String(selected.id));
 
               const ratId = "dswpfvayiqxul1b";
-              const ratImage = `${image.items}${ratId}/100x100_723bzyfzkql6_or7gvv38ny_ltkzx8ac9i.png`;
-              const ratType = "item";
 
-              await itemsApi.addInventory(
-                String(ctx.user.id),
-                ratId,
-                ratImage,
-                ratType,
-              );
+              await itemsApi.addInventory(String(ctx.user.id), ratId);
 
               await ctx.consume(
                 `${ctx.user.username} принес в жертву ${selected.label}`,
@@ -2571,31 +2531,22 @@ export const itemEffect: effectInterface[] = [
 
               if (value === 1) {
                 const id = "az6vdp4mdxvquwr";
-                const imageLink = `${image.items}${id}/100x100_212_byqyvtu7hw_gq3324g7id.png`;
 
-                await itemsApi.addInventory(
-                  ctx.user.id,
-                  id,
-                  imageLink,
-                  "other",
-                );
+                await itemsApi.addInventory(ctx.user.id, id);
               } else if (value === 2) {
                 await userApi.scoreUser(ctx.user.id, 5);
               } else if (value === 3) {
                 const id = "hytio29eocftliq";
-                const imageLink = `${image.items}${id}/1ilqld864j7_it1cek5j3n.png`;
 
-                await itemsApi.addInventory(ctx.user.id, id, imageLink, "item");
+                await itemsApi.addInventory(ctx.user.id, id);
               } else if (value === 4) {
                 const id = "rhqziscmz0pumwy";
-                const imageLink = `${image.items}${id}/100x100_195_vq0r3siowu_gj5hx1rgmx.png`;
 
-                await itemsApi.addInventory(ctx.user.id, id, imageLink, "item");
+                await itemsApi.addInventory(ctx.user.id, id);
               } else if (value === 5) {
                 const id = "szbxjr8hsdyfowg";
-                const imageLink = `${image.items}${id}/100x100_220_oxdh1q7nc1_01oio0xtqi.png`;
 
-                await itemsApi.addInventory(ctx.user.id, id, imageLink, "item");
+                await itemsApi.addInventory(ctx.user.id, id);
               }
 
               await ctx.consume(
@@ -2696,12 +2647,7 @@ export const itemEffect: effectInterface[] = [
               //remove item
               await itemsApi.removeInventory(String(selected.id));
               //add rat
-              await itemsApi.addInventory(
-                ctx.user.id,
-                "a29c7tdphmwlrbc",
-                `${image?.items}a29c7tdphmwlrbc/100x100_162_nkg9c7eia4_593jsogdy7.png`,
-                "item",
-              );
+              await itemsApi.addInventory(ctx.user.id, "a29c7tdphmwlrbc");
 
               await ctx.consume(
                 `${ctx.user.username} превратил ${selected.label} в крысу`,

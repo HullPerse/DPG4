@@ -1,4 +1,4 @@
-import { Inventory, Item, ItemType, Market, Trade } from "@/types/items";
+import { Inventory, Item, Market, Trade } from "@/types/items";
 import { client, image } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 import UserApi from "./user.api";
@@ -43,20 +43,16 @@ export default class ItemsApi {
     return await this.inventoryCollection.getOne(inventoryId);
   };
 
-  addInventory = async (
-    userId: string,
-    itemId: string,
-    image: string,
-    type: ItemType,
-  ) => {
+  addInventory = async (userId: string, itemId: string) => {
     const item = await this.getItemById(itemId);
 
     if (!item) return;
 
-    const imageFile = await fileFromUrl(image);
+    const imageLink = `${image.items}${item.id}/${item.image}`;
+    const imageFile = await fileFromUrl(imageLink);
 
     await this.inventoryCollection.create({
-      type: type,
+      type: item.type,
       owner: userId,
       image: imageFile,
       label: item.label,

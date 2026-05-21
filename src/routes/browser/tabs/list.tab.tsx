@@ -150,8 +150,6 @@ function ListBrowser({
                   await itemsApi.addInventory(
                     String(user?.id),
                     String(item.id),
-                    `${clientImage?.items}${item.id}/${item.image}`,
-                    item.type,
                   );
 
                   queryClient.invalidateQueries({

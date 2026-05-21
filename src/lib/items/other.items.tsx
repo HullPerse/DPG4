@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import { image } from "@/api/client.api";
 import { effectInterface, Inventory } from "@/types/items";
 
 const itemsApi = new ItemsApi();
@@ -139,12 +138,7 @@ export const otherEffect: effectInterface[] = [
             onClick={async () => {
               if (!data || selected.length !== 2) return;
               const itemId = "2hn5xus3bg0i6mg";
-              await itemsApi.addInventory(
-                String(ctx.user.id),
-                itemId,
-                `${image.items}${itemId}/100x100_214_wmbb9r0tf3_1b0q85hrha.png`,
-                "item",
-              );
+              await itemsApi.addInventory(String(ctx.user.id), itemId);
               for (const item of selected) {
                 await itemsApi.chargeInventory(
                   String(item.id),
@@ -229,16 +223,8 @@ export const otherEffect: effectInterface[] = [
                 selected.label === "Конфетка"
                   ? "w8ajf5mhh121nb0"
                   : "olvbzslxz9xbtr9";
-              const itemImage =
-                selected.label === "Конфетка"
-                  ? "100x100_product_preview_my02369_1_k10elro9to_412wxiqd89.png"
-                  : "2okrjiphui9_e2wfst86n4.png";
-              await itemsApi.addInventory(
-                String(ctx.user.id),
-                itemId,
-                `${image.items}${itemId}/${itemImage}`,
-                "item",
-              );
+
+              await itemsApi.addInventory(String(ctx.user.id), itemId);
               await itemsApi.chargeInventory(
                 String(selected.id),
                 selected.charge,

@@ -66,12 +66,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     setLoading(true);
 
     return await itemsApi
-      .addInventory(
-        String(user?.id),
-        String(item.id),
-        `${image?.items}${item.id}/${item.image}`,
-        item.type,
-      )
+      .addInventory(String(user?.id), String(item.id))
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
         queryClient.invalidateQueries({ queryKey: ["inventoryTab", user?.id] });
