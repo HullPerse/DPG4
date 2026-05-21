@@ -28,7 +28,6 @@ export default class UserApi {
           currentAction: "MOVE_POSITIVE",
           currentDice: 1,
           place: "0",
-          subscribed: false,
         })
         .then(async (res) => {
           const activityData = {
