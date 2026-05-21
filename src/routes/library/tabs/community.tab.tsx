@@ -91,7 +91,7 @@ function CommunityTab() {
                 {activityItem.image}
               </span>
             )}
-            <p className="truncate text-sm text-text font-bold line-clamp-2">
+            <p className="text-sm text-text font-bold line-clamp-3">
               {activityItem.text}
             </p>
             <div className="absolute right-1 bottom-1 flex flex-col flex-1 min-w-0">

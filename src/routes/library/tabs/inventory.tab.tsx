@@ -22,7 +22,7 @@ import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
-import { highlightText } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
@@ -144,16 +144,24 @@ function InventoryTab({ id }: { id?: string }) {
     });
 
     const lookup: Record<ItemType, effectInterface[]> = {
-      effect: [],
       item: itemEffect,
       other: otherEffect,
       roll: [],
+      effect: [],
     };
+
+    if (item.type === "effect") {
+      await userApi.changeUserStatus(String(user?.id), item.label, "add");
+
+      await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+      setLoading({ item: -1, type: null });
+      return setActive(null);
+    }
 
     const existing = lookup[item.type]?.find((e) => e.label === item.label);
 
     if (!existing) {
-      //Любой другой предмет
       const activityData = {
         author: user?.id,
         image: user?.avatar,
@@ -164,18 +172,19 @@ function InventoryTab({ id }: { id?: string }) {
       await activityApi.createActivity(activityData);
 
       await itemsApi.chargeInventory(String(item.id), item.charge, -1);
+
+      setLoading({ item: -1, type: null });
+      return setActive(null);
+    }
+
+    if (existing.type === "effect") {
+      existing.effect?.();
       setLoading({ item: -1, type: null });
       return setActive(null);
     } else {
-      if (existing.type === "effect") {
-        existing.effect?.();
-        setLoading({ item: -1, type: null });
-        return setActive(null);
-      } else {
-        setModal(existing.label);
-        setLoading({ item: -1, type: null });
-        return setActive(null);
-      }
+      setModal(existing.label);
+      setLoading({ item: -1, type: null });
+      return setActive(null);
     }
   };
 
@@ -541,46 +550,53 @@ function InventoryTab({ id }: { id?: string }) {
                 <span className="font-bold text-md line-clamp-2">
                   {highlightText(item.label, searchTerms)}
                 </span>
-                <ImageComponent
-                  src={`${image.inventory}${item.id}/${item.image}`}
-                  alt={item.label}
-                  className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                  type="contain"
-                />
 
-                <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
-                  <Button
-                    variant="error"
-                    size="icon"
-                    rendered={currentId === user?.id}
-                    className="w-6 h-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-
-                      handleCharge(index, String(item.id), item.charge, -1);
-                    }}
-                  >
-                    <Minus />
-                  </Button>
-                  <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
-                    {item.charge}
+                <div className="flex flex-col items-center justify-center">
+                  <span className="w-full h-6 items-center justify-center my-1 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                    {translateItemType(item.type)}
                   </span>
-                  <Button
-                    rendered={currentId === user?.id}
-                    variant="success"
-                    size="icon"
-                    className="w-6 h-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                  <ImageComponent
+                    src={`${image.inventory}${item.id}/${item.image}`}
+                    alt={item.label}
+                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
+                    type="contain"
+                  />
 
-                      handleCharge(index, String(item.id), item.charge, 1);
-                    }}
-                  >
-                    <Plus />
-                  </Button>
+                  <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
+                    <Button
+                      variant="error"
+                      size="icon"
+                      rendered={currentId === user?.id}
+                      className="w-6 h-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        handleCharge(index, String(item.id), item.charge, -1);
+                      }}
+                    >
+                      <Minus />
+                    </Button>
+                    <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
+                      {item.charge}
+                    </span>
+                    s
+                    <Button
+                      rendered={currentId === user?.id}
+                      variant="success"
+                      size="icon"
+                      className="w-6 h-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        handleCharge(index, String(item.id), item.charge, 1);
+                      }}
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
                 </div>
 
-                <span className="line-clamp-4 hover:line-clamp-none hover:overflow-y-auto text-xs leading-tight h-20 max-h-20">
+                <span className="line-clamp-3 hover:line-clamp-none hover:overflow-y-auto text-xs leading-tight h-16 max-h-16">
                   {highlightText(item.description, searchTerms)}
                 </span>
               </div>

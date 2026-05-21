@@ -1,7 +1,8 @@
 export const QueryConfig = {
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      // staleTime: 5 * 60 * 1000,
+      staleTime: 5, //5 seconds
       gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,

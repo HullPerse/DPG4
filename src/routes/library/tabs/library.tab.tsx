@@ -28,6 +28,7 @@ function LibraryTab() {
     queryFn: async () => {
       return await gameApi.getGames(String(user?.id));
     },
+    staleTime: 0,
   });
 
   const invalidateQuery = useCallback(() => {
