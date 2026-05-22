@@ -114,7 +114,7 @@ function StoreTab() {
               onMouseLeave={isBought ? undefined : () => setActive(-1)}
             >
               {!isBought && active === index ? (
-                <span className=" hover:overflow-y-auto text-xs leading-tight max-h-50">
+                <span className="hover:overflow-y-auto text-xs leading-tight max-h-50">
                   {item.item.description}
                 </span>
               ) : (

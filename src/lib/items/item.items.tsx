@@ -544,6 +544,49 @@ export const itemEffect: effectInterface[] = [
       `У ${ctx.user.username} выпали из кармана все чубрики, пока он воровал ${finalItem.label}`,
     );
   }),
+
+  ItemFramework.effect("Алтарь обновления", async (ctx) => {
+    const allItems = await itemsApi.getInventory(ctx.user.id);
+
+    for (const item of allItems) {
+      if (!item) continue;
+
+      await itemsApi.removeInventory(String(item.id));
+    }
+
+    await ctx.consume(
+      `${ctx.user.username} принес в жертву ${allItems.length} предметов`,
+    );
+  }),
+
+  ItemFramework.effect("Апельсин", async (ctx) => {
+    await userApi.scoreUser(ctx.user.id, 2);
+    await userApi.moveUserAnimated(ctx.user.id, ctx.user.position + 1);
+
+    await ctx.consume(`${ctx.user.username} съел вкусный апельсин`);
+  }),
+
+  ItemFramework.effect("Ебануто живучая свинья", async (ctx) => {
+    const allUsers = await userApi
+      .getAllUsers()
+      .then((res) => res.filter((u) => u.id !== ctx.user.id));
+    const currentStatuses = await userApi
+      .getUserById(ctx.user.id)
+      .then((res) => res.status);
+
+    if (!currentStatuses) return;
+
+    const finalStatus =
+      currentStatuses[Math.floor(Math.random() * currentStatuses.length)];
+    const finalUser = allUsers[Math.floor(Math.random() * allUsers.length)];
+
+    await userApi.changeUserStatus(ctx.user.id, finalStatus, "remove");
+    await userApi.changeUserStatus(String(finalUser.id), finalStatus, "add");
+
+    await ctx.consume(
+      `${ctx.user.username} отправил эффект ${finalStatus} ${finalUser.username}`,
+    );
+  }),
   //MODALS
 
   ItemFramework.modal("Я не тупой", (ctx) => {
@@ -2754,6 +2797,121 @@ export const itemEffect: effectInterface[] = [
             disabled={!selected}
           >
             Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Крысиный лутбокс", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const ratArray: string[] = [
+          "Восьмибитная Крыса",
+          "Добрая крыса",
+          "Запаянный Крысиный Сундук",
+          "Крыса",
+          "Крыса Изгой",
+          "Крыса гой",
+          "Крыса наркоманка",
+          "Крысиное колесо",
+          "Крысиный алтарь",
+          "Крысиный отец",
+          "Крысиный тапок",
+          "Крысталлизатор",
+          "Мечтательная крыса",
+          "Крысиный лутбокс",
+        ];
+
+        const allItems = await itemsApi
+          .getAllItems()
+          .then((res) => res.filter((i) => ratArray.includes(String(i.label))));
+
+        return allItems;
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [result, setResult] = useState<Item | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    return (
+      <main className="flex flex-col gap-2">
+        <section className="flex flex-col gap-2 p-2 items-center justify-center w-140">
+          <WheelComponent
+            key={data?.join(",")}
+            list={
+              data?.map((item) => ({
+                id: String(item.id),
+                label: item.label,
+                image: `${image?.items}${item.id}/${item.image}`,
+                type: "image",
+              })) as WheelItem[]
+            }
+            onResult={(it) =>
+              setResult(data?.find((item) => item.id === it?.id) as Item)
+            }
+          />
+          {result && (
+            <section
+              key={result.id}
+              className="relative p-2 flex flex-row max-w-full min-h-fit h-22 border-2 border-highlight-high items-center"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                  {translateItemType(result.type)}
+                </span>
+                <ImageComponent
+                  src={`${image?.items}${result.id}/${result.image}`}
+                  alt={result.label}
+                  className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                  onClick={() =>
+                    openWindow(
+                      String(result.id),
+                      `${image?.items}${result.id}/${result.image}`,
+                      "Изображение",
+                    )
+                  }
+                />
+              </div>
+              <div className="flex flex-col ml-2">
+                <span className="font-bold text-xl">{result.label}</span>
+                <span className="text-text/80">{result.description}</span>
+              </div>
+            </section>
+          )}
+        </section>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!result) return;
+
+              await itemsApi.addInventory(
+                String(ctx.user.id),
+                String(result.id),
+              );
+
+              await ctx.consume(`${ctx.user.username} выбил ${result.label}`);
+              ctx.close();
+            }}
+            disabled={!result}
+          >
+            Добавить
           </Button>
         </section>
       </main>
