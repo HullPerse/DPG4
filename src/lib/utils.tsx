@@ -466,3 +466,17 @@ export function translateItemType(type: ItemType) {
 
   return typeMap[type];
 }
+
+export function weightedRandom(max: number): number {
+  const items = Array.from({ length: max }, (_, i) => i + 1);
+  const weights = [1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 6, 7];
+  const total = weights.reduce((a, b) => a + b, 0);
+
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r < 0) return items[i];
+  }
+
+  return items[items.length - 1];
+}

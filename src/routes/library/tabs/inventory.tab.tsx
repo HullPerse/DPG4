@@ -579,7 +579,6 @@ function InventoryTab({ id }: { id?: string }) {
                     <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
                       {item.charge}
                     </span>
-                    s
                     <Button
                       rendered={currentId === user?.id}
                       variant="success"

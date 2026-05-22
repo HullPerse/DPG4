@@ -20,6 +20,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
 import AdvertisementTab from "./tabs/advertisement.tab";
+import StoreTab from "./tabs/store.tab";
 
 export type SortMethod = "name" | "date" | "charges" | "type";
 export type SortDirection = "asc" | "desc";
@@ -42,7 +43,7 @@ export default function Browser() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [sortMethod, setSortMethod] = useState<SortMethod>("date");
   const [tab, setTab] = useState<
-    "home" | "rules" | "list" | "items" | "store" | "ads"
+    "home" | "rules" | "list" | "items" | "store" | "ads" | "randomStore"
   >("home");
   const [searchTerms, setSearchTerms] = useState<string>("");
 
@@ -62,6 +63,7 @@ export default function Browser() {
       items: <ItemsTab searchTerms={searchTerms} />,
       store: <MarketBrowser searchTerms={searchTerms} />,
       ads: <AdvertisementTab />,
+      randomStore: <StoreTab />,
     };
 
     return tabMap[(tab as keyof typeof tabMap) ?? "home"];
