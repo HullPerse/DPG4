@@ -17,6 +17,7 @@ import {
   Palette,
   History,
   MessageSquare,
+  PaintRoller,
 } from "lucide-react";
 import { lazy } from "react";
 
@@ -25,6 +26,7 @@ const Library = lazy(() => import("@/routes/library/library.root"));
 const Browser = lazy(() => import("@/routes/browser/browser.root"));
 const Wheels = lazy(() => import("@/routes/wheels/wheels.root"));
 const Notebook = lazy(() => import("@/routes/notebook/notebook.route"));
+const Paint = lazy(() => import("@/routes/paint/paint.root"));
 const ThemeApp = lazy(() => import("@/routes/desktop/apps/theme.app"));
 const WheelHistoryApp = lazy(() => import("@/routes/desktop/apps/history.app"));
 const GlobalChatApp = lazy(() => import("@/routes/desktop/apps/chat.app"));
@@ -66,25 +68,32 @@ export const APPS = [
     priority: 5,
   },
   {
+    name: "paint",
+    label: "Рисовач",
+    icon: <PaintRoller className="size-7" />,
+    component: <Paint />,
+    priority: 6,
+  },
+  {
     name: "wheelHistory",
     label: "История колес",
     icon: <History className="size-7" />,
     component: <WheelHistoryApp />,
-    priority: 6,
+    priority: 7,
   },
   {
     name: "globalChat",
     label: "Общий чат",
     icon: <MessageSquare className="size-7" />,
     component: <GlobalChatApp />,
-    priority: 7,
+    priority: 8,
   },
   {
     name: "theme",
     label: "Тема",
     icon: <Palette className="size-7" />,
     component: <ThemeApp />,
-    priority: 8,
+    priority: 9,
   },
   {
     name: "howlongtobeat",
@@ -92,7 +101,7 @@ export const APPS = [
     icon: <Timer className="size-7" />,
     link: "https://howlongtobeat.com/",
     type: "window" as const,
-    priority: 9,
+    priority: 10,
   },
   {
     name: "gamewheel",
@@ -100,7 +109,7 @@ export const APPS = [
     link: "https://gamegauntlets.com/",
     icon: <Star className="size-7" />,
     type: "browser" as const,
-    priority: 10,
+    priority: 11,
   },
 ];
 
@@ -186,6 +195,17 @@ export const WINDOWS = [
     id: "notepad",
     title: "Заметки",
     icon: <NotebookIcon className="size-7" />,
+    size: {
+      minWidth: 910,
+      minHeight: 680,
+      width: 910,
+      height: 680,
+    },
+  },
+  {
+    id: "paint",
+    title: "Рисовач",
+    icon: <PaintRoller className="size-7" />,
     size: {
       minWidth: 910,
       minHeight: 680,
