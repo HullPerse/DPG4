@@ -14,12 +14,10 @@ import { SmallLoader } from "@/components/shared/loader.component";
 const chatApi = new ChatApi();
 
 export default function MessagesDesktop({
-  activeApps,
   setActiveApps,
   app,
 }: {
-  activeApps: WindowProps[];
-  setActiveApps: (value: WindowProps[]) => void;
+  setActiveApps: React.Dispatch<React.SetStateAction<WindowProps[]>>;
   app: AppProps;
 }) {
   const queryClient = useQueryClient();
@@ -82,9 +80,9 @@ export default function MessagesDesktop({
                     id: String(item.sender.id),
                   });
 
-                  setActiveApps(
+                  setActiveApps((prev) =>
                     createWindow(
-                      activeApps,
+                      prev,
                       WINDOWS.find((w) => w.id === app.name) as WindowProps,
                       app.component,
                     ),

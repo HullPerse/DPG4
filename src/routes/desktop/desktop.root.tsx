@@ -32,7 +32,7 @@ export default function Desktop({
   setIsOpening,
 }: {
   activeApps: WindowProps[];
-  setActiveApps: (value: WindowProps[]) => void;
+  setActiveApps: React.Dispatch<React.SetStateAction<WindowProps[]>>;
   setWallpaper: (value: string | null) => void;
   isOpening: boolean;
   setIsOpening: (value: boolean) => void;
@@ -94,7 +94,6 @@ export default function Desktop({
               <ContextDesktop
                 key={app.id}
                 app={app}
-                activeApps={activeApps}
                 setActiveApps={setActiveApps}
               />
             ))}
@@ -104,7 +103,6 @@ export default function Desktop({
             {/* MESSAGES */}
             <MessagesDesktop
               app={APPS.find((a) => a.name === "library") as AppProps}
-              activeApps={activeApps}
               setActiveApps={setActiveApps}
             />
 
@@ -122,9 +120,9 @@ export default function Desktop({
             <Image
               className="h-4 w-4 cursor-pointer hover:text-iris"
               onClick={() =>
-                setActiveApps(
+                setActiveApps((prev) =>
                   createWindow(
-                    activeApps,
+                    prev,
                     WINDOWS.find((w) => w.id === "wallpaper") as WindowProps,
                     <WallpaperApp setWallpaper={setWallpaper} />,
                   ),

@@ -31,12 +31,10 @@ import {
 
 export default function ContextDesktop({
   app,
-  activeApps,
   setActiveApps,
 }: {
   app: WindowProps;
-  activeApps: WindowProps[];
-  setActiveApps: (value: WindowProps[]) => void;
+  setActiveApps: React.Dispatch<React.SetStateAction<WindowProps[]>>;
 }) {
   return (
     <ContextMenu key={app.id}>
@@ -44,7 +42,7 @@ export default function ContextDesktop({
         <button
           className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} cursor-pointer rounded border p-1 hover:text-text`}
           title={app.title}
-          onClick={() => setActiveApps(unminimizeWindow(activeApps, app.id))}
+          onClick={() => setActiveApps((prev) => unminimizeWindow(prev, app.id))}
         >
           {WINDOWS.find((w) => w.id === app.id)?.icon}
 
@@ -58,13 +56,13 @@ export default function ContextDesktop({
         <ContextMenuGroup>
           {!app.isActive && (
             <ContextMenuItem
-              onClick={() => setActiveApps(activeWindow(activeApps, app.id))}
+              onClick={() => setActiveApps((prev) => activeWindow(prev, app.id))}
             >
               <Activity /> Сдеать активным
             </ContextMenuItem>
           )}
           <ContextMenuItem
-            onClick={() => setActiveApps(pinWindow(activeApps, app.id))}
+            onClick={() => setActiveApps((prev) => pinWindow(prev, app.id))}
           >
             {app.isPinned ? (
               <>
@@ -81,10 +79,10 @@ export default function ContextDesktop({
           <ContextMenuItem
             onClick={() => {
               if (app.isMinimized) {
-                return setActiveApps(unminimizeWindow(activeApps, app.id));
+                return setActiveApps((prev) => unminimizeWindow(prev, app.id));
               }
 
-              setActiveApps(minimizeWindow(activeApps, app.id));
+              setActiveApps((prev) => minimizeWindow(prev, app.id));
             }}
           >
             {app.isMinimized ? (
@@ -110,8 +108,8 @@ export default function ContextDesktop({
                   <ContextMenuItem
                     key={direction.direction}
                     onClick={() => {
-                      setActiveApps(
-                        moveWindow(activeApps, app.id, direction.direction),
+                      setActiveApps((prev) =>
+                        moveWindow(prev, app.id, direction.direction),
                       );
                     }}
                   >
@@ -122,7 +120,7 @@ export default function ContextDesktop({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuItem
-            onClick={() => setActiveApps(closeWindow(activeApps, app.id))}
+            onClick={() => setActiveApps((prev) => closeWindow(prev, app.id))}
           >
             <X /> Закрыть
           </ContextMenuItem>

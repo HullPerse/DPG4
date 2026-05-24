@@ -140,7 +140,7 @@ function ProfileTab({ id }: { id?: string }) {
                       author: user?.id,
                       image: user?.avatar,
                       type: "emoji",
-                      text: `${user?.username} изменил чубрики ${data?.user.username} с примечанием: ${moneyDescription}`,
+                      text: `${user?.username} изменил чубрики на ${addMoney} ${data?.user.username} с примечанием: ${moneyDescription}`,
                     } as Activity;
 
                     await activityApi.createActivity(activityData);

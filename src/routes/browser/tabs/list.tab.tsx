@@ -16,8 +16,24 @@ import { image as clientImage } from "@/api/client.api";
 import { highlightText, translateItemType } from "@/lib/utils";
 import type { SortMethod, SortDirection } from "../browser.root";
 import AddItem from "./add.tab";
+import { User } from "@/types/user";
+import UserApi from "@/api/user.api";
+import { CreateModal } from "@/components/shared/items.modal";
+import { Input } from "@/components/ui/input.component";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
+import { Activity } from "@/types/activity";
+import ActivityApi from "@/api/activity.api";
 
 const itemsApi = new ItemsApi();
+const usersApi = new UserApi();
+const activityApi = new ActivityApi();
 
 interface ListBrowserProps {
   searchTerms: string;
@@ -37,11 +53,19 @@ function ListBrowser({
   const user = useUserStore((state) => state.user);
 
   const [addItem, setAddItem] = useState<boolean>(false);
+  const [itemData, setItemData] = useState<Item | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selected, setSelected] = useState<User | null>(user ? user : null);
+  const [input, setInput] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["listTab"],
-    queryFn: async (): Promise<Item[]> => itemsApi.getAllItems(),
+    queryFn: async (): Promise<{ items: Item[]; users: User[] }> => {
+      return {
+        items: await itemsApi.getAllItems(),
+        users: await usersApi.getAllUsers(),
+      };
+    },
   });
 
   const invalidateQuery = useCallback(() => {
@@ -70,6 +94,101 @@ function ListBrowser({
 
   return (
     <main className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center">
+      {itemData && (
+        <CreateModal
+          label={itemData.label}
+          body={() => (
+            <main className="flex flex-col gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="font-bold">Игроки</span>
+                <Select
+                  value={selected?.id ?? ""}
+                  onValueChange={(e) => {
+                    if (!e) return;
+                    const item = data?.users?.find((i) => i.id === e);
+                    if (item) setSelected(item);
+                  }}
+                >
+                  <SelectTrigger className="w-full py-5">
+                    <SelectValue
+                      placeholder="Игрок"
+                      style={{ color: selected?.color }}
+                    >
+                      {selected?.username}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {data?.users?.map((item, index) => (
+                        <SelectItem
+                          key={item.id}
+                          value={item.id!}
+                          style={{ color: item.color }}
+                        >
+                          {`${index + 1}: `}
+                          {item.username}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </label>
+
+              <label>
+                <span className="font-bold">Примечание</span>
+                <Input
+                  placeholder="Примечание"
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              </label>
+
+              <section className="flex flex-row items-center justify-between gap-2 p-1">
+                <Button
+                  className="flex flex-1"
+                  variant="success"
+                  onClick={async () => {
+                    if (!selected || !itemData) return;
+
+                    await itemsApi.addInventory(
+                      String(selected?.id),
+                      String(itemData.id),
+                    );
+
+                    queryClient.invalidateQueries({
+                      queryKey: ["inventoryTab", selected.id],
+                      refetchType: "all",
+                    });
+
+                    if (selected.id !== user?.id) {
+                      const activityData = {
+                        author: user?.id,
+                        image: user?.avatar,
+                        text: `${user?.username} добавил ${itemData.label} игроку ${selected.username}`,
+                      } as Activity;
+
+                      await activityApi.createActivity(activityData);
+                    }
+
+                    setSelected(null);
+                    setInput("");
+                    return setItemData(null);
+                  }}
+                  disabled={!selected}
+                >
+                  Применить
+                </Button>
+              </section>
+            </main>
+          )}
+          open={!!itemData}
+          setOpen={(open) => {
+            if (!open) setItemData(null);
+          }}
+        />
+      )}
+
       {isAdmin && (
         <Button
           variant="success"
@@ -84,7 +203,7 @@ function ListBrowser({
         </Button>
       )}
 
-      {data
+      {data?.items
         ?.filter(
           (item) =>
             item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
@@ -147,15 +266,7 @@ function ListBrowser({
                   if (!user) return;
                   setLoading(true);
 
-                  await itemsApi.addInventory(
-                    String(user?.id),
-                    String(item.id),
-                  );
-
-                  queryClient.invalidateQueries({
-                    queryKey: ["inventoryTab", user.id],
-                    refetchType: "all",
-                  });
+                  setItemData(item);
 
                   setLoading(false);
                 }}

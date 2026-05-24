@@ -20,7 +20,7 @@ function AppDesktop({
   setIsOpening,
 }: AppProps & {
   activeApps: WindowProps[];
-  setActiveApps: (value: WindowProps[]) => void;
+  setActiveApps: React.Dispatch<React.SetStateAction<WindowProps[]>>;
   isOpening: boolean;
   setIsOpening: (value: boolean) => void;
 }) {
@@ -45,9 +45,9 @@ function AppDesktop({
 
         if (name === "library") setUserProfile(null);
 
-        setActiveApps(
+        setActiveApps((prev) =>
           createWindow(
-            activeApps,
+            prev,
             WINDOWS.find((w) => w.id === name) as WindowProps,
             component,
           ),

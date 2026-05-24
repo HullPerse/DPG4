@@ -35,6 +35,7 @@ export interface WindowProps {
   onRefresh?: () => void;
   setIsOpening?: (value: boolean) => void;
   refreshKey?: number;
+  zIndex?: number;
 }
 
 export interface WindowPosition {

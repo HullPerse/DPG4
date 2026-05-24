@@ -230,18 +230,19 @@ function App() {
         <Selection ref={selectionRef} visible={isSelecting} />
 
         {/* WINDOWS */}
-        {activeApps.map((app) => (
+        {activeApps.map((app, index) => (
           <Window
             key={app.id}
-            onMinimize={() => setActiveApps(minimizeWindow(activeApps, app.id))}
-            onClose={() => setActiveApps(closeWindow(activeApps, app.id))}
-            onActive={() => setActiveApps(activeWindow(activeApps, app.id))}
+            onMinimize={() => setActiveApps((prev) => minimizeWindow(prev, app.id))}
+            onClose={() => setActiveApps((prev) => closeWindow(prev, app.id))}
+            onActive={() => setActiveApps((prev) => activeWindow(prev, app.id))}
             onInactive={() =>
-              setActiveApps(deactivateWindow(activeApps, app.id))
+              setActiveApps((prev) => deactivateWindow(prev, app.id))
             }
-            onRefresh={() => setActiveApps(refreshWindow(activeApps, app.id))}
+            onRefresh={() => setActiveApps((prev) => refreshWindow(prev, app.id))}
             setIsOpening={setIsOpening}
             {...app}
+            zIndex={app.isPinned ? 9999 : 50 + index}
           >
             <Suspense fallback={<WindowLoader />}>{app.children}</Suspense>
           </Window>

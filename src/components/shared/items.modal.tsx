@@ -19,7 +19,7 @@ export function CreateModal({
       <DialogContent showCloseButton={false} className="p-0 border-0 min-w-xl max-w-full">
         <main
           style={{
-            zIndex: 999,
+            zIndex: 10000,
             boxShadow: "4px 4px 0 transparent",
             border: "2px solid var(--color-highlight-high)",
             display: "grid",

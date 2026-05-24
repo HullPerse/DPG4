@@ -11,11 +11,9 @@ export function createWindow(
 
   //if window already exists, set isActive to true or isMinimized to false and update prevWindows
   if (existingWindow) {
-    existingWindow.isActive = true;
-    existingWindow.isMinimized = false;
     return [
       ...prevWindows.filter((w) => w.id !== newWindow.id),
-      existingWindow,
+      { ...existingWindow, isActive: true, isMinimized: false },
     ];
   }
 
@@ -46,9 +44,10 @@ export function minimizeWindow(prevWindows: WindowProps[], windowId: string) {
   const existingWindow = prevWindows.find((w) => w.id === windowId);
   if (!existingWindow) return prevWindows;
 
-  existingWindow.isActive = false;
-  existingWindow.isMinimized = true;
-  return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+  return [
+    ...prevWindows.filter((w) => w.id !== windowId),
+    { ...existingWindow, isActive: false, isMinimized: true },
+  ];
 }
 
 export function unminimizeWindow(prevWindows: WindowProps[], windowId: string) {
@@ -56,21 +55,24 @@ export function unminimizeWindow(prevWindows: WindowProps[], windowId: string) {
 
   if (!existingWindow) return prevWindows;
 
-  existingWindow.isActive = true;
-  existingWindow.isMinimized = false;
-  return [...prevWindows.filter((w) => w.id !== windowId), existingWindow];
+  return [
+    ...prevWindows.filter((w) => w.id !== windowId),
+    { ...existingWindow, isActive: true, isMinimized: false },
+  ];
 }
 
 export function activeWindow(prevWindows: WindowProps[], windowId: string) {
-  const existingWindow = prevWindows.find((w) => w.id === windowId);
+  const targetWindow = prevWindows.find((w) => w.id === windowId);
 
-  if (!existingWindow) return prevWindows;
+  if (!targetWindow) return prevWindows;
 
-  return prevWindows.map((w) => ({
-    ...w,
-    isActive: w.id === windowId,
-    isMinimized: false,
-  }));
+  return [
+    ...prevWindows.filter((w) => w.id !== windowId).map((w) => ({
+      ...w,
+      isActive: false,
+    })),
+    { ...targetWindow, isActive: true, isMinimized: false },
+  ];
 }
 
 export function deactivateWindow(prevWindows: WindowProps[], windowId: string) {

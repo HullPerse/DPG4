@@ -82,7 +82,7 @@ function Window(props: WindowProps) {
 
   //handle mount centering and maximizing
   useEffect(() => {
-    setTimeout(() => props.setIsOpening?.(false), 300);
+    const timer = setTimeout(() => props.setIsOpening?.(false), 300);
 
     if (props.isMaximized) {
       setWindowSize({
@@ -90,6 +90,8 @@ function Window(props: WindowProps) {
         height: window.innerHeight,
       });
     }
+
+    return () => clearTimeout(timer);
   }, [props.isMaximized]);
 
   //sync position and size from props changes (e.g., moveWindow)
@@ -242,7 +244,7 @@ function Window(props: WindowProps) {
       transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
       width: `${windowSize.width}px`,
       height: `${windowSize.height}px`,
-      zIndex: props.isPinned ? 999 : props.isActive ? 998 : 50,
+      zIndex: props.zIndex ?? (props.isPinned ? 999 : props.isActive ? 998 : 50),
       boxShadow:
         props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
       cursor: isDragging ? "grabbing" : "default",
