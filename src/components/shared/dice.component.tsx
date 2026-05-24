@@ -1,8 +1,26 @@
 import { useCallback, useState, useEffect } from "react";
 import { Button } from "../ui/button.component";
-import { DiceItem } from "@/types/dice";
+import { DiceItem, DiceType } from "@/types/dice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select.component";
 import { Plus, Trash } from "lucide-react";
 import RunSvg from "../svg/run.component";
+
+const DICE_MAX: Record<DiceType, number> = {
+  d4: 4,
+  d6: 6,
+  d8: 8,
+  d10: 10,
+  d12: 12,
+  d20: 20,
+};
+
+const DICE_TYPES: DiceType[] = ["d4", "d6", "d8", "d10", "d12", "d20"];
 
 interface DiceComponentProps {
   minDice?: number;
@@ -17,27 +35,24 @@ export default function DiceComponent({
   handleMove,
   additional,
 }: DiceComponentProps) {
-  const [diceGroups, setDiceGroups] = useState<number[]>(() => {
+  const [diceGroups, setDiceGroups] = useState<DiceType[]>(() => {
     const count = Math.max(minDice, 1);
-    return Array(count).fill(1);
+    return Array(count).fill("d6");
   });
+  const [addDiceType, setAddDiceType] = useState<DiceType>("d6");
   const [diceItems, setDiceItems] = useState<DiceItem[]>([]);
   const [isRolling, setIsRolling] = useState(false);
   const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
     if (diceItems.length === 0) {
-      const placeholders: DiceItem[] = [];
-      diceGroups.forEach((group, groupIdx) => {
-        for (let i = 0; i < group; i++) {
-          placeholders.push({
-            id: `placeholder-${groupIdx}-${i}`,
-            value: 0,
-            isRolling: false,
-            isPlaceholder: true,
-          });
-        }
-      });
+      const placeholders: DiceItem[] = diceGroups.map((type, idx) => ({
+        id: `placeholder-${idx}`,
+        value: 0,
+        type,
+        isRolling: false,
+        isPlaceholder: true,
+      }));
       setDiceItems(placeholders);
     }
   }, [diceGroups]);
@@ -71,6 +86,9 @@ export default function DiceComponent({
     setIsRolling(true);
 
     setDiceItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      const max = item ? DICE_MAX[item.type] : 6;
+
       const updated = prev.map((item) =>
         item.id === id
           ? { ...item, value: 0, isRolling: true, isPlaceholder: false }
@@ -83,7 +101,7 @@ export default function DiceComponent({
             item.id === id
               ? {
                   ...item,
-                  value: Math.floor(Math.floor(Math.random() * 6) + 1),
+                  value: Math.floor(Math.random() * max) + 1,
                   isRolling: false,
                   isPlaceholder: false,
                 }
@@ -103,28 +121,121 @@ export default function DiceComponent({
   }, []);
 
   const addDiceGroup = useCallback(() => {
-    setDiceGroups([...diceGroups, 1]);
+    setDiceGroups([...diceGroups, addDiceType]);
 
     setDiceItems((prev) => [
       ...prev,
-      { id: Date.now(), value: 0, isRolling: false, isPlaceholder: true },
+      {
+        id: Date.now(),
+        value: 0,
+        type: addDiceType,
+        isRolling: false,
+        isPlaceholder: true,
+      },
     ]);
-  }, []);
+  }, [diceGroups, addDiceType]);
+
+  const handleTypeChange = useCallback(
+    (id: string | number, newType: DiceType) => {
+      setDiceItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, type: newType } : item,
+        ),
+      );
+      const idx = diceItems.findIndex((item) => item.id === id);
+      if (idx !== -1) {
+        setDiceGroups((prev) => {
+          const updated = [...prev];
+          updated[idx] = newType;
+          return updated;
+        });
+      }
+    },
+    [diceItems],
+  );
+
+  const removeDice = useCallback(
+    (id: string | number) => {
+      const idx = diceItems.findIndex((item) => item.id === id);
+      const initCount = Math.max(minDice, 1);
+      if (idx < initCount || idx === -1) return;
+
+      setDiceItems((prev) => prev.filter((item) => item.id !== id));
+      setDiceGroups((prev) => prev.filter((_, i) => i !== idx));
+      setTotal((prev) =>
+        prev === null ? null : prev - (diceItems[idx]?.value ?? 0),
+      );
+    },
+    [diceItems, minDice],
+  );
+
+  const resetDice = useCallback(
+    (id: string | number) => {
+      setDiceItems((prev) => {
+        const idx = prev.findIndex((item) => item.id === id);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          value: 0,
+          isPlaceholder: true,
+          isRolling: false,
+        };
+        return updated;
+      });
+      setTotal((prev) => {
+        if (prev === null) return null;
+        const item = diceItems.find((i) => i.id === id);
+        return item ? prev - item.value : prev;
+      });
+    },
+    [diceItems],
+  );
 
   return (
     <main className="relative flex flex-col w-full gap-2 p-2 min-h-fit h-30">
       {diceItems.length > 0 && (
         <div className="flex flex-wrap justify-start gap-2">
-          {diceItems.map((item) => (
-            <button
+          {diceItems.map((item, index) => (
+            <div
               key={item.id}
-              type="button"
-              className="flex flex-col items-center space-y-1 cursor-pointer group"
-              onClick={() => handleReroll(item.id)}
-              disabled={item.isRolling}
+              className="flex flex-col items-center gap-1"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                if (index >= Math.max(minDice, 1)) {
+                  removeDice(item.id);
+                } else if (!item.isPlaceholder && !item.isRolling) {
+                  resetDice(item.id);
+                }
+              }}
             >
-              {getDiceDisplay(item)}
-            </button>
+              <Select
+                value={item.type}
+                onValueChange={(val) =>
+                  handleTypeChange(item.id, val as DiceType)
+                }
+                disabled={item.isRolling}
+              >
+                <SelectTrigger className="text-sm max-h-6 h-6 min-w-17 w-17 mb-1 p-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DICE_TYPES.map((dt) => (
+                    <SelectItem key={dt} value={dt} className="text-xs">
+                      {dt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                type="button"
+                className="flex flex-col items-center space-y-1 cursor-pointer group"
+                onClick={() => handleReroll(item.id)}
+                disabled={item.isRolling}
+              >
+                {getDiceDisplay(item)}
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -134,19 +245,34 @@ export default function DiceComponent({
           size="icon"
           variant="error"
           onClick={() => {
-            setDiceGroups(Array(Math.max(minDice, 1)).fill(1));
+            setDiceGroups(Array(Math.max(minDice, 1)).fill("d6"));
             setDiceItems([]);
           }}
           disabled={isRolling}
         >
           <Trash />
         </Button>
+        <Select
+          value={addDiceType}
+          onValueChange={(val) => setAddDiceType(val as DiceType)}
+        >
+          <SelectTrigger className="text-xs ">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DICE_TYPES.map((dt) => (
+              <SelectItem key={dt} value={dt} className="text-sm">
+                {dt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           title="Добавить кубик"
           variant="default"
           size="icon"
           onClick={() => addDiceGroup()}
-          disabled={diceGroups.length >= 5 || isRolling}
+          disabled={diceItems.length >= 5 || isRolling}
         >
           <Plus />
         </Button>

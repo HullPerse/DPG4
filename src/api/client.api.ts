@@ -1,7 +1,7 @@
 import PocketBase from "pocketbase";
 
-// export const URL = "http://26.15.36.191:8090/";
-export const URL = "http://127.0.0.1:8090/";
+export const URL = "http://26.15.36.191:8090/";
+// export const URL = "http://127.0.0.1:8090/";
 
 export const client = new PocketBase(URL);
 

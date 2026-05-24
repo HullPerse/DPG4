@@ -195,6 +195,7 @@ export default class UserApi {
       } as Activity;
       return await this.activityCollection.create(activityData);
     }
+
     return await this.usersCollection.update(userId, {
       money: finalScore,
     });
