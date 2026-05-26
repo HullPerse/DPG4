@@ -132,7 +132,7 @@ export default function Library() {
                   setTab("inventory");
                 }}
               >
-                Инвентар ь
+                Инвентарь
               </Button>
               <Button
                 variant="link"

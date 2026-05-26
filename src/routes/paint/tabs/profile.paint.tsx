@@ -2,11 +2,13 @@ import { Button } from "@/components/ui/button.component";
 import { ChevronLeft, NetworkIcon } from "lucide-react";
 import PaintApi from "@/api/paint.api";
 import { useUserStore } from "@/store/user.store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PaintType } from "@/types/paint";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import ImagePaint from "../components/image.paint";
+import { startTransition, useCallback } from "react";
+import { useSubscription } from "@/hooks/subscription.hook";
 
 const paintApi = new PaintApi();
 
@@ -16,6 +18,7 @@ function ProfilePaint({
   setTab: (value: "home" | "draw" | "list" | "profile") => void;
 }) {
   const user = useUserStore((state) => state.user);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["profilePaint"],
@@ -26,6 +29,17 @@ function ProfilePaint({
       return allData;
     },
   });
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["profilePaint"],
+        refetchType: "all",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("drawings", "*", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)

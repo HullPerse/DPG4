@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button.component";
 import { ChevronLeft, NetworkIcon } from "lucide-react";
 import PaintApi from "@/api/paint.api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PaintType } from "@/types/paint";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import ImagePaint from "../components/image.paint";
+import { useSubscription } from "@/hooks/subscription.hook";
+import { startTransition, useCallback } from "react";
 
 const paintApi = new PaintApi();
 
@@ -14,13 +16,26 @@ function ListPaint({
 }: {
   setTab: (value: "home" | "draw" | "list" | "profile") => void;
 }) {
+  const queryClient = useQueryClient();
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["profilePaint"],
+    queryKey: ["listPaint"],
     queryFn: async (): Promise<PaintType[]> => {
       const allData = await paintApi.getAllDrawings();
       return allData;
     },
   });
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["listPaint"],
+        refetchType: "all",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("drawings", "*", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)

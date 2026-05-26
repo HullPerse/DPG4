@@ -220,7 +220,10 @@ function ImageViewer({
   return (
     <>
       {trigger && (
-        <div onClick={() => setOpen(true)} className="inline-flex">
+        <div
+          onClick={() => setOpen(true)}
+          className="inline-flex hover:cursor-pointer"
+        >
           {trigger}
         </div>
       )}
