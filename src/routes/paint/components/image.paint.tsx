@@ -1,5 +1,6 @@
 import { image } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
+import ImageViewer from "@/components/shared/viewer.component";
 import { Button } from "@/components/ui/button.component";
 import { PaintType } from "@/types/paint";
 import { ZoomIn } from "lucide-react";
@@ -20,10 +21,16 @@ function ImagePaint({ item }: { item: PaintType }) {
         <span className=" flex item-center text-md font-bold line-clamp-1">
           {item.author.username}
         </span>
-
-        <Button variant="ghost" title="Закрыть" onClick={() => {}}>
-          <ZoomIn />
-        </Button>
+        <ImageViewer
+          src={[`${image.paint}${item.id}/${item.image}`]}
+          zoomable
+          draggable
+          trigger={
+            <Button variant="ghost" title="Увеличить">
+              <ZoomIn />
+            </Button>
+          }
+        />
       </section>
       <section className="flex-1 bg-card w-60 h-45">
         <ImageComponent
