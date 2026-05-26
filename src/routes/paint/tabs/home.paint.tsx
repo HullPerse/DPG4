@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button.component";
 
 import { Book, Library, PlusCircle } from "lucide-react";
 
-const TABS = ["draw", "list", "profile"];
+const TABS = ["draw", "profile", "list"];
 
 function HomePaint({
   setTab,
