@@ -71,9 +71,6 @@ export default function Library() {
             .map((item) => (
               <Button
                 key={item.value}
-                variant="link"
-                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 shadow-sharp-sm border"
-                disabled={tab === item.value}
                 onClick={() => {
                   setUserProfile(null);
                   setTab(item.value as LibraryTabs);
@@ -135,7 +132,7 @@ export default function Library() {
                   setTab("inventory");
                 }}
               >
-                Инвентарь
+                Инвентар ь
               </Button>
               <Button
                 variant="link"

@@ -3,12 +3,12 @@ import HomePaint from "./tabs/home.paint";
 import DrawPage from "./tabs/draw.paint";
 
 function PaintRoot() {
-  const [tab, setTab] = useState<"home" | "draw" | "list" | "profile">("draw");
+  const [tab, setTab] = useState<"home" | "draw" | "list" | "profile">("home");
 
   const getComponent = useCallback(() => {
     const tabMap = {
       home: <HomePaint setTab={setTab} />,
-      draw: <DrawPage />,
+      draw: <DrawPage setTab={setTab} />,
       list: <>3</>,
       profile: <>4</>,
     };
