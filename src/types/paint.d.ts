@@ -5,4 +5,6 @@ export interface PaintType {
     username: string;
   };
   image: File;
+  created?: string;
+  updated?: string;
 }

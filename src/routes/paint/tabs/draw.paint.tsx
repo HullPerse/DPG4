@@ -2,10 +2,27 @@ import PaintApi from "@/api/paint.api";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
 import { useUserStore } from "@/store/user.store";
 import { PaintType } from "@/types/paint";
 import { Brush, ChevronLeft, Eraser, PaintBucket } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { image } from "@/api/client.api";
+import { useSubscription } from "@/hooks/subscription.hook";
+import ImageComponent from "@/components/shared/image.component";
 
 const paintApi = new PaintApi();
 
@@ -26,8 +43,21 @@ function DrawPage({
   setTab: (value: "home" | "draw" | "list" | "profile") => void;
 }) {
   const user = useUserStore((state) => state.user);
+  const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(
+    null,
+  );
+
+  const { data: drawings } = useQuery({
+    queryKey: ["profilePaint"],
+    queryFn: async () => {
+      if (!user) return [];
+      return await paintApi.getDrawinsByAuthor(String(user.id));
+    },
+    enabled: !!user,
+  });
 
   const [tool, setTool] = useState<ToolType>("brush");
   const [color, setColor] = useState("#000000");
@@ -52,6 +82,52 @@ function DrawPage({
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, CW, CH);
   }, []);
+
+  const loadDrawing = useCallback(
+    async (drawingId: string) => {
+      const drawing = drawings?.find((d) => d.id === drawingId);
+      if (!drawing) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = `${image.paint}${drawing.id}/${drawing.image}`;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, CW, CH);
+          ctx.drawImage(img, 0, 0, CW, CH);
+          resolve();
+        };
+        img.onerror = reject;
+      });
+    },
+    [drawings],
+  );
+
+  const handleSelectDrawing = useCallback(
+    (drawingId: string | null) => {
+      if (!drawingId) return;
+      setSelectedDrawingId(drawingId);
+      loadDrawing(drawingId);
+    },
+    [loadDrawing],
+  );
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["profilePaint"],
+        refetchType: "all",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("drawings", "*", invalidateQuery);
 
   const pos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const c = canvasRef.current;
@@ -316,6 +392,42 @@ function DrawPage({
             className="w-full accent-iris"
           />
         </div>
+        <div className="flex flex-col gap-1 mt-2">
+          <label className="text-xs text-text/60 font-bold">
+            {selectedDrawingId ? "Редактирование" : "Новый рисунок"}
+          </label>
+          <Select
+            value={selectedDrawingId ?? ""}
+            onValueChange={handleSelectDrawing}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Выберите рисунок" />
+            </SelectTrigger>
+            <SelectContent>
+              {drawings?.map((d) => (
+                <SelectItem
+                  key={d.id}
+                  value={d.id ?? ""}
+                  className="flex flex-row bg-background"
+                >
+                  <ImageComponent
+                    src={`${image.paint}${d.id}/${d.image}`}
+                    alt="Картинка ЛОЛ"
+                    className="w-6 h-4"
+                  />
+                  <span>
+                    {" "}
+                    {new Date(d.created ?? "").toLocaleDateString("ru-RU", {
+                      day: "numeric",
+                      month: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="mt-auto flex flex-row gap-1">
           <Button
             variant="error"
@@ -357,8 +469,14 @@ function DrawPage({
                 image: imageFile,
               } as PaintType;
 
-              await paintApi.createDraw(data);
+              if (selectedDrawingId) {
+                await paintApi.updateDraw(selectedDrawingId, data);
+              } else {
+                const record = await paintApi.createDraw(data);
+                setSelectedDrawingId(record.id ?? null);
+              }
 
+              invalidateQuery();
               setLoading(false);
             }}
             disabled={loading}
