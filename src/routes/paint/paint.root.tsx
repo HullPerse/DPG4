@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import HomePaint from "./tabs/home.paint";
 import DrawPaint from "./tabs/draw.paint";
 import ProfilePaint from "./tabs/profile.paint";
+import ListPaint from "./tabs/list.paint";
 
 function PaintRoot() {
   const [tab, setTab] = useState<"home" | "draw" | "list" | "profile">("home");
@@ -11,7 +12,7 @@ function PaintRoot() {
       home: <HomePaint setTab={setTab} />,
       draw: <DrawPaint setTab={setTab} />,
       profile: <ProfilePaint setTab={setTab} />,
-      list: <>4</>,
+      list: <ListPaint setTab={setTab} />,
     };
 
     return tabMap[(tab as keyof typeof tabMap) ?? "home"];
