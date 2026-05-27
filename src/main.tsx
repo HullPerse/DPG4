@@ -13,6 +13,7 @@ import {
   initActivitySubscription,
   initChatSubscription,
 } from "./lib/activity.utils";
+import { initCursors } from "./lib/cursor.utils";
 
 const queryClient = new QueryClient(QueryConfig);
 
@@ -23,6 +24,7 @@ await import("react-dom/client").then(async ({ createRoot }) => {
   await initializeAuthStore();
   await initActivitySubscription();
   await initChatSubscription();
+  initCursors();
 
   createRoot(rootElement).render(
     <StrictMode>

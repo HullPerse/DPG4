@@ -19,6 +19,7 @@ import { WindowError } from "./error.component";
 import { useDataStore } from "@/store/data.store";
 import { useWindowResize } from "@/hooks/resize.hook";
 import { useClickAway } from "@uidotdev/usehooks";
+import { lockCursor } from "@/lib/cursor.utils";
 
 function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
@@ -165,6 +166,7 @@ function Window(props: WindowProps) {
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
+    lockCursor(null);
   }, [setIsDragging, setIsResizing]);
 
   useEffect(() => {
@@ -219,6 +221,7 @@ function Window(props: WindowProps) {
     windowStartPos.current = { ...position };
     props.onActive?.();
     e.preventDefault();
+    lockCursor('var(--cursor-grabbing, grabbing)');
   };
 
   const getChildren = useCallback(() => {

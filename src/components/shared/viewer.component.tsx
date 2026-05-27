@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button.component";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { createPortal } from "react-dom";
+import { lockCursor } from "@/lib/cursor.utils";
 
 interface ImageViewerProps {
   className?: string;
@@ -70,6 +71,7 @@ function ImageViewer({
       e.preventDefault();
       setDrag(true);
       setDragStart({ x: e.clientX - pos.x, y: e.clientY - pos.y });
+      lockCursor('var(--cursor-grabbing, grabbing)');
     },
     [draggable, pos],
   );
@@ -85,7 +87,10 @@ function ImageViewer({
     [draggable, drag, dragStart],
   );
 
-  const onMouseUp = useCallback(() => setDrag(false), []);
+  const onMouseUp = useCallback(() => {
+    setDrag(false);
+    lockCursor(null);
+  }, []);
 
   if (!src || src.length === 0) return null;
 

@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import { WindowPosition } from "@/types/window";
+import { lockCursor } from "@/lib/cursor.utils";
 
 export type ResizeDirection =
   | "top"
@@ -33,6 +34,17 @@ interface UseWindowResizeProps {
   >;
 }
 
+const DIRECTION_CURSOR: Record<ResizeDirection, string> = {
+  top: 'n-resize',
+  bottom: 's-resize',
+  left: 'w-resize',
+  right: 'e-resize',
+  'top-left': 'nw-resize',
+  'top-right': 'ne-resize',
+  'bottom-left': 'sw-resize',
+  'bottom-right': 'se-resize',
+};
+
 export const useWindowResize = ({
   windowSize,
   position,
@@ -60,6 +72,7 @@ export const useWindowResize = ({
         direction,
       };
       onActive?.();
+      lockCursor(DIRECTION_CURSOR[direction]);
     },
     [windowSize, position, onActive, windowRef, setIsResizing],
   );
