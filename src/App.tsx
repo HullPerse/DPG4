@@ -94,6 +94,10 @@ function App() {
       const notepadElement = target.closest('[data-notepad="true"]');
       if (notepadElement) return;
 
+      //check if mouse is over image viewer
+      const viewerElement = target.closest(`[data-image-viewer="true"]`);
+      if (viewerElement) return;
+
       selectionStartRef.current = { x, y };
       setIsSelecting(true);
     },
@@ -233,13 +237,17 @@ function App() {
         {activeApps.map((app, index) => (
           <Window
             key={app.id}
-            onMinimize={() => setActiveApps((prev) => minimizeWindow(prev, app.id))}
+            onMinimize={() =>
+              setActiveApps((prev) => minimizeWindow(prev, app.id))
+            }
             onClose={() => setActiveApps((prev) => closeWindow(prev, app.id))}
             onActive={() => setActiveApps((prev) => activeWindow(prev, app.id))}
             onInactive={() =>
               setActiveApps((prev) => deactivateWindow(prev, app.id))
             }
-            onRefresh={() => setActiveApps((prev) => refreshWindow(prev, app.id))}
+            onRefresh={() =>
+              setActiveApps((prev) => refreshWindow(prev, app.id))
+            }
             setIsOpening={setIsOpening}
             {...app}
             zIndex={app.isPinned ? 9999 : 50 + index}

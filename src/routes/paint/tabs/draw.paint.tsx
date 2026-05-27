@@ -28,6 +28,16 @@ const paintApi = new PaintApi();
 
 type ToolType = "brush" | "eraser" | "bucket";
 
+type StrokePoint = { x: number; y: number };
+
+type Stroke = {
+  tool: Exclude<ToolType, "bucket">;
+  color: string;
+  size: number;
+  alpha: number;
+  points: StrokePoint[];
+};
+
 const Tools: { value: ToolType; label: string; icon: React.ReactNode }[] = [
   { value: "brush", label: "Карандаш", icon: <Brush /> },
   { value: "eraser", label: "Ластик", icon: <Eraser /> },
@@ -62,7 +72,15 @@ function DrawPage({
   const [tool, setTool] = useState<ToolType>("brush");
   const [color, setColor] = useState("#000000");
   const [size, setSize] = useState(6);
+  const [alpha, setAlpha] = useState<number>(1);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // const cursorPos = useRef({ x: 0, y: 0 });
+  const [hovering, setHovering] = useState(false);
+
+  const strokesRef = useRef<Stroke[]>([]);
+  const currentStrokeRef = useRef<Stroke | null>(null);
   const drawing = useRef(false);
 
   const [zoom, setZoom] = useState(1);
@@ -70,18 +88,54 @@ function DrawPage({
   const panning = useRef(false);
   const panLast = useRef({ x: 0, y: 0 });
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [cursorRadius, setCursorRadius] = useState(size / 2);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
-  const [hovering, setHovering] = useState(false);
 
   useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
+    setCursorRadius(size / 2);
+  }, [size]);
+
+  const redrawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    ctx.clearRect(0, 0, CW, CH);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, CW, CH);
+
+    for (const stroke of strokesRef.current) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = stroke.tool === "eraser" ? 1 : stroke.alpha;
+      ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      if (stroke.points.length === 1) {
+        const p = stroke.points[0];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, stroke.size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
   }, []);
+
+  useEffect(() => {
+    redrawCanvas();
+  }, [redrawCanvas]);
 
   const loadDrawing = useCallback(
     async (drawingId: string) => {
@@ -98,6 +152,7 @@ function DrawPage({
       img.src = `${image.paint}${drawing.id}/${drawing.image}`;
       await new Promise<void>((resolve, reject) => {
         img.onload = () => {
+          ctx.clearRect(0, 0, CW, CH);
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, CW, CH);
           ctx.drawImage(img, 0, 0, CW, CH);
@@ -105,6 +160,8 @@ function DrawPage({
         };
         img.onerror = reject;
       });
+
+      strokesRef.current = [];
     },
     [drawings],
   );
@@ -139,22 +196,6 @@ function DrawPage({
     };
   }, []);
 
-  const setupCtx = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      ctx.globalCompositeOperation = "source-over";
-      if (tool === "eraser") {
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = size;
-      } else {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = size;
-      }
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-    },
-    [tool, color, size],
-  );
-
   const onMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const c = canvasRef.current;
@@ -163,7 +204,6 @@ function DrawPage({
       if (!ctx) return;
       const p = pos(e);
 
-      // right mouse button — pan
       if (e.button === 2) {
         panning.current = true;
         panLast.current = { x: e.clientX, y: e.clientY };
@@ -224,13 +264,21 @@ function DrawPage({
       }
 
       drawing.current = true;
-      setupCtx(ctx);
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(p.x + 0.01, p.y + 0.01);
-      ctx.stroke();
+
+      const stroke: Stroke = {
+        tool,
+        color,
+        size,
+        alpha,
+        points: [p],
+      };
+
+      currentStrokeRef.current = stroke;
+      strokesRef.current.push(stroke);
+
+      redrawCanvas();
     },
-    [tool, color, pos, setupCtx],
+    [tool, color, size, alpha, pos, redrawCanvas],
   );
 
   const onMouseMove = useCallback(
@@ -241,7 +289,6 @@ function DrawPage({
         setCursorPos({ x: e.clientX - r.left, y: e.clientY - r.top });
       }
 
-      // right-click pan
       if (panning.current) {
         const dx = e.clientX - panLast.current.x;
         const dy = e.clientY - panLast.current.y;
@@ -250,30 +297,22 @@ function DrawPage({
         return;
       }
 
-      const c = canvasRef.current;
-      if (!c) return;
-      const ctx = c.getContext("2d");
-      if (!ctx) return;
-      const p = pos(e);
-
       if (!drawing.current) return;
-      setupCtx(ctx);
-      if (wasOutside.current) {
-        wasOutside.current = false;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-      }
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
+
+      const p = pos(e);
+      const stroke = currentStrokeRef.current;
+      if (!stroke) return;
+
+      stroke.points.push(p);
+      redrawCanvas();
     },
-    [pos, setupCtx],
+    [pos, redrawCanvas],
   );
 
   const onEnd = useCallback(() => {
     drawing.current = false;
     panning.current = false;
+    currentStrokeRef.current = null;
   }, []);
 
   const wasOutside = useRef(false);
@@ -287,8 +326,11 @@ function DrawPage({
     panning.current = false;
   }, []);
 
-  const onWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handler = (e: WheelEvent) => {
       e.preventDefault();
 
       if (e.altKey) {
@@ -297,8 +339,7 @@ function DrawPage({
       }
 
       const container = containerRef.current;
-      const canvas = canvasRef.current;
-      if (!container || !canvas) return;
+      if (!container) return;
 
       const cr = container.getBoundingClientRect();
       const mouseX = e.clientX - cr.left;
@@ -311,27 +352,27 @@ function DrawPage({
         Math.min(10, direction > 0 ? zoom * factor : zoom / factor),
       );
 
-      // zoom toward mouse pointer
       setPan((prev) => ({
         x: mouseX - ((mouseX - prev.x) / zoom) * newZoom,
         y: mouseY - ((mouseY - prev.y) / zoom) * newZoom,
       }));
       setZoom(newZoom);
-    },
-    [zoom],
-  );
+    };
 
-  // global mouseup to catch releases outside canvas
+    canvas.addEventListener("wheel", handler, { passive: false });
+    return () => canvas.removeEventListener("wheel", handler);
+  }, [zoom]);
+
   useEffect(() => {
     const up = () => {
       drawing.current = false;
       panning.current = false;
+      currentStrokeRef.current = null;
     };
     globalThis.addEventListener("mouseup", up);
     return () => globalThis.removeEventListener("mouseup", up);
   }, []);
 
-  // suppress context menu + alt key system behavior
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
@@ -351,8 +392,6 @@ function DrawPage({
       globalThis.removeEventListener("keyup", preventAlt, true);
     };
   }, []);
-
-  const cursorRadius = size / 2;
 
   return (
     <main className="flex flex-row w-full h-full">
@@ -392,6 +431,22 @@ function DrawPage({
             className="w-full accent-iris"
           />
         </div>
+
+        <div className="flex flex-col gap-1 mt-2">
+          <label className="text-xs text-text/60 font-bold">
+            Прозрачность: {Math.round(alpha * 100)}%
+          </label>
+          <input
+            type="range"
+            min={0.05}
+            max={1}
+            step={0.05}
+            value={alpha}
+            onChange={(e) => setAlpha(Number(e.currentTarget.value))}
+            className="w-full accent-iris"
+          />
+        </div>
+
         <div className="flex flex-col gap-1 mt-2">
           <label className="text-xs text-text/60 font-bold">
             {selectedDrawingId ? "Редактирование" : "Новый рисунок"}
@@ -513,7 +568,6 @@ function DrawPage({
             onMouseUp={onEnd}
             onMouseEnter={onEnter}
             onMouseLeave={onLeave}
-            onWheel={onWheel}
           />
         </div>
         {hovering && (tool === "brush" || tool === "eraser") && (

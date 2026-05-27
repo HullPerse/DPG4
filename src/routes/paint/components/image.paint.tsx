@@ -18,7 +18,7 @@ function ImagePaint({ item }: { item: PaintType }) {
       className="overflow-hidden bg-card text-text transition-none w-60 min-w-60 max-w-60"
     >
       <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-        <span className=" flex item-center text-md font-bold line-clamp-1">
+        <span className="flex item-center text-md font-bold line-clamp-1 w-full">
           {item.author.username}
         </span>
         <ImageViewer
@@ -26,7 +26,12 @@ function ImagePaint({ item }: { item: PaintType }) {
           zoomable
           draggable
           trigger={
-            <Button variant="ghost" title="Увеличить">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Увеличить"
+              className="ml-auto"
+            >
               <ZoomIn />
             </Button>
           }

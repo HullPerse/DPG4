@@ -14,7 +14,7 @@ export const image = {
   inventory: `${URL}api/files/pbc_3573984430/`,
   market: `${URL}api/files/pbc_1556084869/`,
   ads: `${URL}api/files/pbc_1911549009/`,
-  paint: `${URL}api/files/pbc_3088867483/`,
+  paint: `${URL}api/files/pbc_1706527574/`,
 };
 
 export const audioURL = {

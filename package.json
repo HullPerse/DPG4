@@ -1,6 +1,6 @@
 {
-  "name": "tauri-app",
-  "version": "0.1.0",
+  "name": "dpg4",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "scripts": {

@@ -115,12 +115,7 @@ function EditReview({
         image = null;
       }
 
-      await gameApi.saveReview(
-        String(data.game.user.id),
-        id,
-        review,
-        image,
-      );
+      await gameApi.saveReview(String(data.game.user.id), id, review, image);
 
       invalidateQuery();
     } catch (error) {
@@ -214,12 +209,13 @@ function EditReview({
               {data.drawings.map((item, index) => (
                 <section
                   key={item.id}
-                  className="flex flex-row w-full h-22 min-h-22 border-highlight-high border-2 shadow-sharp-sm p-1 items-center"
+                  className="flex flex-row h-22 min-h-22 border-highlight-high border-2 shadow-sharp-sm p-1 items-center gap-2"
                 >
                   <ImageViewer
                     src={[`${image.paint}${item.id}/${item.image}`]}
                     zoomable
                     draggable
+                    triggerClassName="w-fit h-fit"
                     trigger={
                       <ImageComponent
                         src={`${image.paint}${item.id}/${item.image}`}
@@ -229,7 +225,7 @@ function EditReview({
                     }
                   />
 
-                  <span>
+                  <span className="flex w-full">
                     {index + 1}. {item.author.username}
                   </span>
 
