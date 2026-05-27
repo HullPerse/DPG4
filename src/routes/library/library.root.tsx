@@ -71,6 +71,8 @@ export default function Library() {
             .map((item) => (
               <Button
                 key={item.value}
+                className="disabled:text-primary"
+                disabled={tab === item.value}
                 onClick={() => {
                   setUserProfile(null);
                   setTab(item.value as LibraryTabs);
