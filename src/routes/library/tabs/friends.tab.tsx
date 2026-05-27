@@ -96,6 +96,7 @@ function FriendsTab() {
 
             return (
               <button
+                role="button"
                 key={user.id}
                 type="button"
                 className="relative flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"

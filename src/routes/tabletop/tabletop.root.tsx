@@ -116,7 +116,8 @@ export default function Tabletop() {
       {showCell && <ShowCell setShowCell={setShowCell} />}
       <section className="absolute top-2 left-2 flex flex-col gap-1 z-500">
         <button
-          className="cursor-pointer rounded border p-1 text-muted hover:text-text"
+          role="button"
+          className="cursor-pointer rounded border p-1 text-muted hover:text-text bg-card shadow-sharp-sm"
           title="Клетка"
           onClick={() => setShowCell(true)}
         >
@@ -124,7 +125,8 @@ export default function Tabletop() {
         </button>
 
         <button
-          className="cursor-pointer rounded border p-1 text-muted hover:text-text"
+          role="button"
+          className="cursor-pointer rounded border p-1 text-muted hover:text-text bg-card shadow-sharp-sm"
           title="Меню"
           onClick={() => setControl(true)}
         >
@@ -133,7 +135,8 @@ export default function Tabletop() {
 
         {!showTools && (
           <button
-            className="z-500 cursor-pointer rounded border p-1 text-muted hover:text-text"
+            role="button"
+            className="z-500 cursor-pointer rounded border p-1 text-muted hover:text-text bg-card shadow-sharp-sm"
             title="Инструменты"
             onClick={() => setShowTools(true)}
           >

@@ -144,6 +144,7 @@ function Review({
             return (
               <div key={index.toString()}>
                 <button
+                  role="button"
                   onClick={() => openUrl(part.content)}
                   className="text-blue-500 hover:text-blue-700 underline cursor-pointer"
                 >

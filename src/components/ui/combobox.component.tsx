@@ -55,6 +55,7 @@ function Combobox({
         disabled={disabled}
         render={
           <button
+            role="button"
             type="button"
             className={cn(
               "text flex w-full cursor-pointer items-center justify-between gap-1.5 rounded border-2 border-highlight-high bg-card px-3 py-2 text-base font-bold whitespace-nowrap transition-all duration-200 outline-none select-none focus:border-primary focus:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",

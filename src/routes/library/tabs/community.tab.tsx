@@ -58,6 +58,7 @@ function CommunityTab() {
         const activityItem = item as Activity;
         return (
           <button
+            role="button"
             key={activityItem.id}
             type="button"
             className="relative flex items-center gap-3 border-2 border-highlight-high bg-card p-2 cursor-pointer hover:opacity-100 opacity-75"

@@ -2759,6 +2759,7 @@ export const itemEffect: effectInterface[] = [
           ))}
         </section>
         <button
+          role="button"
           type="button"
           className="flex flex-col items-center space-y-1 cursor-pointer group"
           onClick={() => handleRoll()}
@@ -4132,6 +4133,7 @@ export const itemEffect: effectInterface[] = [
     return (
       <main className="flex flex-col gap-2">
         <button
+          role="button"
           type="button"
           className="flex flex-col items-center space-y-1 cursor-pointer group"
           onClick={() => handleRoll()}
@@ -4214,6 +4216,7 @@ export const itemEffect: effectInterface[] = [
           ))}
         </section>
         <button
+          role="button"
           type="button"
           className="flex flex-col items-center space-y-1 cursor-pointer group"
           onClick={() => handleRoll()}

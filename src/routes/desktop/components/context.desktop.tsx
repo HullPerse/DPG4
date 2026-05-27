@@ -40,9 +40,12 @@ export default function ContextDesktop({
     <ContextMenu key={app.id}>
       <ContextMenuTrigger>
         <button
+          role="button"
           className={`relative ${app.isMinimized ? "text-muted/50" : "text-muted"} cursor-pointer rounded border p-1 hover:text-text`}
           title={app.title}
-          onClick={() => setActiveApps((prev) => unminimizeWindow(prev, app.id))}
+          onClick={() =>
+            setActiveApps((prev) => unminimizeWindow(prev, app.id))
+          }
         >
           {WINDOWS.find((w) => w.id === app.id)?.icon}
 
@@ -56,7 +59,9 @@ export default function ContextDesktop({
         <ContextMenuGroup>
           {!app.isActive && (
             <ContextMenuItem
-              onClick={() => setActiveApps((prev) => activeWindow(prev, app.id))}
+              onClick={() =>
+                setActiveApps((prev) => activeWindow(prev, app.id))
+              }
             >
               <Activity /> Сдеать активным
             </ContextMenuItem>

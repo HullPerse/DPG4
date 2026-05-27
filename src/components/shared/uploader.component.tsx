@@ -109,6 +109,7 @@ export function ImageUploader({
         </div>
       ) : (
         <button
+          role="button"
           type="button"
           className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 p-4 transition-colors hover:bg-muted/30"
           onClick={() => inputRef.current?.click()}

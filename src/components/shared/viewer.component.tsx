@@ -71,7 +71,7 @@ function ImageViewer({
       e.preventDefault();
       setDrag(true);
       setDragStart({ x: e.clientX - pos.x, y: e.clientY - pos.y });
-      lockCursor('var(--cursor-grabbing, grabbing)');
+      lockCursor("var(--cursor-grabbing, grabbing)");
     },
     [draggable, pos],
   );
@@ -204,6 +204,7 @@ function ImageViewer({
           <section className="flex items-center justify-center gap-2 bg-background border-t-2 border-highlight-high p-2">
             {src.map((s, i) => (
               <button
+                role="button"
                 key={i}
                 onClick={() => setIndex(i)}
                 className={cn(

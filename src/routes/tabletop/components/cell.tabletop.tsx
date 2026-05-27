@@ -132,6 +132,7 @@ function CellComponent({
   return (
     <Dialog open={isEditing && isAdmin ? open : false} onOpenChange={setOpen}>
       <button
+        role="button"
         onClick={() => {
           if (isEditing && isAdmin) return setOpen(true);
           setControl(true);

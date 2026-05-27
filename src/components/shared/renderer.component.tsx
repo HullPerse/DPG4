@@ -31,6 +31,7 @@ export default function renderWheelItems(
 
     return (
       <button
+        role="button"
         key={`${item.id}-${index}`}
         type="button"
         className={`relative shrink-0 w-32 h-32 mx-2 flex flex-col items-center justify-center text-primary font-bold border rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${

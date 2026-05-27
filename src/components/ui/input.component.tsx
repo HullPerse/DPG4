@@ -76,6 +76,7 @@ export function Input({
           aria-hidden={props.disabled ? "true" : "false"}
         >
           <button
+            role="button"
             type="button"
             className="cursor-pointer hover:text-gray-200 disabled:cursor-not-allowed"
             onClick={() => {
@@ -106,6 +107,7 @@ export function Input({
             <ChevronUp size={18} />
           </button>
           <button
+            role="button"
             type="button"
             className="cursor-pointer hover:text-gray-200 disabled:cursor-not-allowed"
             onClick={() => {
@@ -140,6 +142,7 @@ export function Input({
 
       {type === "password" && (
         <button
+          role="button"
           type="button"
           tabIndex={-1}
           className={cn(

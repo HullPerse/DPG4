@@ -50,6 +50,7 @@ export default function MessagesDesktop({
   return (
     <main className="relative">
       <button
+        role="button"
         className={`relative flex items-center gap-1 hover:text-iris hover:cursor-pointer ${
           data && data.length > 0 ? "animate-pulse text-iris" : "text-muted"
         }`}
@@ -72,6 +73,7 @@ export default function MessagesDesktop({
           ) : (
             data.map((item) => (
               <button
+                role="button"
                 key={item.sender.id}
                 className="flex w-full items-center gap-2 border-b border-highlight-high p-2 text-start hover:bg-background/80"
                 onClick={() => {

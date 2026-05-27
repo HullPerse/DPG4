@@ -228,6 +228,7 @@ export default function DiceComponent({
                 </SelectContent>
               </Select>
               <button
+                role="button"
                 type="button"
                 className="flex flex-col items-center space-y-1 cursor-pointer group"
                 onClick={() => handleReroll(item.id)}

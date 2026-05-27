@@ -97,6 +97,7 @@ export default function ChatBubble({
 
           {isAuthor && onEdit && (
             <button
+              role="button"
               onClick={() => onEdit(item)}
               className="ml-2 text-muted hover:text-text underline cursor-pointer"
             >
@@ -105,6 +106,7 @@ export default function ChatBubble({
           )}
           {isAuthor && onRemove && (
             <button
+              role="button"
               onClick={() => onRemove(item)}
               className="ml-auto text-muted hover:text-red-500/40 underline cursor-pointer"
             >
