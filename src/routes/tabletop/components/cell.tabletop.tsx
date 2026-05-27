@@ -217,7 +217,7 @@ function CellComponent({
                     </span>
                   )}
 
-                  {user.status?.some((s) => s === "Большие яйца") && (
+                  {user.status?.includes("Большие яйца") && (
                     <ImageComponent
                       src={"/balls.png"}
                       alt="Большие яйца"
