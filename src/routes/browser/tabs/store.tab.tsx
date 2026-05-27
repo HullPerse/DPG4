@@ -8,6 +8,7 @@ import {
   SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
+import ImageViewer from "@/components/shared/viewer.component";
 import { Button } from "@/components/ui/button.component";
 import { shuffleArray, weightedRandom } from "@/lib/utils";
 import { useUserStore } from "@/store/user.store";
@@ -123,11 +124,18 @@ function StoreTab() {
                     {item.item.label}
                   </span>
 
-                  <ImageComponent
-                    src={`${image.items}${item.item.id}/${item.item.image}`}
-                    alt={item.item.label}
-                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                    type="contain"
+                  <ImageViewer
+                    src={[`${image.items}${item.item.id}/${item.item.image}`]}
+                    zoomable
+                    draggable
+                    trigger={
+                      <ImageComponent
+                        src={`${image.items}${item.item.id}/${item.item.image}`}
+                        alt={item.item.label}
+                        className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
+                        type="contain"
+                      />
+                    }
                   />
 
                   <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">

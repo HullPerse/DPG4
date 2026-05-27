@@ -1,9 +1,10 @@
 import { Chat } from "@/types/chat";
 import { User } from "@/types/user";
-import { cn, openWindow } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import ImageComponent from "./image.component";
 import { image } from "@/api/client.api";
 import { CheckCheck, Trash } from "lucide-react";
+import ImageViewer from "./viewer.component";
 
 interface ChatBubbleProps {
   item: Chat;
@@ -62,18 +63,18 @@ export default function ChatBubble({
 
         {item.image && (
           <section className="mt-1 flex w-full h-full ">
-            <ImageComponent
-              src={`${image.chat}${item.id}/${item.image}`}
-              alt={item.message || "Изображение"}
-              type="contain"
-              className="h-full w-full cursor-pointer"
-              onClick={() => {
-                openWindow(
-                  item.id,
-                  `${image.chat}${item.id}/${item.image}`,
-                  "Изображение",
-                );
-              }}
+            <ImageViewer
+              src={[`${image.chat}${item.id}/${item.image}`]}
+              zoomable
+              draggable
+              trigger={
+                <ImageComponent
+                  src={`${image.chat}${item.id}/${item.image}`}
+                  alt={item.message || "Изображение"}
+                  type="contain"
+                  className="cursor-pointer"
+                />
+              }
             />
           </section>
         )}

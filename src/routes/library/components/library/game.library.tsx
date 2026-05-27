@@ -43,6 +43,7 @@ import EditReview from "./edit.library";
 import { image } from "@/api/client.api";
 import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
+import ImageViewer from "@/components/shared/viewer.component";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -329,22 +330,27 @@ function GameLibrary({
         <div className="relative flex w-full h-12 border-y-2 border-highlight-high bg-background">
           {/* VERTICAL IMAGE */}
           <div className="absolute bottom-4.5 left-2 h-52 w-36 overflow-hidden rounded border-2 border-highlight-high bg-background shadow-sharp-sm">
-            <Image
-              src={
-                data?.game?.data.image ??
-                (data?.game.data.capsuleImage as string)
-              }
-              alt="game background"
-              className="h-full w-full hover:cursor-pointer"
-              onClick={() => {
-                openWindow(
-                  String(data?.game.id),
+            <ImageViewer
+              src={[
+                data?.game?.data.verticalImage ??
                   data?.game?.data.image ??
-                    (data?.game.data.capsuleImage as string),
-                  "Изображение",
-                );
-              }}
+                  (data?.game.data.capsuleImage as string),
+              ]}
+              zoomable
+              draggable
+              trigger={
+                <Image
+                  src={
+                    data?.game?.data.verticalImage ??
+                    data?.game?.data.image ??
+                    (data?.game.data.capsuleImage as string)
+                  }
+                  alt="game background"
+                  className="h-full w-full hover:cursor-pointer"
+                />
+              }
             />
+
             <div
               className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high"
               style={{

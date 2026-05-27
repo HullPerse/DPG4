@@ -401,7 +401,7 @@ function DrawPage({
             onValueChange={handleSelectDrawing}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Выберите рисунок" />
+              <SelectValue placeholder="Рисунок" />
             </SelectTrigger>
             <SelectContent>
               {drawings?.map((d) => (

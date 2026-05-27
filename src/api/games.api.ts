@@ -77,6 +77,7 @@ export default class GameApi {
       image: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
       capsuleImage: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
       backgroundImage: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
+      verticalImage: `https://steamcdn-a.akamaihd.net/steam/apps/${g.appid}/library_600x900_2x.jpg`,
       steamLink: "",
       websiteLink: "",
     }));
@@ -101,9 +102,11 @@ export default class GameApi {
           capsule_image: data.capsuleImage,
           background: data.backgroundImage,
           website: data.websiteLink,
+          vertical_image: `https://steamcdn-a.akamaihd.net/steam/apps/${data.id}/library_600x900_2x.jpg`,
         },
         library_image: data.capsuleImage,
         library_background: data.backgroundImage,
+        library_vertical: `https://steamcdn-a.akamaihd.net/steam/apps/${data.id}/library_600x900_2x.jpg`,
       };
     } catch (e) {
       return console.error(e);

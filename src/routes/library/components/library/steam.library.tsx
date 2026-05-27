@@ -87,6 +87,7 @@ export default function SteamLibrary({
         image: game.library_image,
         capsuleImage: game.game.capsule_image,
         backgroundImage: game.library_background,
+        verticalImage: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/library_600x900_2x.jpg`,
         steamLink: `https://store.steampowered.com/app/${appId}`,
         websiteLink: game.game.website ?? "",
         time: currentType === "preset" ? Number(time) : undefined,

@@ -82,6 +82,7 @@ export default function CustomLibrary({
         image: headerImage,
         capsuleImage: headerImage,
         backgroundImage: headerImage,
+        verticalImage: headerImage,
         steamLink: "",
         websiteLink: "",
         time: currentType === "preset" ? Number(time) : undefined,

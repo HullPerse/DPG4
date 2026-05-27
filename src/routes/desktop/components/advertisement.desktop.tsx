@@ -17,7 +17,7 @@ import { X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { image } from "@/api/client.api";
-import { cn, getAdPosition, getAdPositionIcon, openWindow } from "@/lib/utils";
+import { cn, getAdPosition, getAdPositionIcon } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog.component";
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
+import ImageViewer from "@/components/shared/viewer.component";
 
 const adsApi = new AdsApi();
 const CLOSE_TIME = 10;
@@ -164,19 +165,18 @@ function AdvertisementApp() {
             )}
           </Button>
         )}
-
-        <ImageComponent
-          src={`${image.ads}${randomAd.id}/${randomAd.image}`}
-          alt={randomAd.text}
-          className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer z-49"
-          type="contain"
-          onClick={() => {
-            openWindow(
-              String(randomAd.id),
-              `${image?.ads}${randomAd.id}/${randomAd.image}`,
-              "Изображение",
-            );
-          }}
+        <ImageViewer
+          src={[`${image.ads}${randomAd.id}/${randomAd.image}`]}
+          zoomable
+          draggable
+          trigger={
+            <ImageComponent
+              src={`${image.ads}${randomAd.id}/${randomAd.image}`}
+              alt={randomAd.text}
+              className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer z-49"
+              type="contain"
+            />
+          }
         />
 
         {randomAd.audio && (

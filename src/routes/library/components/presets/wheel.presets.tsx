@@ -122,6 +122,7 @@ export default function PresetsWheel({ id }: { id: string }) {
         image: game.capsuleImage,
         capsuleImage: game.image,
         backgroundImage: game.backgroundImage,
+        verticalImage: game.verticalImage || game.backgroundImage,
         steamLink: `https://store.steampowered.com/app/${game.id}`,
         websiteLink: game.websiteLink ?? "",
       } as GameData,

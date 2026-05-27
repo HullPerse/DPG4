@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select.component";
 import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
+import ImageViewer from "@/components/shared/viewer.component";
 
 const itemsApi = new ItemsApi();
 const usersApi = new UserApi();
@@ -251,11 +252,19 @@ function ListBrowser({
               <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
                 {translateItemType(item.type)}
               </span>
-              <Image
-                src={`${clientImage?.items}${item.id}/${item.image}`}
-                alt={item.label}
-                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+              <ImageViewer
+                src={[`${clientImage?.items}${item.id}/${item.image}`]}
+                zoomable
+                draggable
+                trigger={
+                  <Image
+                    src={`${clientImage?.items}${item.id}/${item.image}`}
+                    alt={item.label}
+                    className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
+                  />
+                }
               />
+
               <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
                 {item.charge}
               </span>

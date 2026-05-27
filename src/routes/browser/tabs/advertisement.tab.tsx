@@ -9,7 +9,13 @@ import {
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import { NetworkIcon, Plus, Image as ImageIcon, Trash } from "lucide-react";
+import {
+  NetworkIcon,
+  Plus,
+  Image as ImageIcon,
+  Trash,
+  Play,
+} from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import {
   Dialog,
@@ -41,6 +47,7 @@ function AdTab() {
     null,
   );
   const [text, setText] = useState<string>("");
+  const [audioLoad, setAudioLoad] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["adsTab"],
@@ -255,14 +262,29 @@ function AdTab() {
                   className="h-16 w-16 min-w-16 min-h-16 border-2 border-highlight-high ml-1"
                 />
               )}
-              <div className="flex flex-col flex-1 min-w-0 ml-2">
-                <span className="truncate line-clamp-2">{item.text}</span>
-                {item.audio && (
-                  <span className="text-xs text-muted">
-                    {item.audio.toString()}
-                  </span>
-                )}
+              <div className="flex flex-col flex-1 ml-2">
+                <span className="line-clamp-2 ">{item.text}</span>
               </div>
+
+              {item.audio && (
+                <Button
+                  variant="info"
+                  size="icon"
+                  className="ml-auto mr-2 size-13"
+                  onClick={() => {
+                    setAudioLoad(true);
+                    const audio = new Audio(
+                      `${image.ads}${item.id}/${item.audio}`,
+                    );
+                    audio.onended = () => setAudioLoad(false);
+                    audio.onerror = () => setAudioLoad(false);
+                    audio.play().catch(() => setAudioLoad(false));
+                  }}
+                  disabled={audioLoad}
+                >
+                  {audioLoad ? <SmallLoader /> : <Play />}
+                </Button>
+              )}
 
               <Button
                 variant="error"

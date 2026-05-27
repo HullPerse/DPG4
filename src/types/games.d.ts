@@ -31,6 +31,7 @@ export type GameData = {
   image: string;
   capsuleImage: string;
   backgroundImage: string;
+  verticalImage?: string;
   steamLink: string;
   websiteLink: string;
   time?: number;

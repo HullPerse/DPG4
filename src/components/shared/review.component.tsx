@@ -12,6 +12,7 @@ import { parseReviewText } from "@/lib/review.utils";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import ImageViewer from "./viewer.component";
 
 const gameApi = new GameApi();
 
@@ -154,7 +155,19 @@ function Review({
 
           {image && (
             <div className="relative w-full flex h-full min-h-64 border border-highlight-high bg-background">
-              <Image src={image} alt={title} loading="lazy" type="contain" />
+              <ImageViewer
+                src={[image]}
+                zoomable
+                draggable
+                trigger={
+                  <Image
+                    src={image}
+                    alt={title}
+                    loading="lazy"
+                    type="contain"
+                  />
+                }
+              />
             </div>
           )}
         </div>

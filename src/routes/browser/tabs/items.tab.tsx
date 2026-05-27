@@ -14,7 +14,8 @@ import { memo, startTransition, useCallback, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText, openWindow, translateItemType } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/utils";
+import ImageViewer from "@/components/shared/viewer.component";
 
 const itemsApi = new ItemsApi();
 
@@ -107,17 +108,17 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
               <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
                 {translateItemType(result.type)}
               </span>
-              <ImageComponent
-                src={`${image?.items}${result.id}/${result.image}`}
-                alt={result.label}
-                className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
-                onClick={() => {
-                  openWindow(
-                    String(result.id),
-                    `${image?.items}${result.id}/${result.image}`,
-                    "Изображение",
-                  );
-                }}
+              <ImageViewer
+                src={[`${image?.items}${result.id}/${result.image}`]}
+                zoomable
+                draggable
+                trigger={
+                  <ImageComponent
+                    src={`${image?.items}${result.id}/${result.image}`}
+                    alt={result.label}
+                    className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                  />
+                }
               />
             </div>
 
@@ -161,17 +162,17 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
                   {translateItemType(item.type)}
                 </span>
-                <ImageComponent
-                  src={`${image?.items}${item.id}/${item.image}`}
-                  alt={item.label}
-                  className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
-                  onClick={() => {
-                    openWindow(
-                      String(item.id),
-                      `${image?.items}${item.id}/${item.image}`,
-                      "Изображение",
-                    );
-                  }}
+                <ImageViewer
+                  src={[`${image?.items}${item.id}/${item.image}`]}
+                  zoomable
+                  draggable
+                  trigger={
+                    <ImageComponent
+                      src={`${image?.items}${item.id}/${item.image}`}
+                      alt={item.label}
+                      className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                    />
+                  }
                 />
               </div>
               <div className="flex flex-col ml-2">
