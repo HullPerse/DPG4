@@ -48,6 +48,7 @@ import ActivityApi from "@/api/activity.api";
 import UserApi from "@/api/user.api";
 import GameApi from "@/api/games.api";
 import CellApi from "@/api/cell.api";
+import { Switch } from "@/components/ui/switch.component";
 
 const userApi = new UserApi();
 const gameApi = new GameApi();
@@ -695,6 +696,97 @@ export const itemEffect: effectInterface[] = [
         : `получил ${inventory.length} чубриков из-за крыс`;
 
     await ctx.consume(`${ctx.user.username} ${text}`);
+  }),
+
+  ItemFramework.effect("Свинство", async (ctx) => {
+    const inventory = await itemsApi.getInventory(ctx.user.id);
+    const allUsers = await userApi.getAllUsers();
+    const otherUsers = allUsers.filter((u) => u.id !== ctx.user.id);
+
+    const half = Math.ceil(inventory.length / 2);
+    const itemsToGive = inventory.slice(0, half);
+    for (let i = 0; i < itemsToGive.length; i++) {
+      const targetUser = otherUsers[i % otherUsers.length];
+
+      await itemsApi.sendInventory(itemsToGive[i].id!, String(targetUser.id));
+    }
+    await ctx.consume(
+      `${ctx.user.username} раздал ${itemsToGive.length} из ${inventory.length} предметов ${otherUsers.length} участникам`,
+    );
+  }),
+
+  ItemFramework.effect("Свинарник", async (ctx) => {
+    await userApi.scoreUser(String(ctx.user.id), -3);
+
+    await ctx.consume(
+      `${ctx.user.username} увидел свинку и испугался. МИНУС 3 ЧУБРИКА ТЕБЕ`,
+    );
+  }),
+
+  ItemFramework.effect("Гремлинская залупа", async (ctx) => {
+    const allItems = await itemsApi
+      .getInventory(ctx.user.id)
+      .then((res) => res.filter((i) => i.label !== "Гремлинская залупа"));
+
+    if (!allItems || allItems.length === 0) {
+      await itemsApi.addInventory(String(ctx.user.id), "evexf52un87e8ju");
+
+      return await ctx.consume(
+        `${ctx.user.username} не хватило предметов, он получил Гремлина`,
+      );
+    }
+
+    let finalItem: Inventory | null = null;
+
+    for (const item of allItems) {
+      if (gremlinIds.includes(item.label)) continue;
+      finalItem = item;
+      break;
+    }
+
+    if (!finalItem) {
+      await itemsApi.addInventory(String(ctx.user.id), "evexf52un87e8ju");
+
+      return await ctx.consume(
+        `${ctx.user.username} не хватило предметов, он получил Гремлина`,
+      );
+    }
+
+    await itemsApi.removeInventory(String(finalItem.id));
+    await itemsApi.addInventory(String(ctx.user.id), "evexf52un87e8ju");
+
+    await ctx.consume(
+      `${ctx.user.username} превратил ${finalItem.label} в Гремлина`,
+    );
+  }),
+
+  ItemFramework.effect("Легендарная Морковка", async (ctx) => {
+    const currentUser = await userApi.getUserById(ctx.user.id);
+
+    if (!currentUser) return;
+
+    const finalScore = Math.floor(currentUser.position / 3);
+
+    await userApi.scoreUser(String(ctx.user.id), finalScore);
+
+    await ctx.consume(
+      `${ctx.user.username} получил ${finalScore} из-за ХОРОШЕЙ позиции на карте`,
+    );
+  }),
+
+  ItemFramework.effect("Меч бесконечной лжи", async (ctx) => {
+    const allItems = await itemsApi
+      .getInventory(ctx.user.id)
+      .then((res) => res.filter((i) => i.label !== "Меч бесконечной лжи"));
+
+    const finalItem = allItems[Math.floor(Math.random() * allItems.length)];
+
+    await itemsApi.removeInventory(String(finalItem.id));
+    await itemsApi.addInventory(String(ctx.user.id), "kqxuqyz17ttndnm");
+
+    await ctx.consume(
+      `${ctx.user.username} превратил ${finalItem.label} в борщ`,
+    );
   }),
   //MODALS
 
@@ -3627,19 +3719,541 @@ export const itemEffect: effectInterface[] = [
       </main>
     );
   }),
-];
 
-// | "Тройной d4-кубик"
-// | "Меч бесконечной лжи"
-// | "Лещ"
-// | "Легендарная Морковка"
-// | "Колесная Фея"
-// | "Клавиша «R»"
-// | "Гремлинская залупа"
-// | "Гремлинизатор"
-// | "Гремлин"
-// | "Свинский Сектор Приз"
-// | "Страшная свиная история"
-// | "Свинарник"
-// | "Свин или не свин?"
-// | "Свинство"
+  ItemFramework.modal("Свин или не свин?", (ctx) => {
+    const [ate, setAte] = useState<boolean>(false);
+    const [food, setFood] = useState<boolean>(false);
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-row gap-1">
+          <span className="font-bold">Кушал?</span>
+          <Switch checked={ate} onCheckedChange={setAte} />
+        </label>
+        <label className="flex flex-row gap-1">
+          <span className="font-bold">Пирожок или огуречич?</span>
+          <Switch checked={food} onCheckedChange={setFood} />
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!ate) return;
+
+              if (ate) await userApi.scoreUser(String(ctx.user.id), -5);
+              else await userApi.scoreUser(String(ctx.user.id), 5);
+
+              if (food) await userApi.scoreUser(String(ctx.user.id), 1);
+
+              const text = ate
+                ? "покушал и потерял 5 чубриков"
+                : "не поел, но зато получил 5 чубриков";
+              const textAdd = food
+                ? "ОН ПОЕЛ ОЧЕНЬ КРУТУЮ ЕДУ и получил чубрик"
+                : "";
+
+              await ctx.consume(`${ctx.user.usernname} ${text}. ${textAdd}`);
+
+              ctx.close();
+            }}
+            disabled={!ate}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Страшная свиная история", (ctx) => {
+    const [read, setRead] = useState<boolean>(false);
+    const [music, setMusic] = useState<boolean>(false);
+    const [pig, setPig] = useState<boolean>(false);
+
+    const [error, setError] = useState<boolean>(false);
+
+    return (
+      <main className="flex flex-col gap-2">
+        <section className=" overflow-y-auto h-70 min-h-70 max-h-70 border-2 border-iris p-1 text-xl leading-tight tracking-wide font-serif font-semilight">
+          В далёкой деревне, затерянной среди лесов, жила старая свинья по
+          кличке Мэгги. Её держал в загоне местный фермер, но никто из деревни
+          не подходил близко к её хлеву. Говорили, что Мэгги была не совсем
+          обычной свиньёй. Её глаза, тёмные и блестящие, словно угольки,
+          казалось, следили за каждым, кто проходил мимо. А по ночам из хлева
+          доносились странные звуки — не хрюканье, а что-то похожее на шёпот.
+          Однажды мальчик из деревни, любопытный и глупый, решил подойти к
+          хлеву. Он хотел посмотреть, что же там происходит. Когда он заглянул
+          внутрь, Мэгги стояла в углу, неподвижно, уставившись на него. Её глаза
+          светились в темноте, а изо рта капала густая чёрная жидкость. Мальчик
+          хотел убежать, но ноги словно приросли к земле. Тогда Мэгги медленно
+          подошла к нему, и её шёпот стал громче: "Ты тоже станешь частью
+          стада..."На следующее утро мальчика нашли в хлеву. Он сидел в углу,
+          неподвижно, уставившись в пустоту. Его глаза были тёмными и
+          блестящими, словно угольки. А изо рта капала густая чёрная жидкость. С
+          тех пор в деревне больше никто не подходил к хлеву. Но по ночам из
+          него до сих пор доносится шёпот. И если вы окажетесь там, не смотрите
+          в глаза свинье. Иначе вы станете частью стада.
+        </section>
+
+        <label className="flex flex-row gap-1">
+          <span className="font-bold">Прочитал</span>
+          <Switch
+            checked={read}
+            onCheckedChange={() => {
+              setError(false);
+
+              if (read) setRead(false);
+              else setRead(true);
+            }}
+          />
+        </label>
+        <label className="flex flex-row gap-1">
+          <span className="font-bold">Атмосферная музыка</span>
+          <Switch
+            checked={music}
+            onCheckedChange={() => {
+              setError(false);
+
+              if (music) setMusic(false);
+              else setMusic(true);
+            }}
+          />
+        </label>
+        <label className="flex flex-row gap-1">
+          <span className="font-bold">Хрюкнул</span>
+          <Switch
+            checked={pig}
+            onCheckedChange={() => {
+              setError(false);
+
+              if (pig) setPig(false);
+              else setPig(true);
+            }}
+          />
+        </label>
+
+        <label className="flex flex-row gap-1 mt-2">
+          <span className="font-bold">Скипнул весь текст</span>
+          <Switch
+            checked={error}
+            onCheckedChange={() => {
+              setRead(false);
+              setMusic(false);
+              setPig(false);
+
+              if (error) setError(false);
+              else setError(true);
+            }}
+          />
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (read ? !read : !error) return;
+              let finalScore: number = 0;
+
+              if (error) finalScore = -5;
+              else {
+                if (read) finalScore += 5;
+                if (music) finalScore += 2;
+                if (pig) finalScore += 2;
+              }
+
+              await userApi.scoreUser(String(ctx.user.id), finalScore);
+
+              await ctx.consume(
+                `${ctx.user.usernname} прочитал страшную свиную историю и изменил свои чубрики на ${finalScore}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={read ? !read : !error}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Гремлин", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allUsers = await userApi.getAllUsers();
+        const allItems = await itemsApi.getAllInventories();
+
+        return {
+          items: allItems,
+          users: allUsers,
+        };
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<Inventory | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Предмет</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.items?.find((i) => i.id === e);
+                if (item) setSelected(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">
+                  {selected?.label}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.items
+                    .sort((a, b) =>
+                      (a.owner ?? "").localeCompare(b.owner ?? ""),
+                    )
+                    .map((item, index) => (
+                      <SelectItem key={index} value={item.id}>
+                        {`${index + 1}) ${data?.users.find((u) => u.id === item.owner)?.username}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <HoverCard>
+              <HoverCardTrigger delay={0} className="z-1000">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                >
+                  <CircleQuestionMark />
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                side="top"
+              >
+                <ItemHelper item={selected} type="inventory" />
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected) return;
+
+              await itemsApi.removeInventory(String(selected.id));
+
+              await userApi.scoreUser(String(ctx.user.id), -1);
+
+              await ctx.consume(
+                `${ctx.user.username} уничтожил ${data?.users.find((u) => u.id === selected.owner)?.username}: ${selected.label}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Гремлинизатор", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allItems = await itemsApi.getAllInventories();
+
+        return allItems
+          .filter((i) => i.owner === ctx.user.id)
+          .filter((i) => i.label !== "Гремлинизатор");
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<Inventory | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Предмет</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.find((i) => i.id === e);
+                if (item) setSelected(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">
+                  {selected?.label}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data
+                    ?.sort((a, b) =>
+                      (a.owner ?? "").localeCompare(b.owner ?? ""),
+                    )
+                    .map((item, index) => (
+                      <SelectItem key={index} value={item.id}>
+                        {`${index + 1}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <HoverCard>
+              <HoverCardTrigger delay={0} className="z-1000">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                >
+                  <CircleQuestionMark />
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                side="top"
+              >
+                <ItemHelper item={selected} type="inventory" />
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected) return;
+
+              await itemsApi.removeInventory(String(selected.id));
+              await itemsApi.addInventory(
+                String(ctx.user.id),
+                "evexf52un87e8ju",
+              );
+
+              await ctx.consume(
+                `${ctx.user.username} превратил ${selected.label} в Гремлина`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Колесная Фея", (ctx) => {
+    const [value, setValue] = useState<number | null>(null);
+    const [isRolling, setIsRolling] = useState<boolean>(false);
+
+    const handleRoll = () => {
+      if (isRolling) return;
+
+      setIsRolling(true);
+
+      setTimeout(() => {
+        const result = Math.floor(Math.floor(Math.random() * 4) + 1);
+        setValue(result);
+        setIsRolling(false);
+      }, 800);
+    };
+
+    const getDiceDisplay = () => {
+      if (isRolling) {
+        return (
+          <div className="flex h-22 w-22 transform animate-spin items-center justify-center border border-primary bg-background font-bold rounded text-text shadow-sharp-sm transition-transform hover:scale-105">
+            ?
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex h-22 w-22 transform items-center justify-center rounded border border-primary bg-background font-bold text-primary shadow-sharp-sm transition-transform hover:scale-105">
+          {value}
+        </div>
+      );
+    };
+
+    return (
+      <main className="flex flex-col gap-2">
+        <button
+          type="button"
+          className="flex flex-col items-center space-y-1 cursor-pointer group"
+          onClick={() => handleRoll()}
+          disabled={isRolling}
+        >
+          {getDiceDisplay()}
+        </button>
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!value) return;
+
+              await ctx.consume(
+                `${ctx.user.username} выбил ${value} бесплатных Колес Приколов для ВСЕХ УЧАСТНИКОВ!!!!!!`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!value}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Лещ", (ctx) => {
+    const [value, setValue] = useState<number | null>(null);
+    const [isRolling, setIsRolling] = useState<boolean>(false);
+
+    const handleRoll = () => {
+      if (isRolling) return;
+
+      setIsRolling(true);
+
+      setTimeout(() => {
+        const result = Math.floor(Math.floor(Math.random() * 4) + 1);
+        setValue(result);
+        setIsRolling(false);
+      }, 800);
+    };
+
+    const getDiceDisplay = () => {
+      if (isRolling) {
+        return (
+          <div className="flex h-22 w-22 transform animate-spin items-center justify-center border border-primary bg-background font-bold rounded text-text shadow-sharp-sm transition-transform hover:scale-105">
+            ?
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex h-22 w-22 transform items-center justify-center rounded border border-primary bg-background font-bold text-primary shadow-sharp-sm transition-transform hover:scale-105">
+          {value}
+        </div>
+      );
+    };
+
+    const possibles = [
+      "Колесо Приколов",
+      "3 чубрика",
+      "Шаг вперед по карте",
+      "2 шага назад по карте",
+    ];
+
+    return (
+      <main className="flex flex-col gap-2">
+        <section className="flex flex-col gap-1">
+          {possibles.map((item, index) => (
+            <span
+              key={item}
+              className="font-bold"
+              style={{ color: index + 1 === value ? "gold" : "white" }}
+            >
+              {`${index + 1}: `} {item}
+            </span>
+          ))}
+        </section>
+        <button
+          type="button"
+          className="flex flex-col items-center space-y-1 cursor-pointer group"
+          onClick={() => handleRoll()}
+          disabled={isRolling}
+        >
+          {getDiceDisplay()}
+        </button>
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!value) return;
+
+              if (value === 2) {
+                await userApi.scoreUser(String(ctx.user.id), 3);
+              } else if (value === 3) {
+                await userApi.moveUser(
+                  String(ctx.user.id),
+                  ctx.user.position + 1,
+                );
+              } else if (value === 4) {
+                await userApi.moveUser(
+                  String(ctx.user.id),
+                  ctx.user.position - 2,
+                );
+              }
+
+              await ctx.consume(
+                `${ctx.user.username} выбил ${possibles[value - 1]} из леща`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!value}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+];

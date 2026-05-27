@@ -323,6 +323,20 @@ export default class GameApi {
       }
     }
 
+    if (status === "COMPLETED") {
+      if (currentUser.status.some((s) => s === "Борщ")) {
+        const finalScore = Math.floor(time / 2);
+
+        await usersApi.scoreUser(String(currentUser.id), finalScore);
+
+        await usersApi.changeUserStatus(
+          String(currentUser.id),
+          "Борщ",
+          "remove",
+        );
+      }
+    }
+
     return await this.gamesCollection.update(id, {
       status: status,
       playtime: newTime,

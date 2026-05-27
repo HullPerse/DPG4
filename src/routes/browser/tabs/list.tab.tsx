@@ -190,17 +190,28 @@ function ListBrowser({
       )}
 
       {isAdmin && (
-        <Button
-          variant="success"
-          className="w-full"
-          onClick={() => {
-            if (!isAdmin) return;
+        <section className="flex flex-row gap-1 w-full">
+          <span className="flex flex-row gap-1 w-20 text-center items-center justify-center text-md font-bold p-1 h-9 border-2 border-highlight-high">
+            {data?.items.filter(
+              (item) =>
+                item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
+                item.description
+                  .toUpperCase()
+                  .includes(searchTerms.toUpperCase()),
+            ).length ?? 0}
+          </span>
+          <Button
+            variant="success"
+            className="flex-1"
+            onClick={() => {
+              if (!isAdmin) return;
 
-            setAddItem(true);
-          }}
-        >
-          <Plus />
-        </Button>
+              setAddItem(true);
+            }}
+          >
+            <Plus />
+          </Button>
+        </section>
       )}
 
       {data?.items
