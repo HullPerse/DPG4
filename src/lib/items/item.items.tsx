@@ -7,6 +7,8 @@ import {
   CircleQuestionMark,
   MousePointerClick,
   RefreshCcw,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { openWindow, translateItemType } from "../utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -52,6 +54,54 @@ const gameApi = new GameApi();
 const cellApi = new CellApi();
 const itemsApi = new ItemsApi();
 const activityApi = new ActivityApi();
+
+const ratIds: string[] = [
+  "Восьмибитная Крыса",
+  "Добрая крыса",
+  "Запаянный Крысиный Сундук",
+  "Крыса",
+  "Крыса Изгой",
+  "Крыса гой",
+  "Крыса наркоманка",
+  "Крысиное колесо",
+  "Крысиный алтарь",
+  "Крысиный отец",
+  "Крысиный тапок",
+  "Крысталлизатор",
+  "Мечтательная крыса",
+  "Крысиный лутбокс",
+  "Крысавчик",
+  "Крысубль",
+  "Крысиная грамота",
+  "Крысиная раздача",
+  "Кредитка КрысПоинтБанка",
+  "Зелье Крысогеддона",
+  "Волшебный Крысиный Дождь",
+  "Белорусская Крыса",
+  "Крысенштекс",
+  "Помойная Крыса",
+  "Крысинариум",
+  "Проклятие Крысиного Короля",
+  "Благословление Крысиного Короля",
+  "Крысиная шкатулка",
+];
+
+const pigIds = [
+  "Подброшенная свинья",
+  "Хрюкающая свинья",
+  "Ебануто живучая свинья",
+  "Свин или не свин?",
+  "Свинарник",
+  "Страшная свиная история",
+  "Свинья",
+  "Свинопитек",
+  "Свиная шляпа",
+  "СпецСвин",
+  "Свинство",
+  "Свинский Сектор Приз",
+];
+
+const gremlinIds = ["Гремлин", "Гремлинизатор", "Гремлинская залупа"];
 
 export const itemEffect: effectInterface[] = [
   //EFFECTS
@@ -586,6 +636,65 @@ export const itemEffect: effectInterface[] = [
     await ctx.consume(
       `${ctx.user.username} отправил эффект ${finalStatus} ${finalUser.username}`,
     );
+  }),
+
+  ItemFramework.effect("Зелье Крысогеддона", async (ctx) => {
+    const allUsers = await userApi
+      .getAllUsers()
+      .then((res) =>
+        res.filter(
+          (u) => u.status && u.status.length !== 0 && u.id !== ctx.user.id,
+        ),
+      );
+
+    const finalUser = allUsers[Math.floor(Math.random() * allUsers.length)];
+    const finalStatus =
+      finalUser.status[Math.floor(Math.random() * finalUser.status.length)];
+
+    let finalItem: "dswpfvayiqxul1b" | "diy82ugngg95mek" = "dswpfvayiqxul1b";
+
+    if (Math.random() < 0.3) {
+      finalItem = "diy82ugngg95mek";
+    }
+
+    if (!finalUser.status || finalUser.status.length === 0) return;
+
+    await userApi.changeUserStatus(String(finalUser.id), finalStatus, "remove");
+
+    await itemsApi.addInventory(String(finalUser.id), finalItem);
+
+    await ctx.consume(
+      `${ctx.user.username} превратил ${finalUser.username}: ${finalStatus} в ${finalItem === "dswpfvayiqxul1b" ? "крысу" : "кал"}`,
+    );
+  }),
+
+  ItemFramework.effect("Крысиная раздача", async (ctx) => {
+    const allUsers = await userApi.getAllUsers();
+
+    for (const user of allUsers) {
+      await itemsApi.addInventory(String(user.id), "dswpfvayiqxul1b");
+    }
+
+    await ctx.consume(`${ctx.user.username} выдал ВСЕМ по крысе`);
+  }),
+
+  ItemFramework.effect("Крысавчик", async (ctx) => {
+    const inventory = await itemsApi
+      .getInventory(ctx.user.id)
+      .then((res) => res.filter((i) => ratIds.includes(i.label)));
+
+    if (inventory.length === 0) {
+      await userApi.scoreUser(String(ctx.user.id), -2);
+    } else {
+      await userApi.scoreUser(String(ctx.user.id), inventory.length);
+    }
+
+    const text =
+      inventory.length === 0
+        ? "потерял 2 чубрика из-за отсутствия крыс"
+        : `получил ${inventory.length} чубриков из-за крыс`;
+
+    await ctx.consume(`${ctx.user.username} ${text}`);
   }),
   //MODALS
 
@@ -2807,26 +2916,9 @@ export const itemEffect: effectInterface[] = [
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
-        const ratArray: string[] = [
-          "Восьмибитная Крыса",
-          "Добрая крыса",
-          "Запаянный Крысиный Сундук",
-          "Крыса",
-          "Крыса Изгой",
-          "Крыса гой",
-          "Крыса наркоманка",
-          "Крысиное колесо",
-          "Крысиный алтарь",
-          "Крысиный отец",
-          "Крысиный тапок",
-          "Крысталлизатор",
-          "Мечтательная крыса",
-          "Крысиный лутбокс",
-        ];
-
         const allItems = await itemsApi
           .getAllItems()
-          .then((res) => res.filter((i) => ratArray.includes(String(i.label))));
+          .then((res) => res.filter((i) => ratIds.includes(String(i.label))));
 
         return allItems;
       },
@@ -2917,4 +3009,637 @@ export const itemEffect: effectInterface[] = [
       </main>
     );
   }),
+
+  ItemFramework.modal("Белорусская Крыса", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allUsers = await userApi.getAllUsers();
+        const filteredUsers = allUsers
+          .filter((u) => u.id !== ctx.user.id)
+          .filter((u) => u.status && u.status.some((s) => s === "Картошка"));
+
+        return filteredUsers.length > 0 ? filteredUsers : [];
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<User | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    if (!data || data.length === 0) return <main>Не нашлось картошки</main>;
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Игроки</span>
+          <Select
+            value={selected?.id ?? ""}
+            onValueChange={(e) => {
+              if (!e) return;
+              const item = data?.find((i) => i.id === e);
+              if (item) setSelected(item);
+            }}
+          >
+            <SelectTrigger className="w-full py-5">
+              <SelectValue placeholder="Игрок">
+                {selected?.username}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {data?.map((item, index) => (
+                  <SelectItem key={item.id} value={item.id!}>
+                    {`${index + 1}: `}
+                    {item.username}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </label>
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected) return;
+
+              await userApi.changeUserStatus(
+                String(selected.id),
+                "Картошка",
+                "remove",
+              );
+
+              await ctx.consume(
+                `${ctx.user.username} украл Картошку у ${selected.username}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Волшебный Крысиный Дождь", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allItems = await itemsApi.getAllInventories();
+        const allUsers = await userApi.getAllUsers();
+
+        return {
+          items: allItems
+            .filter((i) => i.label !== "Волшебный Крысиный Дождь")
+            .filter(
+              (i) =>
+                ratIds.includes(i.label) ||
+                pigIds.includes(i.label) ||
+                gremlinIds.includes(i.label),
+            ),
+          users: allUsers,
+        };
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<Inventory | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    if (!data || data.items.length === 0)
+      return <main>Не нашлось предметов</main>;
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Предметы</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.items.find((i) => i.id === e);
+                if (item) setSelected(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">
+                  {selected?.label}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.items
+                    .sort((a, b) =>
+                      (a.owner ?? "").localeCompare(b.owner ?? ""),
+                    )
+                    .map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <HoverCard>
+              <HoverCardTrigger delay={0} className="z-1000">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                >
+                  <CircleQuestionMark />
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                side="top"
+              >
+                <ItemHelper item={selected} type="inventory" />
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected) return;
+
+              await itemsApi.sendInventory(String(selected.id), ctx.user.id);
+
+              await ctx.consume(
+                `${ctx.user.username} украл ${selected.label} у ${data.users.find((u) => u.id === selected.owner)?.username}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Крысиная грамота", (ctx) => {
+    const [input, setInput] = useState<string[]>([""]);
+
+    return (
+      <main className="flex flex-col gap-2">
+        <span>
+          Подсказка: крысиных предметов где-то между 0 и {ratIds.length}
+        </span>
+
+        {input.map((val, index) => (
+          <label key={index} className="flex flex-col gap-1">
+            <span className="font-bold">#{index + 1}</span>
+            <div className="flex flex-row gap-2">
+              <Input
+                type="text"
+                value={val}
+                onChange={(e) =>
+                  setInput((prev) => {
+                    const next = [...prev];
+                    next[index] = e.target.value;
+                    return next;
+                  })
+                }
+              />
+
+              {index === input.length - 1 ? (
+                <Button
+                  size="icon"
+                  variant="success"
+                  className="h-11 w-11"
+                  onClick={() => setInput((prev) => [...prev, ""])}
+                  disabled={index !== input.length - 1}
+                >
+                  <Plus />
+                </Button>
+              ) : (
+                <Button
+                  size="icon"
+                  variant="error"
+                  className="h-11 w-11"
+                  onClick={() =>
+                    setInput((prev) => prev.filter((_, i) => i !== index))
+                  }
+                  disabled={index === input.length - 1}
+                >
+                  <Minus />
+                </Button>
+              )}
+            </div>
+          </label>
+        ))}
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!input || input.length < 13) return;
+
+              const ratSuccess =
+                input.filter((v) => ratIds.includes(v)).length ?? 0;
+
+              await userApi.scoreUser(ctx.user.id, ratSuccess);
+
+              if (ratSuccess >= 3) {
+                await Promise.all(
+                  Array.from({ length: 3 }, () =>
+                    itemsApi.addInventory(
+                      String(ctx.user.id),
+                      "dswpfvayiqxul1b",
+                    ),
+                  ),
+                );
+              }
+
+              await ctx.consume(
+                `${ctx.user.username} вспомнил ${ratSuccess} крыс и получил ${ratSuccess} чубриков ${ratSuccess >= 3 ? "(+ 3 крысы)" : ""}`,
+              );
+              ctx.close();
+            }}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("Свинья", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allUsers = await userApi.getAllUsers();
+
+        return {
+          effects: allUsers.find((u) => u.id === ctx.user.id)?.status,
+          users: allUsers.filter((u) => u.id !== ctx.user.id),
+        };
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<User | null>(null);
+    const [effect, setEffect] = useState<string | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    if (!data || !data.effects || data.effects.length === 0)
+      return <main>Не нашлось эффектов</main>;
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Статус</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={effect ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.effects?.find((i) => i === e);
+                if (item) setEffect(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Статус">
+                  {selected?.username}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.effects.map((item, index) => (
+                    <SelectItem key={index} value={item}>
+                      {`${index + 1}: `}
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Кому</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.users.find((i) => i.id === e);
+                if (item) setSelected(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Игрок">
+                  {selected?.username}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.users.map((item, index) => (
+                    <SelectItem key={item.id} value={item.id!}>
+                      {`${index + 1}: `}
+                      {item.username}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </label>
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected || !effect) return;
+
+              await userApi.changeUserStatus(
+                String(selected.id),
+                effect,
+                "add",
+              );
+              await userApi.changeUserStatus(
+                String(ctx.user.id),
+                effect,
+                "remove",
+              );
+
+              await ctx.consume(
+                `${ctx.user.username} передал ${effect} ${selected.username}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
+
+  ItemFramework.modal("СпецСвин", (ctx) => {
+    const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+      queryKey: ["modalData"],
+      queryFn: async () => {
+        const allItems = await itemsApi
+          .getInventory(ctx.user.id)
+          .then((res) => res.filter((i) => i.type === "roll"));
+        const allRolls = await itemsApi
+          .getAllItems()
+          .then((res) => res.filter((i) => i.type === "roll"));
+
+        return {
+          items: allItems,
+          rolls: allRolls,
+        };
+      },
+    });
+
+    useEffect(() => {
+      refetch();
+    }, []);
+
+    const [selected, setSelected] = useState<Inventory | null>(null);
+    const [result, setResult] = useState<Item | null>(null);
+
+    if (isLoading || isRefetching) return <WindowLoader />;
+    if (isError)
+      return (
+        <WindowError
+          error={new Error("Произошла ошибка при соединении с сервером")}
+          icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+        />
+      );
+
+    if (!data || !data.items || data.items.length === 0)
+      return (
+        <main className="flex flex-col gap-2">
+          <section className="flex flex-col gap-2 p-2 items-center justify-center w-140">
+            <WheelComponent
+              key={data?.rolls.join(",")}
+              list={
+                data?.rolls.map((item) => ({
+                  id: String(item.id),
+                  label: item.label,
+                  image: `${image?.items}${item.id}/${item.image}`,
+                  type: "image",
+                })) as WheelItem[]
+              }
+              onResult={(it) =>
+                setResult(
+                  data?.rolls.find((item) => item.id === it?.id) as Item,
+                )
+              }
+            />
+            {result && (
+              <section
+                key={result.id}
+                className="relative p-2 flex flex-row max-w-full min-h-fit h-22 border-2 border-highlight-high items-center"
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                    {translateItemType(result.type)}
+                  </span>
+                  <ImageComponent
+                    src={`${image?.items}${result.id}/${result.image}`}
+                    alt={result.label}
+                    className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                    onClick={() =>
+                      openWindow(
+                        String(result.id),
+                        `${image?.items}${result.id}/${result.image}`,
+                        "Изображение",
+                      )
+                    }
+                  />
+                </div>
+                <div className="flex flex-col ml-2">
+                  <span className="font-bold text-xl">{result.label}</span>
+                  <span className="text-text/80">{result.description}</span>
+                </div>
+              </section>
+            )}
+          </section>
+
+          <section className="flex flex-row items-center justify-between gap-2 p-1">
+            <Button
+              className="flex flex-1"
+              variant="success"
+              onClick={async () => {
+                if (!result) return;
+
+                const allUsers = await userApi
+                  .getAllUsers()
+                  .then((res) => res.filter((u) => u.id !== ctx.user.id));
+                const finalUser =
+                  allUsers[Math.floor(Math.random() * allUsers.length)];
+
+                if (!finalUser) return;
+
+                await itemsApi.addInventory(
+                  String(finalUser.id),
+                  String(result.id),
+                );
+
+                await ctx.consume(
+                  `${ctx.user.username} передал ${result.label} ${finalUser.username}`,
+                );
+
+                ctx.close();
+              }}
+              disabled={!result}
+            >
+              Применить
+            </Button>
+          </section>
+        </main>
+      );
+
+    return (
+      <main className="flex flex-col gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="font-bold">Предмет</span>
+          <div className="flex flex-row gap-1">
+            <Select
+              value={selected?.id ?? ""}
+              onValueChange={(e) => {
+                if (!e) return;
+                const item = data?.items.find((i) => i.id === e);
+                if (item) setSelected(item);
+              }}
+            >
+              <SelectTrigger className="w-full py-5">
+                <SelectValue placeholder="Предмет">
+                  {selected?.label}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {data?.items.map((item, index) => (
+                    <SelectItem key={item.id} value={item}>
+                      {`${index + 1}: `}
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <HoverCard>
+              <HoverCardTrigger delay={0} className="z-1000">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                >
+                  <CircleQuestionMark />
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                side="top"
+              >
+                <ItemHelper item={selected} type="inventory" />
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </label>
+
+        <section className="flex flex-row items-center justify-between gap-2 p-1">
+          <Button
+            className="flex flex-1"
+            variant="success"
+            onClick={async () => {
+              if (!selected) return;
+
+              const allUsers = await userApi
+                .getAllUsers()
+                .then((res) => res.filter((u) => u.id !== ctx.user.id));
+              const finalUser =
+                allUsers[Math.floor(Math.random() * allUsers.length)];
+
+              if (!finalUser) return;
+
+              await itemsApi.sendInventory(
+                String(selected.id),
+                String(finalUser.id),
+              );
+
+              await ctx.consume(
+                `${ctx.user.username} передал ${selected.label} ${finalUser.username}`,
+              );
+
+              ctx.close();
+            }}
+            disabled={!selected}
+          >
+            Применить
+          </Button>
+        </section>
+      </main>
+    );
+  }),
 ];
+
+// | "Тройной d4-кубик"
+// | "Меч бесконечной лжи"
+// | "Лещ"
+// | "Легендарная Морковка"
+// | "Колесная Фея"
+// | "Клавиша «R»"
+// | "Гремлинская залупа"
+// | "Гремлинизатор"
+// | "Гремлин"
+// | "Свинский Сектор Приз"
+// | "Страшная свиная история"
+// | "Свинарник"
+// | "Свин или не свин?"
+// | "Свинство"

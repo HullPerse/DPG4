@@ -547,7 +547,7 @@ function InventoryTab({ id }: { id?: string }) {
                   setActive(index);
                 }}
               >
-                <span className="font-bold text-md line-clamp-2">
+                <span className="font-bold text-md line-clamp-1">
                   {highlightText(item.label, searchTerms)}
                 </span>
 
