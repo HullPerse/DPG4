@@ -41,7 +41,6 @@ export interface DataStore {
   // State
   wallpaper: string;
   wallpaperFilters: WallpaperFilters;
-  font: string;
   isConnected: boolean;
   isEditing: boolean;
   arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes";
@@ -72,7 +71,6 @@ export interface DataStore {
   addWheelHistory: (item: WheelHistoryItem) => void;
   setNotepad: (notepad: string) => void;
   setWallpaper: (wallpaper: string) => void;
-  setFont: (font: string) => void;
   setConnected: (isConnected: boolean) => void;
   setEditing: (isEditing: boolean) => void;
   setArrowType: (

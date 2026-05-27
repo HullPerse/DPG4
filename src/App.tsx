@@ -90,9 +90,9 @@ function App() {
       const calendarElement = target.closest('[data-calendar="true"]');
       if (calendarElement) return;
 
-      //check if mouse over font changer
-      const fontElement = target.closest('[data-font="true"]');
-      if (fontElement) return;
+      //check if mouse over notepad viewer
+      const notepadElement = target.closest('[data-notepad="true"]');
+      if (notepadElement) return;
 
       selectionStartRef.current = { x, y };
       setIsSelecting(true);

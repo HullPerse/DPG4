@@ -5,11 +5,9 @@ import { RefObject } from "react";
 export default function CalendarDesktop({
   openCalendar,
   setOpenCalendar,
-  setOpenLanguage,
 }: {
   openCalendar: boolean;
   setOpenCalendar: (value: boolean) => void;
-  setOpenLanguage: (value: boolean) => void;
 }) {
   const clickAwayRef = useClickAway((e: Event) => {
     const target = e.target as HTMLElement;
@@ -21,7 +19,6 @@ export default function CalendarDesktop({
 
     if (!otherWindow && openCalendar) {
       setOpenCalendar(false);
-      setOpenLanguage(false);
     }
   });
 

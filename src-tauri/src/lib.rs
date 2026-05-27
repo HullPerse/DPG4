@@ -1,11 +1,8 @@
-use font_loader::system_fonts;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::path::Path;
 use tauri::Emitter;
 use tauri::Manager;
-use tauri::State;
 use tauri_plugin_updater::UpdaterExt;
 
 static STEAM_API_KEY: &str = "A860B0E16AC5F330EA23DE1D61B37F85";
@@ -257,58 +254,6 @@ async fn delete_wallpaper(app: tauri::AppHandle, path: String) -> Result<(), Str
     fs::remove_file(&path).map_err(|e| format!("Failed to delete wallpaper file: {}", e))?;
 
     Ok(())
-}
-
-#[derive(Serialize, Clone)]
-pub struct FontInfo {
-    pub name: String,
-    pub path: String,
-}
-
-#[derive(Deserialize)]
-pub struct SetFontPayload {
-    pub font_name: String,
-}
-
-#[tauri::command]
-fn get_all_fonts() -> Vec<FontInfo> {
-    system_fonts::query_all()
-        .into_iter()
-        .filter_map(|path_str| {
-            let path = PathBuf::from(&path_str);
-            let name = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .map(|n| n.replace(|c: char| !c.is_alphanumeric() && c != ' ', " "))
-                .map(|n| n.trim().to_string())
-                .unwrap_or_else(|| "Unknown".to_string());
-            if name.is_empty() {
-                None
-            } else {
-                Some(FontInfo {
-                    name,
-                    path: path_str,
-                })
-            }
-        })
-        .collect()
-}
-
-#[tauri::command]
-fn set_default_font(font_name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
-    let mut state = state.lock().map_err(|e| e.to_string())?;
-    state.selected_font = font_name;
-    Ok(())
-}
-
-#[tauri::command]
-fn get_default_font(state: State<'_, Mutex<AppState>>) -> Result<String, String> {
-    let state = state.lock().map_err(|e| e.to_string())?;
-    Ok(state.selected_font.clone())
-}
-
-pub struct AppState {
-    pub selected_font: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -647,9 +592,6 @@ pub fn run() {
 
             Ok(())
         })
-        .manage(Mutex::new(AppState {
-            selected_font: "Segoe UI".to_string(),
-        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -664,9 +606,6 @@ pub fn run() {
             save_wallpaper,
             delete_wallpaper,
             get_wallpaper_by_name,
-            get_all_fonts,
-            set_default_font,
-            get_default_font,
             get_steam_library,
             get_steam_family,
             get_steam_game,

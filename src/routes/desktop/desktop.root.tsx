@@ -1,6 +1,6 @@
 import { APPS, WINDOWS } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
-import { DoorOpen, Image, Languages } from "lucide-react";
+import { DoorOpen, Image, NotebookText } from "lucide-react";
 import Timer from "./components/timer.desktop";
 import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
@@ -17,7 +17,7 @@ import {
 
 import NetworkHover from "./components/network.desktop";
 import CalendarDesktop from "./components/calendar.desktop";
-import FontDesktop from "./components/font.desktop";
+import NotepadViewerDesktop from "./components/notepad.component";
 import ContextDesktop from "./components/context.desktop";
 import MessagesDesktop from "./components/messages.desktop";
 import AnnouncementAd from "./components/advertisement.desktop";
@@ -41,7 +41,7 @@ export default function Desktop({
   const user = useUserStore((state) => state.user);
 
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
-  const [openLanguage, setOpenLanguage] = useState<boolean>(false);
+  const [openNotepad, setOpenNotepad] = useState<boolean>(false);
 
   return (
     <main className="flex h-full w-full flex-col">
@@ -70,11 +70,12 @@ export default function Desktop({
           <CalendarDesktop
             openCalendar={openCalendar}
             setOpenCalendar={setOpenCalendar}
-            setOpenLanguage={setOpenLanguage}
           />
         )}
 
-        {openLanguage && <FontDesktop />}
+        {openNotepad && (
+          <NotepadViewerDesktop setOpenNotepad={setOpenNotepad} />
+        )}
       </section>
 
       <section className="flex h-14 w-full flex-row items-center justify-between border-t-2 border-t-highlight-high bg-background">
@@ -130,11 +131,11 @@ export default function Desktop({
               }
             />
 
-            {/* LANGUAGE */}
-            <Languages
+            {/* NOTEPAD */}
+            <NotebookText
               className="h-4 w-4 cursor-pointer hover:text-iris"
               onClick={() => {
-                setOpenLanguage(!openLanguage);
+                setOpenNotepad(!openNotepad);
               }}
             />
 
@@ -151,7 +152,7 @@ export default function Desktop({
           <Timer
             onClick={() => {
               setOpenCalendar((value) => !value);
-              setOpenLanguage(false);
+              setOpenNotepad(false);
             }}
           />
         </div>
