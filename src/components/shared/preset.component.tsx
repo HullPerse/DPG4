@@ -17,7 +17,7 @@ function PresetComponent({
 }: {
   preset: Preset;
   searchTerms: string;
-  setCurrentPreset: (preset: string) => void;
+  setCurrentPreset: (preset: { id: string; label: string }) => void;
   setCurrentTab: (
     tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
   ) => void;
@@ -56,7 +56,10 @@ function PresetComponent({
           title="Колесо пресета"
           size="icon"
           onClick={() => {
-            setCurrentPreset(steam ? "steamPreset" : preset.id);
+            setCurrentPreset({
+              id: steam ? "steamPreset" : preset.id,
+              label: preset.label,
+            });
             setCurrentTab("presetWheel");
           }}
         >
@@ -66,7 +69,10 @@ function PresetComponent({
           title="Открыть пресет"
           size="icon"
           onClick={() => {
-            setCurrentPreset(steam ? "steamPreset" : preset.id);
+            setCurrentPreset({
+              id: steam ? "steamPreset" : preset.id,
+              label: preset.label,
+            });
             setCurrentTab("presetList");
           }}
         >

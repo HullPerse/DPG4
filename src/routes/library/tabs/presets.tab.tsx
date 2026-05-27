@@ -24,6 +24,7 @@ const gameApi = new GameApi();
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
+  const user = useUserStore((state) => state.user);
   const accessToken = useDataStore((state) => state.accessToken);
   const setAccessToken = useDataStore((state) => state.setAccessToken);
 
@@ -32,7 +33,10 @@ function PresetsTab() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoadinng] = useState(false);
-  const [currentPreset, setCurrentPreset] = useState<string | null>(null);
+  const [currentPreset, setCurrentPreset] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
   const [currentTab, setCurrentTab] = useState<
     "presetAll" | "presetWheel" | "presetList" | "addPresetGame"
   >("presetAll");
@@ -56,15 +60,15 @@ function PresetsTab() {
       );
 
     const buttonMap = {
-      presetWheel: <PresetsWheel id={currentPreset} />,
+      presetWheel: <PresetsWheel id={currentPreset.id} />,
       presetList: (
-        <PresetSettings id={currentPreset} searchTerms={searchTerm} />
+        <PresetSettings id={currentPreset.id} searchTerms={searchTerm} />
       ),
       addPresetGame: (
         <NewGameLibrary
           setCurrentGame={setCurrentTab as (gameId: string) => void}
           currentType="preset"
-          presetId={currentPreset}
+          presetId={currentPreset.id}
           existingId={searchTerm}
         />
       ),
@@ -135,9 +139,9 @@ function PresetsTab() {
           variant="success"
           className="w-10 h-10"
           hidden={
-            !isAdmin ||
+            (!isAdmin &&
+              !currentPreset?.label?.includes(String(user?.username))) ||
             currentTab === "addPresetGame" ||
-            currentTab === "presetAll" ||
             currentTab === "presetWheel"
           }
           onClick={() => setCurrentTab("addPresetGame")}

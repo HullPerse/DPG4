@@ -232,10 +232,17 @@ function PresetSettings({
                 title="Удалить игру"
                 variant="error"
                 size="icon"
-                hidden={!isAdmin || isSteamPreset}
-                onClick={async () =>
-                  await gameApi.removePresetGame(id, Number(item?.id))
+                hidden={
+                  (!isAdmin &&
+                    !data?.label?.includes(String(user?.username))) ||
+                  isSteamPreset
                 }
+                onClick={async () => {
+                  await gameApi.removePresetGame(
+                    String(data?.id),
+                    Number(item?.id),
+                  );
+                }}
               >
                 <Trash />
               </Button>

@@ -19,7 +19,7 @@ export default function PresetsList({
   refetchPresetsRef,
 }: {
   searchTerms: string;
-  setCurrentPreset: (preset: string) => void;
+  setCurrentPreset: (preset: { id: string; label: string }) => void;
   setCurrentTab: (
     tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
   ) => void;
