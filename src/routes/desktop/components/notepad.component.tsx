@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button.component";
 import { useDataStore } from "@/store/data.store";
-import { NotebookText, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export default function NotepadViewerDesktop({
   setOpenNotepad,

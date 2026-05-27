@@ -39,10 +39,10 @@
   * {
     border-radius: 0 !important;
     scroll-behavior: smooth;
+    font-family: DPGfont;
   }
 
   body {
-    font-family: "JetBrains Mono", "Fira Code", monospace;
     font-weight: 400;
     line-height: 1.5;
     scroll-behavior: smooth;
@@ -170,4 +170,9 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .animate-toast-out {
   animation: toast-out 0.2s ease-in forwards;
+}
+
+@font-face {
+  font-family: DPGfont;
+  src: url(/public/font.ttf);
 }

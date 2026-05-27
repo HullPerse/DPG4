@@ -140,7 +140,7 @@ function AdvertisementApp() {
             {!confirm ? (
               <X className="size-4" />
             ) : (
-              <span className="pointer-events-none">Вы уверены?</span>
+              <span className="pointer-events-none">Точно?</span>
             )}
           </Button>
         </div>
