@@ -82,6 +82,10 @@ function App() {
 
       const target = e.target as HTMLElement;
 
+      //check if mouse is over desktop button
+      const buttonElement = target.closest('[data-desktop-button="true"]');
+      if (buttonElement) return;
+
       //check if mouse is over any window
       const windowElement = target.closest('[data-window="true"]');
       if (windowElement) return;

@@ -28,6 +28,7 @@ function AppDesktop({
 
   return (
     <button
+      data-desktop-button="true"
       role="button"
       key={name}
       className="relative flex h-20 w-20 flex-col items-center justify-center rounded border-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] shadow-sharp-sm hover:bg-primary/20"
