@@ -44,6 +44,7 @@ import { image } from "@/api/client.api";
 import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
 import ImageViewer from "@/components/shared/viewer.component";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -58,6 +59,8 @@ function GameLibrary({
 }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const setStoreItems = useDataStore((state) => state.setStoreItems);
+  const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [content, setContent] = useState<"general" | "review">("general");
   const [loading, setLoading] = useState<
@@ -212,6 +215,9 @@ function GameLibrary({
           if (data.user.position === 101) {
             await userApi.updatePlace(String(data.game.user.id));
           }
+
+          setStoreItems([]);
+          setRerollPrice(2);
         }
 
         setInput(false);

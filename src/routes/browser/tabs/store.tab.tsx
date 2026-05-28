@@ -2,62 +2,66 @@ import ActivityApi from "@/api/activity.api";
 import { image } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
-import { WindowError } from "@/components/shared/error.component";
 import ImageComponent from "@/components/shared/image.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
-import ImageViewer from "@/components/shared/viewer.component";
+import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { shuffleArray, weightedRandom } from "@/lib/utils";
+import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { Activity } from "@/types/activity";
-import { Item } from "@/types/items";
-import { useQuery } from "@tanstack/react-query";
-import { CircleX } from "lucide-react";
+import type { Item } from "@/types/items";
+import type { StoreItem } from "@/types/store";
 import { useState } from "react";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
 const activityApi = new ActivityApi();
 
-const INITIAL_PRICE = 2;
 const ITEMS_AMOUNT = 6;
 
 function StoreTab() {
   const user = useUserStore((state) => state.user);
+  const storeItems = useDataStore((state) => state.storeItems);
+  const rerollPrice = useDataStore((state) => state.rerollPrice);
+  const setStoreItems = useDataStore((state) => state.setStoreItems);
+  const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [active, setActive] = useState<number>(-1);
   const [bought, setBought] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(false);
 
-  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ["randomStoreTab"],
-    queryFn: async (): Promise<{ item: Item; price: number }[]> => {
+  const handleReroll = async () => {
+    const userMoney = await userApi.getUserScore(String(user?.id));
+
+    if (userMoney < rerollPrice) return;
+
+    setLoading(true);
+    try {
+      await userApi.scoreUser(String(user?.id), -rerollPrice);
+
       const allItems = await itemsApi.getAllItems();
       const randomSixItems = shuffleArray(allItems).slice(0, ITEMS_AMOUNT);
 
-      let finalArray: { item: Item; price: number }[] = [];
+      const finalArray: StoreItem[] = [];
 
       for (const item of randomSixItems) {
         const price = weightedRandom(15);
         finalArray.push({ item, price });
       }
 
-      return finalArray;
-    },
-
-    enabled: false,
-  });
+      setStoreItems(finalArray);
+      setRerollPrice(rerollPrice + 1);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBuy = async (item: Item, price: number) => {
     const userMoney = await userApi.getUserScore(String(user?.id));
 
     if (userMoney < price) return;
 
-    //add item
     await itemsApi.addInventory(String(user?.id), String(item.id));
-    //score user
     await userApi.scoreUser(String(user?.id), -price);
 
     const activityData = {
@@ -69,25 +73,6 @@ function StoreTab() {
     await activityApi.createActivity(activityData);
   };
 
-  const handleReroll = async () => {
-    const userMoney = await userApi.getUserScore(String(user?.id));
-
-    if (userMoney < INITIAL_PRICE) return;
-    else {
-      await userApi.scoreUser(String(user?.id), -INITIAL_PRICE);
-      refetch();
-    }
-  };
-
-  if (isLoading) return <WindowLoader />;
-  if (isError)
-    return (
-      <WindowError
-        error={new Error("Произошла ошибка при соединении с сервером")}
-        icon={<CircleX className="size-28 animate-pulse text-red-500" />}
-      />
-    );
-
   return (
     <main className="flex flex-wrap w-full gap-1 p-2">
       <Button
@@ -95,12 +80,18 @@ function StoreTab() {
         variant="info"
         className="w-full h-10"
         onClick={handleReroll}
-        disabled={isRefetching || (user?.money ?? 0) < INITIAL_PRICE}
+        disabled={loading || (user?.money ?? 0) < rerollPrice}
       >
-        {isRefetching ? <SmallLoader /> : `РЕРОЛЛ за ${INITIAL_PRICE}`}
+        {loading ? <SmallLoader /> : `РЕРОЛЛ за ${rerollPrice}`}
       </Button>
 
-      {data?.map((item, index) => {
+      {storeItems.length === 0 && (
+        <div className="flex w-full h-64 items-center justify-center text-text/40 text-lg font-bold">
+          В магазине пока нет товаров
+        </div>
+      )}
+
+      {storeItems.map((entry, index) => {
         const isBought = bought.has(index);
 
         return (
@@ -116,31 +107,24 @@ function StoreTab() {
             >
               {!isBought && active === index ? (
                 <span className="hover:overflow-y-auto text-xs leading-tight max-h-50">
-                  {item.item.description}
+                  {entry.item.description}
                 </span>
               ) : (
                 <>
                   <span className="font-bold text-md line-clamp-2">
-                    {item.item.label}
+                    {entry.item.label}
                   </span>
 
-                  <ImageViewer
-                    src={[`${image.items}${item.item.id}/${item.item.image}`]}
-                    zoomable
-                    draggable
-                    trigger={
-                      <ImageComponent
-                        src={`${image.items}${item.item.id}/${item.item.image}`}
-                        alt={item.item.label}
-                        className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                        type="contain"
-                      />
-                    }
+                  <ImageComponent
+                    src={`${image.items}${entry.item.id}/${entry.item.image}`}
+                    alt={entry.item.label}
+                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
+                    type="contain"
                   />
 
                   <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
                     <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
-                      {item.item.charge}
+                      {entry.item.charge}
                     </span>
                   </div>
                 </>
@@ -160,12 +144,12 @@ function StoreTab() {
                 variant="success"
                 className="mt-auto w-full h-8 mb-1"
                 onClick={() => {
-                  handleBuy(item.item, item.price);
+                  handleBuy(entry.item, entry.price);
                   setBought((prev) => new Set(prev).add(index));
                 }}
-                disabled={(user?.money ?? 0) < item.price}
+                disabled={(user?.money ?? 0) < entry.price}
               >
-                КУПИТЬ за {item.price}
+                КУПИТЬ за {entry.price}
               </Button>
             )}
           </div>

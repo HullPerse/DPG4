@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, subscribeWithSelector } from "zustand/middleware";
-import type { DataStore, WheelHistoryItem } from "@/types/store";
+import type { DataStore, StoreItem, WheelHistoryItem } from "@/types/store";
 
 export const useDataStore = create<DataStore>()(
   subscribeWithSelector(
@@ -29,6 +29,8 @@ export const useDataStore = create<DataStore>()(
         accessToken: "",
         noAction: false,
         adPosition: 1,
+        storeItems: [],
+        rerollPrice: 2,
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
@@ -46,6 +48,14 @@ export const useDataStore = create<DataStore>()(
 
         setAdPosition: (adPosition: 1 | 2 | 3 | 4) => {
           set({ adPosition });
+        },
+
+        setStoreItems: (storeItems: StoreItem[]) => {
+          set({ storeItems });
+        },
+
+        setRerollPrice: (rerollPrice: number) => {
+          set({ rerollPrice });
         },
 
         setAccessToken: (accessToken: string) => {
@@ -108,6 +118,8 @@ export const useDataStore = create<DataStore>()(
             wheelHistory: [],
             notepad: "",
             accessToken: "",
+            storeItems: [],
+            rerollPrice: 2,
           });
         },
 

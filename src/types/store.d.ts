@@ -1,4 +1,5 @@
 import type { User } from "@/types/user";
+import type { Item } from "@/types/items";
 
 export interface UserStore {
   // State
@@ -37,6 +38,11 @@ export interface WallpaperFilters {
   hueRotate: number;
 }
 
+export interface StoreItem {
+  item: Item;
+  price: number;
+}
+
 export interface DataStore {
   // State
   wallpaper: string;
@@ -63,6 +69,8 @@ export interface DataStore {
   notepad: string;
   noAction: boolean;
   adPosition: 1 | 2 | 3 | 4;
+  storeItems: StoreItem[];
+  rerollPrice: number;
 
   // Actions
   setWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
@@ -85,6 +93,8 @@ export interface DataStore {
   setNoAction: (noAction: boolean) => void;
   setAccessToken: (accessToken: string) => void;
   setAdPosition: (adPosition: 1 | 2 | 3 | 4) => void;
+  setStoreItems: (items: StoreItem[]) => void;
+  setRerollPrice: (price: number) => void;
   startMoving: (
     userId: string,
     fromPosition: number,
