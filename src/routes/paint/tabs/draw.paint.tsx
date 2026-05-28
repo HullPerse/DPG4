@@ -7,7 +7,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { Brush, ChevronLeft, Eraser, GlobeX, PaintBucket } from "lucide-react";
+import {
+  Brush,
+  ChevronLeft,
+  Circle,
+  Eraser,
+  GlobeX,
+  Minus,
+  PaintBucket,
+  Square,
+} from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +46,9 @@ import DrawingCanvas, {
 const Tools: { value: ToolType; label: string; icon: ReactNode }[] = [
   { value: "brush", label: "Карандаш", icon: <Brush /> },
   { value: "eraser", label: "Ластик", icon: <Eraser /> },
+  { value: "rect", label: "Прямоугольник", icon: <Square /> },
+  { value: "circle", label: "Круг", icon: <Circle /> },
+  { value: "line", label: "Линия", icon: <Minus /> },
   { value: "bucket", label: "Заливка", icon: <PaintBucket /> },
 ];
 
@@ -110,7 +122,7 @@ function DrawPaint({
     const styleId = "__canvas-cursor-override__";
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
 
-    if (tool !== "bucket" && hoveringCanvas) {
+    if ((tool === "brush" || tool === "eraser") && hoveringCanvas) {
       el.style.setProperty("cursor", "none", "important");
       el.classList.add("__canvas-hide-cursor");
       if (!styleEl) {
@@ -392,7 +404,7 @@ function DrawPaint({
           </TransformComponent>
         </TransformWrapper>
 
-        {hoveringCanvas && tool !== "bucket" && !panning && (
+        {hoveringCanvas && (tool === "brush" || tool === "eraser") && !panning && (
           <div
             className="absolute pointer-events-none border-2 border-iris"
             style={{

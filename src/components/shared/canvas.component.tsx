@@ -6,25 +6,25 @@ import {
   useRef,
   useState,
 } from "react";
-import { Stage, Layer, Line, Rect, Image as KonvaImage } from "react-konva";
-import type { ToolType } from "@/types/paint";
+import {
+  Stage,
+  Layer,
+  Line,
+  Rect,
+  Ellipse,
+  Image as KonvaImage,
+} from "react-konva";
+import type { ToolType, CanvasElement, Point } from "@/types/paint";
 import type Konva from "konva";
 
 const CW = 600;
 const CH = 450;
 
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface Stroke {
-  id: number;
-  color: string;
-  size: number;
-  alpha: number;
-  points: Point[];
-}
+const SHAPE_TOOLS: ReadonlySet<ToolType> = new Set([
+  "rect",
+  "circle",
+  "line",
+]);
 
 interface Props {
   tool: ToolType;
@@ -39,10 +39,12 @@ export interface DrawingCanvasHandle {
   loadImage: (url: string) => Promise<void>;
 }
 
+const isShape = (t: ToolType): boolean => SHAPE_TOOLS.has(t);
+
 const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
   ({ tool, color, size, alpha }, ref) => {
     const stageRef = useRef<Konva.Stage>(null);
-    const [strokes, setStrokes] = useState<Stroke[]>([]);
+    const [elements, setElements] = useState<CanvasElement[]>([]);
     const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
     const [rasterImage, setRasterImage] = useState<HTMLCanvasElement | null>(
       null,
@@ -53,7 +55,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
     const needsNewStroke = useRef(false);
 
     const clearCanvas = useCallback(() => {
-      setStrokes([]);
+      setElements([]);
       setCurrentPoints([]);
       setRasterImage(null);
       currentPointsRef.current = [];
@@ -78,7 +80,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
       ctx.drawImage(img, 0, 0, CW, CH);
 
       setRasterImage(canvas);
-      setStrokes([]);
+      setElements([]);
       setCurrentPoints([]);
       currentPointsRef.current = [];
       idCounter.current = 0;
@@ -100,6 +102,54 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
       const p = stage.getPointerPosition();
       return p ?? { x: 0, y: 0 };
     }, []);
+
+    const finalizeStroke = useCallback(() => {
+      if (!drawing.current) return;
+      drawing.current = false;
+
+      const pts = currentPointsRef.current;
+      if (pts.length > 0) {
+        if (pts.length === 1) pts.push({ ...pts[0] });
+        const isErasing = tool === "eraser";
+        const newEl: CanvasElement = {
+          id: idCounter.current++,
+          type: tool,
+          color: isErasing ? "#ffffff" : color,
+          size,
+          alpha: isErasing ? 1 : alpha,
+          points: pts,
+        };
+        setElements((prev) => [...prev, newEl]);
+      }
+      currentPointsRef.current = [];
+      setCurrentPoints([]);
+    }, [tool, color, size, alpha]);
+
+    const finalizeShape = useCallback(() => {
+      if (!drawing.current) return;
+      drawing.current = false;
+
+      const pts = currentPointsRef.current;
+      if (pts.length >= 2) {
+        const newEl: CanvasElement = {
+          id: idCounter.current++,
+          type: tool as "rect" | "circle" | "line",
+          color,
+          size,
+          alpha,
+          points: [pts[0], pts[pts.length - 1]],
+        };
+        setElements((prev) => [...prev, newEl]);
+      }
+      currentPointsRef.current = [];
+      setCurrentPoints([]);
+    }, [tool, color, size, alpha]);
+
+    const handlePointerUp = useCallback(() => {
+      if (!drawing.current) return;
+      if (isShape(tool)) finalizeShape();
+      else finalizeStroke();
+    }, [tool, finalizeShape, finalizeStroke]);
 
     const handleMouseDown = useCallback(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -162,7 +212,14 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
 
           ctx.putImageData(img, 0, 0);
           setRasterImage(canvas);
-          setStrokes([]);
+          setElements([]);
+          return;
+        }
+
+        if (isShape(tool)) {
+          drawing.current = true;
+          currentPointsRef.current = [pos];
+          setCurrentPoints([pos]);
           return;
         }
 
@@ -178,6 +235,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
         if (!drawing.current) return;
         const pos = getPos();
 
+        if (isShape(tool)) {
+          currentPointsRef.current = [currentPointsRef.current[0], pos];
+          setCurrentPoints([...currentPointsRef.current]);
+          return;
+        }
+
         if (needsNewStroke.current) {
           needsNewStroke.current = false;
           currentPointsRef.current = [pos];
@@ -188,46 +251,29 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
         currentPointsRef.current.push(pos);
         setCurrentPoints([...currentPointsRef.current]);
       },
-      [getPos],
+      [tool, getPos],
     );
 
-    const finalizeDraw = useCallback(() => {
-      if (!drawing.current) return;
-      drawing.current = false;
-
-      let pts = currentPointsRef.current;
-      if (pts.length > 0) {
-        if (pts.length === 1) pts = [pts[0], pts[0]];
-        const isErasing = tool === "eraser";
-        const newStroke: Stroke = {
-          id: idCounter.current++,
-          color: isErasing ? "#ffffff" : color,
-          size,
-          alpha: isErasing ? 1 : alpha,
-          points: pts,
-        };
-        setStrokes((prev) => [...prev, newStroke]);
-      }
-      currentPointsRef.current = [];
-      setCurrentPoints([]);
-    }, [tool, color, size, alpha]);
-
-    const handleMouseUp = useCallback(finalizeDraw, [finalizeDraw]);
-
     const handleMouseLeave = useCallback(() => {
-      if (drawing.current) {
-        finalizeDraw();
+      if (!drawing.current) return;
+      if (tool === "brush" || tool === "eraser") {
+        finalizeStroke();
         needsNewStroke.current = true;
       }
-    }, [finalizeDraw]);
+      drawing.current = false;
+      currentPointsRef.current = [];
+      setCurrentPoints([]);
+    }, [tool, finalizeStroke]);
 
     const handleMouseEnter = useCallback(
       (_e: Konva.KonvaEventObject<MouseEvent>) => {
         if (needsNewStroke.current) {
           needsNewStroke.current = false;
+          const pos = getPos();
+          if (pos.x === 0 && pos.y === 0) return;
           drawing.current = true;
-          currentPointsRef.current = [getPos()];
-          setCurrentPoints([getPos()]);
+          currentPointsRef.current = [pos];
+          setCurrentPoints([pos]);
         }
       },
       [getPos],
@@ -235,64 +281,160 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
 
     useEffect(() => {
       const preventCtx = (e: MouseEvent) => e.preventDefault();
-      globalThis.addEventListener("mouseup", finalizeDraw);
+      globalThis.addEventListener("mouseup", handlePointerUp);
       globalThis.addEventListener("contextmenu", preventCtx);
       return () => {
-        globalThis.removeEventListener("mouseup", finalizeDraw);
+        globalThis.removeEventListener("mouseup", handlePointerUp);
         globalThis.removeEventListener("contextmenu", preventCtx);
       };
-    }, [finalizeDraw]);
+    }, [handlePointerUp]);
 
     return (
-      <Stage
-        ref={stageRef}
-        width={CW}
-        height={CH}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        style={{ touchAction: "none" }}
-      >
-        <Layer>
-          <Rect x={0} y={0} width={CW} height={CH} fill="white" />
-          {rasterImage && (
-            <KonvaImage
-              image={rasterImage}
-              x={0}
-              y={0}
-              width={CW}
-              height={CH}
-            />
-          )}
-        </Layer>
-        <Layer>
-          {strokes.map((s) => (
-            <Line
-              key={s.id}
-              points={s.points.flatMap((p) => [p.x, p.y])}
-              stroke={s.color}
-              strokeWidth={s.size}
-              tension={0.3}
-              lineCap="round"
-              lineJoin="round"
-              opacity={s.alpha}
-            />
-          ))}
-          {currentPoints.length > 1 && (
-            <Line
-              points={currentPoints.flatMap((p) => [p.x, p.y])}
-              stroke={tool === "eraser" ? "#ffffff" : color}
-              strokeWidth={size}
-              tension={0.3}
-              lineCap="round"
-              lineJoin="round"
-              opacity={tool === "eraser" ? 1 : alpha}
-            />
-          )}
-        </Layer>
-      </Stage>
+      <div style={{ position: "relative", width: CW, height: CH }}>
+        <Stage
+          ref={stageRef}
+          width={CW}
+          height={CH}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handlePointerUp}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          style={{ touchAction: "none" }}
+        >
+          <Layer>
+            <Rect x={0} y={0} width={CW} height={CH} fill="white" />
+            {rasterImage && (
+              <KonvaImage
+                image={rasterImage}
+                x={0}
+                y={0}
+                width={CW}
+                height={CH}
+              />
+            )}
+          </Layer>
+          <Layer>
+            {elements.map((el) => {
+              if (
+                el.type === "brush" ||
+                el.type === "eraser" ||
+                el.type === "line"
+              ) {
+                return (
+                  <Line
+                    key={el.id}
+                    points={el.points.flatMap((p) => [p.x, p.y])}
+                    stroke={el.color}
+                    strokeWidth={el.size}
+                    tension={el.type === "line" ? 0 : 0.3}
+                    lineCap="round"
+                    lineJoin="round"
+                    opacity={el.alpha}
+                  />
+                );
+              }
+              if (el.type === "rect") {
+                const sx = el.points[0].x,
+                  sy = el.points[0].y;
+                const ex = el.points[1].x,
+                  ey = el.points[1].y;
+                return (
+                  <Rect
+                    key={el.id}
+                    x={Math.min(sx, ex)}
+                    y={Math.min(sy, ey)}
+                    width={Math.abs(ex - sx)}
+                    height={Math.abs(ey - sy)}
+                    stroke={el.color}
+                    strokeWidth={el.size}
+                    opacity={el.alpha}
+                  />
+                );
+              }
+              if (el.type === "circle") {
+                const cx = el.points[0].x,
+                  cy = el.points[0].y;
+                const ex = el.points[1].x,
+                  ey = el.points[1].y;
+                const r = Math.sqrt(
+                  (ex - cx) ** 2 + (ey - cy) ** 2,
+                );
+                return (
+                  <Ellipse
+                    key={el.id}
+                    x={cx}
+                    y={cy}
+                    radiusX={r}
+                    radiusY={r}
+                    stroke={el.color}
+                    strokeWidth={el.size}
+                    opacity={el.alpha}
+                  />
+                );
+              }
+              return null;
+            })}
+            {currentPoints.length > 1 &&
+              (tool === "brush" || tool === "eraser") && (
+                <Line
+                  points={currentPoints.flatMap((p) => [p.x, p.y])}
+                  stroke={tool === "eraser" ? "#ffffff" : color}
+                  strokeWidth={size}
+                  tension={0.3}
+                  lineCap="round"
+                  lineJoin="round"
+                  opacity={tool === "eraser" ? 1 : alpha}
+                />
+              )}
+            {currentPoints.length > 1 && tool === "rect" && (
+              <Rect
+                x={Math.min(currentPoints[0].x, currentPoints[1].x)}
+                y={Math.min(currentPoints[0].y, currentPoints[1].y)}
+                width={Math.abs(
+                  currentPoints[1].x - currentPoints[0].x,
+                )}
+                height={Math.abs(
+                  currentPoints[1].y - currentPoints[0].y,
+                )}
+                stroke={color}
+                strokeWidth={size}
+                opacity={alpha}
+              />
+            )}
+            {currentPoints.length > 1 && tool === "circle" && (
+              <Ellipse
+                x={currentPoints[0].x}
+                y={currentPoints[0].y}
+                radiusX={Math.sqrt(
+                  (currentPoints[1].x - currentPoints[0].x) ** 2 +
+                    (currentPoints[1].y - currentPoints[0].y) ** 2,
+                )}
+                radiusY={Math.sqrt(
+                  (currentPoints[1].x - currentPoints[0].x) ** 2 +
+                    (currentPoints[1].y - currentPoints[0].y) ** 2,
+                )}
+                stroke={color}
+                strokeWidth={size}
+                opacity={alpha}
+              />
+            )}
+            {currentPoints.length > 1 && tool === "line" && (
+              <Line
+                points={[
+                  currentPoints[0].x,
+                  currentPoints[0].y,
+                  currentPoints[1].x,
+                  currentPoints[1].y,
+                ]}
+                stroke={color}
+                strokeWidth={size}
+                opacity={alpha}
+              />
+            )}
+          </Layer>
+        </Stage>
+      </div>
     );
   },
 );

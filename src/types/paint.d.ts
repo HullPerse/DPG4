@@ -9,14 +9,24 @@ export interface PaintType {
   updated?: string;
 }
 
-export type ToolType = "brush" | "eraser" | "bucket";
+export type ToolType =
+  | "brush"
+  | "eraser"
+  | "bucket"
+  | "rect"
+  | "circle"
+  | "line";
 
-// type StrokePoint = { x: number; y: number };
+export interface Point {
+  x: number;
+  y: number;
+}
 
-// type Stroke = {
-//   tool: Exclude<ToolType, "bucket">;
-//   color: string;
-//   size: number;
-//   alpha: number;
-//   points: StrokePoint[];
-// };
+export interface CanvasElement {
+  id: number;
+  type: ToolType;
+  color: string;
+  size: number;
+  alpha: number;
+  points: Point[];
+}
