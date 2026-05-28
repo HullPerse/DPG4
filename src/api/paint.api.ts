@@ -22,4 +22,8 @@ export default class PaintApi {
   updateDraw = async (id: string, data: Partial<PaintType>) => {
     return await this.paintCollection.update(id, data);
   };
+
+  removeDraw = async (id: string) => {
+    return await this.paintCollection.delete(id);
+  };
 }

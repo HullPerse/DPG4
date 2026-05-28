@@ -7,7 +7,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import ImagePaint from "../components/image.paint";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { startTransition, useCallback } from "react";
+import { startTransition, useCallback, useState } from "react";
 
 const paintApi = new PaintApi();
 
@@ -17,6 +17,8 @@ function ListPaint({
   setTab: (value: "home" | "draw" | "list" | "profile") => void;
 }) {
   const queryClient = useQueryClient();
+
+  const [selected, setSelected] = useState<PaintType["author"] | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["listPaint"],
@@ -50,6 +52,16 @@ function ListPaint({
   return (
     <main className="flex flex-row w-full h-full">
       <div className="flex flex-col w-45 border-r-2 border-highlight-high p-2">
+        {selected && (
+          <Button
+            variant="link"
+            className="border-2 border-highlight-high text-primary"
+            onClick={() => setSelected(null)}
+          >
+            {selected.username}
+          </Button>
+        )}
+
         <section className="mt-auto flex flex-row gap-1">
           <Button
             variant="error"
@@ -62,9 +74,13 @@ function ListPaint({
       </div>
 
       <div className="flex flex-wrap gap-2 w-full h-fit overflow-y-auto p-2">
-        {data?.map((item) => (
-          <ImagePaint key={item.id} item={item} />
-        ))}
+        {data
+          ?.filter((item) =>
+            !selected ? item : item.author.id === selected.id,
+          )
+          .map((item) => (
+            <ImagePaint key={item.id} item={item} onClick={setSelected} />
+          ))}
       </div>
     </main>
   );

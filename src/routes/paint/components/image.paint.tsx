@@ -1,11 +1,28 @@
 import { image } from "@/api/client.api";
+import PaintApi from "@/api/paint.api";
 import ImageComponent from "@/components/shared/image.component";
+import { SmallLoader } from "@/components/shared/loader.component";
 import ImageViewer from "@/components/shared/viewer.component";
 import { Button } from "@/components/ui/button.component";
+import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/user.store";
 import { PaintType } from "@/types/paint";
-import { ZoomIn } from "lucide-react";
+import { Trash, ZoomIn } from "lucide-react";
+import { useState } from "react";
 
-function ImagePaint({ item }: { item: PaintType }) {
+const paintApi = new PaintApi();
+
+function ImagePaint({
+  item,
+  onClick,
+}: {
+  item: PaintType;
+  onClick?: (value: PaintType["author"]) => void;
+}) {
+  const user = useUserStore((state) => state.user);
+
+  const [loading, setLoading] = useState<boolean>(false);
+
   return (
     <main
       style={{
@@ -18,7 +35,13 @@ function ImagePaint({ item }: { item: PaintType }) {
       className="overflow-hidden bg-card text-text transition-none w-60 min-w-60 max-w-60"
     >
       <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-        <span className="flex item-center text-md font-bold line-clamp-1 w-full">
+        <span
+          className={cn(
+            "flex item-center text-md font-bold line-clamp-1 w-full",
+            onClick && "opacity-75 hover:opacity-100 hover:cursor-pointer",
+          )}
+          onClick={() => onClick?.(item.author)}
+        >
           {item.author.username}
         </span>
         <ImageViewer
@@ -37,12 +60,32 @@ function ImagePaint({ item }: { item: PaintType }) {
           }
         />
       </section>
-      <section className="flex-1 bg-card w-60 h-45">
+      <section className="relative flex-1 bg-card w-60 h-45">
         <ImageComponent
           src={`${image.paint}${item.id}/${item.image}`}
           alt="Картинка ЛОЛ"
           className="w-60 h-46"
         />
+
+        {item.author.id === user?.id && (
+          <Button
+            size="icon"
+            variant="error"
+            className="absolute right-2 bottom-1"
+            rendered={item.author.id === user?.id}
+            onClick={async () => {
+              if (item.author.id !== user?.id) return;
+
+              setLoading(true);
+
+              await paintApi.removeDraw(String(item.id));
+
+              setLoading(false);
+            }}
+          >
+            {loading ? <SmallLoader /> : <Trash />}
+          </Button>
+        )}
       </section>
     </main>
   );
