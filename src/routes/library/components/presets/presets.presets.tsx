@@ -50,7 +50,7 @@ export default function PresetsList({
           id: "steamPreset",
           label: "Библиотека STEAM",
           games: games,
-        },
+        } as Preset,
       };
     },
   });

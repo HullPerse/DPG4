@@ -1,4 +1,4 @@
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import PaintApi from "@/api/paint.api";
 import ImageComponent from "@/components/shared/image.component";
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -45,7 +45,7 @@ function ImagePaint({
           {item.author.username}
         </span>
         <ImageViewer
-          src={[`${image.paint}${item.id}/${item.image}`]}
+          src={[`${getFileUrl(item)}`]}
           zoomable
           draggable
           trigger={
@@ -62,7 +62,7 @@ function ImagePaint({
       </section>
       <section className="relative flex-1 bg-card w-60 h-45">
         <ImageComponent
-          src={`${image.paint}${item.id}/${item.image}`}
+          src={`${getFileUrl(item)}`}
           alt="Картинка ЛОЛ"
           className="w-60 h-46"
         />

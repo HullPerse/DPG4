@@ -1,5 +1,6 @@
-export interface User {
-  id?: string;
+import { RecordMeta } from "./record";
+
+export interface User extends RecordMeta {
   username: string;
   password: string;
   passwordConfirm?: string;

@@ -1,13 +1,12 @@
 import { User } from "./user";
+import { RecordMeta } from "./record";
 
-export interface Preset {
-  id: string;
+export interface Preset extends RecordMeta {
   label: string;
   games: GameData[];
 }
 
-export interface Game {
-  id?: string;
+export interface Game extends RecordMeta {
   user: {
     id: string;
     username: string;
@@ -21,8 +20,6 @@ export interface Game {
   status: GameStatus;
   review?: GameReview;
   image?: File;
-  created: string;
-  updated?: string;
 }
 
 export type GameData = {

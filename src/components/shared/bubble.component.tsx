@@ -2,7 +2,7 @@ import { Chat } from "@/types/chat";
 import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import ImageComponent from "./image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { CheckCheck, Trash } from "lucide-react";
 import ImageViewer from "./viewer.component";
 
@@ -64,12 +64,12 @@ export default function ChatBubble({
         {item.image && (
           <section className="mt-1 flex w-full h-full ">
             <ImageViewer
-              src={[`${image.chat}${item.id}/${item.image}`]}
+              src={[`${getFileUrl(item)}`]}
               zoomable
               draggable
               trigger={
                 <ImageComponent
-                  src={`${image.chat}${item.id}/${item.image}`}
+                  src={`${getFileUrl(item)}`}
                   alt={item.message || "Изображение"}
                   type="contain"
                   className="cursor-pointer"
@@ -89,7 +89,7 @@ export default function ChatBubble({
           {item.isRead && <CheckCheck className="size-4" />}
 
           <span>
-            {new Date(item.created).toLocaleTimeString("ru-RU", {
+            {new Date(item.created ?? 0).toLocaleTimeString("ru-RU", {
               hour: "2-digit",
               minute: "2-digit",
             })}

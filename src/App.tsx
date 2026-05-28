@@ -23,7 +23,7 @@ import {
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
 import { useToastStore } from "./store/toast.store";
-import { UpdateData } from "./types/activity";
+import { UpdateData, Activity } from "./types/activity";
 import { Download } from "lucide-react";
 
 function App() {
@@ -128,7 +128,7 @@ function App() {
         },
       };
 
-      addToast(toastData);
+      addToast(toastData as unknown as Activity);
     } catch (e) {
       console.error("Failed to check for updates:", e);
     }

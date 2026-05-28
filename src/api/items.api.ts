@@ -1,5 +1,5 @@
 import { Inventory, Item, Market, Trade } from "@/types/items";
-import { client, image } from "./client.api";
+import { client, getFileUrl } from "./client.api";
 import { fileFromUrl } from "@/lib/utils";
 import UserApi from "./user.api";
 import { User } from "@/types/user";
@@ -51,7 +51,7 @@ export default class ItemsApi {
     if (item.type === "effect") {
       await this.userApi.changeUserStatus(String(userId), item.label, "add");
     } else {
-      const imageLink = `${image.items}${item.id}/${item.image}`;
+      const imageLink = `${getFileUrl(item)}`;
       const imageFile = await fileFromUrl(imageLink);
 
       await this.inventoryCollection.create({
@@ -107,7 +107,7 @@ export default class ItemsApi {
     if (!userData || !itemData) return;
 
     const imageFile = await fileFromUrl(
-      `${image.inventory}${itemData.id}/${itemData.image}`,
+      `${getFileUrl(itemData)}`,
     );
 
     const data = {
@@ -180,7 +180,7 @@ export default class ItemsApi {
     if (!existing) return;
 
     const imageFile = await fileFromUrl(
-      `${image.market}${existing.id}/${existing.image}`,
+      `${getFileUrl(existing)}`,
     );
 
     //add item to inventory
@@ -211,7 +211,7 @@ export default class ItemsApi {
     if (!userMoney || userMoney < itemData.price) return;
 
     const imageFile = await fileFromUrl(
-      `${image.market}${itemData.id}/${itemData.image}`,
+      `${getFileUrl(itemData)}`,
     );
 
     await this.userApi.scoreUser(

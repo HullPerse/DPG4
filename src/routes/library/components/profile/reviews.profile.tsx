@@ -6,7 +6,7 @@ import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
 import GameApi from "@/api/games.api";
 import ReviewComponent from "@/components/shared/review.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
 import { Game, GameReview } from "@/types/games";
 
@@ -55,7 +55,7 @@ export default function ReviewsProfile({ id }: { id: string }) {
             id={String(game.id)}
             title={game.data.name}
             review={game.review as GameReview}
-            image={game.image ? `${image.game}${game.id}/${game.image}` : null}
+            image={getFileUrl(game)}
             user={data.user as User}
           />
         </div>

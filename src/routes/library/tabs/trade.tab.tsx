@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select.component";
 import { Input } from "@/components/ui/input.component";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { Button } from "@/components/ui/button.component";
 
 const itemsApi = new ItemsApi();
@@ -167,7 +167,7 @@ function TradeTab({ id }: { id: string }) {
         </div>
         <span className="font-bold text-md line-clamp-2">{item.label}</span>
         <ImageComponent
-          src={`${image.inventory}${item.id}/${item.image}`}
+          src={`${getFileUrl(item)}`}
           alt={item.label}
           className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
           type="contain"

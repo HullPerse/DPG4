@@ -1,14 +1,19 @@
-export interface Activity {
-  id?: string;
+import { RecordMeta } from "./record";
+
+export interface Activity extends RecordMeta {
+  author: string;
+  image: string | null;
+  type: "image" | "emoji" | "chat";
+  text: string;
+}
+
+export type UpdateData = {
+  id: string;
   author: string;
   image: string | null;
   type: "image" | "emoji" | "chat";
   text: string;
   created: string;
-  updated?: string;
-}
-
-export type UpdateData = Activity & {
   timeout: number;
   showClose?: boolean;
   onClick: {

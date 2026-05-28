@@ -21,7 +21,7 @@ import { effectInterface, Inventory, Item, ItemType } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { highlightText, translateItemType } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { Combobox } from "@/components/ui/combobox.component";
@@ -387,7 +387,7 @@ function InventoryTab({ id }: { id?: string }) {
                 </span>
 
                 <ImageComponent
-                  src={`${image.items}${status.id}/${status.image}`}
+                  src={`${getFileUrl(status)}`}
                   alt={status.label}
                   className="min-w-14 w-14 min-h-14 h-14 border border-highlight-high"
                   type="contain"
@@ -556,7 +556,7 @@ function InventoryTab({ id }: { id?: string }) {
                     {translateItemType(item.type)}
                   </span>
                   <ImageComponent
-                    src={`${image.inventory}${item.id}/${item.image}`}
+                    src={`${getFileUrl(item)}`}
                     alt={item.label}
                     className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
                     type="contain"

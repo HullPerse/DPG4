@@ -28,7 +28,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
 import ItemHelper from "@/components/shared/item.helper";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import WheelComponent from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import {
@@ -1071,7 +1071,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1162,7 +1162,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="item" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1267,7 +1267,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1366,7 +1366,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected?.[0] ?? null} type="inventory" />
+                <ItemHelper item={selected?.[0] ?? null} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1423,7 +1423,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected?.[1] ?? null} type="inventory" />
+                <ItemHelper item={selected?.[1] ?? null} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1483,7 +1483,7 @@ export const itemEffect: effectInterface[] = [
                 ? (selected.map((item) => ({
                     id: String(item.id),
                     label: item.label,
-                    image: `${image?.items}${item.id}/${item.image}`,
+                    image: getFileUrl(item)!,
                     type: "image",
                   })) as WheelItem[])
                 : []
@@ -1502,13 +1502,13 @@ export const itemEffect: effectInterface[] = [
                   {translateItemType(result.type)}
                 </span>
                 <ImageComponent
-                  src={`${image?.items}${result.id}/${result.image}`}
+                  src={getFileUrl(result)!}
                   alt={result.label}
                   className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                   onClick={() =>
                     openWindow(
                       String(result.id),
-                      `${image?.items}${result.id}/${result.image}`,
+                      getFileUrl(result)!,
                       "Изображение",
                     )
                   }
@@ -1568,7 +1568,7 @@ export const itemEffect: effectInterface[] = [
                   className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                   side="top"
                 >
-                  <ItemHelper item={selected?.[index] ?? null} type="item" />
+                  <ItemHelper item={selected?.[index] ?? null} />
                 </HoverCardContent>
               </HoverCard>
             </div>
@@ -1868,7 +1868,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={finalItem} type="item" />
+                <ItemHelper item={finalItem} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -1924,10 +1924,7 @@ export const itemEffect: effectInterface[] = [
                   className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                   side="top"
                 >
-                  <ItemHelper
-                    item={selected?.[index] ?? null}
-                    type="inventory"
-                  />
+                  <ItemHelper item={selected?.[index] ?? null} />
                 </HoverCardContent>
               </HoverCard>
             </div>
@@ -2030,7 +2027,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={fromSelected} type="inventory" />
+                <ItemHelper item={fromSelected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -2077,7 +2074,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={toSelected} type="inventory" />
+                <ItemHelper item={toSelected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -2388,7 +2385,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -2485,7 +2482,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -2672,7 +2669,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -2876,7 +2873,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -3041,7 +3038,7 @@ export const itemEffect: effectInterface[] = [
               data?.map((item) => ({
                 id: String(item.id),
                 label: item.label,
-                image: `${image?.items}${item.id}/${item.image}`,
+                image: getFileUrl(item)!,
                 type: "image",
               })) as WheelItem[]
             }
@@ -3059,13 +3056,13 @@ export const itemEffect: effectInterface[] = [
                   {translateItemType(result.type)}
                 </span>
                 <ImageComponent
-                  src={`${image?.items}${result.id}/${result.image}`}
+                  src={getFileUrl(result)!}
                   alt={result.label}
                   className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                   onClick={() =>
                     openWindow(
                       String(result.id),
-                      `${image?.items}${result.id}/${result.image}`,
+                      getFileUrl(result)!,
                       "Изображение",
                     )
                   }
@@ -3276,7 +3273,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -3563,7 +3560,7 @@ export const itemEffect: effectInterface[] = [
                 data?.rolls.map((item) => ({
                   id: String(item.id),
                   label: item.label,
-                  image: `${image?.items}${item.id}/${item.image}`,
+                  image: getFileUrl(item)!,
                   type: "image",
                 })) as WheelItem[]
               }
@@ -3583,13 +3580,13 @@ export const itemEffect: effectInterface[] = [
                     {translateItemType(result.type)}
                   </span>
                   <ImageComponent
-                    src={`${image?.items}${result.id}/${result.image}`}
+                    src={getFileUrl(result)!}
                     alt={result.label}
                     className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                     onClick={() =>
                       openWindow(
                         String(result.id),
-                        `${image?.items}${result.id}/${result.image}`,
+                        getFileUrl(result)!,
                         "Изображение",
                       )
                     }
@@ -3680,7 +3677,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -3958,7 +3955,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>
@@ -4064,7 +4061,7 @@ export const itemEffect: effectInterface[] = [
                 className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
                 side="top"
               >
-                <ItemHelper item={selected} type="inventory" />
+                <ItemHelper item={selected} />
               </HoverCardContent>
             </HoverCard>
           </div>

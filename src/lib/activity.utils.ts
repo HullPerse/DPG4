@@ -58,14 +58,14 @@ export async function initChatSubscription() {
         const senderName = newChat.data?.sender?.username || "Неизвестный";
         const message = newChat.message || "Новое сообщение";
 
-        const toast: Activity = {
+        const toast = {
           id: crypto.randomUUID(),
           author: newChat.data?.sender?.username,
           text: `${senderName}: ${message}`,
-          type: "chat",
+          type: "chat" as const,
           image: newChat.data?.sender?.avatar,
           created: new Date().toISOString(),
-        };
+        } as Activity;
 
         useToastStore.getState().addToast(toast);
       }

@@ -12,7 +12,7 @@ import { Item } from "@/types/items";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import Image from "@/components/shared/image.component";
-import { image as clientImage } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { highlightText, translateItemType } from "@/lib/utils";
 import type { SortMethod, SortDirection } from "../browser.root";
 import AddItem from "./add.tab";
@@ -253,12 +253,12 @@ function ListBrowser({
                 {translateItemType(item.type)}
               </span>
               <ImageViewer
-                src={[`${clientImage?.items}${item.id}/${item.image}`]}
+                src={[`${getFileUrl(item)}`]}
                 zoomable
                 draggable
                 trigger={
                   <Image
-                    src={`${clientImage?.items}${item.id}/${item.image}`}
+                    src={`${getFileUrl(item)}`}
                     alt={item.label}
                     className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
                   />

@@ -1,12 +1,10 @@
 import { translateItemType } from "@/lib/utils";
 import { Inventory, Item } from "@/types/items";
 import ImageComponent from "./image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 
-function ItemHelper({ item, type }: { item: Inventory | Item | null; type: "inventory" | "item" }) {
+function ItemHelper({ item }: { item: Inventory | Item | null }) {
   if (!item) return <main>Выберите предмет</main>;
-
-  const imageCollection = type === "item" ? image.items : image.inventory;
 
   return (
     <main className="flex flex-row">
@@ -15,7 +13,7 @@ function ItemHelper({ item, type }: { item: Inventory | Item | null; type: "inve
           {translateItemType(item.type)}
         </span>
         <ImageComponent
-          src={`${imageCollection}${item.id}/${item.image}`}
+          src={`${getFileUrl(item)}`}
           alt={item.label}
           className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
         />

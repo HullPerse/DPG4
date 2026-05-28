@@ -90,7 +90,7 @@ export default function ChatProfile({ id }: { id: string }) {
       refetchType: "all",
     });
     invalidateQuery();
-  }, [data?.chat]);
+  }, [data?.chat, isInitialLoad]);
 
   const handleReadAll = useCallback(async () => {
     const allIds = data?.chat

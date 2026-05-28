@@ -14,7 +14,7 @@ import { Check, NetworkIcon, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import { highlightText } from "@/lib/utils";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { Input } from "@/components/ui/input.component";
 const itemsApi = new ItemsApi();
 
@@ -135,7 +135,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                   </div>
 
                   <ImageComponent
-                    src={`${image.market}${item.id}/${item.image}`}
+                    src={`${getFileUrl(item)}`}
                     alt={item.label}
                     className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
                     type="contain"

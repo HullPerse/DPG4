@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button.component";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import { useSubscription } from "@/hooks/subscription.hook";
 import Rating from "@/components/shared/rating.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { RichTextEditor } from "@/components/shared/editor.component";
 import { ImageUploader } from "@/components/shared/uploader.component";
 import { useUserStore } from "@/store/user.store";
@@ -165,7 +165,7 @@ function EditReview({
                 value={imageFile}
                 existingImageUrl={
                   data?.game.image
-                    ? `${image.game}${data.game.id}/${data.game.image}`
+                    ? `${getFileUrl(data.game)}`
                     : ""
                 }
                 onChange={(file) => {
@@ -212,13 +212,13 @@ function EditReview({
                   className="flex flex-row h-22 min-h-22 border-highlight-high border-2 shadow-sharp-sm p-1 items-center gap-2"
                 >
                   <ImageViewer
-                    src={[`${image.paint}${item.id}/${item.image}`]}
+                    src={[`${getFileUrl(item)}`]}
                     zoomable
                     draggable
                     triggerClassName="w-fit h-fit"
                     trigger={
                       <ImageComponent
-                        src={`${image.paint}${item.id}/${item.image}`}
+                        src={`${getFileUrl(item)}`}
                         alt="Картинка"
                         className="flex h-18 w-28 bg-background border-2 border-iris"
                       />
@@ -236,10 +236,10 @@ function EditReview({
                       className="w-28"
                       onClick={() => {
                         setSelectedDrawingUrl(
-                          `${image.paint}${item.id}/${item.image}`,
+                          `${getFileUrl(item)}`,
                         );
                         setSelectedDrawingFile(
-                          `${image.paint}${item.id}/${item.image}`,
+                          `${getFileUrl(item)}`,
                         );
                         setImageFile(null);
                       }}

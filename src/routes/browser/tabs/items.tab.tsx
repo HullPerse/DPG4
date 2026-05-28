@@ -1,4 +1,4 @@
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import {
@@ -88,7 +88,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
           list={visibleItems.map((item) => ({
             id: String(item.id),
             label: item.label,
-            image: `${image?.items}${item.id}/${item.image}`,
+            image: `${getFileUrl(item)}`,
             type: "image",
           }))}
           onResult={(it) => {
@@ -109,12 +109,12 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 {translateItemType(result.type)}
               </span>
               <ImageViewer
-                src={[`${image?.items}${result.id}/${result.image}`]}
+                src={[`${getFileUrl(result)}`]}
                 zoomable
                 draggable
                 trigger={
                   <ImageComponent
-                    src={`${image?.items}${result.id}/${result.image}`}
+                    src={`${getFileUrl(result)}`}
                     alt={result.label}
                     className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                   />
@@ -163,12 +163,12 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   {translateItemType(item.type)}
                 </span>
                 <ImageViewer
-                  src={[`${image?.items}${item.id}/${item.image}`]}
+                  src={[`${getFileUrl(item)}`]}
                   zoomable
                   draggable
                   trigger={
                     <ImageComponent
-                      src={`${image?.items}${item.id}/${item.image}`}
+                      src={`${getFileUrl(item)}`}
                       alt={item.label}
                       className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                     />

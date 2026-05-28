@@ -1,16 +1,15 @@
-export interface Item {
-  id?: string;
+import { RecordMeta } from "./record";
+
+export interface Item extends RecordMeta {
   type: ItemType;
   label: string;
   description: string;
   charge: number;
   image: File | null;
   rollable: boolean;
-  created?: string;
 }
 
-export interface Inventory {
-  id?: string;
+export interface Inventory extends RecordMeta {
   type: ItemType;
   owner: string;
   label: string;
@@ -19,8 +18,7 @@ export interface Inventory {
   image: File;
 }
 
-export interface Market {
-  id?: string;
+export interface Market extends RecordMeta {
   type: ItemType;
   originalId: string;
   owner: {

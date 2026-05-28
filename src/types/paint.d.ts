@@ -1,12 +1,11 @@
-export interface PaintType {
-  id?: string;
+import { RecordMeta } from "./record";
+
+export interface PaintType extends RecordMeta {
   author: {
     id: string;
     username: string;
   };
   image: File;
-  created?: string;
-  updated?: string;
 }
 
 export type ToolType =

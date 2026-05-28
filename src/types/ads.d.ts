@@ -1,5 +1,6 @@
-export interface Ads {
-  id?: string;
+import { RecordMeta } from "./record";
+
+export interface Ads extends RecordMeta {
   owner: {
     username: string;
     id: string;
@@ -7,5 +8,4 @@ export interface Ads {
   image: File | string;
   audio?: File | string;
   text: string;
-  created?: string;
 }

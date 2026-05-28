@@ -1,5 +1,6 @@
-export interface Cell {
-  id: string;
+import { RecordMeta } from "./record";
+
+export interface Cell extends RecordMeta {
   type: "start" | "finish" | "grid";
   number: number;
   title: string;

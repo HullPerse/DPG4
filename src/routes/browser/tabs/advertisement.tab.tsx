@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input.component";
 import { ImageUploader } from "@/components/shared/uploader.component";
 import { AudioUploader } from "@/components/shared/audio.component";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 
 const adsApi = new AdsApi();
 
@@ -257,7 +257,7 @@ function AdTab() {
             >
               {item.image && (
                 <ImageComponent
-                  src={`${image.ads}${item.id}/${item.image}`}
+                  src={`${getFileUrl(item)}`}
                   alt="ad image"
                   className="h-16 w-16 min-w-16 min-h-16 border-2 border-highlight-high ml-1"
                 />
@@ -274,7 +274,7 @@ function AdTab() {
                   onClick={() => {
                     setAudioLoad(true);
                     const audio = new Audio(
-                      `${image.ads}${item.id}/${item.audio}`,
+                      `${getFileUrl(item, "audio")}`,
                     );
                     audio.onended = () => setAudioLoad(false);
                     audio.onerror = () => setAudioLoad(false);

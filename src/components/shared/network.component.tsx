@@ -6,7 +6,7 @@ import { useDataStore } from "@/store/data.store";
 import { cn, networkClass, checkForUpdates, installUpdate } from "@/lib/utils";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useToastStore } from "@/store/toast.store";
-import type { UpdateData } from "@/types/activity";
+import type { UpdateData, Activity } from "@/types/activity";
 
 export default function NetworkConnection() {
   const network = useNetworkState();
@@ -64,7 +64,7 @@ export default function NetworkConnection() {
         },
       };
 
-      addToast(toastData);
+      addToast(toastData as unknown as Activity);
     });
   }, [addToast]);
 

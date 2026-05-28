@@ -1,5 +1,6 @@
-export interface Rule {
-  id: string;
+import { RecordMeta } from "./record";
+
+export interface Rule extends RecordMeta {
   category: RuleCategory;
   rule: string;
 }

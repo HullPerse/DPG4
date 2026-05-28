@@ -16,7 +16,7 @@ import { useSubscription } from "@/hooks/subscription.hook";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { cn, getAdPosition, getAdPositionIcon } from "@/lib/utils";
 import {
   Dialog,
@@ -166,12 +166,12 @@ function AdvertisementApp() {
           </Button>
         )}
         <ImageViewer
-          src={[`${image.ads}${randomAd.id}/${randomAd.image}`]}
+          src={[`${getFileUrl(randomAd)}`]}
           zoomable
           draggable
           trigger={
             <ImageComponent
-              src={`${image.ads}${randomAd.id}/${randomAd.image}`}
+              src={`${getFileUrl(randomAd)}`}
               alt={randomAd.text}
               className="min-h-42 h-42 max-h-42 border border-highlight-high hover:cursor-pointer z-49"
               type="contain"
@@ -182,7 +182,7 @@ function AdvertisementApp() {
         {randomAd.audio && (
           <audio
             ref={audioRef}
-            src={`${image.ads}${randomAd.id}/${randomAd.audio}`}
+            src={`${getFileUrl(randomAd, "audio")}`}
             className="hidden"
           />
         )}

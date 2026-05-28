@@ -1,5 +1,5 @@
 import ActivityApi from "@/api/activity.api";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
@@ -116,7 +116,7 @@ function StoreTab() {
                   </span>
 
                   <ImageComponent
-                    src={`${image.items}${entry.item.id}/${entry.item.image}`}
+                    src={`${getFileUrl(entry.item)}`}
                     alt={entry.item.label}
                     className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
                     type="contain"

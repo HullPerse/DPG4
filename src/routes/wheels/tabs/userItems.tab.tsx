@@ -12,7 +12,7 @@ import { useUserStore } from "@/store/user.store";
 import { User } from "@/types/user";
 import ItemsApi from "@/api/items.api";
 import { Inventory } from "@/types/items";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 
 const itemApi = new ItemsApi();
 const userApi = new UserApi();
@@ -98,7 +98,7 @@ function UserItems({
             .map((item) => ({
               id: String(item.id),
               label: item.label,
-              image: `${image?.inventory}${item.id}/${item.image}`,
+              image: `${getFileUrl(item)}`,
               type: "image",
             }))}
           onResult={(it) => {
@@ -117,7 +117,7 @@ function UserItems({
             className="relative p-2 flex flex-row max-w-full w-xl min-h-fit h-22 border-2 border-highlight-high items-center"
           >
             <ImageComponent
-              src={`${image?.inventory}${result.id}/${result.image}`}
+              src={`${getFileUrl(result)}`}
               alt={result.label}
               className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
               type="contain"
@@ -158,7 +158,7 @@ function UserItems({
               }}
             >
               <ImageComponent
-                src={`${image?.inventory}${item.id}/${item.image}`}
+                src={`${getFileUrl(item)}`}
                 alt={item.label}
                 className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
                 type="contain"

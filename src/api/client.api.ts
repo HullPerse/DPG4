@@ -1,25 +1,11 @@
 import PocketBase from "pocketbase";
 
-export const URL = "http://26.15.36.191:27015/";
+export const URL = "http://26.15.36.191:8090/";
 //export const URL = "http://127.0.0.1:8090/";
 
 export const client = new PocketBase(URL);
 
 client.autoCancellation(false);
-
-export const image = {
-  game: `${URL}api/files/pbc_879072730/`,
-  chat: `${URL}api/files/pbc_3861817060/`,
-  items: `${URL}api/files/pbc_710432678/`,
-  inventory: `${URL}api/files/pbc_3573984430/`,
-  market: `${URL}api/files/pbc_1556084869/`,
-  ads: `${URL}api/files/pbc_1911549009/`,
-  paint: `${URL}api/files/pbc_1706527574/`,
-};
-
-export const audioURL = {
-  ads: `${URL}api/files/pbc_1911549009/`,
-};
 
 export const checkConnection = async () => {
   try {
@@ -28,4 +14,14 @@ export const checkConnection = async () => {
   } catch {
     return false;
   }
+};
+
+export const getFileUrl = <T extends { collectionId?: string; id?: string }>(
+  record: T | null | undefined,
+  field: string = "image",
+): string | null => {
+  const r = record as Record<string, unknown>;
+  if (!r?.collectionId || !r?.id || !r?.[field]) return null;
+
+  return `${URL}api/files/${r.collectionId}/${r.id}/${r[field]}`;
 };

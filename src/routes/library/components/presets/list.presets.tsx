@@ -1,7 +1,7 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { GameData, GameStatus, Preset } from "@/types/games";
+import { Game, GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Plus, Trash } from "lucide-react";
 import { startTransition, useCallback, useMemo, useRef, useState } from "react";
@@ -54,7 +54,7 @@ function PresetSettings({
           id: STEAM_PRESET_ID,
           label: "Библиотека STEAM",
           games: games,
-        };
+        } as Preset;
       }
       return await gameApi.getPresetById(id);
     },
@@ -135,7 +135,7 @@ function PresetSettings({
         websiteLink: game.websiteLink ?? "",
       },
       created: new Date().toISOString(),
-    };
+    } as Game;
 
     return await gameApi
       .addGame(gameData)

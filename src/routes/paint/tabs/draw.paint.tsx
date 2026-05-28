@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.component";
 import ImageComponent from "@/components/shared/image.component";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { lockCursor } from "@/lib/cursor.utils";
 import DrawingCanvas, {
@@ -104,7 +104,7 @@ function DrawPaint({
       if (!drawing) return;
       setSelectedId(drawingId);
       await canvasRef.current?.loadImage(
-        `${image.paint}${drawing.id}/${drawing.image}`,
+        `${getFileUrl(drawing)}`,
       );
     },
     [data],
@@ -299,7 +299,7 @@ function DrawPaint({
                   className="flex flex-row bg-background"
                 >
                   <ImageComponent
-                    src={`${image.paint}${d.id}/${d.image}`}
+                    src={`${getFileUrl(d)}`}
                     alt="Картинка ЛОЛ"
                     className="w-6 h-4"
                   />

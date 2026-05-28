@@ -1,4 +1,4 @@
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import ReviewComponent from "@/components/shared/review.component";
 import { getStatusColor, openWindow } from "@/lib/utils";
@@ -91,11 +91,7 @@ export default function Profile({
               id={String(lastReview.id)}
               title={lastReview.data.name}
               review={lastReview.review as GameReview}
-              image={
-                lastReview.image
-                  ? `${image.game}${lastReview.id}/${lastReview.image}`
-                  : null
-              }
+              image={getFileUrl(lastReview)}
               user={user}
             />
           </div>

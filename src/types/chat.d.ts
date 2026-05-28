@@ -1,5 +1,6 @@
-export interface Chat {
-  id: string;
+import { RecordMeta } from "./record";
+
+export interface Chat extends RecordMeta {
   data: {
     receiver: {
       username: string;
@@ -17,6 +18,4 @@ export interface Chat {
   message: string;
   image: string | null;
   isRead: boolean;
-  created: string;
-  updated: string;
 }

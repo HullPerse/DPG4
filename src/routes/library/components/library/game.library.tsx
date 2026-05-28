@@ -40,7 +40,7 @@ import CellApi from "@/api/cell.api";
 
 import ReviewComponent from "@/components/shared/review.component";
 import EditReview from "./edit.library";
-import { image } from "@/api/client.api";
+import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
 import ImageViewer from "@/components/shared/viewer.component";
@@ -121,11 +121,7 @@ function GameLibrary({
           id={id}
           title={data?.game.data.name as string}
           review={data?.game?.review as GameReview}
-          image={
-            data?.game?.image
-              ? `${image.game}${data?.game?.id}/${data?.game?.image}`
-              : null
-          }
+          image={getFileUrl(data?.game)}
           user={data?.user as User}
         />
       ),
