@@ -170,9 +170,10 @@ function ImageViewer({
     <>
       {trigger && (
         <div
+          role="button"
           onClick={() => setOpen(true)}
           className={cn(
-            "flex hover:cursor-pointer w-full h-full",
+            "flex w-full h-full opacity-85 hover:opacity-100",
             triggerClassName,
           )}
         >
