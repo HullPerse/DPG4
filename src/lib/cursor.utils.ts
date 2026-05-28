@@ -58,6 +58,27 @@ function generateCSS(defs: CursorDef[]): string {
     );
   }
 
+  // Native cursor passthrough for resize handles and other interactive cursors
+  const NATIVE_CURSORS = [
+    'n-resize','s-resize','e-resize','w-resize',
+    'ne-resize','nw-resize','se-resize','sw-resize',
+    'col-resize','row-resize','all-scroll',
+  ];
+  for (const cursor of NATIVE_CURSORS) {
+    const sel = [
+      `[style*="cursor:${cursor}" i]`,
+      `[style*="cursor: ${cursor}" i]`,
+      `[class*="cursor-${cursor}"]`,
+    ].join(",");
+    rules.push(`${sel}{cursor:${cursor}!important}`);
+  }
+
+  // Scrollbar thumb uses custom pointer cursor; other scrollbar parts use native
+  if (hasPointer) {
+    rules.push('*::-webkit-scrollbar-thumb{cursor:var(--cursor-pointer)!important}');
+  }
+  rules.push('*::-webkit-scrollbar,*::-webkit-scrollbar-track,*::-webkit-scrollbar-button{cursor:auto!important}');
+
   for (const d of defs) {
     const sel = [
       `[style*="cursor:${d.keyword}" i]`,

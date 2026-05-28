@@ -346,19 +346,20 @@ function GameLibrary({
               draggable
               trigger={
                 <Image
+                  role="button"
                   src={
                     data?.game?.data.verticalImage ??
                     data?.game?.data.image ??
                     (data?.game.data.capsuleImage as string)
                   }
                   alt="game background"
-                  className="h-full w-full hover:cursor-pointer"
+                  className="h-full w-full hover:cursor-pointer opacity-85 hover:opacity-100"
                 />
               }
             />
 
             <div
-              className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high"
+              className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high pointer-events-none"
               style={{
                 backgroundColor: getStatusColor(
                   data?.game?.status ?? "PLAYING",

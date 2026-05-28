@@ -35,8 +35,9 @@ export default function HomeLibrary({
       <section className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
         {reversedGames.map((game) => (
           <div
+            role="button"
             key={game.id}
-            className="flex w-full cursor-pointer flex-col border border-highlight-high shadow-sharp-sm"
+            className="flex w-full cursor-pointer flex-col border border-highlight-high shadow-sharp-sm opacity-85 hover:opacity-100"
             onClick={() => setCurrentGame(game.id as string)}
           >
             <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-highlight-medium">
