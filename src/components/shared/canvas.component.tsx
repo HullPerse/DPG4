@@ -1,4 +1,11 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Stage, Layer, Line, Rect, Image as KonvaImage } from "react-konva";
 import type { ToolType } from "@/types/paint";
 import type Konva from "konva";
@@ -43,6 +50,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
     const drawing = useRef(false);
     const idCounter = useRef(0);
     const currentPointsRef = useRef<Point[]>([]);
+    const needsNewStroke = useRef(false);
 
     const clearCanvas = useCallback(() => {
       setStrokes([]);
@@ -121,12 +129,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
             tb = d[si + 2],
             ta = d[si + 3];
 
-          if (
-            tr === fd[0] &&
-            tg === fd[1] &&
-            tb === fd[2] &&
-            ta === fd[3]
-          )
+          if (tr === fd[0] && tg === fd[1] && tb === fd[2] && ta === fd[3])
             return;
 
           const stack: [number, number][] = [
@@ -174,6 +177,14 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
       (_e: Konva.KonvaEventObject<MouseEvent>) => {
         if (!drawing.current) return;
         const pos = getPos();
+
+        if (needsNewStroke.current) {
+          needsNewStroke.current = false;
+          currentPointsRef.current = [pos];
+          setCurrentPoints([pos]);
+          return;
+        }
+
         currentPointsRef.current.push(pos);
         setCurrentPoints([...currentPointsRef.current]);
       },
@@ -184,8 +195,9 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
       if (!drawing.current) return;
       drawing.current = false;
 
-      const pts = currentPointsRef.current;
+      let pts = currentPointsRef.current;
       if (pts.length > 0) {
+        if (pts.length === 1) pts = [pts[0], pts[0]];
         const isErasing = tool === "eraser";
         const newStroke: Stroke = {
           id: idCounter.current++,
@@ -201,6 +213,25 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
     }, [tool, color, size, alpha]);
 
     const handleMouseUp = useCallback(finalizeDraw, [finalizeDraw]);
+
+    const handleMouseLeave = useCallback(() => {
+      if (drawing.current) {
+        finalizeDraw();
+        needsNewStroke.current = true;
+      }
+    }, [finalizeDraw]);
+
+    const handleMouseEnter = useCallback(
+      (_e: Konva.KonvaEventObject<MouseEvent>) => {
+        if (needsNewStroke.current) {
+          needsNewStroke.current = false;
+          drawing.current = true;
+          currentPointsRef.current = [getPos()];
+          setCurrentPoints([getPos()]);
+        }
+      },
+      [getPos],
+    );
 
     useEffect(() => {
       const preventCtx = (e: MouseEvent) => e.preventDefault();
@@ -220,6 +251,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, Props>(
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         style={{ touchAction: "none" }}
       >
         <Layer>

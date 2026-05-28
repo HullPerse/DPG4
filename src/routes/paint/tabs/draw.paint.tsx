@@ -3,6 +3,7 @@ import {
   ReactNode,
   startTransition,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -58,6 +59,10 @@ function DrawPaint({
   const [alpha, setAlpha] = useState<number>(1);
 
   const canvasRef = useRef<DrawingCanvasHandle>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [hoveringCanvas, setHoveringCanvas] = useState(false);
+  const [panning, setPanning] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["drawPaint"],
@@ -92,6 +97,70 @@ function DrawPaint({
     },
     [data],
   );
+
+  const handleSectionMove = useCallback((e: React.MouseEvent) => {
+    const rect = sectionRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const styleId = "__canvas-cursor-override__";
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+
+    if (tool !== "bucket" && hoveringCanvas) {
+      el.style.setProperty("cursor", "none", "important");
+      el.classList.add("__canvas-hide-cursor");
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = ".__canvas-hide-cursor *{cursor:none!important}";
+    } else {
+      el.style.removeProperty("cursor");
+      el.classList.remove("__canvas-hide-cursor");
+      styleEl?.remove();
+    }
+
+    return () => {
+      el.classList.remove("__canvas-hide-cursor");
+      document.getElementById(styleId)?.remove();
+    };
+  }, [tool, hoveringCanvas]);
+
+  useEffect(() => {
+    const preventAlt = (e: KeyboardEvent) => {
+      if (e.key === "Alt") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    if (hoveringCanvas) {
+      globalThis.addEventListener("keydown", preventAlt, true);
+      globalThis.addEventListener("keyup", preventAlt, true);
+      return () => {
+        globalThis.removeEventListener("keydown", preventAlt, true);
+        globalThis.removeEventListener("keyup", preventAlt, true);
+      };
+    }
+  }, [hoveringCanvas]);
+
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (!e.altKey || !hoveringCanvas) return;
+      const el = sectionRef.current;
+      if (!el || !el.contains(e.target as Node)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setSize((s) => Math.max(1, Math.min(100, s - Math.sign(e.deltaY))));
+    };
+    globalThis.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    return () =>
+      globalThis.removeEventListener("wheel", onWheel, { capture: true });
+  }, [hoveringCanvas]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -267,7 +336,13 @@ function DrawPaint({
       </section>
       {/*CANVAS*/}
 
-      <section className="flex flex-col flex-1 items-center justify-center overflow-hidden relative bg-background p-0">
+      <section
+        ref={sectionRef}
+        className="flex flex-col flex-1 items-center justify-center overflow-hidden relative bg-background p-0"
+        onMouseMove={handleSectionMove}
+        onMouseEnter={() => setHoveringCanvas(true)}
+        onMouseLeave={() => setHoveringCanvas(false)}
+      >
         <TransformWrapper
           limitToBounds={false}
           initialScale={0.5}
@@ -275,9 +350,11 @@ function DrawPaint({
           maxScale={5}
           centerOnInit={true}
           onPanningStart={() => {
+            setPanning(true);
             lockCursor("var(--cursor-grabbing, grabbing)");
           }}
           onPanningStop={() => {
+            setPanning(false);
             lockCursor(null);
           }}
           panning={{
@@ -314,6 +391,19 @@ function DrawPaint({
             />
           </TransformComponent>
         </TransformWrapper>
+
+        {hoveringCanvas && tool !== "bucket" && !panning && (
+          <div
+            className="absolute pointer-events-none border-2 border-iris"
+            style={{
+              left: cursorPos.x - size / 2,
+              top: cursorPos.y - size / 2,
+              width: size,
+              height: size,
+              zIndex: 100,
+            }}
+          />
+        )}
       </section>
     </main>
   );
