@@ -30,10 +30,12 @@ function generateCSS(defs: CursorDef[]): string {
 
   const rules: string[] = [];
 
-  rules.push("html{cursor:var(--cursor-default)!important}");
+  rules.push("html,*{cursor:var(--cursor-default)!important}");
 
   const hasText = defs.some((d) => d.keyword === "text");
   const hasPointer = defs.some((d) => d.keyword === "pointer");
+  const hasGrab = defs.some((d) => d.keyword === "grab");
+  const hasGrabbing = defs.some((d) => d.keyword === "grabbing");
 
   if (hasText) {
     rules.push(
@@ -46,7 +48,14 @@ function generateCSS(defs: CursorDef[]): string {
   }
 
   if (hasPointer) {
-    rules.push('a,[role="button"]{cursor:var(--cursor-pointer)!important}');
+    rules.push('a,[role="button"],a *,[role="button"] *{cursor:var(--cursor-pointer)!important}');
+  }
+
+  if (hasGrab && hasGrabbing) {
+    rules.push('input[type="range"]{cursor:var(--cursor-grab)!important}');
+    rules.push(
+      'input[type="range"]:active{cursor:var(--cursor-grabbing)!important}',
+    );
   }
 
   for (const d of defs) {
