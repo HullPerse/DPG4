@@ -31,6 +31,11 @@ export const useDataStore = create<DataStore>()(
         adPosition: 1,
         storeItems: [],
         rerollPrice: 2,
+        negativeScoreModal: false,
+
+        setNegativeScoreModal: (negativeScoreModal: boolean) => {
+          set({ negativeScoreModal });
+        },
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
@@ -69,7 +74,9 @@ export const useDataStore = create<DataStore>()(
         setWallpaper: (wallpaper: string) => {
           set({ wallpaper });
         },
-        setWallpaperFilters: (filters: Partial<DataStore["wallpaperFilters"]>) => {
+        setWallpaperFilters: (
+          filters: Partial<DataStore["wallpaperFilters"]>,
+        ) => {
           set((state) => ({
             wallpaperFilters: { ...state.wallpaperFilters, ...filters },
           }));
@@ -166,4 +173,3 @@ export const useDataStore = create<DataStore>()(
     ),
   ),
 );
-

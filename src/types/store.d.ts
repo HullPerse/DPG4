@@ -71,6 +71,7 @@ export interface DataStore {
   adPosition: 1 | 2 | 3 | 4;
   storeItems: StoreItem[];
   rerollPrice: number;
+  negativeScoreModal: boolean;
 
   // Actions
   setWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
@@ -81,6 +82,7 @@ export interface DataStore {
   setWallpaper: (wallpaper: string) => void;
   setConnected: (isConnected: boolean) => void;
   setEditing: (isEditing: boolean) => void;
+  setNegativeScoreModal: (negativeScoreModal: boolean) => void;
   setArrowType: (
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;

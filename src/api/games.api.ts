@@ -307,7 +307,10 @@ export default class GameApi {
     //check for sub
     const currentUser = await usersApi.getUserById(game.user.id);
 
-    if (Array.isArray(currentUser.status) && currentUser.status.includes("subscribed")) {
+    if (
+      Array.isArray(currentUser.status) &&
+      currentUser.status.includes("subscribed")
+    ) {
       if (currentUser.money >= SUBSCRIPTION_CONTINUE) {
         await usersApi.scoreUser(
           String(currentUser.id),
@@ -327,7 +330,10 @@ export default class GameApi {
     }
 
     if (status === "COMPLETED") {
-      if (Array.isArray(currentUser.status) && currentUser.status.some((s) => s === "Борщ")) {
+      if (
+        Array.isArray(currentUser.status) &&
+        currentUser.status.some((s) => s === "Борщ")
+      ) {
         const finalScore = Math.floor(time / 2);
 
         await usersApi.scoreUser(String(currentUser.id), finalScore);

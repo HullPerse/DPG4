@@ -24,9 +24,17 @@ import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
 import { useToastStore } from "./store/toast.store";
 import { UpdateData, Activity } from "./types/activity";
-import { Download } from "lucide-react";
+import { Download, PhoneCall } from "lucide-react";
+import { CreateModal } from "./components/shared/items.modal";
+import ImageComponent from "./components/shared/image.component";
+import { Button } from "./components/ui/button.component";
+import UserApi from "./api/user.api";
+
+const userApi = new UserApi();
 
 function App() {
+  const user = useUserStore((state) => state.user);
+
   //routing
   const navigate = useNavigate();
   const addToast = useToastStore((s) => s.addToast);
@@ -34,6 +42,10 @@ function App() {
   //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
   const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
+  const negativeScoreModal = useDataStore((state) => state.negativeScoreModal);
+  const setNegativeScoreModal = useDataStore(
+    (state) => state.setNegativeScoreModal,
+  );
   const isAuth = useUserStore((state) => state.isAuth);
   const loggedIn = useUserStore((state) => state.loggedIn);
 
@@ -211,6 +223,47 @@ function App() {
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
     >
+      <CreateModal
+        label="ЗВОНОК"
+        body={() => (
+          <main className="flex flex-col gap-2 p-2">
+            <section className="w-40 h-40 border-2 border-highlight-high self-center">
+              <ImageComponent
+                src="/death.png"
+                alt="Смерть в нищите"
+                className="w-full h-full"
+              />
+            </section>
+
+            <section className="flex flex-col leading-tight self-center">
+              <span className="font-bold text-xl">СМЕРТЬ В НИЩИТЕ</span>
+              <span className="text-center">входящий звонок...</span>
+            </section>
+
+            <section className="flex flex-row gap-10 self-center mt-14 w-full">
+              <Button
+                variant="success"
+                className="w-full h-20"
+                onClick={async () => {
+                  await userApi
+                    .scoreUser(
+                      String(user?.id),
+                      Math.floor(Math.random() * 10) + 1,
+                    )
+                    .then(() => setNegativeScoreModal(false));
+                }}
+              >
+                <PhoneCall className="size-14 animate-pulse" />
+              </Button>
+            </section>
+          </main>
+        )}
+        open={!!negativeScoreModal}
+        setOpen={(open) => {
+          if (!open) setNegativeScoreModal(false);
+        }}
+      />
+
       {/*<button
         className="absolute z-100 bg-red-500"
         onClick={async () => {
