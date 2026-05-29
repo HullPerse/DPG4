@@ -40,11 +40,11 @@ export default function HomeLibrary({
             className="flex w-full cursor-pointer flex-col border border-highlight-high shadow-sharp-sm opacity-85 hover:opacity-100"
             onClick={() => setCurrentGame(game.id as string)}
           >
-            <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-highlight-medium">
+            <div className="relative  w-full overflow-hidden rounded-sm border border-highlight-medium">
               <ImageComponent
                 src={game.data.capsuleImage}
                 alt={game.data.name}
-                className="h-full w-full object-cover"
+                className="h-18  object-cover"
                 placeholder="https://placehold.co/600x400"
               />
             </div>
