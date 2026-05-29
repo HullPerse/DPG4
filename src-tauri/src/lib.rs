@@ -5,7 +5,8 @@ use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_updater::UpdaterExt;
 
-static STEAM_API_KEY: &str = "A860B0E16AC5F330EA23DE1D61B37F85";
+
+static STEAM_API_KEY: &str = "STEAM_API_KEY";
 
 #[derive(Serialize)]
 struct Wallpaper {

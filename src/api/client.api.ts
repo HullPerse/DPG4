@@ -1,5 +1,6 @@
 import PocketBase from "pocketbase";
 
+//Both of these are locals so yeah
 export const URL = "http://26.15.36.191:8090/";
 //export const URL = "http://127.0.0.1:8090/";
 
