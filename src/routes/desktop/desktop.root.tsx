@@ -64,7 +64,7 @@ export default function Desktop({
           ))}
         </div>
 
-        {!user?.status?.some((u) => u === "subscribed") && <AnnouncementAd />}
+        {!Array.isArray(user?.status) || !user.status.includes("subscribed") ? <AnnouncementAd /> : null}
 
         {openCalendar && (
           <CalendarDesktop
