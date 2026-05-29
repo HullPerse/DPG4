@@ -253,7 +253,7 @@ export default function GlobalChatApp() {
             disabled={loading || !!editId}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && newMessage.trim()) {
+              if (e.key === "Enter" && (newMessage.trim() || image)) {
                 handleSend();
               }
             }}
@@ -262,7 +262,7 @@ export default function GlobalChatApp() {
             size="icon"
             variant="success"
             onClick={handleSend}
-            disabled={!newMessage || loading || !!editId}
+            disabled={(!newMessage.trim() && !image) || loading || !!editId}
           >
             {loading ? <SmallLoader /> : <Send />}
           </Button>
