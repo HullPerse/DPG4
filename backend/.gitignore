@@ -30,6 +30,10 @@ yarn-error.log*
 # drizzle
 /drizzle
 
+# admin panel
+/admin-panel/dist/
+/admin-panel/node_modules/
+
 # local env files
 .env
 .env.local

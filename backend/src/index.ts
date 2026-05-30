@@ -22,6 +22,7 @@ import { gameUtilsRoute } from "./routes/game-utils.route";
 import { steamRoute } from "./routes/steam.route";
 import { metadataRoute } from "./routes/metadata.route";
 import { searchRoute } from "./routes/search.route";
+import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 
 const app = new Elysia()
@@ -58,6 +59,7 @@ const app = new Elysia()
     }),
   )
   .use(dbPlugin)
+  .use(adminRoute)
   .get("/health", () => ({ ok: true }))
   .ws("/ws", {
     open(ws) {
@@ -90,7 +92,7 @@ const app = new Elysia()
   .listen(config.port);
 
 console.log(
-  `🐀 DPG API: http://${app.server?.hostname}:${app.server?.port}  |  Docs: /docs`,
+  `🐀 DPG API: http://${app.server?.hostname}:${app.server?.port}  |  Docs: /docs  |  Admin: /admin`,
 );
 
 export type App = typeof app;
