@@ -31,6 +31,9 @@ export const ITEM_MODAL_LABELS = new Set([
   "Гремлинизатор",
   "Колесная Фея",
   "Лещ",
+  "Ебанутый дед",
+  "Картонная упаковка",
+  "Кайджи",
 ]);
 
 export const RAT_IDS = [

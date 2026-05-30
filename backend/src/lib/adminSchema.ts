@@ -5,6 +5,7 @@ export type AdminFieldType =
   | "date"
   | "json"
   | "objectList"
+  | "stringList"
   | "blob"
   | "audio"
   | "password"
@@ -101,7 +102,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "steam", type: "text" },
       { source: "currentAction", type: "text" },
       { source: "currentDice", type: "number" },
-      { source: "status", type: "json" },
+      { source: "status", type: "stringList" },
       { source: "place", type: "text" },
       { source: "created", type: "date", hideInList: true },
       { source: "updated", type: "date", hideInList: true },
@@ -155,7 +156,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "description", type: "text" },
       { source: "charge", type: "number" },
       { source: "rollable", type: "boolean" },
-      { source: "status", type: "json" },
+      { source: "status", type: "stringList" },
       { source: "created", type: "date", hideInList: true },
       { source: "updated", type: "date", hideInList: true },
     ],
@@ -265,8 +266,8 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "ladderTo", type: "number" },
       { source: "snakeTo", type: "number" },
       { source: "conditions", type: "json" },
-      { source: "status", type: "json" },
-      { source: "captured", type: "json" },
+      { source: "status", type: "stringList" },
+      { source: "captured", type: "stringList" },
       { source: "created", type: "date", hideInList: true },
       { source: "updated", type: "date", hideInList: true },
     ],
@@ -277,7 +278,7 @@ export const ADMIN_JSON_FIELDS: Record<string, string[]> = Object.fromEntries(
   Object.entries(ADMIN_SCHEMA).map(([table, meta]) => [
     table,
     meta.fields
-      .filter((f) => f.type === "json" || f.type === "objectList")
+      .filter((f) => f.type === "json" || f.type === "objectList" || f.type === "stringList")
       .map((f) => f.source),
   ]),
 );

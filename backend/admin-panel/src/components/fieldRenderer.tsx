@@ -14,15 +14,12 @@ import {
 } from "@/components/MediaInputs";
 import { ObjectListInput } from "@/components/ObjectListInput";
 import { ReferenceSelect } from "@/components/ReferenceSelect";
+import { StringListInput, StringListPreview } from "@/components/StringListInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { isObjectArray, isStringArray } from "@/lib/arrayFieldUtils";
 import type { AdminFieldMeta } from "@/types";
-
-function isObjectArray(value: unknown): boolean {
-  if (!Array.isArray(value) || value.length === 0) return false;
-  return typeof value[0] === "object" && value[0] !== null && !Array.isArray(value[0]);
-}
 
 function formatCell(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -47,6 +44,9 @@ export function renderListCell(
   }
   if (field.type === "audio") {
     return <AudioField source={field.source} record={record} resource={resource} />;
+  }
+  if (field.type === "stringList" || isStringArray(val)) {
+    return <StringListPreview value={val} />;
   }
   if (field.type === "objectList" || isObjectArray(val)) {
     return <ObjectListPreview value={val} />;
@@ -88,6 +88,9 @@ export function renderShowField(
         {field.type === "objectList" && (
           <span className="bg-primary/20 text-primary px-1 text-[10px]">list</span>
         )}
+        {field.type === "stringList" && (
+          <span className="bg-primary/20 text-primary px-1 text-[10px]">strings</span>
+        )}
         {(field.type === "select" || field.choices?.length) && (
           <span className="bg-iris/20 text-iris px-1 text-[10px]">select</span>
         )}
@@ -97,6 +100,8 @@ export function renderShowField(
           <BlobField source={field.source} record={record} resource={resource} />
         ) : field.type === "audio" ? (
           <AudioField source={field.source} record={record} resource={resource} />
+        ) : field.type === "stringList" || isStringArray(val) ? (
+          <StringListPreview value={val} />
         ) : field.type === "json" || field.type === "objectList" ? (
           <JsonField value={val} />
         ) : field.type === "select" || field.choices?.length ? (
@@ -294,6 +299,17 @@ export function SmartInput({
     );
   }
 
+  if (field.type === "stringList") {
+    return (
+      <StringListInput
+        source={field.source}
+        value={val}
+        onChange={set}
+        changed={changed}
+      />
+    );
+  }
+
   if (field.type === "objectList") {
     return (
       <ObjectListInput
@@ -309,12 +325,23 @@ export function SmartInput({
   const recordVal = record?.[field.source];
   if (
     field.type === "json" ||
+    isStringArray(val ?? recordVal) ||
     isObjectArray(val ?? recordVal) ||
     (val !== null &&
       val !== undefined &&
       typeof val === "object" &&
       !Array.isArray(val))
   ) {
+    if (isStringArray(val ?? recordVal)) {
+      return (
+        <StringListInput
+          source={field.source}
+          value={val ?? recordVal}
+          onChange={set}
+          changed={changed}
+        />
+      );
+    }
     if (isObjectArray(val ?? recordVal)) {
       return (
         <ObjectListInput
