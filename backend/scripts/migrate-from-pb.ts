@@ -1,13 +1,12 @@
 /**
- * Импорт из PocketBase в SQLite DPG API.
+ * Migrate PocketBase to DPG server.
  *
  * bun run scripts/migrate-from-pb.ts
- * PB_DB_PATH=../old backend/pb_data/data.db  (путь к data.db PocketBase)
+ * PB_DB_PATH=../old backend/pb_data/data.db  (path to data.db)
  * PB_STORAGE=../old backend/pb_data/storage
  */
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { eq } from "drizzle-orm";
 import { readdirSync, readFileSync, existsSync, statSync } from "fs";
 import { join } from "path";
 import * as schema from "../src/db/schema";
@@ -50,7 +49,10 @@ function readPbFile(
   return readFileSync(base);
 }
 
-function findMainFile(collectionId: string, recordId: string): {
+function findMainFile(
+  collectionId: string,
+  recordId: string,
+): {
   name: string;
   buffer: Buffer;
 } | null {
@@ -85,11 +87,10 @@ function parseJson<T>(v: unknown, fallback: T): T {
 }
 
 async function importUsers(pb: Database) {
-  const rows = pb
-    .query(
-      `SELECT * FROM users WHERE id != ''`,
-    )
-    .all() as Record<string, unknown>[];
+  const rows = pb.query(`SELECT * FROM users WHERE id != ''`).all() as Record<
+    string,
+    unknown
+  >[];
 
   for (const row of rows) {
     const id = String(row.id);
@@ -145,103 +146,124 @@ async function importCollection(
 
     if (kind === "games") {
       const file = row.image
-        ? readPbFile(collectionId, id, String(row.image)) ??
-          findMainFile(collectionId, id)?.buffer
+        ? (readPbFile(collectionId, id, String(row.image)) ??
+          findMainFile(collectionId, id)?.buffer)
         : findMainFile(collectionId, id)?.buffer;
-      await db.insert(schema.games).values({
-        id,
-        user: parseJson(row.user, {}),
-        data: parseJson(row.data, {}),
-        status: String(row.status ?? "PLAYING"),
-        playtime: parseJson(row.playtime, {}),
-        score: Number(row.score ?? 0),
-        review: parseJson(row.review, null),
-        image: file ?? null,
-        imageMime: file ? "image/png" : null,
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.games)
+        .values({
+          id,
+          user: parseJson(row.user, {}),
+          data: parseJson(row.data, {}),
+          status: String(row.status ?? "PLAYING"),
+          playtime: parseJson(row.playtime, {}),
+          score: Number(row.score ?? 0),
+          review: parseJson(row.review, null),
+          image: file ?? null,
+          imageMime: file ? "image/png" : null,
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "items") {
       const file =
         readPbFile(collectionId, id, String(row.image ?? "")) ??
         findMainFile(collectionId, id)?.buffer;
-      await db.insert(schema.items).values({
-        id,
-        type: String(row.type ?? "item"),
-        label: String(row.label ?? ""),
-        description: String(row.description ?? ""),
-        charge: Number(row.charge ?? 0),
-        rollable: Boolean(row.rollable),
-        status: parseJson(row.status, null),
-        image: file ?? null,
-        imageMime: file ? "image/png" : null,
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.items)
+        .values({
+          id,
+          type: String(row.type ?? "item"),
+          label: String(row.label ?? ""),
+          description: String(row.description ?? ""),
+          charge: Number(row.charge ?? 0),
+          rollable: Boolean(row.rollable),
+          status: parseJson(row.status, null),
+          image: file ?? null,
+          imageMime: file ? "image/png" : null,
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "inventory" || kind === "market") {
       const file =
         readPbFile(collectionId, id, String(row.image ?? "")) ??
         findMainFile(collectionId, id)?.buffer;
       if (kind === "inventory") {
-        await db.insert(schema.inventory).values({
-          id,
-          type: String(row.type ?? "item"),
-          owner: String(row.owner ?? ""),
-          label: String(row.label ?? ""),
-          description: String(row.description ?? ""),
-          charge: Number(row.charge ?? 0),
-          image: file ?? null,
-          imageMime: file ? "image/png" : null,
-          created,
-          updated,
-        }).onConflictDoNothing();
+        await db
+          .insert(schema.inventory)
+          .values({
+            id,
+            type: String(row.type ?? "item"),
+            owner: String(row.owner ?? ""),
+            label: String(row.label ?? ""),
+            description: String(row.description ?? ""),
+            charge: Number(row.charge ?? 0),
+            image: file ?? null,
+            imageMime: file ? "image/png" : null,
+            created,
+            updated,
+          })
+          .onConflictDoNothing();
       } else {
-        await db.insert(schema.market).values({
-          id,
-          type: String(row.type ?? "item"),
-          originalId: String(row.originalId ?? ""),
-          owner: parseJson(row.owner, {}),
-          label: String(row.label ?? ""),
-          description: String(row.description ?? ""),
-          charge: Number(row.charge ?? 0),
-          price: Number(row.price ?? 0),
-          discount: row.discount != null ? Number(row.discount) : null,
-          image: file ?? null,
-          imageMime: file ? "image/png" : null,
-          created,
-          updated,
-        }).onConflictDoNothing();
+        await db
+          .insert(schema.market)
+          .values({
+            id,
+            type: String(row.type ?? "item"),
+            originalId: String(row.originalId ?? ""),
+            owner: parseJson(row.owner, {}),
+            label: String(row.label ?? ""),
+            description: String(row.description ?? ""),
+            charge: Number(row.charge ?? 0),
+            price: Number(row.price ?? 0),
+            discount: row.discount != null ? Number(row.discount) : null,
+            image: file ?? null,
+            imageMime: file ? "image/png" : null,
+            created,
+            updated,
+          })
+          .onConflictDoNothing();
       }
     } else if (kind === "activity") {
-      await db.insert(schema.activity).values({
-        id,
-        author: row.author != null ? String(row.author) : null,
-        image: row.image != null ? String(row.image) : null,
-        type: String(row.type ?? "emoji"),
-        text: String(row.text ?? ""),
-        created,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.activity)
+        .values({
+          id,
+          author: row.author != null ? String(row.author) : null,
+          image: row.image != null ? String(row.image) : null,
+          type: String(row.type ?? "emoji"),
+          text: String(row.text ?? ""),
+          created,
+        })
+        .onConflictDoNothing();
     } else if (kind === "chats") {
       const file =
         readPbFile(collectionId, id, String(row.image ?? "")) ??
         findMainFile(collectionId, id)?.buffer;
-      await db.insert(schema.chats).values({
-        id,
-        data: parseJson(row.data, {}),
-        message: String(row.message ?? ""),
-        image: file ?? null,
-        imageMime: file ? "image/png" : null,
-        isRead: Boolean(row.isRead),
-        created,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.chats)
+        .values({
+          id,
+          data: parseJson(row.data, {}),
+          message: String(row.message ?? ""),
+          image: file ?? null,
+          imageMime: file ? "image/png" : null,
+          isRead: Boolean(row.isRead),
+          created,
+        })
+        .onConflictDoNothing();
     } else if (kind === "rules") {
-      await db.insert(schema.rules).values({
-        id,
-        category: String(row.category ?? ""),
-        rule: String(row.rule ?? ""),
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.rules)
+        .values({
+          id,
+          category: String(row.category ?? ""),
+          rule: String(row.rule ?? ""),
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "ads") {
       const img =
         row.image != null
@@ -251,53 +273,65 @@ async function importCollection(
         row.audio != null
           ? readPbFile(collectionId, id, String(row.audio))
           : null;
-      await db.insert(schema.ads).values({
-        id,
-        owner: parseJson(row.owner, {}),
-        text: String(row.text ?? ""),
-        image: img ?? null,
-        imageMime: img ? "image/png" : null,
-        audio: aud ?? null,
-        audioMime: aud ? "audio/mpeg" : null,
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.ads)
+        .values({
+          id,
+          owner: parseJson(row.owner, {}),
+          text: String(row.text ?? ""),
+          image: img ?? null,
+          imageMime: img ? "image/png" : null,
+          audio: aud ?? null,
+          audioMime: aud ? "audio/mpeg" : null,
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "drawings") {
       const file =
         readPbFile(collectionId, id, String(row.image ?? "")) ??
         findMainFile(collectionId, id)?.buffer;
-      await db.insert(schema.drawings).values({
-        id,
-        author: parseJson(row.author, {}),
-        image: file ?? null,
-        imageMime: file ? "image/png" : null,
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.drawings)
+        .values({
+          id,
+          author: parseJson(row.author, {}),
+          image: file ?? null,
+          imageMime: file ? "image/png" : null,
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "cells") {
-      await db.insert(schema.cells).values({
-        id,
-        type: String(row.type ?? "grid"),
-        number: Number(row.number ?? 0),
-        title: String(row.title ?? ""),
-        conditions: parseJson(row.conditions, {}),
-        cellType: String(row.cellType ?? ""),
-        difficulty: String(row.difficulty ?? ""),
-        ladderTo: Number(row.ladderTo ?? 0),
-        snakeTo: Number(row.snakeTo ?? 0),
-        status: parseJson(row.status, null),
-        captured: parseJson(row.captured, null),
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.cells)
+        .values({
+          id,
+          type: String(row.type ?? "grid"),
+          number: Number(row.number ?? 0),
+          title: String(row.title ?? ""),
+          conditions: parseJson(row.conditions, {}),
+          cellType: String(row.cellType ?? ""),
+          difficulty: String(row.difficulty ?? ""),
+          ladderTo: Number(row.ladderTo ?? 0),
+          snakeTo: Number(row.snakeTo ?? 0),
+          status: parseJson(row.status, null),
+          captured: parseJson(row.captured, null),
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     } else if (kind === "presets") {
-      await db.insert(schema.presets).values({
-        id,
-        label: String(row.label ?? ""),
-        games: parseJson(row.games, []),
-        created,
-        updated,
-      }).onConflictDoNothing();
+      await db
+        .insert(schema.presets)
+        .values({
+          id,
+          label: String(row.label ?? ""),
+          games: parseJson(row.games, []),
+          created,
+          updated,
+        })
+        .onConflictDoNothing();
     }
   }
 
@@ -308,7 +342,7 @@ async function main() {
   if (!existsSync(PB_DB)) {
     console.error(
       `PocketBase data.db не найден: ${PB_DB}\n` +
-        `Укажите PB_DB_PATH к файлу data.db с сервера PocketBase.`,
+        `locate path to data.db from PocketBase.`,
     );
     process.exit(1);
   }

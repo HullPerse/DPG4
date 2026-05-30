@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
@@ -15,14 +15,13 @@ const STATUSES: Record<string, string> = {
 };
 
 export async function getLastGameForUser(db: Db, userId: string) {
-  const rows = await db
+  const [row] = await db
     .select()
     .from(schema.games)
-    .orderBy(desc(schema.games.created));
-  const userGames = rows.filter(
-    (g) => (g.user as { id?: string })?.id === userId,
-  );
-  return userGames[userGames.length - 1] ?? null;
+    .where(sql`json_extract(${schema.games.user}, '$.id') = ${userId}`)
+    .orderBy(desc(schema.games.created))
+    .limit(1);
+  return row ?? null;
 }
 
 export async function changeGameStatus(

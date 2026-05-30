@@ -42,12 +42,13 @@ export async function createActivity(
   );
 }
 
-export async function listActivity(db: Db, limit = 50) {
+export async function listActivity(db: Db, limit = 50, offset = 0) {
   const rows = await db
     .select()
     .from(schema.activity)
     .orderBy(desc(schema.activity.created))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
   return rows.map((r) =>
     withRecordMeta({ ...r, updated: r.created }, "activity"),
   );

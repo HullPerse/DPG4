@@ -2415,7 +2415,10 @@ export const itemEffect: effectInterface[] = [
         const allUsers = await userApi.getAllUsers();
         const filteredUsers = allUsers
           .filter((u) => u.id !== ctx.user.id)
-          .filter((u) => Array.isArray(u.status) && u.status.some((s) => s === "Картошка"));
+          .filter(
+            (u) =>
+              Array.isArray(u.status) && u.status.some((s) => s === "Картошка"),
+          );
 
         return filteredUsers.length > 0 ? filteredUsers : [];
       },

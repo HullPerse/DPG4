@@ -9,7 +9,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "import:pb": "bun run scripts/migrate-from-pb.ts",
-    "backup": "bun run scripts/backup.ts"
+    "backup": "bun run scripts/backup.ts",
+    "compress-images": "bun run scripts/compress-images.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

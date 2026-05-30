@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
-import { eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { parseFileInput } from "../lib/files";
+import { compressSquare, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import {
@@ -18,6 +19,19 @@ import {
 import { authPlugin } from "../plugins/auth.plugin";
 import { executeInventoryUse } from "../services/item-effects.service";
 
+const itemListColumns = {
+  id: schema.items.id,
+  type: schema.items.type,
+  label: schema.items.label,
+  description: schema.items.description,
+  charge: schema.items.charge,
+  rollable: schema.items.rollable,
+  status: schema.items.status,
+  hasImage: sql<boolean>`${schema.items.image} IS NOT NULL`,
+  created: schema.items.created,
+  updated: schema.items.updated,
+};
+
 function mapItem(row: typeof schema.items.$inferSelect) {
   return withRecordMeta(row, "items");
 }
@@ -26,10 +40,28 @@ import { dbPlugin } from "../plugins/db.plugin";
 
 export const itemsRoute = new Elysia({ prefix: "/items" })
   .use(dbPlugin)
-  .get("/", async ({ db }) => {
-    const rows = await db.select().from(schema.items);
-    return rows.map(mapItem);
-  })
+  .get(
+    "/",
+    async ({ db, query, set }) => {
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const offset = query.offset ? Number(query.offset) : 0;
+      const rows = await db
+        .select(itemListColumns)
+        .from(schema.items)
+        .limit(limit)
+        .offset(offset);
+      set.headers["Cache-Control"] = "public, max-age=60";
+      return rows.map((r) => withRecordMeta(r, "items"));
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          limit: t.Optional(t.String()),
+          offset: t.Optional(t.String()),
+        }),
+      ),
+    },
+  )
   .get("/:id", async ({ params, db, set }) => {
     const [row] = await db
       .select()
@@ -44,7 +76,13 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .post("/", async ({ body, db }) => {
     const id = newId();
     const ts = nowIso();
-    const imageFile = parseFileInput(body.image);
+    let imageFile = parseFileInput(body.image);
+    if (imageFile && isImageMime(imageFile.mime)) {
+      imageFile = {
+        data: await compressSquare(imageFile.data),
+        mime: "image/webp",
+      };
+    }
     await db.insert(schema.items).values({
       id,
       type: body.type,
@@ -64,7 +102,13 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
     );
   })
   .patch("/:id", async ({ params, body, db }) => {
-    const imageFile = parseFileInput(body.image);
+    let imageFile = parseFileInput(body.image);
+    if (imageFile && isImageMime(imageFile.mime)) {
+      imageFile = {
+        data: await compressSquare(imageFile.data),
+        mime: "image/webp",
+      };
+    }
     const patch: Partial<typeof schema.items.$inferInsert> = {
       updated: nowIso(),
     };
@@ -95,12 +139,28 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
 export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .use(dbPlugin)
   .use(authPlugin)
-  .get("/", async ({ db, query }) => {
-    const rows = await db.select().from(schema.inventory);
-    const list = rows.map((r) => withRecordMeta(r, "inventory"));
-    if (query.owner) return list.filter((i) => i.owner === query.owner);
-    return list;
-  })
+  .get(
+    "/",
+    async ({ db, query }) => {
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const offset = query.offset ? Number(query.offset) : 0;
+      const q = db.select().from(schema.inventory);
+      const filtered = query.owner
+        ? q.where(eq(schema.inventory.owner, query.owner))
+        : q;
+      const rows = await filtered.limit(limit).offset(offset);
+      return rows.map((r) => withRecordMeta(r, "inventory"));
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          owner: t.Optional(t.String()),
+          limit: t.Optional(t.String()),
+          offset: t.Optional(t.String()),
+        }),
+      ),
+    },
+  )
   .get("/:id", async ({ params, db, set }) => {
     const [row] = await db
       .select()
@@ -143,10 +203,28 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
 
 export const marketRoute = new Elysia({ prefix: "/market" })
   .use(dbPlugin)
-  .get("/", async ({ db }) => {
-    const rows = await db.select().from(schema.market);
-    return rows.map((r) => withRecordMeta(r, "market"));
-  })
+  .get(
+    "/",
+    async ({ db, query }) => {
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const offset = query.offset ? Number(query.offset) : 0;
+      const rows = await db
+        .select()
+        .from(schema.market)
+        .orderBy(desc(schema.market.created))
+        .limit(limit)
+        .offset(offset);
+      return rows.map((r) => withRecordMeta(r, "market"));
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          limit: t.Optional(t.String()),
+          offset: t.Optional(t.String()),
+        }),
+      ),
+    },
+  )
   .get("/:id", async ({ params, db, set }) => {
     const [row] = await db
       .select()

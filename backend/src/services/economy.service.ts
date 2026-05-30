@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
@@ -207,24 +207,28 @@ export async function tradeInventory(
     await scoreUser(db, otherUser.id, currentUser.money, true);
     await scoreUser(db, currentUser.id, -currentUser.money, true);
   }
-  for (const itemId of currentUser.items) {
+  if (currentUser.items.length > 0) {
     await db
       .update(schema.inventory)
       .set({ owner: otherUser.id, updated: nowIso() })
-      .where(eq(schema.inventory.id, itemId));
-    broadcast("inventory", "update", itemId);
+      .where(inArray(schema.inventory.id, currentUser.items));
+    for (const itemId of currentUser.items) {
+      broadcast("inventory", "update", itemId);
+    }
   }
 
   if (otherUser.money > 0) {
     await scoreUser(db, currentUser.id, otherUser.money, true);
     await scoreUser(db, otherUser.id, -otherUser.money, true);
   }
-  for (const itemId of otherUser.items) {
+  if (otherUser.items.length > 0) {
     await db
       .update(schema.inventory)
       .set({ owner: currentUser.id, updated: nowIso() })
-      .where(eq(schema.inventory.id, itemId));
-    broadcast("inventory", "update", itemId);
+      .where(inArray(schema.inventory.id, otherUser.items));
+    for (const itemId of otherUser.items) {
+      broadcast("inventory", "update", itemId);
+    }
   }
 
   return true;

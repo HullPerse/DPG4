@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { parseFileInput } from "../lib/files";
+import { compressWebp, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
@@ -28,12 +29,13 @@ import { dbPlugin } from "../plugins/db.plugin";
 export const gamesRoute = new Elysia({ prefix: "/games" })
   .use(dbPlugin)
   .get("/", async ({ db, query }) => {
-    const rows = await db.select().from(schema.games).orderBy(desc(schema.games.created));
-    if (query.userId) {
-      return rows
-        .filter((g) => (g.user as { id?: string })?.id === query.userId)
-        .map(mapGame);
-    }
+    const q = db
+      .select()
+      .from(schema.games)
+      .orderBy(desc(schema.games.created));
+    const rows = await (query.userId
+      ? q.where(sql`json_extract(${schema.games.user}, '$.id') = ${query.userId}`)
+      : q);
     return rows.map(mapGame);
   })
   .get("/:id", async ({ params, db, set }) => {
@@ -50,7 +52,13 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   .post("/", async ({ body, db }) => {
     const id = newId();
     const ts = nowIso();
-    const imageFile = parseFileInput(body.image);
+    let imageFile = parseFileInput(body.image);
+    if (imageFile && isImageMime(imageFile.mime)) {
+      imageFile = {
+        data: await compressWebp(imageFile.data),
+        mime: "image/webp",
+      };
+    }
 
     const user = body.user as { id: string; username: string };
     const data = body.data as { name: string; capsuleImage?: string };
@@ -82,7 +90,13 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
     );
   })
   .patch("/:id", async ({ params, body, db }) => {
-    const imageFile = parseFileInput(body.image);
+    let imageFile = parseFileInput(body.image);
+    if (imageFile && isImageMime(imageFile.mime)) {
+      imageFile = {
+        data: await compressWebp(imageFile.data),
+        mime: "image/webp",
+      };
+    }
     const patch: Partial<typeof schema.games.$inferInsert> = {
       updated: nowIso(),
     };

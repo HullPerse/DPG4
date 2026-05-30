@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import {
@@ -26,11 +26,7 @@ import {
   getLastGameForUser,
   rerollUserLastGame,
 } from "./game.service";
-import {
-  changeUserStatus,
-  getUserById,
-  scoreUser,
-} from "./user.service";
+import { changeUserStatus, getUserById, scoreUser } from "./user.service";
 
 type Db = BunSQLiteDatabase<typeof schema>;
 
@@ -125,11 +121,12 @@ const handlers: Record<string, EffectHandler> = {
   },
 
   "Erection - NPC": async ({ db, userId, inventoryId }) => {
-    const user = await getUser(db, userId);
-    const allUsers = await db.select().from(schema.users);
-    const firstPosition = allUsers.reduce((max, u) =>
-      u.position > max.position ? u : max,
-    );
+    const [firstPosition] = await db
+      .select()
+      .from(schema.users)
+      .orderBy(desc(schema.users.position))
+      .limit(1);
+    if (!firstPosition) return null;
     const targetInventory = await db
       .select()
       .from(schema.inventory)
@@ -168,8 +165,7 @@ const handlers: Record<string, EffectHandler> = {
     const user = await getUser(db, userId);
     const row = getGridPosition(user.position).row;
     const cell = getLastCellInRow(row);
-    const action =
-      user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD";
+    const action = user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD";
     await patchUser(db, userId, { position: cell, currentAction: action });
     return `${user.username} переместился на клетку ${cell}`;
   },
@@ -178,8 +174,7 @@ const handlers: Record<string, EffectHandler> = {
     const user = await getUser(db, userId);
     const row = getGridPosition(user.position).row;
     const cell = getFirstCellInNextRow(row);
-    const action =
-      user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD";
+    const action = user.currentAction === "GAMEADD" ? "GAMEFINISH" : "GAMEADD";
     await patchUser(db, userId, { position: cell, currentAction: action });
     return `${user.username} переместился на клетку ${cell}`;
   },
@@ -274,27 +269,45 @@ const handlers: Record<string, EffectHandler> = {
   Вакуум: async ({ db, userId }) => {
     const user = await getUser(db, userId);
     const allUsers = await db.select().from(schema.users);
-    for (const other of allUsers) {
-      if (Math.abs(user.position - other.position) > 5) continue;
-      const inventory = await db
+    const nearbyIds = allUsers
+      .filter(
+        (other) =>
+          other.id !== userId && Math.abs(user.position - other.position) <= 5,
+      )
+      .map((u) => u.id);
+    if (nearbyIds.length > 0) {
+      const allNearbyInventory = await db
         .select()
         .from(schema.inventory)
-        .where(eq(schema.inventory.owner, other.id));
-      if (!inventory.length) continue;
-      const item = inventory[Math.floor(Math.random() * inventory.length)]!;
-      await transferInventoryOwner(db, item.id, userId);
+        .where(inArray(schema.inventory.owner, nearbyIds));
+      const usedIds: string[] = [];
+      for (const other of allUsers) {
+        if (!nearbyIds.includes(other.id)) continue;
+        const inv = allNearbyInventory.filter((i) => i.owner === other.id);
+        if (!inv.length) continue;
+        const item = inv[Math.floor(Math.random() * inv.length)]!;
+        usedIds.push(item.id);
+      }
+      for (const id of usedIds) {
+        await transferInventoryOwner(db, id, userId);
+      }
     }
     return `${user.username} всосал несколько предметов`;
   },
 
   "Налоговый инспектор": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    const allUsers = await db.select().from(schema.users);
-    const allCells = await db.select().from(schema.cells);
+    const allUsers = await db
+      .select()
+      .from(schema.users)
+      .then((res) => res.filter((u) => u.position !== 0));
 
     for (const other of allUsers) {
       if (other.position === 0) continue;
-      const cell = allCells.find((c) => c.number === other.position);
+      const [cell] = await db
+        .select()
+        .from(schema.cells)
+        .where(eq(schema.cells.number, other.position));
       if (!cell?.captured?.includes(other.id)) continue;
       const finalValue = other.money >= 10 ? 10 : other.money;
       await scoreUser(db, userId, finalValue);
@@ -377,15 +390,22 @@ const handlers: Record<string, EffectHandler> = {
 
   "Крыса Изгой": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    const allItems = await db.select().from(schema.inventory);
-    const pool = allItems.filter(
-      (i) => i.owner !== userId && i.label !== "Крыса Изгой",
-    );
-    const finalItem = pool[Math.floor(Math.random() * pool.length)];
+    const [finalItem] = await db
+      .select()
+      .from(schema.inventory)
+      .where(
+        sql`${schema.inventory.owner} != ${userId} AND ${schema.inventory.label} != 'Крыса Изгой'`,
+      )
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!finalItem) return null;
 
-    const ownItems = allItems.filter((i) => i.owner === userId);
-    const currentItem = ownItems[Math.floor(Math.random() * ownItems.length)];
+    const [currentItem] = await db
+      .select()
+      .from(schema.inventory)
+      .where(eq(schema.inventory.owner, userId))
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!currentItem) return null;
 
     await transferInventoryOwner(db, finalItem.id, userId);
@@ -408,9 +428,16 @@ const handlers: Record<string, EffectHandler> = {
     const targetInventory = allItems.filter((i) => i.owner === targetId);
     const shuffled = [...targetInventory].sort(() => Math.random() - 0.5);
     const halfCount = Math.floor(shuffled.length / 2);
+    const ids = shuffled.slice(0, halfCount).map((i) => i.id);
 
-    for (let i = 0; i < halfCount; i++) {
-      await transferInventoryOwner(db, shuffled[i]!.id, userId);
+    if (ids.length > 0) {
+      await db
+        .update(schema.inventory)
+        .set({ owner: userId, updated: nowIso() })
+        .where(inArray(schema.inventory.id, ids));
+      for (const id of ids) {
+        broadcast("inventory", "update", id);
+      }
     }
 
     const targetUser = await getUserById(db, targetId);
@@ -426,15 +453,14 @@ const handlers: Record<string, EffectHandler> = {
 
   "Крыса наркоманка": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    const pool = await db
+    const [finalItem] = await db
       .select()
       .from(schema.inventory)
-      .then((res) =>
-        res.filter(
-          (i) => i.label !== "Крыса наркоманка" && i.owner !== userId,
-        ),
-      );
-    const finalItem = pool[Math.floor(Math.random() * pool.length)];
+      .where(
+        sql`${schema.inventory.label} != 'Крыса наркоманка' AND ${schema.inventory.owner} != ${userId}`,
+      )
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!finalItem) return null;
 
     await transferInventoryOwner(db, finalItem.id, userId);
@@ -445,12 +471,17 @@ const handlers: Record<string, EffectHandler> = {
 
   "Крысиный тапок": async ({ db, userId, inventoryId }) => {
     const user = await getUser(db, userId);
-    const allItems = await db
+    const [finalItem] = await db
       .select()
       .from(schema.inventory)
-      .where(eq(schema.inventory.owner, userId));
-    const pool = allItems.filter((i) => i.label !== "Крысиный тапок");
-    const finalItem = pool[Math.floor(Math.random() * pool.length)];
+      .where(
+        and(
+          eq(schema.inventory.owner, userId),
+          sql`${schema.inventory.label} != 'Крысиный тапок'`,
+        ),
+      )
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!finalItem) return null;
 
     await removeInventoryById(db, finalItem.id);
@@ -465,11 +496,12 @@ const handlers: Record<string, EffectHandler> = {
 
   "Крыса гой": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    const pool = await db
+    const [finalItem] = await db
       .select()
       .from(schema.inventory)
-      .then((res) => res.filter((i) => i.owner !== userId));
-    const finalItem = pool[Math.floor(Math.random() * pool.length)];
+      .where(sql`${schema.inventory.owner} != ${userId}`)
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!finalItem) return null;
 
     await transferInventoryOwner(db, finalItem.id, userId);
@@ -522,17 +554,14 @@ const handlers: Record<string, EffectHandler> = {
       .select()
       .from(schema.users)
       .then((res) =>
-        res.filter(
-          (u) => u.status && u.status.length > 0 && u.id !== userId,
-        ),
+        res.filter((u) => u.status && u.status.length > 0 && u.id !== userId),
       );
     const finalUser = pool[Math.floor(Math.random() * pool.length)];
     if (!finalUser?.status?.length) return null;
 
     const finalStatus =
       finalUser.status[Math.floor(Math.random() * finalUser.status.length)]!;
-    const finalItem =
-      Math.random() < 0.3 ? ITEM_DB_IDS.poop : ITEM_DB_IDS.rat;
+    const finalItem = Math.random() < 0.3 ? ITEM_DB_IDS.poop : ITEM_DB_IDS.rat;
 
     await changeUserStatus(db, finalUser.id, finalStatus, "remove");
     await addInventory(db, finalUser.id, finalItem);
@@ -578,10 +607,15 @@ const handlers: Record<string, EffectHandler> = {
 
     const half = Math.ceil(inventory.length / 2);
     const itemsToGive = inventory.slice(0, half);
+    const ts = nowIso();
     for (let i = 0; i < itemsToGive.length; i++) {
       const targetUser = allUsers[i % allUsers.length];
       if (!targetUser) continue;
-      await transferInventoryOwner(db, itemsToGive[i]!.id, targetUser.id);
+      await db
+        .update(schema.inventory)
+        .set({ owner: targetUser.id, updated: ts })
+        .where(eq(schema.inventory.id, itemsToGive[i]!.id));
+      broadcast("inventory", "update", itemsToGive[i]!.id);
     }
     return `${user.username} раздал ${itemsToGive.length} из ${inventory.length} предметов ${allUsers.length} участникам`;
   },
@@ -597,20 +631,20 @@ const handlers: Record<string, EffectHandler> = {
     const allItems = await db
       .select()
       .from(schema.inventory)
-      .where(eq(schema.inventory.owner, userId));
-    const pool = allItems.filter((i) => i.label !== "Гремлинская залупа");
+      .where(
+        and(
+          eq(schema.inventory.owner, userId),
+          sql`${schema.inventory.label} != 'Гремлинская залупа'`,
+        ),
+      );
+    const pool = allItems.filter((i) => !GREMLIN_IDS.includes(i.label));
 
     if (!pool.length) {
       await addInventory(db, userId, ITEM_DB_IDS.gremlin);
       return `${user.username} не хватило предметов, он получил Гремлина`;
     }
 
-    let finalItem = pool.find((i) => !GREMLIN_IDS.includes(i.label)) ?? null;
-    if (!finalItem) {
-      await addInventory(db, userId, ITEM_DB_IDS.gremlin);
-      return `${user.username} не хватило предметов, он получил Гремлина`;
-    }
-
+    const finalItem = pool[Math.floor(Math.random() * pool.length)]!;
     await removeInventoryById(db, finalItem.id);
     await addInventory(db, userId, ITEM_DB_IDS.gremlin);
     return `${user.username} превратил ${finalItem.label} в Гремлина`;
@@ -637,12 +671,17 @@ const handlers: Record<string, EffectHandler> = {
 
   "Меч бесконечной лжи": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    const pool = await db
+    const [finalItem] = await db
       .select()
       .from(schema.inventory)
-      .where(eq(schema.inventory.owner, userId))
-      .then((res) => res.filter((i) => i.label !== "Меч бесконечной лжи"));
-    const finalItem = pool[Math.floor(Math.random() * pool.length)];
+      .where(
+        and(
+          eq(schema.inventory.owner, userId),
+          sql`${schema.inventory.label} != 'Меч бесконечной лжи'`,
+        ),
+      )
+      .orderBy(sql`RANDOM()`)
+      .limit(1);
     if (!finalItem) return null;
 
     await removeInventoryById(db, finalItem.id);
