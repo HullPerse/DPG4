@@ -1,0 +1,113 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import GameApi from "@/api/games.api";
+import { WindowLoader } from "@/components/shared/loader.component";
+import { WindowError } from "@/components/shared/error.component";
+import { NetworkIcon } from "lucide-react";
+import { startTransition, useCallback } from "react";
+import { useSubscription } from "@/hooks/subscription.hook";
+import { GameData, type Preset } from "@/types/games";
+import PresetComponent from "@/components/shared/preset.component";
+import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
+
+const gameApi = new GameApi();
+
+export default function PresetsList({
+  searchTerms,
+  setCurrentPreset,
+  setCurrentTab,
+  refetchPresetsRef,
+}: {
+  searchTerms: string;
+  setCurrentPreset: (preset: { id: string; label: string }) => void;
+  setCurrentTab: (
+    tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
+  ) => void;
+  refetchPresetsRef?: React.RefObject<(() => void) | null>;
+}) {
+  const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
+  const accessToken = useDataStore((state) => state.accessToken);
+
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+    queryKey: ["presetsList"],
+    queryFn: async (): Promise<{
+      presets: Preset[];
+      steamLibrary: Preset;
+    }> => {
+      const presets = await gameApi.getPresets();
+
+      const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
+
+      let games: GameData[] = [];
+
+      if (!accessToken) games = await gameApi.getSteamLibrary(steamId);
+      else games = await gameApi.getSteamFamily(steamId, accessToken);
+
+      return {
+        presets,
+        steamLibrary: {
+          id: "steamPreset",
+          label: "Библиотека STEAM",
+          games: games,
+        } as Preset,
+      };
+    },
+  });
+
+  if (refetchPresetsRef) {
+    refetchPresetsRef.current = refetch;
+  }
+
+  const invalidateQuery = useCallback(() => {
+    startTransition(() => {
+      queryClient.invalidateQueries({
+        queryKey: ["presetsList"],
+        refetchType: "active",
+      });
+    });
+  }, [queryClient]);
+
+  useSubscription("presets", "*", invalidateQuery);
+
+  if (isLoading || isRefetching) return <WindowLoader />;
+  if (isError)
+    return (
+      <WindowError
+        error={new Error("Произошла ошибка")}
+        icon={<NetworkIcon />}
+        refresh={refetch}
+        button
+      />
+    );
+
+  return (
+    <main className="relative flex flex-col gap-2 w-full h-full p-2 overflow-y-auto bg-background">
+      {data?.steamLibrary && (
+        <PresetComponent
+          preset={data?.steamLibrary}
+          searchTerms={searchTerms}
+          setCurrentPreset={setCurrentPreset}
+          setCurrentTab={setCurrentTab}
+          steam={true}
+        />
+      )}
+
+      {data?.presets
+
+        ?.sort((a, b) => a.label.localeCompare(b.label))
+        .filter((preset) =>
+          preset.label.toUpperCase().includes(searchTerms.toUpperCase()),
+        )
+        .map((preset) => (
+          <PresetComponent
+            key={preset.id}
+            preset={preset}
+            searchTerms={searchTerms}
+            setCurrentPreset={setCurrentPreset}
+            setCurrentTab={setCurrentTab}
+          />
+        ))}
+    </main>
+  );
+}

@@ -1,0 +1,76 @@
+import { WINDOWS } from "@/config/apps.config";
+import { openWindow } from "@/lib/utils";
+import { createWindow } from "@/lib/window.utils";
+import { useDataStore } from "@/store/data.store";
+import { AppProps } from "@/types/desktop";
+import { WindowProps } from "@/types/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { ExternalLink, PictureInPicture2 } from "lucide-react";
+
+function AppDesktop({
+  name,
+  label,
+  icon,
+  link,
+  type,
+  component,
+  activeApps,
+  setActiveApps,
+  isOpening,
+  setIsOpening,
+}: AppProps & {
+  activeApps: WindowProps[];
+  setActiveApps: React.Dispatch<React.SetStateAction<WindowProps[]>>;
+  isOpening: boolean;
+  setIsOpening: (value: boolean) => void;
+}) {
+  const setUserProfile = useDataStore((state) => state.setUserProfile);
+
+  return (
+    <button
+      data-desktop-button="true"
+      role="button"
+      key={name}
+      className="relative flex h-20 w-20 flex-col items-center justify-center rounded border-2 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] shadow-sharp-sm hover:bg-primary/20"
+      style={{
+        cursor: isOpening ? "wait" : "pointer",
+      }}
+      onDoubleClick={() => {
+        if (type && link) {
+          return type === "browser"
+            ? openUrl(link)
+            : openWindow(name, link, label);
+        }
+
+        if (link) return openUrl(link);
+        if (!activeApps.find((item) => item.id === name)) setIsOpening(true);
+
+        if (name === "library") setUserProfile(null);
+
+        setActiveApps((prev) =>
+          createWindow(
+            prev,
+            WINDOWS.find((w) => w.id === name) as WindowProps,
+            component,
+          ),
+        );
+
+        return setTimeout(() => setIsOpening(false), 1000);
+      }}
+    >
+      {link &&
+        (type === "browser" ? (
+          <ExternalLink className="absolute top-1 right-1 size-4" />
+        ) : (
+          <PictureInPicture2 className="absolute top-1 right-1 size-4" />
+        ))}
+
+      {icon}
+      <span className="text-center text-xs leading-tight font-bold text-text">
+        {label}
+      </span>
+    </button>
+  );
+}
+
+export default AppDesktop;

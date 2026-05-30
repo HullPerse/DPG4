@@ -1,0 +1,130 @@
+import { Chat } from "@/types/chat";
+import { User } from "@/types/user";
+import { cn } from "@/lib/utils";
+import ImageComponent from "./image.component";
+import { getFileUrl } from "@/api/client.api";
+import { CheckCheck, Trash } from "lucide-react";
+import ImageViewer from "./viewer.component";
+
+interface ChatBubbleProps {
+  item: Chat;
+  currentUser: User | null;
+  onEdit?: (message: Chat) => void;
+  onRemove?: (message: Chat) => void;
+}
+
+export default function ChatBubble({
+  item,
+  currentUser,
+  onEdit,
+  onRemove,
+}: ChatBubbleProps) {
+  const sender = item.data.sender;
+  const isAuthor =
+    sender.username === currentUser?.username || sender.id === currentUser?.id;
+
+  const senderColor = isAuthor ? currentUser?.color : sender.color;
+  const senderAvatar = isAuthor ? currentUser?.avatar : sender.avatar;
+
+  return (
+    <main
+      className={cn(
+        "flex h-full min-w-30 w-full gap-2",
+        isAuthor ? "justify-end" : "justify-start",
+      )}
+    >
+      {!isAuthor && (
+        <span
+          className="flex items-center justify-center text-xl w-10 h-10 border-2 self-end"
+          style={{
+            borderColor: senderColor || "var(--color-highlight-high)",
+          }}
+        >
+          {senderAvatar}
+        </span>
+      )}
+      <div
+        className={cn(
+          "flex flex-col max-w-[70%] min-w-64 gap-1 px-3 py-2 border-2",
+          isAuthor ? "bg-iris/20" : "bg-card",
+          item.image && "min-h-40",
+        )}
+        style={{
+          borderColor:
+            senderColor ||
+            (isAuthor ? undefined : "var(--color-highlight-high)"),
+        }}
+      >
+        <span
+          className={`text-sm text-text text-end font-bold underline ${isAuthor ? "self-end" : "self-start"}`}
+        >
+          {sender.username}
+        </span>
+
+        {item.image && (
+          <section className="mt-1 flex w-full h-full ">
+            <ImageViewer
+              src={[`${getFileUrl(item)}`]}
+              zoomable
+              draggable
+              trigger={
+                <ImageComponent
+                  src={`${getFileUrl(item)}`}
+                  alt={item.message || "Изображение"}
+                  type="contain"
+                  className="cursor-pointer"
+                />
+              }
+            />
+          </section>
+        )}
+
+        {item.message && (
+          <span className="text-sm text-text wrap-break-word">
+            {item.message}
+          </span>
+        )}
+
+        <section className="flex flex-row items-center gap-1 text-xs text-muted w-full">
+          {item.isRead && <CheckCheck className="size-4" />}
+
+          <span>
+            {new Date(item.created ?? 0).toLocaleTimeString("ru-RU", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+
+          {isAuthor && onEdit && (
+            <button
+              role="button"
+              onClick={() => onEdit(item)}
+              className="ml-2 text-muted hover:text-text underline cursor-pointer"
+            >
+              Изменить
+            </button>
+          )}
+          {isAuthor && onRemove && (
+            <button
+              role="button"
+              onClick={() => onRemove(item)}
+              className="ml-auto text-muted hover:text-red-500/40 underline cursor-pointer"
+            >
+              <Trash className="size-4" />
+            </button>
+          )}
+        </section>
+      </div>
+      {isAuthor && (
+        <span
+          className="flex items-center justify-center text-xl w-10 h-10 border-2 self-end"
+          style={{
+            borderColor: senderColor || "var(--color-highlight-high)",
+          }}
+        >
+          {senderAvatar}
+        </span>
+      )}
+    </main>
+  );
+}
