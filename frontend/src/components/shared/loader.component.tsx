@@ -1,0 +1,38 @@
+import { cn } from "@/lib/utils";
+import { Box } from "lucide-react";
+
+export function BigLoader() {
+  return (
+    <main className="absolute flex h-screen w-screen flex-col items-center justify-center bg-background font-extrabold text-text">
+      <Box className="size-28 animate-spin" />
+    </main>
+  );
+}
+
+export function WindowLoader({ className }: { className?: string }) {
+  return (
+    <main
+      className={cn(
+        "flex h-full w-full flex-col items-center justify-center bg-card font-extrabold text-text",
+        className,
+      )}
+    >
+      <Box className="size-28 animate-spin" />
+    </main>
+  );
+}
+
+export function SmallLoader({
+  size,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <Box
+      className={cn("animate-spin", className)}
+      style={{ width: size ?? 16, height: size ?? 16 }}
+    />
+  );
+}
