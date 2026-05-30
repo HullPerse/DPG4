@@ -9,15 +9,15 @@ import { useDataStore } from "@/store/data.store";
 
 function loginErrorMessage(error: unknown): string {
   if (error instanceof DOMException && error.name === "AbortError") {
-    return "Сервер недоступен. Проверьте подключение и попробуйте снова.";
+    return "Сервер недоступен";
   }
   if (error instanceof TypeError) {
-    return "Сервер недоступен. Проверьте подключение и попробуйте снова.";
+    return "Сервер недоступен";
   }
   if (error instanceof Error && error.message) {
     return error.message;
   }
-  return "Не удалось войти. Попробуйте снова.";
+  return "Не удалось войти";
 }
 
 export default function Signin({
