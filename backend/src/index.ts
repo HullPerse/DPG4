@@ -20,7 +20,6 @@ import { cellsRoute, rulesRoute } from "./routes/cells.route";
 import { filesRoute } from "./routes/files.route";
 import { gameUtilsRoute } from "./routes/gameUtils.route";
 import { steamRoute } from "./routes/steam.route";
-import { metadataRoute } from "./routes/metadata.route";
 import { searchRoute } from "./routes/search.route";
 import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
@@ -86,7 +85,6 @@ const app = new Elysia()
   .use(filesRoute)
   .use(gameUtilsRoute)
   .use(steamRoute)
-  .use(metadataRoute)
   .use(searchRoute)
   .listen(config.port);
 

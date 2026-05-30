@@ -1,5 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { memo, startTransition, useCallback, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
@@ -105,7 +112,9 @@ function ListBrowser({
             comparison = (a.charge || 0) - (b.charge || 0);
             break;
           case "type":
-            comparison = String(a.type || "").localeCompare(String(b.type || ""));
+            comparison = String(a.type || "").localeCompare(
+              String(b.type || ""),
+            );
             break;
         }
         return sortDirection === "asc" ? comparison : -comparison;
@@ -267,7 +276,7 @@ function ListBrowser({
               transform: `translateY(${virtualItem.start}px)`,
               width: "99%",
             }}
-            className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center bg-card"
+            className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center bg-card mt-10"
           >
             <div className="flex flex-col gap-1">
               <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">

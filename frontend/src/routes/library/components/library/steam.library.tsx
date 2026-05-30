@@ -127,7 +127,8 @@ export default function SteamLibrary({
 
               try {
                 const game = await gameApi.getSteamGame(appId);
-                setGame(game as any);
+
+                if (game) setGame(game as any);
               } catch (e) {
                 return console.log(e);
               } finally {

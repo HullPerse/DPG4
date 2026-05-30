@@ -35,17 +35,6 @@ export default class GameApi {
     return mapFamilyApps(data.response?.apps ?? []);
   };
 
-  fetchHltbHours = async (title: string): Promise<number | null> => {
-    try {
-      const res = await apiFetch<{ hours: number | null }>(
-        `/metadata/hltb?title=${encodeURIComponent(title)}`,
-      );
-      return res.hours;
-    } catch {
-      return null;
-    }
-  };
-
   getSteamGame = async (appId: string) => {
     const id = appId.trim();
     if (!id) return;
@@ -119,9 +108,7 @@ export default class GameApi {
       body: {
         review: {
           rating: review.rating,
-          comment: hasPoopReview
-            ? `💩 ${review.comment} 💩`
-            : review.comment,
+          comment: hasPoopReview ? `💩 ${review.comment} 💩` : review.comment,
           votes: currentReview.votes ?? [],
         },
         image: imagePayload,
