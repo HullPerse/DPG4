@@ -4,6 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
+    "db:clear": "rm -f data/db.sqlite data/db.sqlite-wal data/db.sqlite-shm",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",
     "db:push": "drizzle-kit push",

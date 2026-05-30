@@ -10,31 +10,11 @@ import {
   ADMIN_BLOB_FIELDS,
   ADMIN_JSON_FIELDS,
   getAdminSchemaPayload,
-} from "../lib/admin-schema";
-import {
-  getAdminTable,
-  getAdminStats,
-  listAdminRows,
-} from "../lib/admin-query";
+} from "../lib/adminSchema";
+import { getAdminStats, listAdminRows } from "../lib/adminQuery";
+import { adminTableColumn, getAdminTable } from "../lib/adminTables";
 import { broadcastAdminReload } from "../lib/ws";
 import { addInventory } from "../services/economy.service";
-
-type AnyTable = typeof schema.users;
-
-const tables: Record<string, AnyTable> = {
-  users: schema.users,
-  games: schema.games,
-  presets: schema.presets,
-  items: schema.items,
-  inventory: schema.inventory,
-  market: schema.market,
-  activity: schema.activity,
-  chats: schema.chats,
-  rules: schema.rules,
-  ads: schema.ads,
-  drawings: schema.drawings,
-  cells: schema.cells,
-};
 
 const hasTimestamps = new Set([
   "users",
@@ -72,18 +52,29 @@ function parseDataUrl(value: string): { buffer: Buffer; mime: string } | null {
   return { mime: match[1], buffer: Buffer.from(match[2], "base64") };
 }
 
-function cleanBody(
+async function cleanBody(
   body: Record<string, unknown>,
   tbl: string,
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const jf = ADMIN_JSON_FIELDS[tbl] ?? [];
   const bf = ADMIN_BLOB_FIELDS[tbl] ?? [];
   const out: Record<string, unknown> = {};
+  let plainPassword: string | undefined;
+
   for (const [k, v] of Object.entries(body)) {
+    if (k === "password") {
+      if (typeof v === "string" && v.trim()) plainPassword = v.trim();
+      continue;
+    }
     if ((k === "id" || k === "passwordHash") && !v) continue;
     if (k === "collectionId" || k === "collectionName") continue;
     out[k] = jf.includes(k) ? tryParseJson(v) : v;
   }
+
+  if (tbl === "users" && plainPassword) {
+    out.passwordHash = await Bun.password.hash(plainPassword);
+  }
+
   for (const { field, mimeField } of bf) {
     const val = out[field];
     if (typeof val === "string" && val.startsWith("data:")) {
@@ -103,7 +94,7 @@ function sanitizePath(p: string): string {
   return p
     .replace(/\.\.\//g, "")
     .replace(/\.\.\\/g, "")
-    .replace(/\0/g, "");
+    .replaceAll("\0", "");
 }
 
 function mimeType(fp: string): string {
@@ -135,7 +126,6 @@ type AdminJwtPayload = { sub: string; role?: string };
 async function verifyAdmin(
   headers: Record<string, string | undefined>,
   adminJwt: { verify: (t: string) => Promise<false | AdminJwtPayload> },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
 ): Promise<{ id: string; username: string } | null> {
   const h = headers.authorization;
@@ -259,7 +249,9 @@ export const adminRoute = new Elysia()
             return { error: "Table not found" };
           }
 
-          result.data.forEach((row) => replaceBuffers(row as Record<string, unknown>));
+          result.data.forEach((row) =>
+            replaceBuffers(row as Record<string, unknown>),
+          );
           set.headers["X-Total-Count"] = String(result.total);
           return { data: result.data, total: result.total };
         },
@@ -272,16 +264,17 @@ export const adminRoute = new Elysia()
             set.status = 401;
             return { error: "Unauthorized" };
           }
-          const table = tables[params.table];
+          const table = getAdminTable(params.table);
           if (!table) {
             set.status = 404;
             return { error: "Table not found" };
           }
 
+          const idCol = adminTableColumn(table, "id");
           const [row] = await db
             .select()
             .from(table)
-            .where(eq((table as typeof schema.users).id, params.id));
+            .where(eq(idCol as never, params.id));
           if (!row) {
             set.status = 404;
             return { error: "Not found" };
@@ -298,13 +291,13 @@ export const adminRoute = new Elysia()
             set.status = 401;
             return { error: "Unauthorized" };
           }
-          const table = tables[params.table];
+          const table = getAdminTable(params.table);
           if (!table) {
             set.status = 404;
             return { error: "Table not found" };
           }
 
-          const cleaned = cleanBody(
+          const cleaned = await cleanBody(
             body as Record<string, unknown>,
             params.table,
           );
@@ -315,12 +308,18 @@ export const adminRoute = new Elysia()
             cleaned.updated = ts;
           }
 
+          if (params.table === "users" && !cleaned.passwordHash) {
+            set.status = 400;
+            return { error: "Password is required for new users" };
+          }
+
           try {
-            await db.insert(table).values(cleaned);
+            await db.insert(table).values(cleaned as never);
+            const idCol = adminTableColumn(table, "id");
             const [row] = await db
               .select()
               .from(table)
-              .where(eq((table as typeof schema.users).id, cleaned.id as string));
+              .where(eq(idCol as never, cleaned.id as string));
             replaceBuffers(row as Record<string, unknown>);
             return { data: row };
           } catch (err: unknown) {
@@ -339,13 +338,13 @@ export const adminRoute = new Elysia()
             set.status = 401;
             return { error: "Unauthorized" };
           }
-          const table = tables[params.table];
+          const table = getAdminTable(params.table);
           if (!table) {
             set.status = 404;
             return { error: "Table not found" };
           }
 
-          const cleaned = cleanBody(
+          const cleaned = await cleanBody(
             body as Record<string, unknown>,
             params.table,
           );
@@ -353,14 +352,15 @@ export const adminRoute = new Elysia()
           if (hasTimestamps.has(params.table)) cleaned.updated = nowIso();
 
           try {
+            const idCol = adminTableColumn(table, "id");
             await db
               .update(table)
-              .set(cleaned)
-              .where(eq((table as typeof schema.users).id, params.id));
+              .set(cleaned as never)
+              .where(eq(idCol as never, params.id));
             const [row] = await db
               .select()
               .from(table)
-              .where(eq((table as typeof schema.users).id, params.id));
+              .where(eq(idCol as never, params.id));
             if (!row) {
               set.status = 404;
               return { error: "Not found" };
@@ -383,22 +383,23 @@ export const adminRoute = new Elysia()
             set.status = 401;
             return { error: "Unauthorized" };
           }
-          const table = tables[params.table];
+          const table = getAdminTable(params.table);
           if (!table) {
             set.status = 404;
             return { error: "Table not found" };
           }
 
+          const idCol = adminTableColumn(table, "id");
           const [row] = await db
             .select()
             .from(table)
-            .where(eq((table as typeof schema.users).id, params.id));
+            .where(eq(idCol as never, params.id));
           if (!row) {
             set.status = 404;
             return { error: "Not found" };
           }
 
-          await db.delete(table).where(eq((table as typeof schema.users).id, params.id));
+          await db.delete(table).where(eq(idCol as never, params.id));
           replaceBuffers(row as Record<string, unknown>);
           return { data: row };
         },

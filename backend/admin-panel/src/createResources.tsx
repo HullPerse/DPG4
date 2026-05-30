@@ -18,7 +18,13 @@ import { renderField, SmartInput } from "./components/fieldRenderer";
 import { JsonField } from "./components/JsonField";
 import { ObjectListPreview } from "./components/fieldRenderer";
 
-function EditForm({ meta }: { meta: AdminTableMeta }) {
+function EditForm({
+  meta,
+  isCreate = false,
+}: {
+  meta: AdminTableMeta;
+  isCreate?: boolean;
+}) {
   const record = useRecordContext();
   return (
     <SimpleForm>
@@ -27,6 +33,7 @@ function EditForm({ meta }: { meta: AdminTableMeta }) {
           field={f}
           key={f.source}
           record={record as Record<string, unknown> | undefined}
+          isCreate={isCreate}
         />
       ))}
     </SimpleForm>
@@ -35,7 +42,8 @@ function EditForm({ meta }: { meta: AdminTableMeta }) {
 
 export function createResourceNode(table: string, meta: AdminTableMeta) {
   const listFields = meta.fields.filter(
-    (f) => f.type !== "hidden" && !f.hideInList,
+    (f) =>
+      f.type !== "hidden" && f.type !== "password" && !f.hideInList,
   );
 
   const ListView = () => (
@@ -58,7 +66,7 @@ export function createResourceNode(table: string, meta: AdminTableMeta) {
     <Show>
       <SimpleShowLayout>
         {meta.fields
-          .filter((f) => f.type !== "hidden")
+          .filter((f) => f.type !== "hidden" && f.type !== "password")
           .map((f) =>
             f.type === "json" || f.type === "objectList" ? (
               <JsonField source={f.source} key={f.source} />
@@ -78,7 +86,7 @@ export function createResourceNode(table: string, meta: AdminTableMeta) {
 
   const CreateView = () => (
     <Create>
-      <EditForm meta={meta} />
+      <EditForm meta={meta} isCreate />
     </Create>
   );
 

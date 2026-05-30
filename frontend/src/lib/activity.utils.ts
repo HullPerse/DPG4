@@ -2,11 +2,15 @@ import { apiFetch } from "@/api/client.api";
 import { useToastStore } from "@/store/toast.store";
 import { useUserStore } from "@/store/user.store";
 import type { Activity } from "@/types/activity";
-import { subscribeWsChannel, ensureWsConnected, closeWs } from "@/lib/ws.client";
+import {
+  subscribeWsChannel,
+  ensureWsConnected,
+  closeWs,
+} from "@/lib/ws.client";
 import {
   cleanupAdminReloadListener,
   initAdminReloadListener,
-} from "@/lib/admin-reload";
+} from "@/lib/reload.utils";
 import { notifyPrivateMessage } from "@/lib/notifications";
 import { initCursors } from "@/lib/cursor.utils";
 

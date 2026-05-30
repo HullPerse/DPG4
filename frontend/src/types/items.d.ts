@@ -49,11 +49,16 @@ export type Trade = {
  */
 export type ItemType = "effect" | "item" | "roll" | "other";
 
+import type { FC } from "react";
+import type { ModalType } from "./effect";
+
 export interface effectInterface {
   label: ItemLabel;
   type: "modal" | "effect";
   effect?: () => void;
-  body?: (close: () => void) => ReactNode;
+  /** @deprecated use Modal */
+  body?: (close: () => void) => React.ReactNode;
+  Modal?: FC<ModalType>;
 }
 
 export type ItemLabel =

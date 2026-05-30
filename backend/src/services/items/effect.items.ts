@@ -1,32 +1,36 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../db/schema";
+import * as schema from "@/db/schema";
 import {
   getFirstCellInNextRow,
   getGridPosition,
   getLastCellInRow,
-} from "../lib/cell.utils";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
+} from "@/lib/cell.utils";
+import { nowIso } from "@/lib/dates";
+import { broadcast } from "@/lib/ws";
 import {
   GREMLIN_IDS,
   ITEM_DB_IDS,
   ITEM_MODAL_LABELS,
   RAT_IDS,
-} from "../items/constants";
-import { createActivity } from "./activity.service";
+} from "@/items/constants";
+import { createActivity } from "@/services/activity.service";
 import {
   addInventory,
   chargeInventory,
   removeInventoryById,
   transferInventoryOwner,
-} from "./economy.service";
+} from "@/services/economy.service";
 import {
   dropUserPlayingGame,
   getLastGameForUser,
   rerollUserLastGame,
-} from "./game.service";
-import { changeUserStatus, getUserById, scoreUser } from "./user.service";
+} from "@/services/game.service";
+import {
+  changeUserStatus,
+  getUserById,
+  scoreUser,
+} from "@/services/user.service";
 
 type Db = BunSQLiteDatabase<typeof schema>;
 
@@ -109,7 +113,7 @@ const handlers: Record<string, EffectHandler> = {
     return `${user.username} использовал Гем Монтесумы`;
   },
 
-  Кредит: async ({ db, userId }) => {
+  "Кредит": async ({ db, userId }) => {
     const user = await getUser(db, userId);
     if (user.money < 15) return null;
     await scoreUser(db, userId, -15);
@@ -708,44 +712,44 @@ export async function executeInventoryUse(
   if (!inv) return { ok: false, error: "Предмет не найден" };
   if (inv.owner !== userId) return { ok: false, error: "Не ваш предмет" };
 
+  if (ITEM_MODAL_LABELS.has(inv.label)) {
+    return { ok: true, mode: "modal", label: inv.label };
+  }
+
+  const handler = handlers[inv.label];
+  if (handler) {
+    const ctx: EffectCtx = { db, userId, inventoryId, label: inv.label };
+    const activityText = await handler(ctx);
+    if (activityText === null) {
+      return { ok: false, error: "Эффект не сработал" };
+    }
+
+    if (inv.label !== "Erection - NPC" && inv.label !== "Крысиный тапок") {
+      await consume(db, ctx, activityText);
+    } else {
+      await createActivity(db, {
+        author: userId,
+        image: (await getUser(db, userId)).avatar,
+        text: activityText,
+      });
+    }
+
+    return { ok: true, mode: "done" };
+  }
+
   if (inv.type === "effect") {
     await changeUserStatus(db, userId, inv.label, "add");
     await chargeInventory(db, inventoryId, inv.charge, -1);
     return { ok: true, mode: "done" };
   }
 
-  if (ITEM_MODAL_LABELS.has(inv.label)) {
-    return { ok: true, mode: "modal", label: inv.label };
-  }
-
-  const handler = handlers[inv.label];
-  if (!handler) {
-    const user = await getUser(db, userId);
-    await chargeInventory(db, inventoryId, inv.charge, -1);
-    await createActivity(db, {
-      author: userId,
-      image: user.avatar,
-      type: "emoji",
-      text: `${user.username} использовал предмет ${inv.label}`,
-    });
-    return { ok: true, mode: "done" };
-  }
-
-  const ctx: EffectCtx = { db, userId, inventoryId, label: inv.label };
-  const activityText = await handler(ctx);
-  if (activityText === null) {
-    return { ok: false, error: "Эффект не сработал" };
-  }
-
-  if (inv.label !== "Erection - NPC" && inv.label !== "Крысиный тапок") {
-    await consume(db, ctx, activityText);
-  } else if (activityText) {
-    await createActivity(db, {
-      author: userId,
-      image: (await getUser(db, userId)).avatar,
-      text: activityText,
-    });
-  }
-
+  const user = await getUser(db, userId);
+  await chargeInventory(db, inventoryId, inv.charge, -1);
+  await createActivity(db, {
+    author: userId,
+    image: user.avatar,
+    type: "emoji",
+    text: `${user.username} использовал предмет ${inv.label}`,
+  });
   return { ok: true, mode: "done" };
 }

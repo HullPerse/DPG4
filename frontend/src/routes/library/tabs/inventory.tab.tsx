@@ -1,4 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { ItemLabel } from "@/types/items";
+import type { ModalType } from "@/types/effect";
+import ItemFramework from "@/lib/items/item.framework";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
@@ -53,7 +56,7 @@ function InventoryTab({ id }: { id?: string }) {
 
   const currentId = id ? id : String(user?.id);
 
-  let initialLoad = false;
+  const initialLoadRef = useRef(false);
 
   const [modal, setModal] = useState<string | null>(null);
 
@@ -182,9 +185,14 @@ function InventoryTab({ id }: { id?: string }) {
     return (
       [...otherEffect, ...itemEffect].find((e) => e.label === modal) ?? null
     );
-  }, [modal, otherEffect]);
+  }, [modal]);
 
-  if (!initialLoad && isLoading) return <WindowLoader />;
+  const modalConsume = useMemo((): ModalType["consume"] | undefined => {
+    if (!modal) return undefined;
+    return new ItemFramework(modal as ItemLabel).consume;
+  }, [modal]);
+
+  if (!initialLoadRef.current && isLoading) return <WindowLoader />;
   if (isError)
     return (
       <WindowError
@@ -195,7 +203,7 @@ function InventoryTab({ id }: { id?: string }) {
       />
     );
 
-  initialLoad = true;
+  initialLoadRef.current = true;
 
   const handleUse = async (_index: number, item: Inventory) => {
     const itemId = String(item.id);
@@ -206,6 +214,7 @@ function InventoryTab({ id }: { id?: string }) {
 
       if (!result.ok) {
         setActive(null);
+        window.alert(result.error ?? "Не удалось использовать предмет");
         return;
       }
 
@@ -293,14 +302,18 @@ function InventoryTab({ id }: { id?: string }) {
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
-      <CreateModal
-        label={modalItem?.label ?? ""}
-        body={modalItem?.body}
-        open={Boolean(modal && modalItem)}
-        setOpen={(open) => {
-          if (!open) setModal(null);
-        }}
-      />
+      {user && modalItem?.Modal && modalConsume ? (
+        <CreateModal
+          label={modalItem.label}
+          Modal={modalItem.Modal}
+          user={user}
+          consume={modalConsume}
+          open={Boolean(modal && modalItem.Modal)}
+          setOpen={(open) => {
+            if (!open) setModal(null);
+          }}
+        />
+      ) : null}
 
       <Input
         autoFocus

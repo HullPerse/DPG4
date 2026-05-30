@@ -55,10 +55,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   .patch(
     "/:id",
     async ({ params, body, db }) => {
-      const { password, passwordHash, id, created, ...rest } = body as Record<
-        string,
-        unknown
-      >;
+      const { password: _pw, passwordHash: _ph, id: _id, created: _cr, ...rest } = body;
       await db
         .update(schema.users)
         .set({ ...rest, updated: nowIso() } as Partial<typeof schema.users.$inferInsert>)
@@ -66,7 +63,10 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       broadcast("users", "update", params.id);
       return getUserById(db, params.id);
     },
-    { detail: { tags: ["users"], summary: "Update user fields" } },
+    {
+      body: t.Record(t.String(), t.Any()),
+      detail: { tags: ["users"], summary: "Update user fields" },
+    },
   )
   .post(
     "/:id/status",

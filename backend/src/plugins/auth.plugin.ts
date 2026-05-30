@@ -12,11 +12,9 @@ export const authPlugin = new Elysia({ name: "auth" })
       exp: "7d",
     }),
   )
-  .derive({ as: "scoped" }, async ({ jwt, headers, set }) => {
+  .derive({ as: "scoped" }, async ({ jwt, headers }) => {
     const header = headers.authorization;
-    const token = header?.startsWith("Bearer ")
-      ? header.slice(7)
-      : null;
+    const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
     if (!token) {
       return { user: null as JwtUser | null, token: null as string | null };

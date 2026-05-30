@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
-import { ConsumeType, EffectType, ModalType } from "@/types/effect";
-import { effectInterface, ItemLabel } from "@/types/items";
+import type { FC } from "react";
+import type { ConsumeType, ModalType } from "@/types/effect";
+import type { effectInterface, ItemLabel } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import ActivityApi from "@/api/activity.api";
 import { useUserStore } from "@/store/user.store";
@@ -36,7 +36,7 @@ export default class ItemFramework {
 
   static effect(
     label: ItemLabel,
-    handler: (ctx: EffectType) => Promise<void>,
+    handler: (ctx: import("@/types/effect").EffectType) => Promise<void>,
   ): effectInterface {
     return {
       label,
@@ -53,22 +53,15 @@ export default class ItemFramework {
     };
   }
 
+  /** Factory returns a real FC so hooks inside the modal are valid. */
   static modal(
     label: ItemLabel,
-    renderBody: (ctx: ModalType) => ReactNode,
+    create: () => FC<ModalType>,
   ): effectInterface {
     return {
       label,
       type: "modal",
-      body: (close) => {
-        const user = useUserStore.getState().user;
-
-        if (!user) return;
-
-        const framework = new ItemFramework(label);
-
-        return renderBody({ user, close, consume: framework.consume });
-      },
+      Modal: create(),
     };
   }
 }

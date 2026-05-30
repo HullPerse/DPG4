@@ -1,12 +1,24 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { createActivity } from "../services/activity.service";
-
 import { dbPlugin } from "../plugins/db.plugin";
+
+const cellPatchBody = t.Object({
+  type: t.Optional(t.String()),
+  number: t.Optional(t.Number()),
+  title: t.Optional(t.String()),
+  conditions: t.Optional(t.Any()),
+  cellType: t.Optional(t.String()),
+  difficulty: t.Optional(t.String()),
+  ladderTo: t.Optional(t.Number()),
+  snakeTo: t.Optional(t.Number()),
+  status: t.Optional(t.Nullable(t.Array(t.String()))),
+  captured: t.Optional(t.Nullable(t.Array(t.String()))),
+});
 
 export const cellsRoute = new Elysia({ prefix: "/cells" })
   .use(dbPlugin)
@@ -37,41 +49,68 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
     }
     return withRecordMeta(row, "cells");
   })
-  .patch("/:id", async ({ params, body, db }) => {
-    await db
-      .update(schema.cells)
-      .set({ ...body, updated: nowIso() })
-      .where(eq(schema.cells.id, params.id));
-    broadcast("cells", "update", params.id);
-    const [row] = await db
-      .select()
-      .from(schema.cells)
-      .where(eq(schema.cells.id, params.id));
-    return withRecordMeta(row!, "cells");
-  })
-  .post("/:id/capture", async ({ params, body, db }) => {
-    const [cell] = await db
-      .select()
-      .from(schema.cells)
-      .where(eq(schema.cells.id, params.id));
-    if (!cell) return { error: "Not found" };
+  .patch(
+    "/:id",
+    async ({ params, body, db }) => {
+      const patch: Partial<typeof schema.cells.$inferInsert> = {
+        updated: nowIso(),
+      };
+      if (body.type !== undefined) patch.type = body.type;
+      if (body.number !== undefined) patch.number = body.number;
+      if (body.title !== undefined) patch.title = body.title;
+      if (body.conditions !== undefined) patch.conditions = body.conditions;
+      if (body.cellType !== undefined) patch.cellType = body.cellType;
+      if (body.difficulty !== undefined) patch.difficulty = body.difficulty;
+      if (body.ladderTo !== undefined) patch.ladderTo = body.ladderTo;
+      if (body.snakeTo !== undefined) patch.snakeTo = body.snakeTo;
+      if (body.status !== undefined) patch.status = body.status;
+      if (body.captured !== undefined) patch.captured = body.captured;
 
-    const captured = [...(cell.captured ?? []), body.username];
-    await db
-      .update(schema.cells)
-      .set({ captured, updated: nowIso() })
-      .where(eq(schema.cells.id, params.id));
+      await db
+        .update(schema.cells)
+        .set(patch)
+        .where(eq(schema.cells.id, params.id));
+      broadcast("cells", "update", params.id);
+      const [row] = await db
+        .select()
+        .from(schema.cells)
+        .where(eq(schema.cells.id, params.id));
+      return withRecordMeta(row!, "cells");
+    },
+    { body: cellPatchBody },
+  )
+  .post(
+    "/:id/capture",
+    async ({ params, body, db }) => {
+      const [cell] = await db
+        .select()
+        .from(schema.cells)
+        .where(eq(schema.cells.id, params.id));
+      if (!cell) return { error: "Not found" };
 
-    await createActivity(db, {
-      author: body.userId,
-      image: "✅",
-      type: "emoji",
-      text: `${body.username} захватил клетку ${cell.number}`,
-    });
+      const captured = [...(cell.captured ?? []), body.username];
+      await db
+        .update(schema.cells)
+        .set({ captured, updated: nowIso() })
+        .where(eq(schema.cells.id, params.id));
 
-    broadcast("cells", "update", params.id);
-    return { ok: true };
-  });
+      await createActivity(db, {
+        author: body.userId,
+        image: "✅",
+        type: "emoji",
+        text: `${body.username} захватил клетку ${cell.number}`,
+      });
+
+      broadcast("cells", "update", params.id);
+      return { ok: true };
+    },
+    {
+      body: t.Object({
+        username: t.String(),
+        userId: t.String(),
+      }),
+    },
+  );
 
 export const rulesRoute = new Elysia({ prefix: "/rules" })
   .use(dbPlugin)

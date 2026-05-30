@@ -11,37 +11,13 @@ import {
 } from "drizzle-orm";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
-import { ADMIN_SCHEMA } from "./admin-schema";
+import { ADMIN_SCHEMA } from "./adminSchema";
+import { ADMIN_TABLES, adminTableColumn, type AdminTable } from "./adminTables";
 
-type AnyTable = typeof schema.users;
 type Db = BunSQLiteDatabase<typeof schema>;
 
-const tables: Record<string, AnyTable> = {
-  users: schema.users,
-  games: schema.games,
-  presets: schema.presets,
-  items: schema.items,
-  inventory: schema.inventory,
-  market: schema.market,
-  activity: schema.activity,
-  chats: schema.chats,
-  rules: schema.rules,
-  ads: schema.ads,
-  drawings: schema.drawings,
-  cells: schema.cells,
-};
-
-export function getAdminTable(name: string): AnyTable | undefined {
-  return tables[name];
-}
-
-function columnOf(table: AnyTable, field: string) {
-  const col = (table as Record<string, unknown>)[field];
-  return col ?? null;
-}
-
 function buildWhere(
-  table: AnyTable,
+  table: AdminTable,
   tableName: string,
   query: Record<string, unknown>,
 ): SQL | undefined {
@@ -52,7 +28,10 @@ function buildWhere(
 
   if (query._ids && typeof query._ids === "string") {
     const ids = query._ids.split(",").filter(Boolean);
-    if (ids.length) parts.push(inArray((table as typeof schema.users).id, ids));
+    if (ids.length) {
+      const idCol = adminTableColumn(table, "id");
+      if (idCol) parts.push(inArray(idCol as never, ids));
+    }
   }
 
   const q = typeof query.q === "string" ? query.q.trim() : "";
@@ -60,7 +39,7 @@ function buildWhere(
     const pattern = `%${q}%`;
     const searchParts: SQL[] = [];
     for (const field of meta.searchFields) {
-      const col = columnOf(table, field);
+      const col = adminTableColumn(table, field);
       if (col) searchParts.push(like(col as never, pattern));
     }
     if (searchParts.length) parts.push(or(...searchParts)!);
@@ -69,7 +48,7 @@ function buildWhere(
   for (const [key, raw] of Object.entries(query)) {
     if (key.startsWith("_") || key === "q") continue;
     if (raw === undefined || raw === null || raw === "") continue;
-    const col = columnOf(table, key);
+    const col = adminTableColumn(table, key);
     if (!col) continue;
     const value = String(raw);
     if (key === "id" || key.endsWith("Id") || key === "owner") {
@@ -88,15 +67,16 @@ export async function listAdminRows(
   tableName: string,
   query: Record<string, unknown>,
 ) {
-  const table = tables[tableName];
+  const table = ADMIN_TABLES[tableName as keyof typeof ADMIN_TABLES];
   const meta = ADMIN_SCHEMA[tableName];
   if (!table || !meta) return null;
 
   const sortField =
-    typeof query._sort === "string" && columnOf(table, query._sort)
+    typeof query._sort === "string" && adminTableColumn(table, query._sort)
       ? query._sort
       : "id";
-  const sortCol = columnOf(table, sortField) ?? (table as typeof schema.users).id;
+  const sortCol =
+    adminTableColumn(table, sortField) ?? adminTableColumn(table, "id");
   const sortDir =
     String(query._order ?? "ASC").toLowerCase() === "desc" ? desc : asc;
 
@@ -110,11 +90,12 @@ export async function listAdminRows(
   const where = buildWhere(table, tableName, query);
 
   const countQuery = db.select({ total: count() }).from(table);
-  const [{ total }] = where
-    ? await countQuery.where(where)
-    : await countQuery;
+  const [{ total }] = where ? await countQuery.where(where) : await countQuery;
 
-  let rowsQuery = db.select().from(table).orderBy(sortDir(sortCol as never));
+  let rowsQuery = db
+    .select()
+    .from(table)
+    .orderBy(sortDir(sortCol as never));
   if (where) rowsQuery = rowsQuery.where(where) as typeof rowsQuery;
   const data = await rowsQuery.limit(perPage).offset(offset);
 
@@ -123,8 +104,8 @@ export async function listAdminRows(
 
 export async function getAdminStats(db: Db) {
   const counts: Record<string, number> = {};
-  for (const name of Object.keys(tables)) {
-    const table = tables[name]!;
+  for (const name of Object.keys(ADMIN_TABLES)) {
+    const table = ADMIN_TABLES[name as keyof typeof ADMIN_TABLES];
     const [{ total }] = await db.select({ total: count() }).from(table);
     counts[name] = Number(total);
   }

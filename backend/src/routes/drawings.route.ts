@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { eq, desc } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
@@ -25,48 +25,66 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
     }
     return rows.map((r) => withRecordMeta(r, "drawings"));
   })
-  .post("/", async ({ body, db }) => {
-    const id = newId();
-    const ts = nowIso();
-    const imageFile = parseFileInput(body.image);
-    const imageData = imageFile?.data ?? null;
-    const imageMime = imageFile?.mime ?? null;
+  .post(
+    "/",
+    async ({ body, db }) => {
+      const id = newId();
+      const ts = nowIso();
+      const imageFile = parseFileInput(body.image);
+      const imageData = imageFile?.data ?? null;
+      const imageMime = imageFile?.mime ?? null;
 
-    await db.insert(schema.drawings).values({
-      id,
-      author: body.author,
-      image: imageData,
-      imageMime,
-      created: ts,
-      updated: ts,
-    });
-    broadcast("drawings", "create", id);
-    return withRecordMeta(
-      (await db.select().from(schema.drawings).where(eq(schema.drawings.id, id)))[0]!,
-      "drawings",
-    );
-  })
-  .patch("/:id", async ({ params, body, db }) => {
-    const imageFile = parseFileInput(body.image);
-    const patch: Partial<typeof schema.drawings.$inferInsert> = {
-      updated: nowIso(),
-    };
-    if (body.author !== undefined) patch.author = body.author;
-    if (imageFile !== undefined) {
-      patch.image = imageFile?.data ?? null;
-      patch.imageMime = imageFile?.mime ?? null;
-    }
-    await db
-      .update(schema.drawings)
-      .set(patch)
-      .where(eq(schema.drawings.id, params.id));
-    broadcast("drawings", "update", params.id);
-    const [row] = await db
-      .select()
-      .from(schema.drawings)
-      .where(eq(schema.drawings.id, params.id));
-    return withRecordMeta(row!, "drawings");
-  })
+      await db.insert(schema.drawings).values({
+        id,
+        author: body.author,
+        image: imageData,
+        imageMime,
+        created: ts,
+        updated: ts,
+      });
+      broadcast("drawings", "create", id);
+      return withRecordMeta(
+        (await db.select().from(schema.drawings).where(eq(schema.drawings.id, id)))[0]!,
+        "drawings",
+      );
+    },
+    {
+      body: t.Object({
+        author: t.Any(),
+        image: t.Optional(t.Any()),
+      }),
+    },
+  )
+  .patch(
+    "/:id",
+    async ({ params, body, db }) => {
+      const imageFile = parseFileInput(body.image);
+      const patch: Partial<typeof schema.drawings.$inferInsert> = {
+        updated: nowIso(),
+      };
+      if (body.author !== undefined) patch.author = body.author;
+      if (imageFile !== undefined) {
+        patch.image = imageFile?.data ?? null;
+        patch.imageMime = imageFile?.mime ?? null;
+      }
+      await db
+        .update(schema.drawings)
+        .set(patch)
+        .where(eq(schema.drawings.id, params.id));
+      broadcast("drawings", "update", params.id);
+      const [row] = await db
+        .select()
+        .from(schema.drawings)
+        .where(eq(schema.drawings.id, params.id));
+      return withRecordMeta(row!, "drawings");
+    },
+    {
+      body: t.Object({
+        author: t.Optional(t.Any()),
+        image: t.Optional(t.Any()),
+      }),
+    },
+  )
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id));
     broadcast("drawings", "delete", params.id);

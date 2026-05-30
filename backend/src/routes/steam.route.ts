@@ -133,8 +133,7 @@ export const steamRoute = new Elysia({ prefix: "/steam" })
         }
 
         const data = entry.data;
-        const steamAppId =
-          data.steam_appid ?? data.appid ?? Number(appId) ?? 0;
+        const steamAppId = data.steam_appid ?? data.appid ?? Number(appId ?? 0);
         const name = data.name ?? "";
         const headerImage = data.header_image ?? "";
         const capsuleImage =

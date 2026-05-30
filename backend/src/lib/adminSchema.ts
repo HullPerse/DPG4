@@ -7,6 +7,7 @@ export type AdminFieldType =
   | "objectList"
   | "blob"
   | "audio"
+  | "password"
   | "hidden";
 
 export type AdminFieldMeta = {
@@ -32,6 +33,11 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "id", type: "text" },
       { source: "username", type: "text" },
       { source: "email", type: "text" },
+      {
+        source: "password",
+        type: "password",
+        hideInList: true,
+      },
       { source: "passwordHash", type: "hidden" },
       { source: "avatar", type: "text" },
       { source: "color", type: "text" },

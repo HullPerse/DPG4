@@ -58,26 +58,25 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       broadcast("users", "create", id);
 
       const token = await signToken(jwt, id, false);
-      const user = withRecordMeta(
-        omitPassword({
-          id,
-          username,
-          email: `${username.toLowerCase()}@gmail.com`,
-          avatar: body.avatar ?? "",
-          color: body.color ?? "#000000",
-          isAdmin: false,
-          position: 0,
-          money: 0,
-          steam: "",
-          currentAction: "MOVE_POSITIVE",
-          currentDice: 1,
-          status: [] as string[],
-          place: "0",
-          created: ts,
-          updated: ts,
-        }),
-        "users",
-      );
+      const inserted: typeof schema.users.$inferSelect = {
+        id,
+        username,
+        passwordHash,
+        email: `${username.toLowerCase()}@gmail.com`,
+        avatar: body.avatar ?? "",
+        color: body.color ?? "#000000",
+        isAdmin: false,
+        position: 0,
+        money: 0,
+        steam: "",
+        currentAction: "MOVE_POSITIVE",
+        currentDice: 1,
+        status: [],
+        place: "0",
+        created: ts,
+        updated: ts,
+      };
+      const user = withRecordMeta(omitPassword(inserted), "users");
 
       return { token, user };
     },

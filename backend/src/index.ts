@@ -18,7 +18,7 @@ import { adsRoute } from "./routes/ads.route";
 import { drawingsRoute } from "./routes/drawings.route";
 import { cellsRoute, rulesRoute } from "./routes/cells.route";
 import { filesRoute } from "./routes/files.route";
-import { gameUtilsRoute } from "./routes/game-utils.route";
+import { gameUtilsRoute } from "./routes/gameUtils.route";
 import { steamRoute } from "./routes/steam.route";
 import { metadataRoute } from "./routes/metadata.route";
 import { searchRoute } from "./routes/search.route";
@@ -37,9 +37,8 @@ const app = new Elysia()
       documentation: {
         info: {
           title: "DPG API",
-          version: "1.0.0",
-          description:
-            "Локальный API для DPG (Tauri + React). Auth: Bearer JWT из /auth/login.",
+          version: "2.0.0",
+          description: "Локальный API для DPG (Tauri + React)",
         },
         tags: [
           { name: "auth", description: "Вход и регистрация" },

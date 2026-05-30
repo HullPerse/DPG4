@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -48,7 +48,6 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       );
     }
 
-    const sort = query.sort === "created" ? asc(schema.chats.created) : desc(schema.chats.created);
     list.sort((a, b) =>
       query.sort === "created"
         ? a.created.localeCompare(b.created)
@@ -57,81 +56,113 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
 
     return list.map(mapChat);
   })
-  .post("/", async ({ body, db }) => {
-    const id = newId();
-    const created = nowIso();
-    const imageFile = parseFileInput(body.image);
+  .post(
+    "/",
+    async ({ body, db }) => {
+      const id = newId();
+      const created = nowIso();
+      const imageFile = parseFileInput(body.image);
 
-    let data = body.data;
-    if (body.senderId && body.receiverId) {
-      const sender = await getUserById(db, body.senderId);
-      const isGlobal = body.receiverId === "global";
-      const receiver = isGlobal
-        ? null
-        : await getUserById(db, body.receiverId);
+      let data = body.data;
+      if (body.senderId && body.receiverId) {
+        const sender = await getUserById(db, body.senderId);
+        const isGlobal = body.receiverId === "global";
+        const receiver = isGlobal
+          ? null
+          : await getUserById(db, body.receiverId);
 
-      data = {
-        sender: {
-          id: body.senderId,
-          username: sender?.username ?? "",
-          avatar: sender?.avatar ?? "",
-          color: sender?.color ?? "",
-        },
-        receiver: isGlobal
-          ? {
-              id: "global",
-              username: "Глобальный чат",
-              avatar: "🌐",
-              color: "#f6c177",
-            }
-          : {
-              id: body.receiverId,
-              username: receiver?.username ?? "",
-              avatar: receiver?.avatar ?? "",
-              color: receiver?.color ?? "",
-            },
-      };
-    }
+        data = {
+          sender: {
+            id: body.senderId,
+            username: sender?.username ?? "",
+            avatar: sender?.avatar ?? "",
+            color: sender?.color ?? "",
+          },
+          receiver: isGlobal
+            ? {
+                id: "global",
+                username: "Глобальный чат",
+                avatar: "🌐",
+                color: "#f6c177",
+              }
+            : {
+                id: body.receiverId,
+                username: receiver?.username ?? "",
+                avatar: receiver?.avatar ?? "",
+                color: receiver?.color ?? "",
+              },
+        };
+      }
 
-    await db.insert(schema.chats).values({
-      id,
-      data,
-      message: body.message ?? "",
-      image: imageFile?.data ?? null,
-      imageMime: imageFile?.mime ?? null,
-      isRead: false,
-      created,
-    });
+      await db.insert(schema.chats).values({
+        id,
+        data,
+        message: body.message ?? "",
+        image: imageFile?.data ?? null,
+        imageMime: imageFile?.mime ?? null,
+        isRead: false,
+        created,
+      });
 
-    broadcast("chats", "create", id);
-    const [row] = await db
-      .select()
-      .from(schema.chats)
-      .where(eq(schema.chats.id, id));
-    return mapChat(row!);
-  })
-  .patch("/:id", async ({ params, body, db }) => {
-    const patch: Partial<typeof schema.chats.$inferInsert> = {};
-    if (body.message !== undefined) patch.message = body.message;
-    if (body.isRead !== undefined) patch.isRead = body.isRead;
-  await db.update(schema.chats).set(patch).where(eq(schema.chats.id, params.id));
-    broadcast("chats", "update", params.id);
-    const [row] = await db
-      .select()
-      .from(schema.chats)
-      .where(eq(schema.chats.id, params.id));
-    return mapChat(row!);
-  })
-  .post("/mark-read", async ({ body, db }) => {
-    for (const id of body.ids) {
+      broadcast("chats", "create", id);
+      const [row] = await db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.id, id));
+      return mapChat(row!);
+    },
+    {
+      body: t.Object({
+        data: t.Optional(t.Any()),
+        senderId: t.Optional(t.String()),
+        receiverId: t.Optional(t.String()),
+        message: t.Optional(t.String()),
+        image: t.Optional(t.Any()),
+      }),
+    },
+  )
+  .patch(
+    "/:id",
+    async ({ params, body, db }) => {
+      const patch: Partial<typeof schema.chats.$inferInsert> = {};
+      if (body.message !== undefined) patch.message = body.message;
+      if (body.isRead !== undefined) patch.isRead = body.isRead;
       await db
         .update(schema.chats)
-        .set({ isRead: true })
-        .where(eq(schema.chats.id, id));
-      broadcast("chats", "update", id);
-    }
-    return { ok: true };
-  })
+        .set(patch)
+        .where(eq(schema.chats.id, params.id));
+      broadcast("chats", "update", params.id);
+      const [row] = await db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.id, params.id));
+      return mapChat(row!);
+    },
+    {
+      body: t.Object({
+        message: t.Optional(t.String()),
+        isRead: t.Optional(t.Boolean()),
+      }),
+    },
+  )
+  .post(
+    "/mark-read",
+    async ({ body, db }) => {
+      for (const id of body.ids) {
+        await db
+          .update(schema.chats)
+          .set({ isRead: true })
+          .where(eq(schema.chats.id, id));
+        broadcast("chats", "update", id);
+      }
+      return { ok: true };
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.String()),
+      }),
+    },
+  )
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.chats).where(eq(schema.chats.id, params.id));
     broadcast("chats", "delete", params.id);

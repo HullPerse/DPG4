@@ -15,13 +15,14 @@ import {
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { effectInterface, Inventory } from "@/types/items";
+import type { ModalType } from "@/types/effect";
 
 const itemsApi = new ItemsApi();
 
 export const otherEffect: effectInterface[] = [
   //MODALS (эффекты — на сервере, POST /inventory/:id/use)
 
-  ItemFramework.modal("Дырявый сапог", (ctx) => {
+  ItemFramework.modal("Дырявый сапог", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -139,7 +140,7 @@ export const otherEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Пустой пакет", (ctx) => {
+  ItemFramework.modal("Пустой пакет", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {

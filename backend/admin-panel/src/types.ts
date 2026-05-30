@@ -7,6 +7,7 @@ export type AdminFieldType =
   | "objectList"
   | "blob"
   | "audio"
+  | "password"
   | "hidden";
 
 export type AdminFieldMeta = {

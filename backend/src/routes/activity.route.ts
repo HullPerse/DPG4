@@ -36,4 +36,15 @@ export const activityRoute = new Elysia({ prefix: "/activity" })
     }
     return row;
   })
-  .post("/", async ({ body, db }) => createActivity(db, body));
+  .post(
+    "/",
+    async ({ body, db }) => createActivity(db, body),
+    {
+      body: t.Object({
+        text: t.String(),
+        author: t.Optional(t.String()),
+        image: t.Optional(t.String()),
+        type: t.Optional(t.String()),
+      }),
+    },
+  );

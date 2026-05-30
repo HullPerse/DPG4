@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { QueryConfig } from "@/config/query.config";
 import { ToastContainer } from "./components/ui/toast.component";
-import { ADMIN_RELOAD_EVENT } from "@/lib/admin-reload";
+import { ADMIN_RELOAD_EVENT } from "@/lib/reload.utils";
 
 const queryClient = new QueryClient(QueryConfig);
 

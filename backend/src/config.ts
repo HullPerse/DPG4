@@ -19,7 +19,7 @@ function parseCorsOrigin(
 
 export const config = {
   port: Number(process.env.PORT) || 3000,
-  jwtSecret: process.env.JWT_SECRET || "dpg-local-friends-secret-change-me",
+  jwtSecret: process.env.JWT_SECRET || "dpg-local-jwt",
   dbPath: process.env.DB_PATH || "data/db.sqlite",
   corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
   steamApiKey: process.env.STEAM_API_KEY ?? "",

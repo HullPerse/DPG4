@@ -5,6 +5,7 @@ import {
   DateTimeInput,
   NumberField,
   NumberInput,
+  PasswordInput,
   TextField,
   TextInput,
   useRecordContext,
@@ -20,7 +21,7 @@ function isObjectArray(value: unknown): boolean {
 }
 
 export function renderField(field: AdminFieldMeta) {
-  if (field.type === "hidden") return null;
+  if (field.type === "hidden" || field.type === "password") return null;
   if (field.type === "blob") return <BlobField source={field.source} key={field.source} />;
   if (field.type === "audio") return <AudioField source={field.source} key={field.source} />;
   if (field.type === "boolean")
@@ -55,11 +56,28 @@ function ObjectAwareTextField({ source }: { source: string }) {
 export function SmartInput({
   field,
   record,
+  isCreate,
 }: {
   field: AdminFieldMeta;
   record?: Record<string, unknown>;
+  isCreate?: boolean;
 }) {
   if (field.type === "hidden") return null;
+  if (field.type === "password") {
+    return (
+      <PasswordInput
+        source={field.source}
+        key={field.source}
+        fullWidth
+        label="Пароль"
+        helperText={
+          isCreate
+            ? "Обязателен для нового пользователя"
+            : "Оставьте пустым, чтобы не менять текущий пароль"
+        }
+      />
+    );
+  }
   if (field.type === "boolean")
     return <BooleanInput source={field.source} key={field.source} />;
   if (field.type === "number")

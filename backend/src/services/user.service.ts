@@ -14,7 +14,9 @@ export async function getUserById(db: Db, userId: string) {
     .select()
     .from(schema.users)
     .where(eq(schema.users.id, userId));
+
   if (!row) return null;
+
   return withRecordMeta(omitPassword(row), "users");
 }
 
@@ -28,14 +30,13 @@ export async function changeUserStatus(
     .select()
     .from(schema.users)
     .where(eq(schema.users.id, userId))
-    .then((r) => r[0]);
+    .then((res) => res[0]);
+
   if (!user) return null;
 
   const current = user.status ?? [];
   const newStatuses =
-    type === "remove"
-      ? removeFirst(current, status)
-      : [...current, status];
+    type === "remove" ? removeFirst(current, status) : [...current, status];
 
   await db
     .update(schema.users)

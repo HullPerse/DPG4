@@ -32,6 +32,7 @@ import { getFileUrl } from "@/api/client.api";
 import WheelComponent from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { effectInterface, Inventory, Item } from "@/types/items";
+import type { ModalType } from "@/types/effect";
 import { Game } from "@/types/games";
 import { WheelItem } from "@/types/wheel";
 import { User } from "@/types/user";
@@ -98,7 +99,7 @@ export const itemEffect: effectInterface[] = [
   //EFFECTS
   // Server effects via POST /inventory/:id/use
 
-  ItemFramework.modal("Я не тупой", (ctx) => {
+  ItemFramework.modal("Я не тупой", () => function (ctx: ModalType) {
     const [answers, setAnswers] = useState<string | null>(null);
 
     return (
@@ -151,7 +152,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Алтарь жертвоприношения", (ctx) => {
+  ItemFramework.modal("Алтарь жертвоприношения", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -223,7 +224,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Подброшенная свинья", (ctx) => {
+  ItemFramework.modal("Подброшенная свинья", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -306,7 +307,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Шляпа", (ctx) => {
+  ItemFramework.modal("Шляпа", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -408,7 +409,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Кредитный чип Сбербанка", (ctx) => {
+  ItemFramework.modal("Кредитный чип Сбербанка", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: () => itemsApi.getAllItems(),
@@ -499,7 +500,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Танец Хомяка: Эпический Расколбас Восприятия", (ctx) => {
+  ItemFramework.modal("Танец Хомяка: Эпический Расколбас Восприятия", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -601,7 +602,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Хорадрический куб", (ctx) => {
+  ItemFramework.modal("Хорадрический куб", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: () => itemsApi.getInventory(String(ctx.user.id)),
@@ -761,7 +762,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Платная педалька", (ctx) => {
+  ItemFramework.modal("Платная педалька", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: () => itemsApi.getAllItems(),
@@ -906,7 +907,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Подмена за кулисами", (ctx) => {
+  ItemFramework.modal("Подмена за кулисами", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1025,7 +1026,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Карта Джокер", (ctx) => {
+  ItemFramework.modal("Карта Джокер", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1102,7 +1103,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Ведьмин котел", (ctx) => {
+  ItemFramework.modal("Ведьмин котел", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1265,7 +1266,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Скальпель", (ctx) => {
+  ItemFramework.modal("Скальпель", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1424,7 +1425,7 @@ export const itemEffect: effectInterface[] = [
 
   ItemFramework.modal(
     "Гидразинокарбонилметилбромфенилдигидробенздиазепин",
-    (ctx) => {
+    () => function (ctx: ModalType) {
       const { data, isLoading, isError, refetch, isRefetching } = useQuery({
         queryKey: ["modalData"],
         queryFn: async () => {
@@ -1527,7 +1528,7 @@ export const itemEffect: effectInterface[] = [
     },
   ),
 
-  ItemFramework.modal("Астролог", (ctx) => {
+  ItemFramework.modal("Астролог", () => function (ctx: ModalType) {
     const [input, setInput] = useState<string[]>([]);
 
     return (
@@ -1619,7 +1620,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крыса", (ctx) => {
+  ItemFramework.modal("Крыса", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1723,7 +1724,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крысиный алтарь", (ctx) => {
+  ItemFramework.modal("Крысиный алтарь", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1824,7 +1825,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крысиный отец", (ctx) => {
+  ItemFramework.modal("Крысиный отец", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -1906,7 +1907,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Восьмибитная Крыса", (ctx) => {
+  ItemFramework.modal("Восьмибитная Крыса", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2009,7 +2010,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Яйцо", (ctx) => {
+  ItemFramework.modal("Яйцо", () => function (ctx: ModalType) {
     const [value, setValue] = useState<number | null>(null);
     const [isRolling, setIsRolling] = useState<boolean>(false);
 
@@ -2114,7 +2115,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крысталлизатор", (ctx) => {
+  ItemFramework.modal("Крысталлизатор", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2214,7 +2215,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Мечтательная крыса", (ctx) => {
+  ItemFramework.modal("Мечтательная крыса", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2310,7 +2311,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крысиный лутбокс", (ctx) => {
+  ItemFramework.modal("Крысиный лутбокс", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2408,7 +2409,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Белорусская Крыса", (ctx) => {
+  ItemFramework.modal("Белорусская Крыса", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2498,7 +2499,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Волшебный Крысиный Дождь", (ctx) => {
+  ItemFramework.modal("Волшебный Крысиный Дождь", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2614,7 +2615,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Крысиная грамота", (ctx) => {
+  ItemFramework.modal("Крысиная грамота", () => function (ctx: ModalType) {
     const [input, setInput] = useState<string[]>([""]);
 
     return (
@@ -2701,7 +2702,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Свинья", (ctx) => {
+  ItemFramework.modal("Свинья", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -2827,7 +2828,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("СпецСвин", (ctx) => {
+  ItemFramework.modal("СпецСвин", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -3029,7 +3030,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Свин или не свин?", (ctx) => {
+  ItemFramework.modal("Свин или не свин?", () => function (ctx: ModalType) {
     const [ate, setAte] = useState<boolean>(false);
     const [food, setFood] = useState<boolean>(false);
 
@@ -3076,7 +3077,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Страшная свиная история", (ctx) => {
+  ItemFramework.modal("Страшная свиная история", () => function (ctx: ModalType) {
     const [read, setRead] = useState<boolean>(false);
     const [music, setMusic] = useState<boolean>(false);
     const [pig, setPig] = useState<boolean>(false);
@@ -3190,7 +3191,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Гремлин", (ctx) => {
+  ItemFramework.modal("Гремлин", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -3298,7 +3299,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Гремлинизатор", (ctx) => {
+  ItemFramework.modal("Гремлинизатор", () => function (ctx: ModalType) {
     const { data, isLoading, isError, refetch, isRefetching } = useQuery({
       queryKey: ["modalData"],
       queryFn: async () => {
@@ -3406,7 +3407,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Колесная Фея", (ctx) => {
+  ItemFramework.modal("Колесная Фея", () => function (ctx: ModalType) {
     const [value, setValue] = useState<number | null>(null);
     const [isRolling, setIsRolling] = useState<boolean>(false);
 
@@ -3471,7 +3472,7 @@ export const itemEffect: effectInterface[] = [
     );
   }),
 
-  ItemFramework.modal("Лещ", (ctx) => {
+  ItemFramework.modal("Лещ", () => function (ctx: ModalType) {
     const [value, setValue] = useState<number | null>(null);
     const [isRolling, setIsRolling] = useState<boolean>(false);
 
