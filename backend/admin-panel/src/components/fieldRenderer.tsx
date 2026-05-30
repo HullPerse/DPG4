@@ -58,6 +58,14 @@ export function renderListCell(
     const label = findChoiceLabel(field, val);
     return val ? <ValueChip value={String(val)} label={label} /> : <span className="text-muted">—</span>;
   }
+  if (field.type === "date") {
+    if (val === null || val === undefined || val === "") {
+      return <span className="text-muted">—</span>;
+    }
+    const d = new Date(String(val));
+    const text = Number.isNaN(d.getTime()) ? String(val) : d.toLocaleString();
+    return <span className="whitespace-nowrap text-xs">{text}</span>;
+  }
   if (typeof val === "string" && (isBlobPlaceholder(val) || val.startsWith("data:"))) {
     return <BlobField source={field.source} record={record} resource={resource} />;
   }

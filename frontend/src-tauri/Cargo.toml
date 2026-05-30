@@ -1,6 +1,6 @@
 [package]
 name = "DPG4"
-version = "2.0.3"
+version = "2.0.5"
 description = "DPG 4 desktop shell"
 authors = ["HullPerse"]
 edition = "2021"

@@ -41,7 +41,7 @@ export async function listRecords(
   resource: string,
   params: ListParams = {},
 ) {
-  const { page = 1, perPage = 25, sortField = "id", sortOrder = "ASC", filter = {} } =
+  const { page = 1, perPage = 25, sortField = "created", sortOrder = "ASC", filter = {} } =
     params;
   const q: Record<string, string> = {
     _sort: sortField,

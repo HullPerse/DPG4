@@ -1,6 +1,6 @@
 //both ips are local so we good
-const VITE_API_URL = "http://127.0.0.1:3000";
-const VITE_WS_URL = "ws://127.0.0.1:3000/ws";
+const VITE_API_URL = "http://26.15.36.191:3000";
+const VITE_WS_URL = "ws://26.15.36.191:3000/ws";
 
 const URL = VITE_API_URL ?? "http://127.0.0.1:3000";
 export const WS_URL = VITE_WS_URL ?? URL.replace(/^http/, "ws") + "/ws";

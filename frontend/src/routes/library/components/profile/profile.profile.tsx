@@ -1,8 +1,8 @@
 import { getFileUrl } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import ReviewComponent from "@/components/shared/review.component";
-import { getStatusColor, openWindow } from "@/lib/utils";
-import { Game, GameReview } from "@/types/games";
+import { getStatusColor } from "@/lib/utils";
+import { Game, GameReview, GameStatus } from "@/types/games";
 import { User } from "@/types/user";
 
 const STATUSES = [
@@ -35,7 +35,7 @@ export default function Profile({
     const onlyReviews = games?.filter((game) =>
       game.review ? game.review !== undefined : false,
     );
-    return onlyReviews[onlyReviews.length - 1];
+    return onlyReviews[0];
   };
 
   const lastReview = getLastReview();
@@ -58,24 +58,32 @@ export default function Profile({
             <div className=" border-2 border-highlight-high w-full h-full flex flex-row gap-2 items-center">
               <div className="relative h-full">
                 <ImageComponent
-                  src={games[games.length - 1]?.data.capsuleImage}
-                  alt={games[games.length - 1]?.data.name}
-                  className="w-50 h-28 max-h-28 min-h-28 max-w-50 min-w-50 aspect-video border-r-2 border-highlight-high hover:cursor-pointer"
-                  onClick={() => {
-                    openWindow(
-                      String(games[games.length - 1]?.data.id),
-                      String(games[games.length - 1]?.data.capsuleImage),
-                      "Изображение",
-                    );
-                  }}
+                  src={games[0]?.data.capsuleImage}
+                  alt={games[0]?.data.name}
+                  className="w-80 h-28 aspect-video border-r-2 border-highlight-high hover:cursor-pointer"
                 />
+                <div className="absolute bottom-0 bg-black/50 text-xl font-bold border-t-2 border-r-2 border-highlight-high text-primary">
+                  <span className="overflow-hidden text-ellipsis whitespace-pre-wrap line-clamp-2">
+                    {games[0]?.data.name}
+                  </span>
+                </div>
               </div>
-              <div className="text-xl font-bold">
-                <span className="overflow-hidden text-ellipsis whitespace-pre-wrap line-clamp-2">
-                  [{games[games.length - 1]?.playtime.hltb} ч.]{" "}
-                  {games[games.length - 1]?.data.name}
-                </span>
-              </div>
+              <span
+                className="text-xl font-bold flex-col flex w-full gap-2"
+                style={{
+                  color: getStatusColor(
+                    (STATUSES.find((s) => s.name === games[0].status)
+                      ?.name as GameStatus) ?? "PLAYING",
+                  ),
+                }}
+              >
+                <div className="text-center">
+                  {STATUSES.find((s) => s.name === games[0].status)?.label}
+                </div>
+                <div className="text-center">
+                  [{games[0]?.playtime.hltb} ч.]
+                </div>
+              </span>
             </div>
           )}
         </div>
