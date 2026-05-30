@@ -9,8 +9,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { QueryConfig } from "@/config/query.config";
 import { ToastContainer } from "./components/ui/toast.component";
+import { ADMIN_RELOAD_EVENT } from "@/lib/admin-reload";
 
 const queryClient = new QueryClient(QueryConfig);
+
+window.addEventListener(ADMIN_RELOAD_EVENT, () => {
+  void queryClient.invalidateQueries();
+});
 
 await import("react-dom/client").then(async ({ createRoot }) => {
   const rootElement = document.getElementById("root");

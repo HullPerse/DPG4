@@ -93,6 +93,7 @@ export interface DataStore {
       id: string;
     } | null,
   ) => void;
+  resetSessionCaches: () => void;
   setNoAction: (noAction: boolean) => void;
   setAccessToken: (accessToken: string) => void;
   setAdPosition: (adPosition: 1 | 2 | 3 | 4) => void;

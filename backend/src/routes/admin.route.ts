@@ -6,6 +6,18 @@ import { config } from "../config";
 import { dbPlugin } from "../plugins/db.plugin";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
+import {
+  ADMIN_BLOB_FIELDS,
+  ADMIN_JSON_FIELDS,
+  getAdminSchemaPayload,
+} from "../lib/admin-schema";
+import {
+  getAdminTable,
+  getAdminStats,
+  listAdminRows,
+} from "../lib/admin-query";
+import { broadcastAdminReload } from "../lib/ws";
+import { addInventory } from "../services/economy.service";
 
 type AnyTable = typeof schema.users;
 
@@ -38,40 +50,15 @@ const hasTimestamps = new Set([
   "cells",
 ]);
 
-const jsonFields: Record<string, string[]> = {
-  users: ["status"],
-  games: ["user", "data", "playtime", "review"],
-  presets: ["games"],
-  items: ["status"],
-  market: ["owner"],
-  chats: ["data"],
-  cells: ["conditions", "status", "captured"],
-  ads: ["owner"],
-  drawings: ["author"],
-};
-
-const blobFields: Record<string, { field: string; mimeField: string }[]> = {
-  games: [{ field: "image", mimeField: "imageMime" }],
-  items: [{ field: "image", mimeField: "imageMime" }],
-  inventory: [{ field: "image", mimeField: "imageMime" }],
-  market: [{ field: "image", mimeField: "imageMime" }],
-  chats: [{ field: "image", mimeField: "imageMime" }],
-  ads: [
-    { field: "image", mimeField: "imageMime" },
-    { field: "audio", mimeField: "audioMime" },
-  ],
-  drawings: [{ field: "image", mimeField: "imageMime" }],
-};
-
 function tryParseJson(v: unknown): unknown {
   if (typeof v !== "string") return v;
-  const t = v.trim();
+  const trimmed = v.trim();
   if (
-    (t.startsWith("{") && t.endsWith("}")) ||
-    (t.startsWith("[") && t.endsWith("]"))
+    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"))
   ) {
     try {
-      return JSON.parse(t);
+      return JSON.parse(trimmed);
     } catch {
       return v;
     }
@@ -89,8 +76,8 @@ function cleanBody(
   body: Record<string, unknown>,
   tbl: string,
 ): Record<string, unknown> {
-  const jf = jsonFields[tbl] ?? [];
-  const bf = blobFields[tbl] ?? [];
+  const jf = ADMIN_JSON_FIELDS[tbl] ?? [];
+  const bf = ADMIN_BLOB_FIELDS[tbl] ?? [];
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
     if ((k === "id" || k === "passwordHash") && !v) continue;
@@ -138,26 +125,30 @@ function mimeType(fp: string): string {
 function replaceBuffers(row: Record<string, unknown>): void {
   for (const [k, v] of Object.entries(row)) {
     if (Buffer.isBuffer(v)) {
-      (row as any)[k] = `[buffer ${v.length}b]`;
+      (row as Record<string, string>)[k] = `[buffer ${v.length}b]`;
     }
   }
 }
 
-async function verifyToken(
+type AdminJwtPayload = { sub: string; role?: string };
+
+async function verifyAdmin(
   headers: Record<string, string | undefined>,
-  adminJwt: any,
+  adminJwt: { verify: (t: string) => Promise<false | AdminJwtPayload> },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
-): Promise<boolean> {
+): Promise<{ id: string; username: string } | null> {
   const h = headers.authorization;
   const token = h?.startsWith("Bearer ") ? h.slice(7) : null;
-  if (!token) return false;
+  if (!token) return null;
   const p = await adminJwt.verify(token);
-  if (!p || typeof p.sub !== "string") return false;
+  if (!p || typeof p.sub !== "string") return null;
   const [user] = await db
     .select()
     .from(schema.users)
     .where(eq(schema.users.id, p.sub));
-  return !!(user && user.isAdmin);
+  if (!user || !user.isAdmin) return null;
+  return { id: user.id, username: user.username };
 }
 
 export const adminRoute = new Elysia()
@@ -176,10 +167,7 @@ export const adminRoute = new Elysia()
           if (!user || !user.isAdmin) {
             return new Response(
               JSON.stringify({ error: "Invalid credentials" }),
-              {
-                status: 401,
-                headers: { "Content-Type": "application/json" },
-              },
+              { status: 401, headers: { "Content-Type": "application/json" } },
             );
           }
           const valid = await Bun.password.verify(
@@ -189,87 +177,98 @@ export const adminRoute = new Elysia()
           if (!valid) {
             return new Response(
               JSON.stringify({ error: "Invalid credentials" }),
-              {
-                status: 401,
-                headers: { "Content-Type": "application/json" },
-              },
+              { status: 401, headers: { "Content-Type": "application/json" } },
             );
           }
           const token = await adminJwt.sign({ sub: user.id, role: "admin" });
-          return { token };
+          return {
+            token,
+            user: { id: user.id, username: user.username },
+          };
         },
         { body: t.Object({ username: t.String(), password: t.String() }) },
       )
 
       .get("/verify", async ({ headers, adminJwt, db }) => {
-        const ok = await verifyToken(headers, adminJwt, db);
-        if (!ok) {
+        const admin = await verifyAdmin(headers, adminJwt, db);
+        if (!admin) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
           });
         }
+        return { ok: true, ...admin };
+      })
+
+      .get("/schema", () => getAdminSchemaPayload())
+
+      .get("/stats", async ({ headers, adminJwt, db, set }) => {
+        if (!(await verifyAdmin(headers, adminJwt, db))) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        return { counts: await getAdminStats(db) };
+      })
+
+      .post("/broadcast-reload", async ({ headers, adminJwt, db, set }) => {
+        if (!(await verifyAdmin(headers, adminJwt, db))) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        broadcastAdminReload();
         return { ok: true };
       })
 
-      .get("/schema", () => {
-        const result: Record<string, any> = {};
-        for (const [name] of Object.entries(tables)) {
-          result[name] = {
-            name,
-            fields: (jsonFields[name] ?? []).map((f) => ({
-              name: f,
-              type: "json",
-            })),
-          };
-        }
-        return result;
-      })
+      .post(
+        "/grant-item",
+        async ({ body, db, headers, adminJwt, set }) => {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
+            set.status = 401;
+            return { error: "Unauthorized" };
+          }
+          const ok = await addInventory(db, body.userId, body.itemId);
+          if (!ok) {
+            set.status = 400;
+            return { error: "User or item not found" };
+          }
+          return { ok: true };
+        },
+        {
+          body: t.Object({
+            userId: t.String(),
+            itemId: t.String(),
+          }),
+        },
+      )
 
       .get(
         "/data/:table",
         async ({ params, query, db, headers, adminJwt, set }) => {
-          if (!(await verifyToken(headers, adminJwt, db))) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
-          const table = tables[params.table];
-          if (!table) {
+          if (!getAdminTable(params.table)) {
             set.status = 404;
             return { error: "Table not found" };
           }
 
-          const sortField = (query._sort as string) || "id";
-          const sortDir =
-            (query._order as string)?.toLowerCase() === "desc" ? "desc" : "asc";
-          const page = Math.max(1, parseInt(query._page as string) || 1);
-          const perPage = Math.min(
-            200,
-            Math.max(1, parseInt(query._perPage as string) || 50),
-          );
-
-          const all: any[] = await db.select().from(table);
-          let data = [...all];
-
-          if (query._ids) {
-            const ids = (query._ids as string).split(",");
-            data = data.filter((r: any) => ids.includes(r.id));
+          const result = await listAdminRows(db, params.table, query);
+          if (!result) {
+            set.status = 404;
+            return { error: "Table not found" };
           }
 
-          const total = data.length;
-          const start = (page - 1) * perPage;
-          data = data.slice(start, start + perPage);
-          data.forEach(replaceBuffers);
-
-          set.headers["X-Total-Count"] = String(total);
-          return { data, total };
+          result.data.forEach((row) => replaceBuffers(row as Record<string, unknown>));
+          set.headers["X-Total-Count"] = String(result.total);
+          return { data: result.data, total: result.total };
         },
       )
 
       .get(
         "/data/:table/:id",
         async ({ params, db, headers, adminJwt, set }) => {
-          if (!(await verifyToken(headers, adminJwt, db))) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -282,12 +281,12 @@ export const adminRoute = new Elysia()
           const [row] = await db
             .select()
             .from(table)
-            .where(eq((table as any).id, params.id));
+            .where(eq((table as typeof schema.users).id, params.id));
           if (!row) {
             set.status = 404;
             return { error: "Not found" };
           }
-          replaceBuffers(row);
+          replaceBuffers(row as Record<string, unknown>);
           return { data: row };
         },
       )
@@ -295,7 +294,7 @@ export const adminRoute = new Elysia()
       .post(
         "/data/:table",
         async ({ params, body, db, headers, adminJwt, set }) => {
-          if (!(await verifyToken(headers, adminJwt, db))) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -321,11 +320,14 @@ export const adminRoute = new Elysia()
             const [row] = await db
               .select()
               .from(table)
-              .where(eq((table as any).id, cleaned.id));
+              .where(eq((table as typeof schema.users).id, cleaned.id as string));
+            replaceBuffers(row as Record<string, unknown>);
             return { data: row };
-          } catch (err: any) {
+          } catch (err: unknown) {
             set.status = 400;
-            return { error: err.message };
+            return {
+              error: err instanceof Error ? err.message : "Insert failed",
+            };
           }
         },
       )
@@ -333,7 +335,7 @@ export const adminRoute = new Elysia()
       .put(
         "/data/:table/:id",
         async ({ params, body, db, headers, adminJwt, set }) => {
-          if (!(await verifyToken(headers, adminJwt, db))) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -347,7 +349,6 @@ export const adminRoute = new Elysia()
             body as Record<string, unknown>,
             params.table,
           );
-          const id = cleaned.id;
           delete cleaned.id;
           if (hasTimestamps.has(params.table)) cleaned.updated = nowIso();
 
@@ -355,19 +356,22 @@ export const adminRoute = new Elysia()
             await db
               .update(table)
               .set(cleaned)
-              .where(eq((table as any).id, params.id));
+              .where(eq((table as typeof schema.users).id, params.id));
             const [row] = await db
               .select()
               .from(table)
-              .where(eq((table as any).id, params.id));
+              .where(eq((table as typeof schema.users).id, params.id));
             if (!row) {
               set.status = 404;
               return { error: "Not found" };
             }
+            replaceBuffers(row as Record<string, unknown>);
             return { data: row };
-          } catch (err: any) {
+          } catch (err: unknown) {
             set.status = 400;
-            return { error: err.message };
+            return {
+              error: err instanceof Error ? err.message : "Update failed",
+            };
           }
         },
       )
@@ -375,7 +379,7 @@ export const adminRoute = new Elysia()
       .delete(
         "/data/:table/:id",
         async ({ params, db, headers, adminJwt, set }) => {
-          if (!(await verifyToken(headers, adminJwt, db))) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -388,13 +392,14 @@ export const adminRoute = new Elysia()
           const [row] = await db
             .select()
             .from(table)
-            .where(eq((table as any).id, params.id));
+            .where(eq((table as typeof schema.users).id, params.id));
           if (!row) {
             set.status = 404;
             return { error: "Not found" };
           }
 
-          await db.delete(table).where(eq((table as any).id, params.id));
+          await db.delete(table).where(eq((table as typeof schema.users).id, params.id));
+          replaceBuffers(row as Record<string, unknown>);
           return { data: row };
         },
       ),
@@ -406,9 +411,7 @@ export const adminRoute = new Elysia()
     }
     return new Response(
       "Admin panel not built. Run: cd admin-panel && bun run build",
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   })
   .get("/admin/*", async ({ params }) => {

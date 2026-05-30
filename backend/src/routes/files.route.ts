@@ -24,7 +24,7 @@ export const filesRoute = new Elysia({ prefix: "/files" })
       set.status = 404;
       return "Not found";
     }
-    if (!config.fields.includes(params.field as "image")) {
+    if (!config.fields.includes(params.field as (typeof config.fields)[number])) {
       set.status = 404;
       return "Not found";
     }

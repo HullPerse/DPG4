@@ -39,3 +39,9 @@ export function broadcastAll(action: string, id?: string) {
     broadcast(name, action, id);
   }
 }
+
+/** Tell clients to invalidate caches and refresh stores */
+export function broadcastAdminReload() {
+  broadcast("admin", "reload");
+  broadcastAll("update");
+}

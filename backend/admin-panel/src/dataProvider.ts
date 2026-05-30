@@ -30,8 +30,13 @@ export const dataProvider = {
     };
     if (params.filter) {
       Object.entries(params.filter).forEach(([k, v]) => {
-        if (v !== undefined && v !== null && v !== "") q[k] = String(v);
+        if (v !== undefined && v !== null && v !== "") {
+          q[k] = String(v);
+        }
       });
+    }
+    if (params.filter?.q) {
+      q.q = String(params.filter.q);
     }
     const url = `${apiUrl}/${resource}${toQuery(q)}`;
     const { json, headers } = await httpClient(url);
@@ -58,8 +63,13 @@ export const dataProvider = {
     };
     if (params.filter) {
       Object.entries(params.filter).forEach(([k, v]) => {
-        if (v !== undefined && v !== null && v !== "") q[k] = String(v);
+        if (v !== undefined && v !== null && v !== "") {
+          q[k] = String(v);
+        }
       });
+    }
+    if (params.filter?.q) {
+      q.q = String(params.filter.q);
     }
     const url = `${apiUrl}/${resource}${toQuery(q)}`;
     const { json, headers } = await httpClient(url);

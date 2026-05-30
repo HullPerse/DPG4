@@ -103,6 +103,21 @@ export const useDataStore = create<DataStore>()(
           set({ userProfile });
         },
 
+        /** Clears volatile session caches (admin broadcast), keeps wallpaper prefs */
+        resetSessionCaches: () => {
+          set({
+            userProfile: null,
+            movingUser: null,
+            savedWheel: [],
+            wheelHistory: [],
+            storeItems: [],
+            accessToken: "",
+            noAction: false,
+            isEditing: false,
+            negativeScoreModal: false,
+          });
+        },
+
         clear: () => {
           set({
             wallpaper: "",

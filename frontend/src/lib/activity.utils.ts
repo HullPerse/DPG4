@@ -3,6 +3,10 @@ import { useToastStore } from "@/store/toast.store";
 import { useUserStore } from "@/store/user.store";
 import type { Activity } from "@/types/activity";
 import { subscribeWsChannel, ensureWsConnected, closeWs } from "@/lib/ws.client";
+import {
+  cleanupAdminReloadListener,
+  initAdminReloadListener,
+} from "@/lib/admin-reload";
 import { notifyPrivateMessage } from "@/lib/notifications";
 import { initCursors } from "@/lib/cursor.utils";
 
@@ -97,6 +101,7 @@ export function cleanupChatSubscription() {
 
 export async function initRealtimeServices() {
   ensureWsConnected();
+  initAdminReloadListener();
   await initActivitySubscription();
   await initChatSubscription();
   initCursors();
@@ -105,5 +110,6 @@ export async function initRealtimeServices() {
 export function cleanupRealtimeServices() {
   cleanupActivitySubscription();
   cleanupChatSubscription();
+  cleanupAdminReloadListener();
   closeWs();
 }
