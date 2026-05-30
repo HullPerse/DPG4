@@ -9,8 +9,10 @@ import { useDataStore } from "@/store/data.store";
 
 export default function Signin({
   setRegister,
+  serverAvailable,
 }: {
   setRegister: (value: boolean) => void;
+  serverAvailable: boolean;
 }) {
   const login = useUserStore((state) => state.login);
   const setLoggedIn = useUserStore((state) => state.setLoggedIn);
@@ -20,9 +22,11 @@ export default function Signin({
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   const handleAuth = async () => {
     setLoading(true);
+    setError("");
     try {
       await login(username.toUpperCase(), password).then(() => {
         setLoggedIn(true);
@@ -32,8 +36,11 @@ export default function Signin({
           replace: true,
         });
       });
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Не удалось войти";
+      setError(message);
       setLoading(false);
     }
   };
@@ -65,6 +72,16 @@ export default function Signin({
         onChange={(e) => setPassword(e.target.value)}
       />
 
+      {error && (
+        <p className="text-love w-full text-center text-xs">{error}</p>
+      )}
+
+      {!serverAvailable && !error && (
+        <p className="text-muted w-full text-center text-xs">
+          Сервер offline — вход будет доступен после запуска
+        </p>
+      )}
+
       <Button
         variant="success"
         className="w-full py-5"
@@ -73,13 +90,15 @@ export default function Signin({
       >
         {loading ? <SmallLoader /> : "Войти"}
       </Button>
-      <Button
-        variant="link"
-        className="text-xs text-text"
-        onClick={() => setRegister(true)}
-      >
-        Создать аккаунт
-      </Button>
+      {serverAvailable && (
+        <Button
+          variant="link"
+          className="text-xs text-text"
+          onClick={() => setRegister(true)}
+        >
+          Создать аккаунт
+        </Button>
+      )}
     </main>
   );
 }
