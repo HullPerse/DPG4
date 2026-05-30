@@ -1,7 +1,9 @@
-const URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
-export const WS_URL =
-  import.meta.env.VITE_WS_URL ??
-  URL.replace(/^http/, "ws") + "/ws";
+//both ips are local so we good
+const VITE_API_URL = "http://127.0.0.1:3000";
+const VITE_WS_URL = "ws://127.0.0.1:3000/ws";
+
+const URL = VITE_API_URL ?? "http://127.0.0.1:3000";
+export const WS_URL = VITE_WS_URL ?? URL.replace(/^http/, "ws") + "/ws";
 
 const TOKEN_KEY = "dpg_token";
 
@@ -44,8 +46,11 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const method = options.method ?? (options.body ? "POST" : "GET");
+
   const res = await fetch(`${URL}${path}`, {
-    method: options.method ?? (options.body ? "POST" : "GET"),
+    method,
+    cache: method === "GET" ? "no-store" : undefined,
     headers,
     body:
       options.body === undefined

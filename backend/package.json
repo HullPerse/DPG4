@@ -9,7 +9,7 @@
     "db:migrate": "bun run src/db/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "import:pb": "bun run scripts/migrate-from-pb.ts",
+    "db:import-pocketbase": "bun run scripts/migrate-from-pb.ts",
     "backup": "bun run scripts/backup.ts",
     "compress-images": "bun run scripts/compress-images.ts",
     "admin:install": "cd admin-panel && bun install",
@@ -23,7 +23,6 @@
     "date-fns": "^4.3.0",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.4.28",
-    "howlongtobeat": "^1.7.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

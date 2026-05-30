@@ -50,7 +50,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         .from(schema.items)
         .limit(limit)
         .offset(offset);
-      set.headers["Cache-Control"] = "public, max-age=60";
+      set.headers["Cache-Control"] = "no-store";
       return rows.map((r) => withRecordMeta(r, "items"));
     },
     {
