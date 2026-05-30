@@ -1,16 +1,11 @@
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Paper,
-  TextField,
-  Typography,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { adminFetch } from "../adminApi";
-import { palette } from "../theme";
+import { adminFetch } from "@/adminApi";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Row = { id: string; username?: string; label?: string };
 
@@ -47,54 +42,68 @@ export function GrantItemPage() {
     }
   };
 
-  const statusColor =
-    status && !status.includes("Ошибка") ? palette.success : palette.error;
+  const ok = status && !status.toLowerCase().includes("ошиб");
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 560 }}>
-      <Button
-        component={Link}
+    <div className="p-6 md:p-8">
+      <Link
         to="/"
-        size="small"
-        startIcon={<ArrowBackIcon />}
-        sx={{ mb: 2, color: palette.textMuted }}
+        className="text-muted hover:text-text mb-4 inline-flex items-center gap-1 text-sm"
       >
+        <ArrowLeft className="size-4" />
         На главную
-      </Button>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        Выдать предмет
-      </Typography>
-      <Typography variant="body2" sx={{ color: palette.textMuted, mb: 3 }}>
+      </Link>
+      <h1 className="text-2xl font-bold">Выдать предмет</h1>
+      <p className="text-muted mt-1 text-sm">
         Добавляет запись в инвентарь выбранного игрока.
-      </Typography>
-      <Paper sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
-        <Autocomplete
-          options={users}
-          getOptionLabel={(o) => `${o.username ?? o.id} (${o.id})`}
-          onChange={(_, v) => setUserId(v?.id ?? "")}
-          renderInput={(params) => <TextField {...params} label="Игрок" />}
-        />
-        <Autocomplete
-          options={items}
-          getOptionLabel={(o) => `${o.label ?? o.id} (${o.id})`}
-          onChange={(_, v) => setItemId(v?.id ?? "")}
-          renderInput={(params) => (
-            <TextField {...params} label="Предмет (items)" />
-          )}
-        />
+      </p>
+      <Card className="mt-6 max-w-md space-y-4">
+        <div>
+          <Label htmlFor="user">Игрок</Label>
+          <Input
+            id="user"
+            list="users-list"
+            placeholder="username или id"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+          />
+          <datalist id="users-list">
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.username ?? u.id}
+              </option>
+            ))}
+          </datalist>
+        </div>
+        <div>
+          <Label htmlFor="item">Предмет</Label>
+          <Input
+            id="item"
+            list="items-list"
+            placeholder="label или id"
+            value={itemId}
+            onChange={(e) => setItemId(e.target.value)}
+          />
+          <datalist id="items-list">
+            {items.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.label ?? i.id}
+              </option>
+            ))}
+          </datalist>
+        </div>
         <Button
-          variant="contained"
+          type="button"
+          variant="primary"
           disabled={!userId || !itemId}
           onClick={() => void submit()}
         >
           Выдать в инвентарь
         </Button>
         {status && (
-          <Typography variant="body2" sx={{ color: statusColor }}>
-            {status}
-          </Typography>
+          <p className={`text-sm ${ok ? "text-green-400" : "text-love"}`}>{status}</p>
         )}
-      </Paper>
-    </Box>
+      </Card>
+    </div>
   );
 }

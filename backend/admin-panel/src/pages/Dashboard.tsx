@@ -1,19 +1,11 @@
+import { Gift, Grid3x3, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Paper,
-  Typography,
-  alpha,
-} from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import GridViewIcon from "@mui/icons-material/GridView";
-import { adminFetch } from "../adminApi";
-import { palette } from "../theme";
-import type { AdminSchema } from "../types";
+import { adminFetch } from "@/adminApi";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { resourceIcons } from "@/config/resourceIcons";
+import type { AdminSchema } from "@/types";
 
 export function Dashboard({ schema }: { schema: AdminSchema }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
@@ -40,114 +32,70 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200 }}>
-      <Typography
-        variant="overline"
-        sx={{ color: palette.textMuted, letterSpacing: "0.12em", mb: 0.5 }}
-      >
+    <div className="p-6 md:p-8">
+      <p className="text-muted text-[10px] font-bold tracking-widest uppercase">
         DPG · панель управления
-      </Typography>
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 700,
-          mb: 1,
-          background: `linear-gradient(135deg, ${palette.text} 0%, ${palette.primary} 100%)`,
-          backgroundClip: "text",
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-        }}
-      >
+      </p>
+      <h1 className="from-text to-primary mt-1 bg-gradient-to-br bg-clip-text text-3xl font-bold text-transparent">
         Админка
-      </Typography>
-      <Typography sx={{ color: palette.textMuted, mb: 4, maxWidth: 520 }}>
+      </h1>
+      <p className="text-muted mt-2 max-w-lg text-sm">
         Управление базой и инструменты для живой сессии.
-      </Typography>
+      </p>
 
-      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 3 }}>
-        <Button
-          variant="contained"
-          startIcon={<RefreshIcon />}
-          onClick={handleBroadcast}
-          disabled={broadcasting}
-        >
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Button variant="primary" onClick={() => void handleBroadcast()} disabled={broadcasting}>
+          <RefreshCw className={broadcasting ? "animate-spin" : undefined} />
           {broadcasting ? "Отправка…" : "Обновить всех игроков"}
         </Button>
-        <Button
-          component={Link}
+        <Link
           to="/grant-item"
-          variant="outlined"
-          startIcon={<CardGiftcardIcon />}
+          className="border-highlight-high bg-card text-text hover:border-iris inline-flex h-9 items-center gap-2 border-2 px-4 text-sm font-bold"
         >
+          <Gift className="size-4" />
           Выдать предмет
-        </Button>
-        <Button
-          component={Link}
+        </Link>
+        <Link
           to="/cells-board"
-          variant="outlined"
-          startIcon={<GridViewIcon />}
+          className="border-highlight-high bg-card text-text hover:border-iris inline-flex h-9 items-center gap-2 border-2 px-4 text-sm font-bold"
         >
+          <Grid3x3 className="size-4" />
           Поле (cells)
-        </Button>
-      </Box>
+        </Link>
+      </div>
 
       {message && (
-        <Paper
-          sx={{
-            px: 2,
-            py: 1.5,
-            mb: 3,
-            bgcolor: alpha(palette.success, 0.1),
-            borderColor: alpha(palette.success, 0.35),
-          }}
-        >
-          <Typography variant="body2" sx={{ color: palette.success }}>
-            {message}
-          </Typography>
-        </Paper>
+        <Card className="border-green-500/40 bg-green-500/10 mt-4 text-sm text-green-300">
+          {message}
+        </Card>
       )}
 
-      {!counts ? (
-        <CircularProgress size={28} sx={{ color: palette.primary }} />
-      ) : (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))",
-            gap: 1.5,
-          }}
-        >
-          {Object.entries(schema.tables).map(([key, meta]) => (
-            <Paper
-              key={key}
-              component={Link}
-              to={`/${key}`}
-              elevation={0}
-              sx={{
-                p: 2,
-                textDecoration: "none",
-                color: "inherit",
-                display: "block",
-                transition: "transform 0.15s, border-color 0.15s",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  borderColor: alpha(palette.primary, 0.4),
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ color: palette.textMuted }}>
-                {meta.label}
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: palette.primary, mt: 1 }}
-              >
-                {counts[key] ?? 0}
-              </Typography>
-            </Paper>
-          ))}
-        </Box>
-      )}
-    </Box>
+      <div className="mt-8">
+        {!counts ? (
+          <Loader2 className="text-primary size-7 animate-spin" />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Object.entries(schema.tables).map(([key, meta]) => {
+              const Icon = resourceIcons[key];
+              return (
+                <Link
+                  key={key}
+                  to={`/${key}`}
+                  className="border-highlight-high bg-card hover:border-primary/50 block border-2 p-4 shadow-sharp-sm transition-colors hover:-translate-y-0.5"
+                >
+                  <div className="text-muted flex items-center gap-2 text-sm">
+                    {Icon ? <Icon className="size-4" /> : null}
+                    {meta.label}
+                  </div>
+                  <div className="text-primary mt-2 text-2xl font-bold">
+                    {counts[key] ?? 0}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,70 +1,20 @@
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  Admin,
-  Resource,
-  CustomRoutes,
-} from "react-admin";
-import { Route } from "react-router-dom";
-import { Box, CircularProgress, Typography } from "@mui/material";
-import {
-  People,
-  SportsEsports,
-  Bookmark,
-  Inventory,
-  Storefront,
-  Timeline,
-  Chat,
-  Gavel,
-  Campaign,
-  Brush,
-  GridOn,
-} from "@mui/icons-material";
-import { authProvider } from "./authProvider";
-import { dataProvider } from "./dataProvider";
-import { adminFetch } from "./adminApi";
-import type { AdminSchema } from "./types";
-import { createResourceNode } from "./createResources";
-import { Dashboard } from "./pages/Dashboard";
-import { GrantItemPage } from "./pages/GrantItem";
-import { CellsBoardPage } from "./pages/CellsBoard";
-import { adminTheme, palette } from "./theme";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { adminFetch } from "@/adminApi";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SchemaProvider } from "@/context/SchemaContext";
+import { AdminShell } from "@/layout/AdminShell";
+import { CellsBoardPage } from "@/pages/CellsBoard";
+import { Dashboard } from "@/pages/Dashboard";
+import { GrantItemPage } from "@/pages/GrantItem";
+import { LoginPage } from "@/pages/Login";
+import { ResourceFormPage } from "@/pages/ResourceForm";
+import { ResourceListPage } from "@/pages/ResourceList";
+import { ResourceShowPage } from "@/pages/ResourceShow";
+import type { AdminSchema } from "@/types";
 
-const icons: Record<string, React.ReactNode> = {
-  users: <People />,
-  games: <SportsEsports />,
-  presets: <Bookmark />,
-  items: <Inventory />,
-  inventory: <Inventory />,
-  market: <Storefront />,
-  activity: <Timeline />,
-  chats: <Chat />,
-  rules: <Gavel />,
-  ads: <Campaign />,
-  drawings: <Brush />,
-  cells: <GridOn />,
-};
-
-function LoadingScreen({ text }: { text: string }) {
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 2,
-        bgcolor: palette.bg,
-        color: palette.textMuted,
-      }}
-    >
-      <CircularProgress size={32} sx={{ color: palette.primary }} />
-      <Typography variant="body2">{text}</Typography>
-    </Box>
-  );
-}
-
-function AdminApp() {
+export function App() {
   const [schema, setSchema] = useState<AdminSchema | null>(null);
   const [error, setError] = useState("");
 
@@ -78,52 +28,43 @@ function AdminApp() {
 
   if (error) {
     return (
-      <Box
-        sx={{
-          p: 4,
-          minHeight: "100vh",
-          bgcolor: palette.bg,
-          color: palette.error,
-        }}
-      >
+      <div className="text-love bg-background h-full overflow-y-auto p-8">
         Не удалось загрузить схему: {error}
-      </Box>
+      </div>
     );
   }
 
   if (!schema) {
-    return <LoadingScreen text="Загрузка схемы…" />;
+    return (
+      <div className="bg-background flex h-full items-center justify-center">
+        <Loader2 className="text-primary size-8 animate-spin" />
+        <span className="text-muted ml-3 text-sm">Загрузка схемы…</span>
+      </div>
+    );
   }
 
   return (
-    <Admin
-      authProvider={authProvider}
-      dataProvider={dataProvider}
-      dashboard={() => <Dashboard schema={schema} />}
-      requireAuth
-      theme={adminTheme}
-      title="DPG Admin"
-    >
-      {Object.entries(schema.tables).map(([name, meta]) => {
-        const views = createResourceNode(name, meta);
-        return (
-          <Resource
-            key={name}
-            name={name}
-            options={{ label: meta.label }}
-            icon={() => icons[name] ?? null}
-            {...views}
-          />
-        );
-      })}
-      <CustomRoutes>
-        <Route path="/grant-item" element={<GrantItemPage />} />
-        <Route path="/cells-board" element={<CellsBoardPage />} />
-      </CustomRoutes>
-    </Admin>
+    <SchemaProvider schema={schema}>
+      <BrowserRouter basename="/admin">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminShell schema={schema} />}>
+              <Route index element={<Dashboard schema={schema} />} />
+              <Route path="grant-item" element={<GrantItemPage />} />
+              <Route path="cells-board" element={<CellsBoardPage />} />
+              <Route path=":resource/create" element={<ResourceFormPage mode="create" />} />
+              <Route
+                path=":resource/:id/edit"
+                element={<ResourceFormPage mode="edit" />}
+              />
+              <Route path=":resource/:id" element={<ResourceShowPage />} />
+              <Route path=":resource" element={<ResourceListPage />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </SchemaProvider>
   );
-}
-
-export function App() {
-  return <AdminApp />;
 }

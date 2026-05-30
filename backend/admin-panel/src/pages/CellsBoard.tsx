@@ -1,9 +1,8 @@
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, Button, Paper, Typography, alpha } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { adminFetch } from "../adminApi";
-import { palette } from "../theme";
+import { adminFetch } from "@/adminApi";
+import { cn } from "@/lib/utils";
 
 type CellRow = {
   id: string;
@@ -39,98 +38,81 @@ export function CellsBoardPage() {
     return { start, final, grid };
   }, [cells]);
 
-  const cellStyle = (cell: CellRow): React.CSSProperties => {
-    const isLadder = cell.ladderTo > 0;
-    const isSnake = cell.snakeTo > 0;
-    return {
-      width: 72,
-      minHeight: 56,
-      padding: 4,
-      borderRadius: 8,
-      border: `1px solid ${palette.border}`,
-      background: isLadder
-        ? alpha(palette.success, 0.12)
-        : isSnake
-          ? alpha(palette.error, 0.12)
-          : palette.surfaceRaised,
-      cursor: "pointer",
-      fontSize: 10,
-      lineHeight: 1.2,
-      color: palette.text,
-      transition: "border-color 0.15s, transform 0.15s",
-    };
-  };
+  const cellClass = (cell: CellRow) =>
+    cn(
+      "w-[72px] min-h-14 cursor-pointer border-2 p-1 text-[10px] leading-tight transition-colors hover:-translate-y-0.5",
+      cell.ladderTo > 0 && "border-green-500/50 bg-green-500/10",
+      cell.snakeTo > 0 && "border-love/50 bg-love/10",
+      !cell.ladderTo && !cell.snakeTo && "border-highlight-high bg-highlight-low",
+    );
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        Поле (tabletop)
-      </Typography>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-        <Button
-          component={Link}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Поле (tabletop)</h1>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Link
           to="/"
-          size="small"
-          startIcon={<ArrowBackIcon />}
-          sx={{ color: palette.textMuted }}
+          className="text-muted hover:text-text inline-flex items-center gap-1 text-sm"
         >
+          <ArrowLeft className="size-4" />
           На главную
-        </Button>
-        <Button component={Link} to="/cells" size="small" variant="outlined">
+        </Link>
+        <Link
+          to="/cells"
+          className="border-highlight-high hover:border-iris border-2 px-3 py-1 text-xs font-bold"
+        >
           Таблица cells
-        </Button>
-        <Button component={Link} to="/rules" size="small" variant="outlined">
+        </Link>
+        <Link
+          to="/rules"
+          className="border-highlight-high hover:border-iris border-2 px-3 py-1 text-xs font-bold"
+        >
           Правила
-        </Button>
-      </Box>
+        </Link>
+      </div>
 
-      <Paper sx={{ p: 2, overflow: "auto" }}>
+      <div className="border-highlight-high bg-card mt-4 overflow-auto border-2 p-4 shadow-sharp-sm">
         {start && (
-          <Box
-            sx={{ mb: 1 }}
-            onClick={() => navigate(`/cells/${start.id}/show`)}
-            style={{
-              ...cellStyle(start),
-              borderColor: alpha(palette.primary, 0.5),
-            }}
+          <button
+            type="button"
+            className={cn(cellClass(start), "border-primary/50 mb-2")}
+            onClick={() => navigate(`/cells/${start.id}`)}
           >
             <strong>START</strong>
             <div>{start.title || start.cellType}</div>
-          </Box>
+          </button>
         )}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+        <div className="flex flex-col gap-1">
           {grid.map((row, ri) => (
-            <Box key={ri} sx={{ display: "flex", gap: 0.5 }}>
+            <div key={ri} className="flex gap-1">
               {row.map((cell) => (
-                <Box
+                <button
                   key={cell.id}
-                  onClick={() => navigate(`/cells/${cell.id}/show`)}
-                  style={cellStyle(cell)}
+                  type="button"
+                  className={cellClass(cell)}
                   title={cell.id}
+                  onClick={() => navigate(`/cells/${cell.id}`)}
                 >
                   <strong>#{cell.number}</strong>
                   <div>{cell.title || cell.cellType || "—"}</div>
                   {cell.ladderTo > 0 && <div>↑{cell.ladderTo}</div>}
                   {cell.snakeTo > 0 && <div>↓{cell.snakeTo}</div>}
-                </Box>
+                </button>
               ))}
-            </Box>
+            </div>
           ))}
-        </Box>
+        </div>
         {final && (
-          <Box
-            sx={{ mt: 1 }}
-            onClick={() => navigate(`/cells/${final.id}/show`)}
-            style={{
-              ...cellStyle(final),
-              borderColor: alpha(palette.primary, 0.5),
-            }}
+          <button
+            type="button"
+            className={cn(cellClass(final), "border-primary/50 mt-2")}
+            onClick={() => navigate(`/cells/${final.id}`)}
           >
             <strong>FINISH</strong>
             <div>{final.title || final.cellType}</div>
-          </Box>
+          </button>
         )}
-      </Paper>
-    </Box>
+      </div>
+    </div>
   );
 }

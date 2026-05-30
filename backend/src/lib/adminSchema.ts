@@ -8,7 +8,15 @@ export type AdminFieldType =
   | "blob"
   | "audio"
   | "password"
-  | "hidden";
+  | "hidden"
+  | "select";
+
+export type AdminChoice = { value: string; label?: string };
+
+export type AdminColumnMeta = {
+  kind?: "text" | "number" | "boolean" | "select";
+  choices?: AdminChoice[];
+};
 
 export type AdminFieldMeta = {
   source: string;
@@ -16,8 +24,54 @@ export type AdminFieldMeta = {
   hideInList?: boolean;
   /** Columns for objectList editor (default: id, name if present) */
   objectListColumns?: string[];
+  /** Per-column editor hints for objectList rows */
+  columns?: Record<string, AdminColumnMeta>;
+  /** Fixed options for select fields */
+  choices?: AdminChoice[];
   reference?: { table: string; labelField: string };
 };
+
+const ITEM_TYPES: AdminChoice[] = [
+  { value: "effect", label: "effect" },
+  { value: "item", label: "item" },
+  { value: "roll", label: "roll" },
+  { value: "other", label: "other" },
+];
+
+const GAME_STATUS: AdminChoice[] = [
+  { value: "PLAYING", label: "PLAYING" },
+  { value: "COMPLETED", label: "COMPLETED" },
+  { value: "DROPPED", label: "DROPPED" },
+  { value: "REROLLED", label: "REROLLED" },
+];
+
+const CELL_TYPES: AdminChoice[] = [
+  { value: "start", label: "start" },
+  { value: "finish", label: "finish" },
+  { value: "grid", label: "grid" },
+];
+
+const CELL_CELL_TYPES: AdminChoice[] = [
+  { value: "Игра" },
+  { value: "Пресет" },
+  { value: "Стим" },
+  { value: "Просмотр" },
+];
+
+const CELL_DIFFICULTY: AdminChoice[] = [
+  { value: "Лёгкий" },
+  { value: "Средний" },
+  { value: "Сложноватый" },
+  { value: "Сложный" },
+  { value: "Адский" },
+  { value: "Сердце" },
+];
+
+const ACTIVITY_TYPES: AdminChoice[] = [
+  { value: "image" },
+  { value: "emoji" },
+  { value: "chat" },
+];
 
 export type AdminTableMeta = {
   label: string;
@@ -59,7 +113,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     fields: [
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
-      { source: "status", type: "text" },
+      { source: "status", type: "select", choices: GAME_STATUS },
       { source: "score", type: "number" },
       { source: "user", type: "json" },
       { source: "data", type: "json" },
@@ -79,6 +133,12 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
         source: "games",
         type: "objectList",
         objectListColumns: ["id", "name", "image", "steamLink"],
+        columns: {
+          id: { kind: "number" },
+          name: { kind: "text" },
+          image: { kind: "text" },
+          steamLink: { kind: "text" },
+        },
       },
       { source: "created", type: "date", hideInList: true },
       { source: "updated", type: "date", hideInList: true },
@@ -90,7 +150,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     fields: [
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
-      { source: "type", type: "text" },
+      { source: "type", type: "select", choices: ITEM_TYPES },
       { source: "label", type: "text" },
       { source: "description", type: "text" },
       { source: "charge", type: "number" },
@@ -106,7 +166,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     fields: [
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
-      { source: "type", type: "text" },
+      { source: "type", type: "select", choices: ITEM_TYPES },
       { source: "owner", type: "text", reference: { table: "users", labelField: "username" } },
       { source: "label", type: "text" },
       { source: "description", type: "text" },
@@ -121,7 +181,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     fields: [
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
-      { source: "type", type: "text" },
+      { source: "type", type: "select", choices: ITEM_TYPES },
       { source: "originalId", type: "text" },
       { source: "label", type: "text" },
       { source: "description", type: "text" },
@@ -140,7 +200,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "id", type: "text" },
       { source: "author", type: "text" },
       { source: "image", type: "text" },
-      { source: "type", type: "text" },
+      { source: "type", type: "select", choices: ACTIVITY_TYPES },
       { source: "text", type: "text" },
       { source: "created", type: "date" },
     ],
@@ -197,11 +257,11 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     searchFields: ["id", "title", "type", "cellType"],
     fields: [
       { source: "id", type: "text" },
-      { source: "type", type: "text" },
+      { source: "type", type: "select", choices: CELL_TYPES },
       { source: "number", type: "number" },
       { source: "title", type: "text" },
-      { source: "cellType", type: "text" },
-      { source: "difficulty", type: "text" },
+      { source: "cellType", type: "select", choices: CELL_CELL_TYPES },
+      { source: "difficulty", type: "select", choices: CELL_DIFFICULTY },
       { source: "ladderTo", type: "number" },
       { source: "snakeTo", type: "number" },
       { source: "conditions", type: "json" },

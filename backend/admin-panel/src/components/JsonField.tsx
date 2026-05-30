@@ -1,31 +1,22 @@
-import { useRecordContext } from "react-admin";
-import { formatAlignedJsonText } from "../jsonAlign";
+import { formatAlignedJsonText } from "@/jsonAlign";
 
-const jsonPreStyle: React.CSSProperties = {
-  margin: 0,
-  maxWidth: "100%",
-  whiteSpace: "pre",
-  overflowX: "auto",
-  fontSize: 13,
-  lineHeight: 1.5,
-  fontFamily: 'ui-monospace, "Cascadia Code", Consolas, monospace',
-};
+const jsonPreClass =
+  "m-0 max-w-full overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre";
 
 export function JsonField({
-  source,
+  value,
   maxChars,
 }: {
-  source: string;
+  value: unknown;
   maxChars?: number;
 }) {
-  const record = useRecordContext();
-  if (!record) return null;
-  const val = record[source];
-  if (val === null || val === undefined || val === "") return <span>—</span>;
-  const pretty = formatAlignedJsonText(val);
+  if (value === null || value === undefined || value === "") {
+    return <span className="text-muted">—</span>;
+  }
+  const pretty = formatAlignedJsonText(value);
   const shown =
     maxChars && pretty.length > maxChars
       ? `${pretty.slice(0, maxChars)}…`
       : pretty;
-  return <pre style={jsonPreStyle}>{shown}</pre>;
+  return <pre className={jsonPreClass}>{shown}</pre>;
 }

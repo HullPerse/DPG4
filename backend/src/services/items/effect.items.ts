@@ -115,8 +115,8 @@ const handlers: Record<string, EffectHandler> = {
 
   "Кредит": async ({ db, userId }) => {
     const user = await getUser(db, userId);
-    if (user.money < 15) return null;
-    await scoreUser(db, userId, -15);
+    if (user.money < 6) return null;
+    await scoreUser(db, userId, -6);
     await dropUserPlayingGame(db, userId);
     await patchUser(db, userId, { currentAction: "GAMEADD" });
     const game = await getLastGameForUser(db, userId);
