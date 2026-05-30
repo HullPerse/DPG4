@@ -16,9 +16,29 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
+
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = DEFAULT_FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function checkConnection(): Promise<boolean> {
   try {
-    const res = await fetch(`${URL}/health`);
+    const res = await fetchWithTimeout(`${URL}/health`);
     return res.ok;
   } catch {
     return false;
@@ -48,17 +68,25 @@ export async function apiFetch<T>(
 
   const method = options.method ?? (options.body ? "POST" : "GET");
 
-  const res = await fetch(`${URL}${path}`, {
-    method,
-    cache: method === "GET" ? "no-store" : undefined,
-    headers,
-    body:
-      options.body === undefined
-        ? undefined
-        : options.body instanceof FormData
-          ? options.body
-          : JSON.stringify(options.body),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(`${URL}${path}`, {
+      method,
+      cache: method === "GET" ? "no-store" : undefined,
+      headers,
+      body:
+        options.body === undefined
+          ? undefined
+          : options.body instanceof FormData
+            ? options.body
+            : JSON.stringify(options.body),
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error("Сервер недоступен");
+    }
+    throw e;
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));

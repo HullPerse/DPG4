@@ -14,13 +14,11 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
-import { checkForUpdates, installUpdate, selectionMouse } from "./lib/utils";
+import { selectionMouse } from "./lib/utils";
 import { wallpaperAssetUrl } from "./lib/tauri/wallpaper";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
-import { useToastStore } from "./store/toast.store";
-import { UpdateData, Activity } from "./types/activity";
-import { Download, PhoneCall } from "lucide-react";
+import { PhoneCall } from "lucide-react";
 import { CreateModal } from "./components/shared/items.modal";
 import ImageComponent from "./components/shared/image.component";
 import { Button } from "./components/ui/button.component";
@@ -85,7 +83,6 @@ function App() {
 
   //routing
   const navigate = useNavigate();
-  const addToast = useToastStore((s) => s.addToast);
 
   //stores
   const wallpaperData = useDataStore((state) => state.wallpaper);
@@ -167,36 +164,6 @@ function App() {
     },
     [],
   );
-
-  const handleUpdates = useCallback(async () => {
-    try {
-      const update = await checkForUpdates();
-      if (!update) return;
-
-      const toastData: UpdateData = {
-        id: "update",
-        author: "System",
-        image: "⚠️",
-        type: "emoji",
-        text: `Версия ${update.version} доступна для скачивания`,
-        created: new Date().toISOString(),
-        timeout: Infinity,
-        showClose: true,
-        onClick: {
-          fn: () => installUpdate(update),
-          icon: <Download className="size-4" />,
-        },
-      };
-
-      addToast(toastData as unknown as Activity);
-    } catch (e) {
-      console.error("Failed to check for updates:", e);
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    handleUpdates();
-  }, []);
 
   useEffect(() => {
     if (!isSelecting) return;

@@ -2,6 +2,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  redirect,
   useNavigate,
 } from "@tanstack/react-router";
 import { lazy, useEffect } from "react";
@@ -10,6 +11,7 @@ import OutletComponent from "@/components/shared/outlet.component";
 import { BigLoader } from "@/components/shared/loader.component";
 import { BigError } from "@/components/shared/error.component";
 import { CircleX } from "lucide-react";
+import { getToken } from "@/api/client.api";
 
 const App = lazy(() => import("@/App"));
 const Auth = lazy(() => import("./auth/auth.root"));
@@ -23,6 +25,11 @@ const indexRoute = createRoute({
   path: "/",
   component: App,
   pendingComponent: BigLoader,
+  beforeLoad: () => {
+    if (!getToken()) {
+      throw redirect({ to: "/auth" });
+    }
+  },
 });
 
 const authRoute = createRoute({
