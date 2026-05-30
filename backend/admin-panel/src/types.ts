@@ -5,6 +5,7 @@ export type AdminFieldType =
   | "date"
   | "json"
   | "objectList"
+  | "stringList"
   | "blob"
   | "audio"
   | "password"

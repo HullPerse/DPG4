@@ -113,7 +113,7 @@ const handlers: Record<string, EffectHandler> = {
     return `${user.username} использовал Гем Монтесумы`;
   },
 
-  "Кредит": async ({ db, userId }) => {
+  Кредит: async ({ db, userId }) => {
     const user = await getUser(db, userId);
     if (user.money < 6) return null;
     await scoreUser(db, userId, -6);
@@ -122,6 +122,15 @@ const handlers: Record<string, EffectHandler> = {
     const game = await getLastGameForUser(db, userId);
     const name = (game?.data as { name?: string })?.name ?? "игру";
     return `${user.username} использовал Кредит на ${name}`;
+  },
+
+  Салфетка: async ({ db, userId }) => {
+    const user = await getUser(db, userId);
+    await rerollUserLastGame(db, userId);
+    const game = await getLastGameForUser(db, userId);
+    const name = (game?.data as { name?: string })?.name ?? "игру";
+
+    return `${user.username} подтер ж̶о̶п̶у̶ ${name}`;
   },
 
   "Erection - NPC": async ({ db, userId, inventoryId }) => {

@@ -118,7 +118,8 @@ function InventoryTab({ id }: { id?: string }) {
   const patchInventoryFor = useCallback(
     async (userId: string) => {
       const inventory = await itemsApi.getInventory(userId);
-      const hadCache = queryClient.getQueryData(["inventoryTab", userId]) != null;
+      const hadCache =
+        queryClient.getQueryData(["inventoryTab", userId]) != null;
 
       queryClient.setQueryData<InventoryTabData>(
         ["inventoryTab", userId],
@@ -410,7 +411,7 @@ function InventoryTab({ id }: { id?: string }) {
                 />
               </HoverCardTrigger>
               <HoverCardContent
-                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-30 max-h-30 mi-h-30 min-w-full w-sm"
+                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-30 max-h-30 mi-h-30 min-w-full w-sm  overflow-y-auto"
                 side="top"
               >
                 <span>{status.description}</span>
@@ -464,14 +465,11 @@ function InventoryTab({ id }: { id?: string }) {
                       onChange={setSelectedUser}
                       placeholder={selectedUser || "Пользователь"}
                       className="w-64"
-                      loading={
-                        isItemLoading(String(item.id), "send")
-                      }
+                      loading={isItemLoading(String(item.id), "send")}
                     />
                     <Button
                       disabled={
-                        isItemLoading(String(item.id), "send") ||
-                        !selectedUser
+                        isItemLoading(String(item.id), "send") || !selectedUser
                       }
                       onClick={() => {
                         if (!selectedUser) return;
