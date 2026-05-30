@@ -4,8 +4,22 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SmartInput } from "@/components/fieldRenderer";
+import { isBlobPlaceholder } from "@/components/MediaInputs";
 import { createRecord, getRecord, updateRecord } from "@/lib/data";
 import { useSchema } from "@/context/SchemaContext";
+import type { AdminFieldMeta } from "@/types";
+
+function stripUnchangedBlobs(
+  payload: Record<string, unknown>,
+  fields: AdminFieldMeta[],
+): Record<string, unknown> {
+  const out = { ...payload };
+  for (const f of fields) {
+    if (f.type !== "blob" && f.type !== "audio") continue;
+    if (isBlobPlaceholder(out[f.source])) delete out[f.source];
+  }
+  return out;
+}
 
 export function ResourceFormPage({ mode }: { mode: "create" | "edit" }) {
   const { resource = "", id = "" } = useParams<{ resource: string; id: string }>();
@@ -47,7 +61,7 @@ export function ResourceFormPage({ mode }: { mode: "create" | "edit" }) {
     setSaving(true);
     setError("");
     try {
-      const payload = { ...values };
+      const payload = stripUnchangedBlobs({ ...values }, formFields);
       if (isCreate) {
         const created = await createRecord(resource, payload);
         navigate(`/${resource}/${created.id}`);

@@ -13,8 +13,31 @@ import {
 } from "../lib/adminSchema";
 import { getAdminStats, listAdminRows } from "../lib/adminQuery";
 import { adminTableColumn, getAdminTable } from "../lib/adminTables";
-import { broadcastAdminReload } from "../lib/ws";
+import { broadcast, broadcastAdminReload } from "../lib/ws";
 import { addInventory } from "../services/economy.service";
+
+const BROADCAST_TABLES = new Set([
+  "users",
+  "games",
+  "presets",
+  "items",
+  "inventory",
+  "market",
+  "activity",
+  "chats",
+  "rules",
+  "ads",
+  "drawings",
+  "cells",
+]);
+
+function isBlobPlaceholder(val: unknown): boolean {
+  return typeof val === "string" && val.includes("[buffer");
+}
+
+function maybeBroadcast(table: string, action: string, id: string) {
+  if (BROADCAST_TABLES.has(table)) broadcast(table, action, id);
+}
 
 const hasTimestamps = new Set([
   "users",
@@ -85,6 +108,10 @@ async function cleanBody(
       }
     } else if (typeof val === "string" && val === "") {
       delete out[field];
+      delete out[mimeField];
+    } else if (isBlobPlaceholder(val)) {
+      delete out[field];
+      delete out[mimeField];
     }
   }
   return out;
@@ -321,6 +348,7 @@ export const adminRoute = new Elysia()
               .from(table)
               .where(eq(idCol as never, cleaned.id as string));
             replaceBuffers(row as Record<string, unknown>);
+            maybeBroadcast(params.table, "create", cleaned.id as string);
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -366,6 +394,7 @@ export const adminRoute = new Elysia()
               return { error: "Not found" };
             }
             replaceBuffers(row as Record<string, unknown>);
+            maybeBroadcast(params.table, "update", params.id);
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -401,6 +430,7 @@ export const adminRoute = new Elysia()
 
           await db.delete(table).where(eq(idCol as never, params.id));
           replaceBuffers(row as Record<string, unknown>);
+          maybeBroadcast(params.table, "delete", params.id);
           return { data: row };
         },
       ),

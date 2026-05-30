@@ -46,8 +46,11 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const method = options.method ?? (options.body ? "POST" : "GET");
+
   const res = await fetch(`${URL}${path}`, {
-    method: options.method ?? (options.body ? "POST" : "GET"),
+    method,
+    cache: method === "GET" ? "no-store" : undefined,
     headers,
     body:
       options.body === undefined
