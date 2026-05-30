@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { Box, Button, Paper, Typography, alpha } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { adminFetch } from "../adminApi";
+import { palette } from "../theme";
 
 type CellRow = {
   id: string;
@@ -44,46 +46,53 @@ export function CellsBoardPage() {
       width: 72,
       minHeight: 56,
       padding: 4,
-      borderRadius: 6,
-      border: "1px solid #cbd5e1",
-      background: isLadder ? "#ecfdf5" : isSnake ? "#fef2f2" : "#fff",
+      borderRadius: 8,
+      border: `1px solid ${palette.border}`,
+      background: isLadder
+        ? alpha(palette.success, 0.12)
+        : isSnake
+          ? alpha(palette.error, 0.12)
+          : palette.surfaceRaised,
       cursor: "pointer",
       fontSize: 10,
       lineHeight: 1.2,
+      color: palette.text,
+      transition: "border-color 0.15s, transform 0.15s",
     };
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Поле (tabletop)
       </Typography>
-      <Button component={Link} to="/" size="small" sx={{ mb: 2 }}>
-        ← На главную
-      </Button>
-      <Button
-        component={Link}
-        to="/cells"
-        size="small"
-        sx={{ mb: 2, ml: 1 }}
-      >
-        Таблица cells
-      </Button>
-      <Button
-        component={Link}
-        to="/rules"
-        size="small"
-        sx={{ mb: 2, ml: 1 }}
-      >
-        Правила
-      </Button>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        <Button
+          component={Link}
+          to="/"
+          size="small"
+          startIcon={<ArrowBackIcon />}
+          sx={{ color: palette.textMuted }}
+        >
+          На главную
+        </Button>
+        <Button component={Link} to="/cells" size="small" variant="outlined">
+          Таблица cells
+        </Button>
+        <Button component={Link} to="/rules" size="small" variant="outlined">
+          Правила
+        </Button>
+      </Box>
 
       <Paper sx={{ p: 2, overflow: "auto" }}>
         {start && (
           <Box
             sx={{ mb: 1 }}
             onClick={() => navigate(`/cells/${start.id}/show`)}
-            style={cellStyle(start)}
+            style={{
+              ...cellStyle(start),
+              borderColor: alpha(palette.primary, 0.5),
+            }}
           >
             <strong>START</strong>
             <div>{start.title || start.cellType}</div>
@@ -112,7 +121,10 @@ export function CellsBoardPage() {
           <Box
             sx={{ mt: 1 }}
             onClick={() => navigate(`/cells/${final.id}/show`)}
-            style={cellStyle(final)}
+            style={{
+              ...cellStyle(final),
+              borderColor: alpha(palette.primary, 0.5),
+            }}
           >
             <strong>FINISH</strong>
             <div>{final.title || final.cellType}</div>

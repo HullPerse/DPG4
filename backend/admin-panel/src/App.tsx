@@ -3,10 +3,9 @@ import {
   Admin,
   Resource,
   CustomRoutes,
-  defaultTheme,
 } from "react-admin";
-import { createTheme } from "@mui/material/styles";
 import { Route } from "react-router-dom";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import {
   People,
   SportsEsports,
@@ -28,6 +27,7 @@ import { createResourceNode } from "./createResources";
 import { Dashboard } from "./pages/Dashboard";
 import { GrantItemPage } from "./pages/GrantItem";
 import { CellsBoardPage } from "./pages/CellsBoard";
+import { adminTheme, palette } from "./theme";
 
 const icons: Record<string, React.ReactNode> = {
   users: <People />,
@@ -44,15 +44,25 @@ const icons: Record<string, React.ReactNode> = {
   cells: <GridOn />,
 };
 
-const theme = createTheme({
-  ...defaultTheme,
-  palette: {
-    ...defaultTheme.palette,
-    primary: { main: "#2563eb" },
-    mode: "light",
-    background: { default: "#f1f5f9" },
-  },
-});
+function LoadingScreen({ text }: { text: string }) {
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+        bgcolor: palette.bg,
+        color: palette.textMuted,
+      }}
+    >
+      <CircularProgress size={32} sx={{ color: palette.primary }} />
+      <Typography variant="body2">{text}</Typography>
+    </Box>
+  );
+}
 
 function AdminApp() {
   const [schema, setSchema] = useState<AdminSchema | null>(null);
@@ -68,16 +78,21 @@ function AdminApp() {
 
   if (error) {
     return (
-      <div style={{ padding: 32, color: "#b91c1c" }}>
+      <Box
+        sx={{
+          p: 4,
+          minHeight: "100vh",
+          bgcolor: palette.bg,
+          color: palette.error,
+        }}
+      >
         Не удалось загрузить схему: {error}
-      </div>
+      </Box>
     );
   }
 
   if (!schema) {
-    return (
-      <div style={{ padding: 32, color: "#64748b" }}>Загрузка схемы…</div>
-    );
+    return <LoadingScreen text="Загрузка схемы…" />;
   }
 
   return (
@@ -86,7 +101,8 @@ function AdminApp() {
       dataProvider={dataProvider}
       dashboard={() => <Dashboard schema={schema} />}
       requireAuth
-      theme={theme}
+      theme={adminTheme}
+      title="DPG Admin"
     >
       {Object.entries(schema.tables).map(([name, meta]) => {
         const views = createResourceNode(name, meta);

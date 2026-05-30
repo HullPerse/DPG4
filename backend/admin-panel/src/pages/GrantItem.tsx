@@ -8,7 +8,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { adminFetch } from "../adminApi";
+import { palette } from "../theme";
 
 type Row = { id: string; username?: string; label?: string };
 
@@ -45,14 +47,26 @@ export function GrantItemPage() {
     }
   };
 
+  const statusColor =
+    status && !status.includes("Ошибка") ? palette.success : palette.error;
+
   return (
-    <Box sx={{ p: 4, maxWidth: 560 }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 560 }}>
+      <Button
+        component={Link}
+        to="/"
+        size="small"
+        startIcon={<ArrowBackIcon />}
+        sx={{ mb: 2, color: palette.textMuted }}
+      >
+        На главную
+      </Button>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Выдать предмет
       </Typography>
-      <Button component={Link} to="/" size="small" sx={{ mb: 2 }}>
-        ← На главную
-      </Button>
+      <Typography variant="body2" sx={{ color: palette.textMuted, mb: 3 }}>
+        Добавляет запись в инвентарь выбранного игрока.
+      </Typography>
       <Paper sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
         <Autocomplete
           options={users}
@@ -64,7 +78,9 @@ export function GrantItemPage() {
           options={items}
           getOptionLabel={(o) => `${o.label ?? o.id} (${o.id})`}
           onChange={(_, v) => setItemId(v?.id ?? "")}
-          renderInput={(params) => <TextField {...params} label="Предмет (items)" />}
+          renderInput={(params) => (
+            <TextField {...params} label="Предмет (items)" />
+          )}
         />
         <Button
           variant="contained"
@@ -74,7 +90,7 @@ export function GrantItemPage() {
           Выдать в инвентарь
         </Button>
         {status && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{ color: statusColor }}>
             {status}
           </Typography>
         )}
