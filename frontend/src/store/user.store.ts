@@ -122,7 +122,7 @@ export const initializeAuthStore = async () => {
   if (!token) return;
 
   try {
-    const user = await apiFetch<User>("/auth/me");
+    const user = await apiFetch<User>("/auth/me", { timeoutMs: 5000 });
     useUserStore.setState({
       isAuth: true,
       isAdmin: user.isAdmin ?? false,

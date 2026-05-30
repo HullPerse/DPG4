@@ -7,6 +7,19 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useDataStore } from "@/store/data.store";
 
+function loginErrorMessage(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "Сервер недоступен. Проверьте подключение и попробуйте снова.";
+  }
+  if (error instanceof TypeError) {
+    return "Сервер недоступен. Проверьте подключение и попробуйте снова.";
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return "Не удалось войти. Попробуйте снова.";
+}
+
 export default function Signin({
   setRegister,
   serverAvailable,
@@ -38,9 +51,7 @@ export default function Signin({
       });
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "Не удалось войти";
-      setError(message);
+      setError(loginErrorMessage(err));
       setLoading(false);
     }
   };
@@ -72,14 +83,10 @@ export default function Signin({
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      {error && (
-        <p className="text-love w-full text-center text-xs">{error}</p>
-      )}
+      {error && <p className="text-love w-full text-center text-xs">{error}</p>}
 
-      {!serverAvailable && !error && (
-        <p className="text-muted w-full text-center text-xs">
-          Сервер offline — вход будет доступен после запуска
-        </p>
+      {!serverAvailable && (
+        <p className="text-muted w-full text-center text-xs">Сервер offline</p>
       )}
 
       <Button
