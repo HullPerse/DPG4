@@ -42,6 +42,7 @@ export interface WallpaperFilters {
 export interface StoreItem {
   item: Item;
   price: number;
+  bought: boolean;
 }
 
 export interface DataStore {

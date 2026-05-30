@@ -71,12 +71,14 @@ export async function listAdminRows(
   const meta = ADMIN_SCHEMA[tableName];
   if (!table || !meta) return null;
 
+  const defaultSort = adminTableColumn(table, "created") ? "created" : "id";
   const sortField =
     typeof query._sort === "string" && adminTableColumn(table, query._sort)
       ? query._sort
-      : "id";
+      : defaultSort;
   const sortCol =
-    adminTableColumn(table, sortField) ?? adminTableColumn(table, "id");
+    adminTableColumn(table, sortField) ??
+    adminTableColumn(table, defaultSort);
   const sortDir =
     String(query._order ?? "ASC").toLowerCase() === "desc" ? desc : asc;
 

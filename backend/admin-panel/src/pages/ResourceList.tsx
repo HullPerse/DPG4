@@ -1,4 +1,13 @@
-import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Eye,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,6 +29,10 @@ export function ResourceListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get("page") ?? "1");
   const q = searchParams.get("q") ?? "";
+  const sortField = searchParams.get("sort") ?? "created";
+  const sortOrder = (
+    searchParams.get("order") ?? "ASC"
+  ).toUpperCase() as "ASC" | "DESC";
 
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
@@ -41,8 +54,8 @@ export function ResourceListPage() {
       const res = await listRecords(resource, {
         page,
         perPage: 25,
-        sortField: "id",
-        sortOrder: "ASC",
+        sortField,
+        sortOrder,
         filter,
       });
       setRows(res.data);
@@ -52,7 +65,7 @@ export function ResourceListPage() {
     } finally {
       setLoading(false);
     }
-  }, [resource, page, q, meta]);
+  }, [resource, page, q, sortField, sortOrder, meta]);
 
   useEffect(() => {
     void load();
@@ -68,6 +81,18 @@ export function ResourceListPage() {
     const next = new URLSearchParams(searchParams);
     if (search) next.set("q", search);
     else next.delete("q");
+    next.set("page", "1");
+    setSearchParams(next);
+  };
+
+  const toggleSort = (field: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (sortField === field) {
+      next.set("order", sortOrder === "ASC" ? "DESC" : "ASC");
+    } else {
+      next.set("sort", field);
+      next.set("order", "ASC");
+    }
     next.set("page", "1");
     setSearchParams(next);
   };
@@ -119,14 +144,40 @@ export function ResourceListPage() {
           <DataTableElement>
             <DataTableHead>
               <tr>
-                {listFields.map((f: AdminFieldMeta) => (
-                  <th
-                    key={f.source}
-                    className="border-highlight-high border px-2 py-2 font-bold"
-                  >
-                    {f.source}
-                  </th>
-                ))}
+                {listFields.map((f: AdminFieldMeta) => {
+                  const active = sortField === f.source;
+                  const SortIcon = active
+                    ? sortOrder === "ASC"
+                      ? ArrowUp
+                      : ArrowDown
+                    : ArrowUpDown;
+                  return (
+                    <th
+                      key={f.source}
+                      className="border-highlight-high border px-0 py-0 font-bold"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(f.source)}
+                        className={`hover:bg-highlight-med flex w-full items-center gap-1 px-2 py-2 text-left uppercase ${
+                          active ? "text-text" : "text-muted hover:text-text"
+                        }`}
+                        title={
+                          active
+                            ? sortOrder === "ASC"
+                              ? "По возрастанию — нажмите для убывания"
+                              : "По убыванию — нажмите для возрастания"
+                            : "Сортировать"
+                        }
+                      >
+                        <span className="truncate">{f.source}</span>
+                        <SortIcon
+                          className={`size-3.5 shrink-0 ${active ? "text-primary" : "opacity-40"}`}
+                        />
+                      </button>
+                    </th>
+                  );
+                })}
                 <th className="border-highlight-high w-28 border px-2 py-2" />
               </tr>
             </DataTableHead>

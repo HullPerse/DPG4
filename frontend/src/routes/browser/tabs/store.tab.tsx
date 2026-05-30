@@ -27,8 +27,15 @@ function StoreTab() {
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [active, setActive] = useState<number>(-1);
-  const [bought, setBought] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
+
+  const markBought = (index: number) => {
+    setStoreItems(
+      storeItems.map((entry, i) =>
+        i === index ? { ...entry, bought: true } : entry,
+      ),
+    );
+  };
 
   const handleReroll = async () => {
     const userMoney = await userApi.getUserScore(String(user?.id));
@@ -46,7 +53,7 @@ function StoreTab() {
 
       for (const item of randomSixItems) {
         const price = weightedRandom(15);
-        finalArray.push({ item, price });
+        finalArray.push({ item, price, bought: false });
       }
 
       setStoreItems(finalArray);
@@ -92,11 +99,11 @@ function StoreTab() {
       )}
 
       {storeItems.map((entry, index) => {
-        const isBought = bought.has(index);
+        const isBought = entry.bought ?? false;
 
         return (
           <div
-            key={index}
+            key={entry.item.id ?? index}
             className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
           >
             <section
@@ -143,9 +150,9 @@ function StoreTab() {
               <Button
                 variant="success"
                 className="mt-auto w-full h-8 mb-1"
-                onClick={() => {
-                  handleBuy(entry.item, entry.price);
-                  setBought((prev) => new Set(prev).add(index));
+                onClick={async () => {
+                  await handleBuy(entry.item, entry.price);
+                  markBought(index);
                 }}
                 disabled={(user?.money ?? 0) < entry.price}
               >
