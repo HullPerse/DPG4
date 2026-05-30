@@ -1,6 +1,6 @@
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { getDataUrlSizeMB } from "@/lib/utils";
+import { formatBytesToMB } from "@/lib/utils";
 import { WallpaperProps } from "@/types/desktop";
 import { Trash } from "lucide-react";
 import { useState } from "react";
@@ -27,12 +27,18 @@ function Wallpaper({
   }) => void;
 }) {
   const [isHovering, setIsHovering] = useState(false);
+  const sizeMb = formatBytesToMB(wallpaper.size);
+  const sizeTitle =
+    wallpaper.size && wallpaper.size > 0
+      ? `${sizeMb} МБ`
+      : undefined;
 
   return (
     <div
+      role="button"
       key={wallpaper.path}
-      title={getDataUrlSizeMB(wallUrls[wallpaper.path])}
-      className="relative h-40 w-48 overflow-hidden rounded border-2 bg-background"
+      title={sizeTitle ? `${wallpaper.name} · ${sizeTitle}` : wallpaper.name}
+      className="relative h-40 w-48 overflow-hidden rounded border-2 bg-background opacity-85 hover:opacity-100"
       onClick={() => {
         setWallpaper(wallUrls[wallpaper.path]);
         setData(wallpaper.name);
@@ -49,17 +55,15 @@ function Wallpaper({
       <Image
         src={wallUrls[wallpaper.path]}
         alt={wallpaper.name}
-        className="h-26 w-full object-contain"
+        className="h-26 w-full object-contain cursor-pointer"
       />
 
       <section className="border-t-2 p-1">
         <div className="line-clamp-1 truncate text-center font-bold">
           {wallpaper.name.replace("Default:", "")}
         </div>
-        {wallUrls[wallpaper.path] && (
-          <div className="text-center text-xs text-muted">
-            {getDataUrlSizeMB(wallUrls[wallpaper.path])} МБ
-          </div>
+        {wallpaper.size !== undefined && wallpaper.size > 0 && (
+          <div className="text-center text-xs text-muted">{sizeMb} МБ</div>
         )}
       </section>
 

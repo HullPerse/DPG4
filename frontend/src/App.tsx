@@ -14,12 +14,8 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
-import {
-  checkForUpdates,
-  dataURLtoBlob,
-  installUpdate,
-  selectionMouse,
-} from "./lib/utils";
+import { checkForUpdates, installUpdate, selectionMouse } from "./lib/utils";
+import { wallpaperAssetUrl } from "./lib/tauri/wallpaper";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
 import { useToastStore } from "./store/toast.store";
@@ -221,25 +217,15 @@ function App() {
 
   useEffect(() => {
     let mounted = true;
-    let currentObjectUrl: string | null = null;
 
     const getWallpaper = async () => {
       try {
-        const wallpaper = await invoke<string>("get_wallpaper_by_name", {
+        const path = await invoke<string>("get_wallpaper_by_name", {
           name: wallpaperData,
         });
-        const dataUrl = await invoke<string>("get_wallpaper_data", {
-          path: wallpaper || "",
-        });
 
-        if (mounted && dataUrl) {
-          if (currentObjectUrl) {
-            URL.revokeObjectURL(currentObjectUrl);
-          }
-
-          const blob = dataURLtoBlob(dataUrl);
-          currentObjectUrl = URL.createObjectURL(blob);
-          setWallpaper(currentObjectUrl);
+        if (mounted && path) {
+          setWallpaper(wallpaperAssetUrl(path));
         }
       } catch (e) {
         console.error(e);
@@ -250,9 +236,6 @@ function App() {
 
     return () => {
       mounted = false;
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
-      }
     };
   }, [wallpaperData]);
 

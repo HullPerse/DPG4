@@ -10,7 +10,8 @@ export type AppProps = {
 export type WallpaperProps = {
   name: string;
   path: string;
-  size?: number;
+  /** File size in bytes from the desktop backend */
+  size: number;
 };
 
 export type WallpaperFilters = {

@@ -1,13 +1,24 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
 import { Button } from "@/components/ui/button.component";
 import { Slider } from "@/components/ui/slider.component";
 import { Switch } from "@/components/ui/switch.component";
 import { Plus, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { readFileAsDataUrl } from "@/lib/readFileAsDataUrl";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { WallpaperProps } from "@/types/desktop";
 import WallpaperComponent from "../components/wallpaper.component";
+import { WallpaperUploadPlaceholder } from "../components/placeholder.wallpaper";
 import { useDataStore } from "@/store/data.store";
+
+type UploadState = {
+  previewUrl: string;
+  fileName: string;
+  fileSizeBytes: number;
+  progress: number;
+  stage: string;
+};
 
 const FILTER_PRESETS = [
   {
@@ -75,37 +86,43 @@ export default function WallpaperApp({
 
   const [wallpapers, setWallpapers] = useState<WallpaperProps[]>([]);
   const [wallUrls, setWallUrls] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [upload, setUpload] = useState<UploadState | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [compressEnabled, setCompressEnabled] = useState(false);
   const [compressQuality, setCompressQuality] = useState(100);
   const [webpEnabled, setWebpEnabled] = useState(false);
 
-  const loadWallpapers = async () => {
+  const loadWallpapers = async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setInitialLoading(true);
     try {
       const walls = await invoke<WallpaperProps[]>("get_wallpapers");
       setWallpapers(walls);
 
-      const urls: { [key: string]: string } = {};
-      for (const wall of walls) {
-        const dataUrl = await invoke<string>("get_wallpaper_data", {
-          path: wall.path,
-        });
-        urls[wall.path] = dataUrl;
-      }
+      const urls = Object.fromEntries(
+        walls.map((wall) => [wall.path, wallpaperAssetUrl(wall.path)]),
+      );
 
       setWallUrls(urls);
     } catch (error) {
       console.error("Failed to load wallpapers:", error);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setInitialLoading(false);
     }
   };
 
+  const patchUpload = (patch: Partial<UploadState>) => {
+    setUpload((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
+
   const convertImage = useCallback(
-    (dataUrl: string, format: 'jpeg' | 'webp', quality: number): Promise<string> => {
+    (
+      dataUrl: string,
+      format: "jpeg" | "webp",
+      quality: number,
+    ): Promise<string> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -161,6 +178,7 @@ export default function WallpaperApp({
 
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const input = e.target;
 
     if (!file) return;
 
@@ -176,70 +194,80 @@ export default function WallpaperApp({
       alert(
         "Пожалуйста, выберите файл изображения (JPEG, PNG, GIF, BMP или WebP)",
       );
-      e.target.value = "";
+      input.value = "";
       return;
     }
 
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert("Размер файла должен быть меньше 10 МБ");
-      e.target.value = "";
+      input.value = "";
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    setUpload({
+      previewUrl,
+      fileName: file.name,
+      fileSizeBytes: file.size,
+      progress: 0,
+      stage: "Чтение файла…",
+    });
     setUploading(true);
 
     try {
-      const reader = new FileReader();
+      let dataUrl = await readFileAsDataUrl(file, (ratio) => {
+        patchUpload({
+          progress: Math.round(ratio * 28),
+          stage: "Чтение файла…",
+        });
+      });
 
-      reader.onload = async (event) => {
-        try {
-          let dataUrl = event.target?.result as string;
+      patchUpload({ progress: 30, stage: "Подготовка…" });
 
-          if (!dataUrl || !dataUrl.startsWith("data:")) {
-            throw new Error("Неверный формат данных изображения");
-          }
+      const timestamp = Date.now();
+      let extension = file.name.split(".").pop() || "jpg";
 
-          const timestamp = Date.now();
-          let extension = file.name.split(".").pop() || "jpg";
+      if (webpEnabled) {
+        extension = "webp";
+        patchUpload({ progress: 40, stage: "Конвертация WebP…" });
+      } else if (compressEnabled && compressQuality < 100) {
+        patchUpload({ progress: 35, stage: "Сжатие JPEG…" });
+        dataUrl = await convertImage(dataUrl, "jpeg", compressQuality);
+        patchUpload({ progress: 48, stage: "Сжатие JPEG…" });
+      }
 
-          if (webpEnabled) {
-            extension = "webp";
-            const quality = compressEnabled ? compressQuality : 100;
-            dataUrl = await convertImage(dataUrl, "webp", quality);
-          } else if (compressEnabled && compressQuality < 100) {
-            dataUrl = await convertImage(dataUrl, "jpeg", compressQuality);
-          }
+      const fileName = `custom_${timestamp}.${extension}`;
 
-          const fileName = `custom_${timestamp}.${extension}`;
+      patchUpload({ progress: 52, stage: "Сохранение…" });
+      const saveTick = window.setInterval(() => {
+        setUpload((prev) => {
+          if (!prev || prev.progress >= 82) return prev;
+          return { ...prev, progress: prev.progress + 1 };
+        });
+      }, 120);
+      try {
+        await invoke<string>("save_wallpaper", {
+          fileName,
+          data: dataUrl,
+          preferWebp: webpEnabled,
+          quality: compressEnabled ? compressQuality : 100,
+        });
+      } finally {
+        window.clearInterval(saveTick);
+      }
+      patchUpload({ progress: 85, stage: "Обновление списка…" });
 
-          await invoke<string>("save_wallpaper", {
-            fileName,
-            data: dataUrl,
-          });
+      input.value = "";
 
-          e.target.value = "";
-
-          setLoading(true);
-          await loadWallpapers();
-          setUploading(false);
-        } catch (error) {
-          console.error(error);
-          alert("Не удалось сохранить обои. Пожалуйста, попробуйте еще раз.");
-          setLoading(false);
-        }
-      };
-
-      reader.onerror = () => {
-        console.error("FileReader error");
-        alert("Ошибка чтения файла");
-        setUploading(false);
-      };
-
-      reader.readAsDataURL(file);
+      await loadWallpapers({ silent: true });
+      patchUpload({ progress: 100, stage: "Готово" });
     } catch (error) {
       console.error(error);
-      alert("Ошибка загрузки обоев");
+      alert("Не удалось сохранить обои. Пожалуйста, попробуйте еще раз.");
+    } finally {
+      URL.revokeObjectURL(previewUrl);
+      setUpload(null);
       setUploading(false);
     }
   };
@@ -455,62 +483,57 @@ export default function WallpaperApp({
                   <option value="repeat-x">По горизонтали</option>
                   <option value="repeat-y">По вертикали</option>
                 </select>
-               </div>
-             </div>
-           </div>
-
-<div className="border-t-2 pt-2">
-              <h4 className="mb-2 text-sm font-semibold">Сжатие при загрузке</h4>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Включить сжатие</label>
-                  <Switch
-                    checked={compressEnabled}
-                    onCheckedChange={setCompressEnabled}
-                  />
-                </div>
-                {compressEnabled && (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between text-sm">
-                      <label className="font-semibold">Качество</label>
-                      <span className="text-muted">{compressQuality}%</span>
-                    </div>
-                    <Slider
-                      min={1}
-                      max={100}
-                      value={[compressQuality]}
-                      onValueChange={(val) =>
-                        setCompressQuality(Array.isArray(val) ? val[0] : val)
-                      }
-                    />
-                  </div>
-                )}
-                <div className="flex items-center justify-between pt-2 border-t border-highlight-high">
-                  <label className="text-sm">Конвертировать в WebP</label>
-                  <Switch
-                    checked={webpEnabled}
-                    onCheckedChange={setWebpEnabled}
-                  />
-                </div>
               </div>
             </div>
-         </section>
+          </div>
+
+          <div className="border-t-2 pt-2">
+            <h4 className="mb-2 text-sm font-semibold">Сжатие при загрузке</h4>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Включить сжатие</label>
+                <Switch
+                  checked={compressEnabled}
+                  onCheckedChange={setCompressEnabled}
+                />
+              </div>
+              {compressEnabled && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between text-sm">
+                    <label className="font-semibold">Качество</label>
+                    <span className="text-muted">{compressQuality}%</span>
+                  </div>
+                  <Slider
+                    min={1}
+                    max={100}
+                    value={[compressQuality]}
+                    onValueChange={(val) =>
+                      setCompressQuality(Array.isArray(val) ? val[0] : val)
+                    }
+                  />
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 border-t border-highlight-high">
+                <label className="text-sm">Конвертировать в WebP</label>
+                <Switch
+                  checked={webpEnabled}
+                  onCheckedChange={setWebpEnabled}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
       <section className="flex w-full cursor-pointer flex-row flex-wrap items-center justify-center gap-2 overflow-auto">
-        {wallpapers.map((wallpaper) => {
-          if (loading)
-            return (
-              <div
-                key={wallpaper.path}
-                className="relative h-36 w-48 overflow-hidden rounded border-2 bg-background"
-              >
-                <div className="flex h-full w-full items-center justify-center">
-                  <SmallLoader />
-                </div>
-              </div>
-            );
-          return (
+        {initialLoading && !upload ? (
+          <div className="relative h-40 w-48 overflow-hidden rounded border-2 bg-background">
+            <div className="flex h-full w-full items-center justify-center">
+              <SmallLoader />
+            </div>
+          </div>
+        ) : (
+          wallpapers.map((wallpaper) => (
             <WallpaperComponent
               key={wallpaper.path}
               wallpaper={wallpaper}
@@ -520,8 +543,18 @@ export default function WallpaperApp({
               handleDelete={handleDelete}
               setData={setData}
             />
-          );
-        })}
+          ))
+        )}
+
+        {upload && (
+          <WallpaperUploadPlaceholder
+            previewUrl={upload.previewUrl}
+            fileName={upload.fileName}
+            fileSizeBytes={upload.fileSizeBytes}
+            progress={upload.progress}
+            stage={upload.stage}
+          />
+        )}
       </section>
     </main>
   );

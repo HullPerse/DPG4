@@ -253,6 +253,12 @@ export function getDataUrlSizeMB(dataUrl: string): string {
   const base64 = dataUrl.split(",")[1];
   if (!base64) return "0";
   const bytes = Math.ceil((base64.length * 3) / 4);
+  return formatBytesToMB(bytes);
+}
+
+/** Size in megabytes for display (2 decimal places). */
+export function formatBytesToMB(bytes?: number | null): string {
+  if (bytes === undefined || bytes === null || bytes <= 0) return "—";
   return (bytes / 1024 / 1024).toFixed(2);
 }
 

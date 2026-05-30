@@ -6,9 +6,6 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "fs:default",
-    "fs:allow-read-dir",
-    "fs:allow-read-file",
     "updater:default",
     "core:webview:allow-create-webview-window",
     "notification:default"

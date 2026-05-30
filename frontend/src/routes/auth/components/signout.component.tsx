@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
+import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TimeDisplay } from "../../desktop/components/timer.desktop";
@@ -29,17 +30,14 @@ export default function Signpout() {
   }, []);
 
   const getWallpaper = async () => {
-    const wallpaper = await invoke<string>("get_wallpaper_by_name", {
-      name: wallpaperData,
-    });
-
-    const dataUrl = await invoke<string>("get_wallpaper_data", {
-      path: wallpaper,
-    });
-
-    if (dataUrl) return setWallpaper(dataUrl);
-
-    return setWallpaper(null);
+    try {
+      const path = await invoke<string>("get_wallpaper_by_name", {
+        name: wallpaperData,
+      });
+      setWallpaper(path ? wallpaperAssetUrl(path) : null);
+    } catch {
+      setWallpaper(null);
+    }
   };
 
   useEffect(() => {
