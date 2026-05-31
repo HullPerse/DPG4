@@ -106,9 +106,13 @@ export const useUserStore = create<UserStore>()(
         partialize: (state) => ({
           token: state.token,
           loggedIn: state.loggedIn,
+          isAuth: state.isAuth,
         }),
         onRehydrateStorage: () => (state) => {
-          if (state?.token) setToken(state.token);
+          if (state?.token) {
+            setToken(state.token);
+            state.isAuth = true;
+          }
         },
       },
     ),
@@ -116,13 +120,13 @@ export const useUserStore = create<UserStore>()(
 );
 
 export const initializeAuthStore = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
   const token = getToken();
   if (!token) return;
 
+  useUserStore.setState({ isAuth: true, loggedIn: true });
+
   try {
-    const user = await apiFetch<User>("/auth/me");
+    const user = await apiFetch<User>("/auth/me", { timeoutMs: 5000 });
     useUserStore.setState({
       isAuth: true,
       isAdmin: user.isAdmin ?? false,

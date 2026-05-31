@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -8,6 +8,7 @@ import { compressWebp, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { createActivity } from "../services/activity.service";
 import { changeUserStatus, getUserById, scoreUser } from "../services/user.service";
 import { dbPlugin } from "../plugins/db.plugin";
@@ -69,16 +70,53 @@ function mapGame(row: typeof schema.games.$inferSelect) {
 
 export const gamesRoute = new Elysia({ prefix: "/games" })
   .use(dbPlugin)
-  .get("/", async ({ db, query }) => {
-    const q = db
+  .get(
+    "/",
+    async ({ db, query }) => {
+    const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
+    const offset = query.offset ? Number(query.offset) : 0;
+    let q = db
       .select()
-      .from(schema.games)
-      .orderBy(desc(schema.games.created));
-    const rows = await (query.userId
-      ? q.where(sql`json_extract(${schema.games.user}, '$.id') = ${query.userId}`)
-      : q);
+      .from(schema.games);
+    const conditions: ReturnType<typeof eq>[] = [];
+
+    if (query.userId) {
+      conditions.push(eq(schema.games.userId, query.userId));
+    }
+
+    if (query.search) {
+      conditions.push(sql`${schema.games.data} LIKE ${`%${query.search}%`}`);
+    }
+
+    if (query.status) {
+      conditions.push(eq(schema.games.status, query.status));
+    }
+
+    if (query.hasReview === "true") {
+      conditions.push(sql`${schema.games.review} IS NOT NULL`);
+    }
+
+    if (conditions.length > 0) {
+      q = q.where(and(...conditions));
+    }
+
+    q = q.orderBy(desc(schema.games.created)) as typeof q;
+    const rows = await q.limit(limit).offset(offset);
     return rows.map(mapGame);
-  })
+  },
+  {
+    query: t.Optional(
+      t.Object({
+        userId: t.Optional(t.String()),
+        search: t.Optional(t.String()),
+        status: t.Optional(t.String()),
+        hasReview: t.Optional(t.String()),
+        limit: t.Optional(t.String()),
+        offset: t.Optional(t.String()),
+      }),
+    ),
+  },
+)
   .get("/:id", async ({ params, db, set }) => {
     const [row] = await db
       .select()
@@ -106,8 +144,10 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       const user = body.user as { id: string; username: string };
       const data = body.data as { name: string; capsuleImage?: string };
 
+      const userObj = body.user as { id?: string };
       await db.insert(schema.games).values({
         id,
+        userId: userObj?.id ?? null,
         user: body.user,
         data: body.data,
         status: body.status ?? "PLAYING",
@@ -128,6 +168,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       });
 
       broadcast("games", "create", id);
+      logger.info(user.username, "added game", data.name);
       return mapGame(
         (await db.select().from(schema.games).where(eq(schema.games.id, id)))[0]!,
       );
@@ -164,6 +205,9 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .select()
         .from(schema.games)
         .where(eq(schema.games.id, params.id));
+      const gameUser = row?.user as { username?: string } | undefined;
+      const gameData = row?.data as { name?: string } | undefined;
+      logger.info(gameUser?.username ?? null, "updated game", gameData?.name ?? params.id);
       return mapGame(row!);
     },
     { body: gamePatchBody },
@@ -227,6 +271,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .where(eq(schema.games.id, params.id));
 
       broadcast("games", "update", params.id);
+      logger.info(gameUser.username, "changed game status", gameData.name, STATUSES[body.status] ?? body.status);
       return mapGame(
         (await db.select().from(schema.games).where(eq(schema.games.id, params.id)))[0]!,
       );
@@ -271,6 +316,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .where(eq(schema.games.id, params.id));
 
       broadcast("games", "update", params.id);
+      logger.info(null, "voted on game", params.id, `user:${body.userId}`);
       return { ok: true };
     },
     { body: gameVoteBody },
@@ -278,14 +324,25 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.games).where(eq(schema.games.id, params.id));
     broadcast("games", "delete", params.id);
+    logger.info(null, "deleted game", params.id);
     return { ok: true };
   });
 
 export const presetsRoute = new Elysia({ prefix: "/presets" })
   .use(dbPlugin)
-  .get("/", async ({ db }) => {
-    const rows = await db.select().from(schema.presets);
+  .get("/", async ({ db, query }) => {
+    let q = db.select().from(schema.presets);
+    if (query.search) {
+      q = q.where(sql`${schema.presets.label} LIKE ${`%${query.search}%`}`);
+    }
+    const rows = await q;
     return rows.map((r) => withRecordMeta(r, "presets"));
+  }, {
+    query: t.Optional(
+      t.Object({
+        search: t.Optional(t.String()),
+      }),
+    ),
   })
   .get("/:id", async ({ params, db, set }) => {
     const [row] = await db
@@ -311,6 +368,7 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
         updated: ts,
       });
       broadcast("presets", "create", id);
+      logger.info(null, "created preset", body.label);
       return withRecordMeta(
         { id, label: body.label, games: [], created: ts, updated: ts },
         "presets",
@@ -336,6 +394,7 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
         .select()
         .from(schema.presets)
         .where(eq(schema.presets.id, params.id));
+      logger.info(null, "updated preset", row?.label ?? params.id);
       return withRecordMeta(row!, "presets");
     },
     { body: presetPatchBody },
@@ -343,5 +402,6 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.presets).where(eq(schema.presets.id, params.id));
     broadcast("presets", "delete", params.id);
+    logger.info(null, "deleted preset", params.id);
     return { ok: true };
   });

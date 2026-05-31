@@ -17,6 +17,8 @@ window.addEventListener(ADMIN_RELOAD_EVENT, () => {
   void queryClient.invalidateQueries();
 });
 
+await initializeAuthStore();
+
 await import("react-dom/client").then(({ createRoot }) => {
   const rootElement = document.getElementById("root");
   if (!rootElement) throw new Error("Root element not found");
@@ -29,6 +31,4 @@ await import("react-dom/client").then(({ createRoot }) => {
       </QueryClientProvider>
     </StrictMode>,
   );
-
-  void initializeAuthStore();
 });

@@ -67,10 +67,27 @@ export default class GameApi {
 
   getAllGames = async (): Promise<Game[]> => apiFetch<Game[]>("/games");
 
+  getGamesFiltered = async (params?: {
+    userId?: string;
+    search?: string;
+    status?: string;
+    hasReview?: boolean;
+    limit?: number;
+  }): Promise<Game[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.userId) searchParams.set("userId", params.userId);
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.status) searchParams.set("status", params.status);
+    if (params?.hasReview) searchParams.set("hasReview", "true");
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const qs = searchParams.toString();
+    return apiFetch<Game[]>(`/games${qs ? `?${qs}` : ""}`);
+  };
+
   getLastGame = async (userId: string[]) => {
     const lastGamePerPlayer: Game[] = [];
     for (const id of userId) {
-      const games = await this.getAllUserGames(id);
+      const games = await this.getGamesFiltered({ userId: id, limit: 1 });
       if (games.length > 0) lastGamePerPlayer.push(games[games.length - 1]!);
     }
     return lastGamePerPlayer;
@@ -138,12 +155,9 @@ export default class GameApi {
   getAllReviews = async (
     userId: string,
   ): Promise<{ user: User | null; games: Game[] }> => {
-    const allGames = await this.getAllUserGames(userId);
+    const allGames = await this.getGamesFiltered({ userId, hasReview: true });
     const user = await apiFetch<User>(`/users/${userId}`);
-    return {
-      user,
-      games: allGames.filter((game) => game.review || game.hasImage),
-    };
+    return { user, games: allGames };
   };
 
   addGame = async (game: Game): Promise<Game> =>
@@ -174,7 +188,10 @@ export default class GameApi {
     await apiFetch(`/games/${id}`, { method: "DELETE" });
   };
 
-  getPresets = async (): Promise<Preset[]> => apiFetch<Preset[]>("/presets");
+  getPresets = async (search?: string): Promise<Preset[]> => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : "";
+    return apiFetch<Preset[]>(`/presets${qs}`);
+  };
 
   getPresetById = async (id: string): Promise<Preset> =>
     apiFetch<Preset>(`/presets/${id}`);

@@ -5,7 +5,7 @@ import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
-import { shuffleArray, weightedRandom } from "@/lib/utils";
+import { weightedRandom } from "@/lib/utils";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { Activity } from "@/types/activity";
@@ -46,8 +46,7 @@ function StoreTab() {
     try {
       await userApi.scoreUser(String(user?.id), -rerollPrice);
 
-      const allItems = await itemsApi.getAllItems();
-      const randomSixItems = shuffleArray(allItems).slice(0, ITEMS_AMOUNT);
+      const randomSixItems = await itemsApi.getItems({ random: ITEMS_AMOUNT });
 
       const finalArray: StoreItem[] = [];
 

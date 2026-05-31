@@ -13,6 +13,7 @@ import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { ADMIN_SCHEMA } from "./adminSchema";
 import { ADMIN_TABLES, adminTableColumn, type AdminTable } from "./adminTables";
+import { cacheGet, cacheSet, cacheDel } from "./cache";
 
 type Db = BunSQLiteDatabase<typeof schema>;
 
@@ -104,12 +105,24 @@ export async function listAdminRows(
   return { data, total: Number(total) };
 }
 
+const STATS_CACHE_KEY = "admin:stats";
+const STATS_TTL = 30_000;
+
 export async function getAdminStats(db: Db) {
+  const cached = await cacheGet<Record<string, number>>(STATS_CACHE_KEY);
+  if (cached) return cached;
+
   const counts: Record<string, number> = {};
   for (const name of Object.keys(ADMIN_TABLES)) {
     const table = ADMIN_TABLES[name as keyof typeof ADMIN_TABLES];
     const [{ total }] = await db.select({ total: count() }).from(table);
     counts[name] = Number(total);
   }
+
+  await cacheSet(STATS_CACHE_KEY, counts, STATS_TTL);
   return counts;
+}
+
+export function invalidateAdminStatsCache() {
+  void cacheDel(STATS_CACHE_KEY);
 }

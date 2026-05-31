@@ -57,28 +57,32 @@ function UserGames({
   const [result, setResult] = useState<Game | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["UserGamesWheel"],
+    queryKey: ["UserGamesWheel", selected, selectedFilter],
     queryFn: async (): Promise<{ games: Game[]; users: User[] }> => {
       const users = await userApi.getAllUsers();
 
-      setValues(["ВСЕ", ...users.map((u) => u.username)]);
-      setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
+      if (values.length === 0) {
+        setValues(["ВСЕ", ...users.map((u) => u.username)]);
+        setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
+      }
+
+      const status = selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
 
       if (selected !== 0) {
         const user = users.find((u) => u.username === values[selected]);
 
         return {
-          games: await gameApi.getAllUserGames(String(user?.id)),
+          games: await gameApi.getGamesFiltered({ userId: String(user?.id), status }),
           users,
         };
       }
 
-      return { games: await gameApi.getAllGames(), users };
+      return { games: await gameApi.getGamesFiltered({ status }), users };
     },
   });
 
   useEffect(() => {
-    if (data && selected === 0 && values.length === 0) {
+    if (data && values.length === 0) {
       setValues(["ВСЕ", ...data.users.map((u) => u.username)]);
       setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
     }
@@ -140,18 +144,7 @@ function UserGames({
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
           key={`wheel-${selected}-${selectedFilter}-${hiddenItems.join(",")}`}
-          list={visibleItems
-            .filter((item) =>
-              selected === 0 ? item : item.user.username === values[selected],
-            )
-            .filter((item) =>
-              selectedFilter === 0
-                ? item
-                : item.status ===
-                  STATUSES.find((s) => s.label === filters[selectedFilter])
-                    ?.name,
-            )
-            .map((item) => ({
+          list={visibleItems.map((item) => ({
               id: String(item.id),
               label: item.data.name,
               image: item.data.capsuleImage,
@@ -203,17 +196,7 @@ function UserGames({
       </section>
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
-        {data?.games
-          .filter((item) =>
-            selected === 0 ? item : item.user.username === values[selected],
-          )
-          .filter((item) =>
-            selectedFilter === 0
-              ? item
-              : item.status ===
-                STATUSES.find((s) => s.label === filters[selectedFilter])?.name,
-          )
-          .map((item) => (
+        {data?.games.map((item) => (
             <section
               key={item.id}
               className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"

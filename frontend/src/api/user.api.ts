@@ -41,6 +41,21 @@ export default class UserApi {
     return apiFetch<User[]>("/users?fields=id,username,avatar,color,money,position,status");
   };
 
+  getUsers = async (params?: {
+    search?: string;
+    excludeUserId?: string;
+    hasStatus?: string;
+    fields?: string;
+  }): Promise<User[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.excludeUserId) searchParams.set("excludeUserId", params.excludeUserId);
+    if (params?.hasStatus) searchParams.set("hasStatus", params.hasStatus);
+    if (params?.fields) searchParams.set("fields", params.fields);
+    else searchParams.set("fields", "id,username,avatar,color,money,position,status");
+    return apiFetch<User[]>(`/users?${searchParams.toString()}`);
+  };
+
   getUserPositions = async (): Promise<User[]> => {
     return apiFetch<User[]>(
       "/users?fields=id,position,username,avatar,color,place,status",

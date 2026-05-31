@@ -6,6 +6,7 @@ import { nowIso } from "../lib/dates";
 import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { createActivity } from "../services/activity.service";
 import { changeUserStatus, getUserById, scoreUser } from "../services/user.service";
 
@@ -40,6 +41,8 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
       });
 
       broadcast("ads", "create", id);
+      const ownerName = (body.owner as { username?: string } | undefined)?.username;
+      logger.info(ownerName ?? null, "created ad", body.text);
       return withRecordMeta(
         (await db.select().from(schema.ads).where(eq(schema.ads.id, id)))[0]!,
         "ads",
@@ -57,13 +60,17 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.ads).where(eq(schema.ads.id, params.id));
     broadcast("ads", "delete", params.id);
+    logger.info(null, "deleted ad", params.id);
     return { ok: true };
   })
   .post(
     "/subscribe",
     async ({ body, db }) => {
       const user = await getUserById(db, body.userId);
-      if (!user || user.money < SUBSCRIPTION_COST) return { ok: false };
+      if (!user || user.money < SUBSCRIPTION_COST) {
+        logger.info(user?.username ?? null, "subscription failed", "insufficient funds");
+        return { ok: false };
+      }
 
       await scoreUser(db, body.userId, -SUBSCRIPTION_COST);
       await changeUserStatus(db, body.userId, "subscribed", "add");
@@ -74,6 +81,7 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
         text: `${user.username} оформил подписку за ${SUBSCRIPTION_COST} чубриков`,
       });
 
+      logger.info(user.username, "subscribed");
       return { ok: true };
     },
     { body: t.Object({ userId: t.String() }) },
@@ -90,6 +98,7 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
         image: user.avatar,
         text: `${user.username} не хватило денег на подписку`,
       });
+      logger.info(user.username, "unsubscribed");
       return { ok: true };
     },
     { body: t.Object({ userId: t.String() }) },

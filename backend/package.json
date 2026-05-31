@@ -4,12 +4,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
+    "prod": "bun admin:build && bun run db:build && bun run server",
     "db:clear": "rm -f data/db.sqlite data/db.sqlite-wal data/db.sqlite-shm",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",
     "db:push": "drizzle-kit push",
+    "db:restore": "bun run scripts/restore.ts",
     "db:studio": "drizzle-kit studio",
     "db:import-pocketbase": "bun run scripts/migrate-from-pb.ts",
+    "db:build": "bun build --target bun --outfile server src/index.ts",
     "backup": "bun run scripts/backup.ts",
     "compress-images": "bun run scripts/compress-images.ts",
     "admin:install": "cd admin-panel && bun install",
@@ -23,6 +26,7 @@
     "date-fns": "^4.3.0",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.4.28",
+    "ioredis": "^5.11.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

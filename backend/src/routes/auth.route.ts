@@ -7,6 +7,7 @@ import { nowIso } from "../lib/dates";
 import { omitPassword, withRecordMeta } from "../lib/record";
 import { createActivity } from "../services/activity.service";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
@@ -78,6 +79,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       };
       const user = withRecordMeta(omitPassword(inserted), "users");
 
+      logger.info(null, "registered", username);
       return { token, user };
     },
     {
@@ -112,6 +114,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
 
       const token = await signToken(jwt, row.id, row.isAdmin);
       const user = withRecordMeta(omitPassword(row), "users");
+      logger.info(row.username, "logged in");
       return { token, user };
     },
     {
@@ -157,6 +160,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         return { error: "Unauthorized" };
       }
       const token = await signToken(jwt, row.id, row.isAdmin);
+      logger.info(user.username, "refreshed session");
       return {
         token,
         user: withRecordMeta(omitPassword(row), "users"),

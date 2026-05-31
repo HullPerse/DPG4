@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, not, asc, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -7,6 +7,7 @@ import { parseFileInput } from "../lib/files";
 import { compressSquare, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import {
   addInventory,
   buyMarket,
@@ -43,19 +44,74 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .get(
     "/",
     async ({ db, query, set }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const rows = await db
-        .select(itemListColumns)
-        .from(schema.items)
-        .limit(limit)
-        .offset(offset);
+      let q = db.select(itemListColumns).from(schema.items);
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (query.labels) {
+        const labels = query.labels.split(",").map((l) => l.trim()).filter(Boolean);
+        if (labels.length > 0) {
+          conditions.push(inArray(schema.items.label, labels));
+        }
+      }
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        conditions.push(
+          sql`(${schema.items.label} LIKE ${pattern} OR ${schema.items.description} LIKE ${pattern})`,
+        );
+      }
+
+      if (query.type) {
+        conditions.push(eq(schema.items.type, query.type));
+      }
+
+      if (query.rollable !== undefined) {
+        conditions.push(eq(schema.items.rollable, query.rollable === "true"));
+      }
+
+      if (query.excludeLabel) {
+        conditions.push(not(eq(schema.items.label, query.excludeLabel)));
+      }
+
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions));
+      }
+
+      if (query.sort === "label") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.label) : asc(schema.items.label));
+      } else if (query.sort === "created") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.created) : asc(schema.items.created));
+      } else if (query.sort === "charge") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.charge) : asc(schema.items.charge));
+      } else if (query.sort === "type") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type));
+      }
+
+      if (query.random) {
+        const count = Math.min(Number(query.random), 100);
+        const all = await q;
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
+        set.headers["Cache-Control"] = "no-store";
+        return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       set.headers["Cache-Control"] = "no-store";
       return rows.map((r) => withRecordMeta(r, "items"));
     },
     {
       query: t.Optional(
         t.Object({
+          labels: t.Optional(t.String()),
+          search: t.Optional(t.String()),
+          type: t.Optional(t.String()),
+          rollable: t.Optional(t.String()),
+          excludeLabel: t.Optional(t.String()),
+          sort: t.Optional(t.String()),
+          order: t.Optional(t.String()),
+          random: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
@@ -99,6 +155,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         updated: ts,
       });
       broadcast("items", "create", id);
+      logger.info(null, "created item", body.label, `(${body.type})`);
       return mapItem(
         (
           await db.select().from(schema.items).where(eq(schema.items.id, id))
@@ -147,6 +204,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       .select()
       .from(schema.items)
       .where(eq(schema.items.id, params.id));
+    logger.info(null, "updated item", row?.label ?? params.id);
     return mapItem(row!);
   }, {
     body: t.Object({
@@ -162,6 +220,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.items).where(eq(schema.items.id, params.id));
     broadcast("items", "delete", params.id);
+    logger.info(null, "deleted item", params.id);
     return { ok: true };
   });
 
@@ -171,19 +230,44 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .get(
     "/",
     async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const q = db.select().from(schema.inventory);
-      const filtered = query.owner
-        ? q.where(eq(schema.inventory.owner, query.owner))
-        : q;
-      const rows = await filtered.limit(limit).offset(offset);
+      let q = db.select().from(schema.inventory);
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (query.owner) {
+        conditions.push(eq(schema.inventory.owner, query.owner));
+      }
+
+      if (query.excludeOwner) {
+        conditions.push(not(eq(schema.inventory.owner, query.excludeOwner)));
+      }
+
+      if (query.type) {
+        conditions.push(eq(schema.inventory.type, query.type));
+      }
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        conditions.push(
+          sql`(${schema.inventory.label} LIKE ${pattern} OR ${schema.inventory.description} LIKE ${pattern})`,
+        );
+      }
+
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions));
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       return rows.map((r) => withRecordMeta(r, "inventory"));
     },
     {
       query: t.Optional(
         t.Object({
           owner: t.Optional(t.String()),
+          excludeOwner: t.Optional(t.String()),
+          type: t.Optional(t.String()),
+          search: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
@@ -203,8 +287,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   })
   .post(
     "/add",
-    async ({ body, db }) =>
-      addInventory(db, body.userId, body.itemId),
+    async ({ body, db, user }) => {
+      const result = await addInventory(db, body.userId, body.itemId);
+      logger.info(user?.username, "added item to inventory", `user:${body.userId}`, `item:${body.itemId}`);
+      return result;
+    },
     {
       body: t.Object({
         userId: t.String(),
@@ -214,12 +301,13 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/transfer",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, user }) => {
       await db
         .update(schema.inventory)
         .set({ owner: body.newOwner, updated: nowIso() })
         .where(eq(schema.inventory.id, params.id));
       broadcast("inventory", "update", params.id);
+      logger.info(user?.username, "transferred inventory item", params.id, `to:${body.newOwner}`);
       return { ok: true };
     },
     {
@@ -235,7 +323,9 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         set.status = 401;
         return { error: "Unauthorized" };
       }
-      return executeInventoryUse(db, user.sub, params.id);
+      const result = await executeInventoryUse(db, user.sub, params.id);
+      logger.info(user.username, "used inventory item", params.id);
+      return result;
     },
     {
       detail: {
@@ -246,8 +336,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/charge",
-    async ({ params, body, db }) =>
-      chargeInventory(db, params.id, body.oldCharge, body.newCharge),
+    async ({ params, body, db, user }) => {
+      const result = await chargeInventory(db, params.id, body.oldCharge, body.newCharge);
+      logger.info(user?.username, "charged inventory item", params.id, `${body.oldCharge}→${body.newCharge}`);
+      return result;
+    },
     {
       body: t.Object({
         oldCharge: t.Number(),
@@ -255,9 +348,10 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
+  .delete("/:id", async ({ params, db, user }) => {
     await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
     broadcast("inventory", "delete", params.id);
+    logger.info(user?.username, "deleted inventory item", params.id);
     return { ok: true };
   });
 
@@ -266,19 +360,27 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .get(
     "/",
     async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const rows = await db
+      let q = db
         .select()
         .from(schema.market)
-        .orderBy(desc(schema.market.created))
-        .limit(limit)
-        .offset(offset);
+        .orderBy(desc(schema.market.created));
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        q = q.where(
+          sql`(${schema.market.label} LIKE ${pattern} OR ${schema.market.owner} LIKE ${pattern})`,
+        );
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       return rows.map((r) => withRecordMeta(r, "market"));
     },
     {
       query: t.Optional(
         t.Object({
+          search: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
@@ -298,8 +400,11 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   })
   .post(
     "/sell",
-    async ({ body, db }) =>
-      sellInventory(db, body.inventoryId, body.ownerId, body.price),
+    async ({ body, db }) => {
+      const result = await sellInventory(db, body.inventoryId, body.ownerId, body.price);
+      logger.info(null, "listed item on market", `item:${body.inventoryId}`, `price:${body.price}`);
+      return result;
+    },
     {
       body: t.Object({
         inventoryId: t.String(),
@@ -310,8 +415,11 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   )
   .post(
     "/:id/buy",
-    async ({ params, body, db }) =>
-      buyMarket(db, params.id, body.newOwnerId, body.oldOwnerId),
+    async ({ params, body, db }) => {
+      const result = await buyMarket(db, params.id, body.newOwnerId, body.oldOwnerId);
+      logger.info(null, "bought market item", params.id, `buyer:${body.newOwnerId}`);
+      return result;
+    },
     {
       body: t.Object({
         newOwnerId: t.String(),
@@ -319,13 +427,18 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       }),
     },
   )
-  .post("/:id/remove", async ({ params, db }) =>
-    removeMarketListing(db, params.id),
-  )
+  .post("/:id/remove", async ({ params, db }) => {
+    const result = await removeMarketListing(db, params.id);
+    logger.info(null, "removed market listing", params.id);
+    return result;
+  })
   .post(
     "/:id/discount",
-    async ({ params, body, db }) =>
-      discountMarket(db, params.id, body.ownerId, body.price, body.discountPrice),
+    async ({ params, body, db }) => {
+      const result = await discountMarket(db, params.id, body.ownerId, body.price, body.discountPrice);
+      logger.info(null, "discounted market item", params.id, `${body.price}→${body.discountPrice}`);
+      return result;
+    },
     {
       body: t.Object({
         ownerId: t.String(),
@@ -337,6 +450,7 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.market).where(eq(schema.market.id, params.id));
     broadcast("market", "delete", params.id);
+    logger.info(null, "deleted market listing", params.id);
     return { ok: true };
   });
 
@@ -344,8 +458,11 @@ export const tradeRoute = new Elysia({ prefix: "/trade" })
   .use(dbPlugin)
   .post(
     "/",
-    async ({ body, db }) =>
-      tradeInventory(db, body.currentUser, body.otherUser),
+    async ({ body, db }) => {
+      const result = await tradeInventory(db, body.currentUser, body.otherUser);
+      logger.info(null, "trade completed", `${body.currentUser.id} ↔ ${body.otherUser.id}`);
+      return result;
+    },
     {
       body: t.Object({
         currentUser: t.Object({

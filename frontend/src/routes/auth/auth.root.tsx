@@ -20,10 +20,10 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    if (!serverAvailable && register) {
+    if (register && !serverAvailable) {
       setRegister(false);
     }
-  }, [serverAvailable, register]);
+  }, [register, serverAvailable]);
 
   return (
     <main onContextMenu={(e) => e.preventDefault()}>

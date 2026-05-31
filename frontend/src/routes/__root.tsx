@@ -7,11 +7,11 @@ import {
 } from "@tanstack/react-router";
 import { lazy, useEffect } from "react";
 
+import { getToken } from "@/api/client.api";
 import OutletComponent from "@/components/shared/outlet.component";
 import { BigLoader } from "@/components/shared/loader.component";
 import { BigError } from "@/components/shared/error.component";
 import { CircleX } from "lucide-react";
-import { getToken } from "@/api/client.api";
 
 const App = lazy(() => import("@/App"));
 const Auth = lazy(() => import("./auth/auth.root"));

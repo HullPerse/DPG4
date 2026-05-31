@@ -227,9 +227,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-
-            return allUsers.filter((res) => res.id !== ctx.user.id);
+            return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
 
@@ -581,12 +579,8 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const inventory = await itemsApi.getAllInventories();
-            const users = await userApi.getAllUsers();
-            return {
-              inventory: inventory.filter((i) => i.owner !== ctx.user.id),
-              users,
-            };
+            const [inventory, users] = await Promise.all([itemsApi.getInventories({ excludeOwner: ctx.user.id }), userApi.getAllUsers()]);
+            return { inventory, users };
           },
         });
         useEffect(() => {
@@ -686,7 +680,7 @@ export const itemEffect: effectInterface[] = [
       function (ctx: ModalType) {
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
-          queryFn: () => itemsApi.getAllItems(),
+          queryFn: () => itemsApi.getItems(),
         });
         useEffect(() => {
           refetch();
@@ -782,7 +776,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
             return { inventory: allItems, users: allUsers };
           },
@@ -1061,7 +1055,7 @@ export const itemEffect: effectInterface[] = [
       function (ctx: ModalType) {
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
-          queryFn: () => itemsApi.getAllItems(),
+          queryFn: () => itemsApi.getItems(),
         });
         useEffect(() => {
           refetch();
@@ -1211,8 +1205,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-            return allUsers.filter((u) => u.id !== ctx.user.id);
+            return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
         useEffect(() => {
@@ -1334,7 +1327,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
             return {
               items: allItems.filter((i) =>
@@ -1420,10 +1413,10 @@ export const itemEffect: effectInterface[] = [
           queryKey: ["modalData"],
           queryFn: async () => {
             const allUsers = await userApi.getAllUsers();
-            const allItems = await itemsApi.getAllItems();
-            const allInventories = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getItems({ excludeLabel: "Ведьмин котел" });
+            const allInventories = await itemsApi.getInventories();
             return {
-              items: allItems.filter((i) => i.label !== "Ведьмин котел"),
+              items: allItems,
               inventories: allInventories.filter(
                 (i) => i.label !== "Ведьмин котел",
               ),
@@ -1955,11 +1948,8 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
-            return {
-              items: allItems.filter((i) => i.owner !== ctx.user.id),
-              users: await userApi.getAllUsers(),
-            };
+            const [items, users] = await Promise.all([itemsApi.getInventories({ excludeOwner: ctx.user.id }), userApi.getAllUsers()]);
+            return { items, users };
           },
         });
 
@@ -2171,8 +2161,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-            return allUsers.filter((u) => u.id !== ctx.user.id);
+            return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
 
@@ -2257,7 +2246,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
             return {
               users: allUsers,
@@ -2582,8 +2571,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-            return allUsers.filter((u) => u.id !== ctx.user.id);
+            return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
 
@@ -2793,16 +2781,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-            const filteredUsers = allUsers
-              .filter((u) => u.id !== ctx.user.id)
-              .filter(
-                (u) =>
-                  Array.isArray(u.status) &&
-                  u.status.some((s) => s === "Картошка"),
-              );
-
-            return filteredUsers.length > 0 ? filteredUsers : [];
+            return userApi.getUsers({ excludeUserId: ctx.user.id, hasStatus: "Картошка" });
           },
         });
 
@@ -2888,7 +2867,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
 
             return {
@@ -3102,12 +3081,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-
-            return {
-              effects: allUsers.find((u) => u.id === ctx.user.id)?.status,
-              users: allUsers.filter((u) => u.id !== ctx.user.id),
-            };
+            const [me, users] = await Promise.all([userApi.getUserById(ctx.user.id), userApi.getUsers({ excludeUserId: ctx.user.id })]); return { effects: me?.status, users };
           },
         });
 
@@ -3610,12 +3584,11 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allUsers = await userApi.getAllUsers();
-            const allItems = await itemsApi.getAllInventories();
+            const [users, items] = await Promise.all([userApi.getAllUsers(), itemsApi.getInventories()]);
 
             return {
-              items: allItems,
-              users: allUsers,
+              items,
+              users,
             };
           },
         });
@@ -3722,7 +3695,7 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const allItems = await itemsApi.getAllInventories();
+            const allItems = await itemsApi.getInventories();
 
             return allItems
               .filter((i) => i.owner === ctx.user.id)

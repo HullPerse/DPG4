@@ -10,10 +10,9 @@ export function useAppUpdates() {
   useEffect(() => {
     let cancelled = false;
 
-    void (async () => {
-      try {
-        const update = await checkForUpdates();
-        if (!update || cancelled) return;
+    void checkForUpdates()
+      .then((update) => {
+        if (cancelled || !update) return;
 
         const toastData: UpdateData = {
           id: "update",
@@ -31,10 +30,10 @@ export function useAppUpdates() {
         };
 
         addToast(toastData as unknown as Activity);
-      } catch (e) {
+      })
+      .catch((e) => {
         console.error("Failed to check for updates:", e);
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;

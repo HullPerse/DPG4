@@ -23,6 +23,8 @@ import { steamRoute } from "./routes/steam.route";
 import { searchRoute } from "./routes/search.route";
 import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
+import { logger } from "./lib/logger";
+import { initAutoBackup } from "./lib/autoBackup";
 
 const app = new Elysia()
   .use(
@@ -88,8 +90,10 @@ const app = new Elysia()
   .use(searchRoute)
   .listen(config.port);
 
-console.log(
-  `🐀 DPG API: http://${app.server?.hostname}:${app.server?.port}  |  Docs: /docs  |  Admin: /admin`,
-);
+logger.info(null, `DPG API running on http://${app.server?.hostname}:${app.server?.port}`);
+logger.info(null, `Docs at /docs  |  Admin at /admin`);
+
+initAutoBackup();
 
 export type App = typeof app;
+export default app;

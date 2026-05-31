@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
-import { eq } from "drizzle-orm";
+import { and, eq, not, asc, desc as descOrder } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { createActivity } from "../services/activity.service";
 import { dbPlugin } from "../plugins/db.plugin";
 
@@ -22,9 +23,42 @@ const cellPatchBody = t.Object({
 
 export const cellsRoute = new Elysia({ prefix: "/cells" })
   .use(dbPlugin)
-  .get("/", async ({ db }) => {
-    const rows = await db.select().from(schema.cells);
+  .get("/", async ({ db, query }) => {
+    let q = db.select().from(schema.cells);
+    const conditions: ReturnType<typeof eq>[] = [];
+
+    if (query.type) {
+      conditions.push(eq(schema.cells.type, query.type));
+    }
+
+    if (query.excludeType) {
+      conditions.push(not(eq(schema.cells.type, query.excludeType)));
+    }
+
+    if (query.excludeNumber) {
+      conditions.push(not(eq(schema.cells.number, Number(query.excludeNumber))));
+    }
+
+    if (conditions.length > 0) {
+      q = q.where(and(...conditions));
+    }
+
+    if (query.sort === "number") {
+      q = q.orderBy(query.order === "desc" ? descOrder(schema.cells.number) : asc(schema.cells.number));
+    }
+
+    const rows = await q;
     return rows.map((r) => withRecordMeta(r, "cells"));
+  }, {
+    query: t.Optional(
+      t.Object({
+        type: t.Optional(t.String()),
+        excludeType: t.Optional(t.String()),
+        excludeNumber: t.Optional(t.String()),
+        sort: t.Optional(t.String()),
+        order: t.Optional(t.String()),
+      }),
+    ),
   })
   .get("/by-number/:number", async ({ params, db, set }) => {
     const num = Number(params.number);
@@ -75,6 +109,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
         .select()
         .from(schema.cells)
         .where(eq(schema.cells.id, params.id));
+      logger.info(null, "updated cell", row?.title ?? `#${row?.number}` ?? params.id);
       return withRecordMeta(row!, "cells");
     },
     { body: cellPatchBody },
@@ -102,6 +137,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
       });
 
       broadcast("cells", "update", params.id);
+      logger.info(body.username, "captured cell", `#${cell.number}`);
       return { ok: true };
     },
     {

@@ -21,10 +21,11 @@ function ListPaint({
   const [selected, setSelected] = useState<PaintType["author"] | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["listPaint"],
+    queryKey: ["listPaint", selected?.id],
     queryFn: async (): Promise<PaintType[]> => {
-      const allData = await paintApi.getAllDrawings();
-      return allData;
+      return !selected
+        ? await paintApi.getAllDrawings()
+        : await paintApi.getDrawingsByAuthor(selected.id);
     },
   });
 
@@ -74,11 +75,7 @@ function ListPaint({
       </div>
 
       <div className="flex flex-wrap gap-2 w-full h-fit overflow-y-auto p-2">
-        {data
-          ?.filter((item) =>
-            !selected ? item : item.author.id === selected.id,
-          )
-          .map((item) => (
+        {data?.map((item) => (
             <ImagePaint key={item.id} item={item} onClick={setSelected} />
           ))}
       </div>
