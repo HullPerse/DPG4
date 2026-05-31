@@ -5,6 +5,7 @@ import { authPlugin } from "../plugins/auth.plugin";
 import { nowIso } from "../lib/dates";
 import { omitPassword, withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import {
   changeUserDice,
@@ -54,13 +55,14 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .patch(
     "/:id",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, user }) => {
       const { password: _pw, passwordHash: _ph, id: _id, created: _cr, ...rest } = body;
       await db
         .update(schema.users)
         .set({ ...rest, updated: nowIso() } as Partial<typeof schema.users.$inferInsert>)
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
+      logger.info(user?.username, "updated profile", params.id);
       return getUserById(db, params.id);
     },
     {
@@ -70,8 +72,11 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/status",
-    async ({ params, body, db }) =>
-      changeUserStatus(db, params.id, body.status, body.type),
+    async ({ params, body, db, user }) => {
+      const result = await changeUserStatus(db, params.id, body.status, body.type);
+      logger.info(user?.username, "changed status", params.id, `${body.type}:${body.status}`);
+      return result;
+    },
     {
       body: t.Object({
         status: t.String(),
@@ -82,8 +87,11 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/score",
-    async ({ params, body, db }) =>
-      scoreUser(db, params.id, body.score, body.trade),
+    async ({ params, body, db, user }) => {
+      const result = await scoreUser(db, params.id, body.score, body.trade);
+      logger.info(user?.username, "changed score", params.id, body.score > 0 ? `+${body.score}` : String(body.score));
+      return result;
+    },
     {
       body: t.Object({
         score: t.Number(),
@@ -94,8 +102,11 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/dice",
-    async ({ params, body, db }) =>
-      changeUserDice(db, params.id, body.realTime, body.action),
+    async ({ params, body, db, user }) => {
+      const result = await changeUserDice(db, params.id, body.realTime, body.action);
+      logger.info(user?.username, "changed dice", params.id, body.action);
+      return result;
+    },
     {
       body: t.Object({
         realTime: t.Number(),
@@ -109,17 +120,22 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/place",
-    async ({ params, db }) => updatePlace(db, params.id),
+    async ({ params, db, user }) => {
+      const result = await updatePlace(db, params.id);
+      logger.info(user?.username, "assigned place", params.id);
+      return result;
+    },
     { detail: { tags: ["users"], summary: "Assign podium place" } },
   )
   .delete(
     "/:id/place",
-    async ({ params, db }) => {
+    async ({ params, db, user }) => {
       await db
         .update(schema.users)
         .set({ place: "0", updated: nowIso() })
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
+      logger.info(user?.username, "cleared place", params.id);
       return getUserById(db, params.id);
     },
     { detail: { tags: ["users"], summary: "Clear podium place" } },

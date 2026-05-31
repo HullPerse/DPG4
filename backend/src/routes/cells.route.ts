@@ -4,6 +4,7 @@ import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { createActivity } from "../services/activity.service";
 import { dbPlugin } from "../plugins/db.plugin";
 
@@ -75,6 +76,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
         .select()
         .from(schema.cells)
         .where(eq(schema.cells.id, params.id));
+      logger.info(null, "updated cell", row?.title ?? `#${row?.number}` ?? params.id);
       return withRecordMeta(row!, "cells");
     },
     { body: cellPatchBody },
@@ -102,6 +104,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
       });
 
       broadcast("cells", "update", params.id);
+      logger.info(body.username, "captured cell", `#${cell.number}`);
       return { ok: true };
     },
     {

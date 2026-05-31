@@ -7,6 +7,7 @@ import { parseFileInput } from "../lib/files";
 import { compressSquare, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import {
   addInventory,
   buyMarket,
@@ -99,6 +100,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         updated: ts,
       });
       broadcast("items", "create", id);
+      logger.info(null, "created item", body.label, `(${body.type})`);
       return mapItem(
         (
           await db.select().from(schema.items).where(eq(schema.items.id, id))
@@ -147,6 +149,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       .select()
       .from(schema.items)
       .where(eq(schema.items.id, params.id));
+    logger.info(null, "updated item", row?.label ?? params.id);
     return mapItem(row!);
   }, {
     body: t.Object({
@@ -162,6 +165,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.items).where(eq(schema.items.id, params.id));
     broadcast("items", "delete", params.id);
+    logger.info(null, "deleted item", params.id);
     return { ok: true };
   });
 
@@ -203,8 +207,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   })
   .post(
     "/add",
-    async ({ body, db }) =>
-      addInventory(db, body.userId, body.itemId),
+    async ({ body, db, user }) => {
+      const result = await addInventory(db, body.userId, body.itemId);
+      logger.info(user?.username, "added item to inventory", `user:${body.userId}`, `item:${body.itemId}`);
+      return result;
+    },
     {
       body: t.Object({
         userId: t.String(),
@@ -214,12 +221,13 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/transfer",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, user }) => {
       await db
         .update(schema.inventory)
         .set({ owner: body.newOwner, updated: nowIso() })
         .where(eq(schema.inventory.id, params.id));
       broadcast("inventory", "update", params.id);
+      logger.info(user?.username, "transferred inventory item", params.id, `to:${body.newOwner}`);
       return { ok: true };
     },
     {
@@ -235,7 +243,9 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         set.status = 401;
         return { error: "Unauthorized" };
       }
-      return executeInventoryUse(db, user.sub, params.id);
+      const result = await executeInventoryUse(db, user.sub, params.id);
+      logger.info(user.username, "used inventory item", params.id);
+      return result;
     },
     {
       detail: {
@@ -246,8 +256,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/charge",
-    async ({ params, body, db }) =>
-      chargeInventory(db, params.id, body.oldCharge, body.newCharge),
+    async ({ params, body, db, user }) => {
+      const result = await chargeInventory(db, params.id, body.oldCharge, body.newCharge);
+      logger.info(user?.username, "charged inventory item", params.id, `${body.oldCharge}→${body.newCharge}`);
+      return result;
+    },
     {
       body: t.Object({
         oldCharge: t.Number(),
@@ -255,9 +268,10 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
+  .delete("/:id", async ({ params, db, user }) => {
     await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
     broadcast("inventory", "delete", params.id);
+    logger.info(user?.username, "deleted inventory item", params.id);
     return { ok: true };
   });
 
@@ -298,8 +312,11 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   })
   .post(
     "/sell",
-    async ({ body, db }) =>
-      sellInventory(db, body.inventoryId, body.ownerId, body.price),
+    async ({ body, db }) => {
+      const result = await sellInventory(db, body.inventoryId, body.ownerId, body.price);
+      logger.info(null, "listed item on market", `item:${body.inventoryId}`, `price:${body.price}`);
+      return result;
+    },
     {
       body: t.Object({
         inventoryId: t.String(),
@@ -310,8 +327,11 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   )
   .post(
     "/:id/buy",
-    async ({ params, body, db }) =>
-      buyMarket(db, params.id, body.newOwnerId, body.oldOwnerId),
+    async ({ params, body, db }) => {
+      const result = await buyMarket(db, params.id, body.newOwnerId, body.oldOwnerId);
+      logger.info(null, "bought market item", params.id, `buyer:${body.newOwnerId}`);
+      return result;
+    },
     {
       body: t.Object({
         newOwnerId: t.String(),
@@ -319,13 +339,18 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       }),
     },
   )
-  .post("/:id/remove", async ({ params, db }) =>
-    removeMarketListing(db, params.id),
-  )
+  .post("/:id/remove", async ({ params, db }) => {
+    const result = await removeMarketListing(db, params.id);
+    logger.info(null, "removed market listing", params.id);
+    return result;
+  })
   .post(
     "/:id/discount",
-    async ({ params, body, db }) =>
-      discountMarket(db, params.id, body.ownerId, body.price, body.discountPrice),
+    async ({ params, body, db }) => {
+      const result = await discountMarket(db, params.id, body.ownerId, body.price, body.discountPrice);
+      logger.info(null, "discounted market item", params.id, `${body.price}→${body.discountPrice}`);
+      return result;
+    },
     {
       body: t.Object({
         ownerId: t.String(),
@@ -337,6 +362,7 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.market).where(eq(schema.market.id, params.id));
     broadcast("market", "delete", params.id);
+    logger.info(null, "deleted market listing", params.id);
     return { ok: true };
   });
 
@@ -344,8 +370,11 @@ export const tradeRoute = new Elysia({ prefix: "/trade" })
   .use(dbPlugin)
   .post(
     "/",
-    async ({ body, db }) =>
-      tradeInventory(db, body.currentUser, body.otherUser),
+    async ({ body, db }) => {
+      const result = await tradeInventory(db, body.currentUser, body.otherUser);
+      logger.info(null, "trade completed", `${body.currentUser.id} ↔ ${body.otherUser.id}`);
+      return result;
+    },
     {
       body: t.Object({
         currentUser: t.Object({

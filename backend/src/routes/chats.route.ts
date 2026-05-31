@@ -6,6 +6,7 @@ import { nowIso } from "../lib/dates";
 import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { getUserById } from "../services/user.service";
 
 function mapChat(row: typeof schema.chats.$inferSelect) {
@@ -105,6 +106,9 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       });
 
       broadcast("chats", "create", id);
+      const senderUsername = (data as { sender?: { username?: string } } | undefined)?.sender?.username;
+      const receiverLabel = (data as { receiver?: { username?: string } } | undefined)?.receiver?.username ?? "global";
+      logger.info(senderUsername ?? null, "sent message", `to:${receiverLabel}`);
       const [row] = await db
         .select()
         .from(schema.chats)
@@ -136,6 +140,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
         .select()
         .from(schema.chats)
         .where(eq(schema.chats.id, params.id));
+      logger.info(null, "updated message", params.id);
       return mapChat(row!);
     },
     {
@@ -155,6 +160,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
           .where(eq(schema.chats.id, id));
         broadcast("chats", "update", id);
       }
+      logger.info(null, "marked messages read", `count:${body.ids.length}`);
       return { ok: true };
     },
     {
@@ -166,6 +172,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.chats).where(eq(schema.chats.id, params.id));
     broadcast("chats", "delete", params.id);
+    logger.info(null, "deleted message", params.id);
     return { ok: true };
   })
   .get("/thread/:sender/:receiver", async ({ params, db }) => {

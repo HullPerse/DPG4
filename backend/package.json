@@ -9,6 +9,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",
     "db:push": "drizzle-kit push",
+    "db:restore": "bun run scripts/restore.ts",
     "db:studio": "drizzle-kit studio",
     "db:import-pocketbase": "bun run scripts/migrate-from-pb.ts",
     "db:build": "bun build --target bun --outfile server src/index.ts",

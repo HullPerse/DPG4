@@ -1,4 +1,4 @@
-import { Gift, Grid3x3, LayoutDashboard, LogOut } from "lucide-react";
+import { Gift, Grid3x3, LayoutDashboard, LogOut, ScrollText, Terminal } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { getAdminUser, logout } from "@/lib/auth";
 import { resourceIcons } from "@/config/resourceIcons";
@@ -46,6 +46,14 @@ export function AdminShell({ schema }: { schema: AdminSchema }) {
           <NavLink to="/cells-board" className={navLinkClass}>
             <Grid3x3 className="size-4" />
             Поле (cells)
+          </NavLink>
+          <NavLink to="/console" className={navLinkClass}>
+            <Terminal className="size-4" />
+            Консоль
+          </NavLink>
+          <NavLink to="/logs" className={navLinkClass}>
+            <ScrollText className="size-4" />
+            Логи
           </NavLink>
           <div className="border-highlight-high text-muted mx-3 my-2 border-t pt-2 text-[10px] font-bold tracking-wider uppercase">
             Таблицы

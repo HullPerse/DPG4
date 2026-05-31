@@ -8,6 +8,7 @@ import { compressWebp, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 import { createActivity } from "../services/activity.service";
 import { changeUserStatus, getUserById, scoreUser } from "../services/user.service";
 import { dbPlugin } from "../plugins/db.plugin";
@@ -128,6 +129,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       });
 
       broadcast("games", "create", id);
+      logger.info(user.username, "added game", data.name);
       return mapGame(
         (await db.select().from(schema.games).where(eq(schema.games.id, id)))[0]!,
       );
@@ -164,6 +166,9 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .select()
         .from(schema.games)
         .where(eq(schema.games.id, params.id));
+      const gameUser = row?.user as { username?: string } | undefined;
+      const gameData = row?.data as { name?: string } | undefined;
+      logger.info(gameUser?.username ?? null, "updated game", gameData?.name ?? params.id);
       return mapGame(row!);
     },
     { body: gamePatchBody },
@@ -227,6 +232,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .where(eq(schema.games.id, params.id));
 
       broadcast("games", "update", params.id);
+      logger.info(gameUser.username, "changed game status", gameData.name, STATUSES[body.status] ?? body.status);
       return mapGame(
         (await db.select().from(schema.games).where(eq(schema.games.id, params.id)))[0]!,
       );
@@ -271,6 +277,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         .where(eq(schema.games.id, params.id));
 
       broadcast("games", "update", params.id);
+      logger.info(null, "voted on game", params.id, `user:${body.userId}`);
       return { ok: true };
     },
     { body: gameVoteBody },
@@ -278,6 +285,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.games).where(eq(schema.games.id, params.id));
     broadcast("games", "delete", params.id);
+    logger.info(null, "deleted game", params.id);
     return { ok: true };
   });
 
@@ -311,6 +319,7 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
         updated: ts,
       });
       broadcast("presets", "create", id);
+      logger.info(null, "created preset", body.label);
       return withRecordMeta(
         { id, label: body.label, games: [], created: ts, updated: ts },
         "presets",
@@ -336,6 +345,7 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
         .select()
         .from(schema.presets)
         .where(eq(schema.presets.id, params.id));
+      logger.info(null, "updated preset", row?.label ?? params.id);
       return withRecordMeta(row!, "presets");
     },
     { body: presetPatchBody },
@@ -343,5 +353,6 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.presets).where(eq(schema.presets.id, params.id));
     broadcast("presets", "delete", params.id);
+    logger.info(null, "deleted preset", params.id);
     return { ok: true };
   });

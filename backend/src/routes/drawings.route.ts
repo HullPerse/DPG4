@@ -6,6 +6,7 @@ import { nowIso } from "../lib/dates";
 import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { logger } from "../lib/logger";
 
 import { dbPlugin } from "../plugins/db.plugin";
 
@@ -42,7 +43,9 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
         created: ts,
         updated: ts,
       });
+      const authorName = (body.author as { username?: string } | undefined)?.username;
       broadcast("drawings", "create", id);
+      logger.info(authorName ?? null, "created drawing");
       return withRecordMeta(
         (await db.select().from(schema.drawings).where(eq(schema.drawings.id, id)))[0]!,
         "drawings",
@@ -76,6 +79,7 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
         .select()
         .from(schema.drawings)
         .where(eq(schema.drawings.id, params.id));
+      logger.info(null, "updated drawing", params.id);
       return withRecordMeta(row!, "drawings");
     },
     {
@@ -88,5 +92,6 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id));
     broadcast("drawings", "delete", params.id);
+    logger.info(null, "deleted drawing", params.id);
     return { ok: true };
   });

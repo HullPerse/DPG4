@@ -6,8 +6,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SchemaProvider } from "@/context/SchemaContext";
 import { AdminShell } from "@/layout/AdminShell";
 import { CellsBoardPage } from "@/pages/CellsBoard";
+import { ConsolePage } from "@/pages/Console";
 import { Dashboard } from "@/pages/Dashboard";
 import { GrantItemPage } from "@/pages/GrantItem";
+import { LogsPage } from "@/pages/Logs";
 import { LoginPage } from "@/pages/Login";
 import { ResourceFormPage } from "@/pages/ResourceForm";
 import { ResourceListPage } from "@/pages/ResourceList";
@@ -53,6 +55,8 @@ export function App() {
               <Route index element={<Dashboard schema={schema} />} />
               <Route path="grant-item" element={<GrantItemPage />} />
               <Route path="cells-board" element={<CellsBoardPage />} />
+              <Route path="console" element={<ConsolePage />} />
+              <Route path="logs" element={<LogsPage />} />
               <Route path=":resource/create" element={<ResourceFormPage mode="create" />} />
               <Route
                 path=":resource/:id/edit"
