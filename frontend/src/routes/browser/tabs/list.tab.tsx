@@ -3,7 +3,6 @@ import {
   memo,
   startTransition,
   useCallback,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -67,12 +66,14 @@ function ListBrowser({
   const [selected, setSelected] = useState<User | null>(user ? user : null);
   const [input, setInput] = useState<string>("");
 
+  const sortFieldMap: Record<string, string> = { name: "label", date: "created", charges: "charge", type: "type" };
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["listTab"],
+    queryKey: ["listTab", searchTerms, sortMethod, sortDirection],
     queryFn: async (): Promise<{ items: Item[]; users: User[] }> => {
       return {
-        items: await itemsApi.getAllItems(),
-        users: await usersApi.getAllUsers(),
+        items: await itemsApi.getItems({ search: searchTerms || undefined, sort: sortFieldMap[sortMethod] as "label" | "created" | "charge" | "type", order: sortDirection }),
+        users: await usersApi.getUsers({ search: searchTerms || undefined }),
       };
     },
   });
@@ -88,38 +89,7 @@ function ListBrowser({
 
   useSubscription("items", "*", invalidateQuery);
 
-  const filteredItems = useMemo(() => {
-    if (!data?.items) return [];
-
-    return data.items
-      .filter(
-        (item) =>
-          item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-          item.description.toUpperCase().includes(searchTerms.toUpperCase()),
-      )
-      .sort((a, b) => {
-        let comparison = 0;
-        switch (sortMethod) {
-          case "name":
-            comparison = a.label.localeCompare(b.label);
-            break;
-          case "date":
-            comparison = String(a.created || "").localeCompare(
-              String(b.created || ""),
-            );
-            break;
-          case "charges":
-            comparison = (a.charge || 0) - (b.charge || 0);
-            break;
-          case "type":
-            comparison = String(a.type || "").localeCompare(
-              String(b.type || ""),
-            );
-            break;
-        }
-        return sortDirection === "asc" ? comparison : -comparison;
-      });
-  }, [data?.items, searchTerms, sortMethod, sortDirection]);
+  const filteredItems = data?.items ?? [];
 
   const listRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({

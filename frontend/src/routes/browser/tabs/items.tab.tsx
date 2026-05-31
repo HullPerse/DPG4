@@ -29,10 +29,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["itemsWheel"],
+    queryKey: ["itemsWheel", searchTerms],
     queryFn: async (): Promise<Item[]> => {
-      const res = await itemsApi.getAllItems();
-      return res.filter((i) => i.rollable);
+      return itemsApi.getItems({ rollable: true, search: searchTerms || undefined });
     },
   });
 
@@ -141,15 +140,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       </section>
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
-        {data
-          ?.filter(
-            (item) =>
-              item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-              item.description
-                .toUpperCase()
-                .includes(searchTerms.toUpperCase()),
-          )
-          .map((item) => (
+        {data?.map((item) => (
             <section
               key={item.id}
               className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"

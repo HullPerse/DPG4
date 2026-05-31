@@ -35,7 +35,7 @@ export default function PresetsList({
       presets: Preset[];
       steamLibrary: Preset;
     }> => {
-      const presets = await gameApi.getPresets();
+      const presets = await gameApi.getPresets(searchTerms || undefined);
 
       const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
 
@@ -96,9 +96,6 @@ export default function PresetsList({
       {data?.presets
 
         ?.sort((a, b) => a.label.localeCompare(b.label))
-        .filter((preset) =>
-          preset.label.toUpperCase().includes(searchTerms.toUpperCase()),
-        )
         .map((preset) => (
           <PresetComponent
             key={preset.id}

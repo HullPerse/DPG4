@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback, useMemo, useState } from "react";
+import { memo, startTransition, useCallback, useState } from "react";
 
 import ItemsApi from "@/api/items.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,9 +28,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   const [inputDiscount, setInputDiscount] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["marketTab"],
+    queryKey: ["marketTab", searchTerms],
     queryFn: async (): Promise<Market[]> => {
-      return await itemsApi.getMarket();
+      return await itemsApi.getMarket(searchTerms || undefined);
     },
   });
 
@@ -45,15 +45,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   useSubscription("market", "*", invalidateQuery);
 
-  const filteredItems = useMemo(() => {
-    if (!data) return [];
-
-    return data.filter(
-      (item) =>
-        item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-        item.owner.username.toUpperCase().includes(searchTerms.toUpperCase()),
-    );
-  }, [data, searchTerms]);
+  const filteredItems = data ?? [];
 
   if (isLoading) return <WindowLoader />;
   if (isError)

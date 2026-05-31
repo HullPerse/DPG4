@@ -13,7 +13,7 @@ import {
   ADMIN_JSON_FIELDS,
   getAdminSchemaPayload,
 } from "../lib/adminSchema";
-import { getAdminStats, listAdminRows } from "../lib/adminQuery";
+import { getAdminStats, invalidateAdminStatsCache, listAdminRows } from "../lib/adminQuery";
 import { adminTableColumn, getAdminTable } from "../lib/adminTables";
 import { broadcast, broadcastAdminReload } from "../lib/ws";
 import { logger, LOG_FILE } from "../lib/logger";
@@ -266,6 +266,37 @@ export const adminRoute = new Elysia()
         },
       )
 
+      .get("/search", async ({ headers, adminJwt, db, set, query }) => {
+        const admin = await verifyAdmin(headers, adminJwt, db);
+        if (!admin) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        const q = (query.q ?? "").trim();
+        if (!q || q.length < 2) {
+          return { results: [] };
+        }
+        const results: Record<string, unknown[]> = {};
+        const schema = getAdminSchemaPayload().tables;
+        for (const [name, meta] of Object.entries(schema)) {
+          const table = getAdminTable(name);
+          if (!table) continue;
+          const result = await listAdminRows(db, name, {
+            q,
+            _perPage: "10",
+            _page: "1",
+            _sort: "created",
+            _order: "DESC",
+          });
+          if (result && result.data.length > 0) {
+            results[name] = result.data;
+          }
+        }
+        return { results };
+      }, {
+        query: t.Object({ q: t.String() }),
+      })
+
       .get("/logs", async ({ headers, adminJwt, db, set, query }) => {
         const admin = await verifyAdmin(headers, adminJwt, db);
         if (!admin) {
@@ -421,6 +452,7 @@ export const adminRoute = new Elysia()
               .from(table)
               .where(eq(idCol as never, cleaned.id as string));
             replaceBuffers(row as Record<string, unknown>);
+            invalidateAdminStatsCache();
             maybeBroadcast(params.table, "create", cleaned.id as string);
             logger.info(admin.username, "admin created record", `${params.table}:${cleaned.id}`);
             return { data: row };
@@ -469,6 +501,7 @@ export const adminRoute = new Elysia()
               return { error: "Not found" };
             }
             replaceBuffers(row as Record<string, unknown>);
+            invalidateAdminStatsCache();
             maybeBroadcast(params.table, "update", params.id);
             logger.info(admin.username, "admin updated record", `${params.table}:${params.id}`);
             return { data: row };
@@ -506,6 +539,7 @@ export const adminRoute = new Elysia()
           }
 
           await db.delete(table).where(eq(idCol as never, params.id));
+          invalidateAdminStatsCache();
           replaceBuffers(row as Record<string, unknown>);
           maybeBroadcast(params.table, "delete", params.id);
           logger.info(admin.username, "admin deleted record", `${params.table}:${params.id}`);

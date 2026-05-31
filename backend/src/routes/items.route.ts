@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, not, asc, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -44,19 +44,74 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .get(
     "/",
     async ({ db, query, set }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const rows = await db
-        .select(itemListColumns)
-        .from(schema.items)
-        .limit(limit)
-        .offset(offset);
+      let q = db.select(itemListColumns).from(schema.items);
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (query.labels) {
+        const labels = query.labels.split(",").map((l) => l.trim()).filter(Boolean);
+        if (labels.length > 0) {
+          conditions.push(inArray(schema.items.label, labels));
+        }
+      }
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        conditions.push(
+          sql`(${schema.items.label} LIKE ${pattern} OR ${schema.items.description} LIKE ${pattern})`,
+        );
+      }
+
+      if (query.type) {
+        conditions.push(eq(schema.items.type, query.type));
+      }
+
+      if (query.rollable !== undefined) {
+        conditions.push(eq(schema.items.rollable, query.rollable === "true"));
+      }
+
+      if (query.excludeLabel) {
+        conditions.push(not(eq(schema.items.label, query.excludeLabel)));
+      }
+
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions));
+      }
+
+      if (query.sort === "label") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.label) : asc(schema.items.label));
+      } else if (query.sort === "created") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.created) : asc(schema.items.created));
+      } else if (query.sort === "charge") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.charge) : asc(schema.items.charge));
+      } else if (query.sort === "type") {
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type));
+      }
+
+      if (query.random) {
+        const count = Math.min(Number(query.random), 100);
+        const all = await q;
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
+        set.headers["Cache-Control"] = "no-store";
+        return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       set.headers["Cache-Control"] = "no-store";
       return rows.map((r) => withRecordMeta(r, "items"));
     },
     {
       query: t.Optional(
         t.Object({
+          labels: t.Optional(t.String()),
+          search: t.Optional(t.String()),
+          type: t.Optional(t.String()),
+          rollable: t.Optional(t.String()),
+          excludeLabel: t.Optional(t.String()),
+          sort: t.Optional(t.String()),
+          order: t.Optional(t.String()),
+          random: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
@@ -175,19 +230,44 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .get(
     "/",
     async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const q = db.select().from(schema.inventory);
-      const filtered = query.owner
-        ? q.where(eq(schema.inventory.owner, query.owner))
-        : q;
-      const rows = await filtered.limit(limit).offset(offset);
+      let q = db.select().from(schema.inventory);
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (query.owner) {
+        conditions.push(eq(schema.inventory.owner, query.owner));
+      }
+
+      if (query.excludeOwner) {
+        conditions.push(not(eq(schema.inventory.owner, query.excludeOwner)));
+      }
+
+      if (query.type) {
+        conditions.push(eq(schema.inventory.type, query.type));
+      }
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        conditions.push(
+          sql`(${schema.inventory.label} LIKE ${pattern} OR ${schema.inventory.description} LIKE ${pattern})`,
+        );
+      }
+
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions));
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       return rows.map((r) => withRecordMeta(r, "inventory"));
     },
     {
       query: t.Optional(
         t.Object({
           owner: t.Optional(t.String()),
+          excludeOwner: t.Optional(t.String()),
+          type: t.Optional(t.String()),
+          search: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),
@@ -280,19 +360,27 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .get(
     "/",
     async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 10000;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      const rows = await db
+      let q = db
         .select()
         .from(schema.market)
-        .orderBy(desc(schema.market.created))
-        .limit(limit)
-        .offset(offset);
+        .orderBy(desc(schema.market.created));
+
+      if (query.search) {
+        const pattern = `%${query.search}%`;
+        q = q.where(
+          sql`(${schema.market.label} LIKE ${pattern} OR ${schema.market.owner} LIKE ${pattern})`,
+        );
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       return rows.map((r) => withRecordMeta(r, "market"));
     },
     {
       query: t.Optional(
         t.Object({
+          search: t.Optional(t.String()),
           limit: t.Optional(t.String()),
           offset: t.Optional(t.String()),
         }),

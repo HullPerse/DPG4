@@ -96,14 +96,7 @@ function InventoryTab({ id }: { id?: string }) {
 
       if (!allStatuses) finalStatuses = [];
       else {
-        const allItems = await itemsApi.getAllItems();
-
-        for (const status of allStatuses) {
-          const item = allItems.find((i) => i.label === status);
-          if (!item) continue;
-
-          finalStatuses.push(item);
-        }
+        finalStatuses = await itemsApi.getItemsByLabels(allStatuses);
       }
 
       return {
@@ -145,14 +138,9 @@ function InventoryTab({ id }: { id?: string }) {
     const users = await userApi.getAllUsers();
     const allStatuses = users.find((u) => u.id === currentId)?.status;
 
-    let finalStatuses: Item[] = [];
-    if (allStatuses?.length) {
-      const allItems = await itemsApi.getAllItems();
-      for (const status of allStatuses) {
-        const item = allItems.find((i) => i.label === status);
-        if (item) finalStatuses.push(item);
-      }
-    }
+    const finalStatuses: Item[] = allStatuses?.length
+      ? await itemsApi.getItemsByLabels(allStatuses)
+      : [];
 
     queryClient.setQueryData<InventoryTabData>(
       ["inventoryTab", currentId],

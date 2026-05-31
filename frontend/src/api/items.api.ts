@@ -7,8 +7,46 @@ export default class ItemsApi {
     return await apiFetch<Item[]>("/items");
   };
 
+  getItems = async (params?: {
+    search?: string;
+    type?: string;
+    rollable?: boolean;
+    excludeLabel?: string;
+    sort?: "label" | "created" | "charge" | "type";
+    order?: "asc" | "desc";
+    labels?: string[];
+    random?: number;
+  }): Promise<Item[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.type) searchParams.set("type", params.type);
+    if (params?.rollable !== undefined) searchParams.set("rollable", String(params.rollable));
+    if (params?.excludeLabel) searchParams.set("excludeLabel", params.excludeLabel);
+    if (params?.sort) searchParams.set("sort", params.sort);
+    if (params?.order) searchParams.set("order", params.order);
+    if (params?.random) searchParams.set("random", String(params.random));
+    if (params?.labels?.length) searchParams.set("labels", params.labels.join(","));
+    const qs = searchParams.toString();
+    return apiFetch<Item[]>(`/items${qs ? `?${qs}` : ""}`);
+  };
+
   getAllInventories = async (): Promise<Inventory[]> => {
     return await apiFetch<Inventory[]>("/inventory");
+  };
+
+  getInventories = async (params?: {
+    owner?: string;
+    excludeOwner?: string;
+    type?: string;
+    search?: string;
+  }): Promise<Inventory[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.owner) searchParams.set("owner", params.owner);
+    if (params?.excludeOwner) searchParams.set("excludeOwner", params.excludeOwner);
+    if (params?.type) searchParams.set("type", params.type);
+    if (params?.search) searchParams.set("search", params.search);
+    const qs = searchParams.toString();
+    return apiFetch<Inventory[]>(`/inventory${qs ? `?${qs}` : ""}`);
   };
 
   addItem = async (data: Item): Promise<Item> => {
@@ -22,6 +60,11 @@ export default class ItemsApi {
 
   getItemById = async (itemId: string): Promise<Item | undefined> => {
     return apiFetch<Item>(`/items/${itemId}`);
+  };
+
+  getItemsByLabels = async (labels: string[]): Promise<Item[]> => {
+    if (labels.length === 0) return [];
+    return apiFetch<Item[]>(`/items?labels=${encodeURIComponent(labels.join(","))}`);
   };
 
   getInventory = async (userId: string): Promise<Inventory[]> => {
@@ -85,8 +128,9 @@ export default class ItemsApi {
     });
   };
 
-  getMarket = async (): Promise<Market[]> => {
-    return await apiFetch<Market[]>("/market");
+  getMarket = async (search?: string): Promise<Market[]> => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : "";
+    return await apiFetch<Market[]>(`/market${qs}`);
   };
 
   getMarketById = async (marketId: string): Promise<Market> => {

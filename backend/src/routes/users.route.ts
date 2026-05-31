@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { eq } from "drizzle-orm";
+import { and, eq, not, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { authPlugin } from "../plugins/auth.plugin";
 import { nowIso } from "../lib/dates";
@@ -21,7 +21,28 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   .get(
     "/",
     async ({ db, query }) => {
-      const rows = await db.select().from(schema.users);
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
+      const offset = query.offset ? Number(query.offset) : 0;
+      let q = db.select().from(schema.users);
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (query.search) {
+        conditions.push(sql`${schema.users.username} LIKE ${`%${query.search}%`}`);
+      }
+
+      if (query.excludeUserId) {
+        conditions.push(not(eq(schema.users.id, query.excludeUserId)));
+      }
+
+      if (query.hasStatus) {
+        conditions.push(sql`${schema.users.status} LIKE ${`%"${query.hasStatus}"%`}`);
+      }
+
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions));
+      }
+
+      const rows = await q.limit(limit).offset(offset);
       let list = rows.map((r) => withRecordMeta(omitPassword(r), "users"));
 
       if (query.fields) {
@@ -37,7 +58,16 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       return list;
     },
     {
-      query: t.Optional(t.Object({ fields: t.Optional(t.String()) })),
+      query: t.Optional(
+        t.Object({
+          search: t.Optional(t.String()),
+          excludeUserId: t.Optional(t.String()),
+          hasStatus: t.Optional(t.String()),
+          fields: t.Optional(t.String()),
+          limit: t.Optional(t.String()),
+          offset: t.Optional(t.String()),
+        }),
+      ),
       detail: { tags: ["users"], summary: "List users" },
     },
   )

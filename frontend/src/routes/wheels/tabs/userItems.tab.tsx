@@ -39,7 +39,7 @@ function UserItems({
 
       setValues(["ВСЕ", ...users.map((u) => u.username)]);
 
-      return { items: await itemApi.getAllInventories(), users };
+      return { items: await itemApi.getInventories(), users };
     },
   });
 

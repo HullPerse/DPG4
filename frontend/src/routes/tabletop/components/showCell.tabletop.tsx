@@ -34,9 +34,7 @@ export default function ShowCell({
       if (!user?.position) return null;
       const cellData = await cellApi.getCellByNumber(Number(user?.position));
 
-      const inventoryData = await itemsApi
-        .getInventory(String(user?.id))
-        .then((res) => res.filter((i) => i.type === "roll"));
+      const inventoryData = await itemsApi.getInventories({ owner: String(user?.id), type: "roll" });
 
       return {
         cell: cellData,

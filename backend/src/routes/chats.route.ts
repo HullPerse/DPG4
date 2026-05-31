@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -21,41 +21,44 @@ import { dbPlugin } from "../plugins/db.plugin";
 export const chatsRoute = new Elysia({ prefix: "/chats" })
   .use(dbPlugin)
   .get("/", async ({ db, query }) => {
-    const rows = await db.select().from(schema.chats);
-    let list = rows;
+    const conditions: ReturnType<typeof sql>[] = [];
 
     if (query.receiverId && query.senderId) {
-      list = rows.filter((c) => {
-        const d = c.data as {
-          sender?: { id: string };
-          receiver?: { id: string };
-        };
-        const a = d.sender?.id;
-        const b = d.receiver?.id;
-        const s = query.senderId!;
-        const r = query.receiverId!;
-        return (a === s && b === r) || (a === r && b === s);
-      });
-    } else if (query.receiverId === "global") {
-      list = rows.filter(
-        (c) =>
-          (c.data as { receiver?: { id: string } })?.receiver?.id === "global",
+      conditions.push(
+        or(
+          and(
+            sql`json_extract(data, '$.sender.id') = ${query.senderId}`,
+            sql`json_extract(data, '$.receiver.id') = ${query.receiverId}`,
+          ),
+          and(
+            sql`json_extract(data, '$.sender.id') = ${query.receiverId}`,
+            sql`json_extract(data, '$.receiver.id') = ${query.senderId}`,
+          ),
+        )!,
       );
+    } else if (query.receiverId === "global") {
+      conditions.push(sql`json_extract(data, '$.receiver.id') = 'global'`);
     } else if (query.unreadFor) {
-      list = rows.filter(
-        (c) =>
-          (c.data as { receiver?: { id: string } })?.receiver?.id ===
-            query.unreadFor && !c.isRead,
+      conditions.push(
+        and(
+          sql`json_extract(data, '$.receiver.id') = ${query.unreadFor}`,
+          eq(schema.chats.isRead, false),
+        ),
       );
     }
 
-    list.sort((a, b) =>
-      query.sort === "created"
-        ? a.created.localeCompare(b.created)
-        : b.created.localeCompare(a.created),
-    );
+    const orderCol = query.sort === "created"
+      ? schema.chats.created
+      : schema.chats.created;
+    const orderDir = query.sort === "created" ? "ASC" : "DESC";
 
-    return list.map(mapChat);
+    const rows = await db
+      .select()
+      .from(schema.chats)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(orderDir === "ASC" ? sql`${orderCol} ASC` : sql`${orderCol} DESC`);
+
+    return rows.map(mapChat);
   })
   .post(
     "/",
@@ -153,13 +156,11 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
   .post(
     "/mark-read",
     async ({ body, db }) => {
-      for (const id of body.ids) {
-        await db
-          .update(schema.chats)
-          .set({ isRead: true })
-          .where(eq(schema.chats.id, id));
-        broadcast("chats", "update", id);
-      }
+      await db
+        .update(schema.chats)
+        .set({ isRead: true })
+        .where(inArray(schema.chats.id, body.ids));
+      for (const id of body.ids) broadcast("chats", "update", id);
       logger.info(null, "marked messages read", `count:${body.ids.length}`);
       return { ok: true };
     },
@@ -176,22 +177,24 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
     return { ok: true };
   })
   .get("/thread/:sender/:receiver", async ({ params, db }) => {
-    const chats = await db.select().from(schema.chats);
-    const filtered = chats.filter((c) => {
-      const d = c.data as {
-        sender?: { id: string };
-        receiver?: { id: string };
-      };
-      const s = params.sender;
-      const r = params.receiver;
-      return (
-        (d.sender?.id === s && d.receiver?.id === r) ||
-        (d.sender?.id === r && d.receiver?.id === s)
+    const chats = await db
+      .select()
+      .from(schema.chats)
+      .where(
+        or(
+          and(
+            sql`json_extract(data, '$.sender.id') = ${params.sender}`,
+            sql`json_extract(data, '$.receiver.id') = ${params.receiver}`,
+          ),
+          and(
+            sql`json_extract(data, '$.sender.id') = ${params.receiver}`,
+            sql`json_extract(data, '$.receiver.id') = ${params.sender}`,
+          ),
+        ),
       );
-    });
     const user = await getUserById(db, params.receiver);
     return {
-      chat: filtered.map(mapChat),
+      chat: chats.map(mapChat),
       user,
     };
   })

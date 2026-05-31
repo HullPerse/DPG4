@@ -30,6 +30,7 @@ export const users = sqliteTable("users", {
 
 export const games = sqliteTable("games", {
   id: text("id").primaryKey(),
+  userId: text("user_id"),
   user: text("user", { mode: "json" }).$type<Record<string, unknown>>(),
   data: text("data", { mode: "json" }).$type<Record<string, unknown>>(),
   status: text("status").notNull().default("PLAYING"),

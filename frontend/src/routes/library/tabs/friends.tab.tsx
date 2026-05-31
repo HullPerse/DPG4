@@ -37,7 +37,7 @@ function FriendsTab() {
       const allIds = await userApi.getAllIds();
 
       const [users, games, chats] = await Promise.all([
-        userApi.getAllUsers(),
+        userApi.getUsers({ search: searchTerms || undefined }),
         gameApi.getLastGame(allIds.map((player) => player.id)),
         chatApi.getUnreadByReceiver(String(currentUser?.id)),
       ]);
@@ -84,11 +84,7 @@ function FriendsTab() {
         onChange={(e) => setSearchTerms(e.target.value)}
       />
       <section className="flex flex-wrap gap-2 overflow-y-auto w-full pb-2 items-start justify-start">
-        {data?.users
-          .filter((user) =>
-            user.username.toUpperCase().includes(searchTerms.toUpperCase()),
-          )
-          .map((user) => {
+        {data?.users.map((user) => {
             const game = data.games.find((g) => g.user.id === user.id);
             const unread = data.chats?.filter(
               (c) => c.data.sender.id === user.id,
