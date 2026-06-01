@@ -11,6 +11,13 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "CREATE INDEX IF NOT EXISTS idx_chats_created ON chats (created DESC);",
     ],
   },
+  {
+    hash: "0003_add_gambling_columns",
+    sql: [
+      "ALTER TABLE users ADD COLUMN gambling_winnings INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE users ADD COLUMN gambling_banned INTEGER NOT NULL DEFAULT 0;",
+    ],
+  },
 ];
 
 export function runMigrations() {

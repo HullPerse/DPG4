@@ -1,4 +1,5 @@
 import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
 import { useRef, useCallback, useState, memo } from "react";
 import { cn } from "@/lib/utils";
@@ -11,16 +12,18 @@ import { DicePending, DiceResult, DiceRevealed } from "@/types/gamble";
 const BASE_PRICE = 3;
 
 const RULES = [
-  { text: "1 · 2 · 3", result: "−6 (×2 ставки)" },
-  { text: "4 · 5 · 6", result: "+9 (×3 ставки)" },
-  { text: "1 · 1 · 1", result: "+18 (джекпот ×6)" },
-  { text: "Три одинаковых (кроме 1)", result: "+9 (×3 ставки)" },
-  { text: "Пара", result: "50%: +8 / −1.5" },
-  { text: "Остальное", result: "50%: +7 / 0" },
+  { text: "1 · 2 · 3", result: "−6" },
+  { text: "4 · 5 · 6", result: "+3" },
+  { text: "1 · 1 · 1", result: "+15 (джекпот)" },
+  { text: "Три одинаковых (кроме 1)", result: "+6" },
+  { text: "Пара", result: "50%: +4 / −2" },
+  { text: "Остальное", result: "50%: +5 / −1" },
 ];
 
 function DiceTab() {
   const user = useUserStore((state) => state.user);
+  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
+  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
   const [rolling, setRolling] = useState<boolean>(false);
   const [rollKey, setRollKey] = useState<number>(0);
@@ -83,7 +86,7 @@ function DiceTab() {
   };
 
   const handleRoll = async () => {
-    if (rolling || !user || balance < BASE_PRICE) return;
+    if (rolling || !user || balance < BASE_PRICE || gamblingBanned) return;
 
     revealTimeoutsRef.current.forEach(clearTimeout);
     revealTimeoutsRef.current = [];
@@ -108,6 +111,10 @@ function DiceTab() {
         result.net >= 0
           ? `${result.label} · итого +${result.net}`
           : `${result.label} · итого ${result.net}`;
+
+      if (result.banned) {
+        setGamblingBanned(true);
+      }
 
       setResult({ net: result.net, label: netLabel, tone: result.tone });
       setRolling(false);
@@ -156,9 +163,9 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           onClick={handleRoll}
-          disabled={rolling || balance < BASE_PRICE}
+          disabled={rolling || balance < BASE_PRICE || gamblingBanned}
         >
-          {rolling ? <SmallLoader /> : `Кинуть (${BASE_PRICE})`}
+          {gamblingBanned ? "Вы забанены" : rolling ? <SmallLoader /> : `Кинуть (${BASE_PRICE})`}
         </Button>
 
         <details

@@ -7,7 +7,7 @@ export const STAGGER_S = 0.65;
 export const MIN_AIR_TIME = 0.55;
 
 // +x, -x, +y, -y, +z, -z
-export const FACE_VALUES = [3, 4, 1, 6, 2, 5] as const;
+export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
 
 export const TARGET_ROTATION: Record<number, [number, number, number]> = {
   1: [0, 0, 0],

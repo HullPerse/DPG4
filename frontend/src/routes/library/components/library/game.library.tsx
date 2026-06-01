@@ -45,6 +45,7 @@ import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
+import { unbanDice } from "@/api/gambling.api";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -214,6 +215,8 @@ function GameLibrary({
 
           setStoreItems([]);
           setRerollPrice(2);
+
+          await unbanDice(String(user?.id));
         }
 
         setInput(false);

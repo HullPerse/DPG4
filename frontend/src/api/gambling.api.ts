@@ -7,10 +7,18 @@ export interface DiceRollResult {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
   balance: number;
+  banned: boolean;
 }
 
 export async function rollDice(userId: string): Promise<DiceRollResult> {
   return apiFetch<DiceRollResult>("/utils/dice-roll", {
+    method: "POST",
+    body: { userId },
+  });
+}
+
+export async function unbanDice(userId: string): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>("/utils/dice-unban", {
     method: "POST",
     body: { userId },
   });
