@@ -5,10 +5,13 @@ import { adminFetch } from "@/adminApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { resourceIcons } from "@/config/resourceIcons";
+import { formatTableSize } from "@/lib/formatTableSize";
 import type { AdminSchema } from "@/types";
 
 export function Dashboard({ schema }: { schema: AdminSchema }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
+  const [responseTimes, setResponseTimes] = useState<Record<string, number> | null>(null);
+  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(null);
   const [broadcasting, setBroadcasting] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -16,6 +19,22 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
     adminFetch<{ counts: Record<string, number> }>("/api/admin/stats")
       .then((r) => setCounts(r.counts))
       .catch(() => setCounts(null));
+  }, []);
+
+  useEffect(() => {
+    const fetch = () =>
+      adminFetch<{
+        tableResponseTimes: Record<string, number>;
+        tableSizes: Record<string, number>;
+      }>("/api/sentinel/health")
+        .then((r) => {
+          setResponseTimes(r.tableResponseTimes);
+          setTableSizes(r.tableSizes);
+        })
+        .catch(() => {});
+    fetch();
+    const id = setInterval(fetch, 5000);
+    return () => clearInterval(id);
   }, []);
 
   const handleBroadcast = async () => {
@@ -81,7 +100,7 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
                 <Link
                   key={key}
                   to={`/${key}`}
-                  className="border-highlight-high bg-card hover:border-primary/50 block border-2 p-4 shadow-sharp-sm transition-colors hover:-translate-y-0.5"
+                  className="border-highlight-high bg-card hover:border-primary/50 relative block border-2 p-4 shadow-sharp-sm transition-colors hover:-translate-y-0.5"
                 >
                   <div className="text-muted flex items-center gap-2 text-sm">
                     {Icon ? <Icon className="size-4" /> : null}
@@ -90,6 +109,18 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
                   <div className="text-primary mt-2 text-2xl font-bold">
                     {counts[key] ?? 0}
                   </div>
+                  {responseTimes?.[key] !== undefined && (
+                    <span className="text-muted absolute top-2 right-2 text-[10px] font-medium tabular-nums">
+                      {responseTimes[key] >= 0
+                        ? `${responseTimes[key].toFixed(2)}ms`
+                        : "err"}
+                    </span>
+                  )}
+                  {tableSizes?.[key] !== undefined && (
+                    <span className="text-muted absolute right-2 bottom-2 text-[10px] font-medium tabular-nums">
+                      {formatTableSize(tableSizes[key])}
+                    </span>
+                  )}
                 </Link>
               );
             })}

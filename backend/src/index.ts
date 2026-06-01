@@ -25,6 +25,8 @@ import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
+import { sentinelRoute } from "./routes/sentinel.route";
+import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()
   .use(
@@ -33,6 +35,7 @@ const app = new Elysia()
       credentials: true,
     }),
   )
+  .use(sentinelRoute)
   .use(
     swagger({
       documentation: {
@@ -56,6 +59,44 @@ const app = new Elysia()
         ],
       },
       path: "/docs",
+      scalarConfig: {
+        customCss: [
+          ".dark-mode {",
+          "  --scalar-background-1: #191724;",
+          "  --scalar-background-2: #232136;",
+          "  --scalar-background-3: #403d52;",
+          "  --scalar-color-1: #e0def4;",
+          "  --scalar-color-2: #908caa;",
+          "  --scalar-color-3: #6e6a86;",
+          "  --scalar-color-accent: #f6c177;",
+          "  --scalar-color-green: #9bceb0;",
+          "  --scalar-color-red: #eb6f92;",
+          "  --scalar-color-yellow: #f6c177;",
+          "  --scalar-color-blue: #9ccfd8;",
+          "  --scalar-color-orange: #ea9a97;",
+          "  --scalar-color-purple: #c4a7e7;",
+          "  --scalar-border-color: #393552;",
+          "  --scalar-background-accent: #f6c1771f;",
+          "  --scalar-sidebar-background-1: #191724;",
+          "  --scalar-sidebar-color-1: #e0def4;",
+          "  --scalar-sidebar-color-2: #908caa;",
+          "  --scalar-sidebar-border-color: #393552;",
+          "  --scalar-sidebar-item-hover-background: #232136;",
+          "  --scalar-sidebar-item-active-background: #f6c1771f;",
+          "  --scalar-sidebar-color-active: #f6c177;",
+          "  --scalar-sidebar-search-background: #232136;",
+          "  --scalar-sidebar-search-border-color: #393552;",
+          "  --scalar-button-1: #f6c177;",
+          "  --scalar-button-1-color: #191724;",
+          "  --scalar-button-1-hover: #ea9a97;",
+          "  --scalar-radius: 0;",
+          "  --scalar-radius-lg: 0;",
+          "  --scalar-radius-xl: 0;",
+          "  --scalar-shadow-1: 2px 2px 0 0 #26233a;",
+          "  --scalar-shadow-2: 0 0 0 0.5px var(--scalar-border-color), 4px 4px 0 0 #26233a;",
+          "}",
+        ].join("\n"),
+      },
     }),
   )
   .use(dbPlugin)
@@ -87,8 +128,12 @@ const app = new Elysia()
   .use(filesRoute)
   .use(gameUtilsRoute)
   .use(steamRoute)
-  .use(searchRoute)
-  .listen(config.port);
+  .use(searchRoute);
+
+runMigrations();
+logger.info("SYSTEM", "DB migrations applied");
+
+app.listen(config.port);
 
 logger.info(
   "SYSTEM",

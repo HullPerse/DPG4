@@ -1,8 +1,6 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import * as schema from "../db/schema";
 import { config } from "../config";
 import { dbPlugin } from "../plugins/db.plugin";
@@ -13,7 +11,11 @@ import {
   ADMIN_JSON_FIELDS,
   getAdminSchemaPayload,
 } from "../lib/adminSchema";
-import { getAdminStats, invalidateAdminStatsCache, listAdminRows } from "../lib/adminQuery";
+import {
+  getAdminStats,
+  invalidateAdminStatsCache,
+  listAdminRows,
+} from "../lib/adminQuery";
 import { adminTableColumn, getAdminTable } from "../lib/adminTables";
 import { broadcast, broadcastAdminReload } from "../lib/ws";
 import { logger, LOG_FILE } from "../lib/logger";
@@ -232,15 +234,15 @@ export const adminRoute = new Elysia()
       })
 
       .post("/broadcast-reload", async ({ headers, adminJwt, db, set }) => {
-          const admin = await verifyAdmin(headers, adminJwt, db);
-          if (!admin) {
-            set.status = 401;
-            return { error: "Unauthorized" };
-          }
-          broadcastAdminReload();
-          logger.info(admin.username, "admin broadcast reload");
-          return { ok: true };
-        })
+        const admin = await verifyAdmin(headers, adminJwt, db);
+        if (!admin) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        broadcastAdminReload();
+        logger.info(admin.username, "admin broadcast reload");
+        return { ok: true };
+      })
 
       .post(
         "/grant-item",
@@ -255,7 +257,12 @@ export const adminRoute = new Elysia()
             set.status = 400;
             return { error: "User or item not found" };
           }
-          logger.info(admin.username, "admin granted item", `user:${body.userId}`, `item:${body.itemId}`);
+          logger.info(
+            admin.username,
+            "admin granted item",
+            `user:${body.userId}`,
+            `item:${body.itemId}`,
+          );
           return { ok: true };
         },
         {
@@ -266,36 +273,40 @@ export const adminRoute = new Elysia()
         },
       )
 
-      .get("/search", async ({ headers, adminJwt, db, set, query }) => {
-        const admin = await verifyAdmin(headers, adminJwt, db);
-        if (!admin) {
-          set.status = 401;
-          return { error: "Unauthorized" };
-        }
-        const q = (query.q ?? "").trim();
-        if (!q || q.length < 2) {
-          return { results: [] };
-        }
-        const results: Record<string, unknown[]> = {};
-        const schema = getAdminSchemaPayload().tables;
-        for (const [name, meta] of Object.entries(schema)) {
-          const table = getAdminTable(name);
-          if (!table) continue;
-          const result = await listAdminRows(db, name, {
-            q,
-            _perPage: "10",
-            _page: "1",
-            _sort: "created",
-            _order: "DESC",
-          });
-          if (result && result.data.length > 0) {
-            results[name] = result.data;
+      .get(
+        "/search",
+        async ({ headers, adminJwt, db, set, query }) => {
+          const admin = await verifyAdmin(headers, adminJwt, db);
+          if (!admin) {
+            set.status = 401;
+            return { error: "Unauthorized" };
           }
-        }
-        return { results };
-      }, {
-        query: t.Object({ q: t.String() }),
-      })
+          const q = (query.q ?? "").trim();
+          if (!q || q.length < 2) {
+            return { results: [] };
+          }
+          const results: Record<string, unknown[]> = {};
+          const schema = getAdminSchemaPayload().tables;
+          for (const [name] of Object.entries(schema)) {
+            const table = getAdminTable(name);
+            if (!table) continue;
+            const result = await listAdminRows(db, name, {
+              q,
+              _perPage: "10",
+              _page: "1",
+              _sort: "created",
+              _order: "DESC",
+            });
+            if (result && result.data.length > 0) {
+              results[name] = result.data;
+            }
+          }
+          return { results };
+        },
+        {
+          query: t.Object({ q: t.String() }),
+        },
+      )
 
       .get("/logs", async ({ headers, adminJwt, db, set, query }) => {
         const admin = await verifyAdmin(headers, adminJwt, db);
@@ -304,14 +315,17 @@ export const adminRoute = new Elysia()
           return { error: "Unauthorized" };
         }
 
-        if (!existsSync(LOG_FILE)) {
+        if (!(await Bun.file(LOG_FILE).exists())) {
           return { lines: [], total: 0 };
         }
 
-        const raw = await readFile(LOG_FILE, "utf-8");
+        const raw = await Bun.file(LOG_FILE).text();
         const allLines = raw.trim().split("\n").filter(Boolean).reverse();
 
-        const linesMax = Math.min(Math.max(Number(query.lines) || 100, 1), 5000);
+        const linesMax = Math.min(
+          Math.max(Number(query.lines) || 100, 1),
+          5000,
+        );
         const offset = Math.max(Number(query.offset) || 0, 0);
         const search = (query.search ?? "").trim().toLowerCase();
 
@@ -454,7 +468,11 @@ export const adminRoute = new Elysia()
             replaceBuffers(row as Record<string, unknown>);
             invalidateAdminStatsCache();
             maybeBroadcast(params.table, "create", cleaned.id as string);
-            logger.info(admin.username, "admin created record", `${params.table}:${cleaned.id}`);
+            logger.info(
+              admin.username,
+              "admin created record",
+              `${params.table}:${cleaned.id}`,
+            );
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -503,7 +521,11 @@ export const adminRoute = new Elysia()
             replaceBuffers(row as Record<string, unknown>);
             invalidateAdminStatsCache();
             maybeBroadcast(params.table, "update", params.id);
-            logger.info(admin.username, "admin updated record", `${params.table}:${params.id}`);
+            logger.info(
+              admin.username,
+              "admin updated record",
+              `${params.table}:${params.id}`,
+            );
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -542,7 +564,11 @@ export const adminRoute = new Elysia()
           invalidateAdminStatsCache();
           replaceBuffers(row as Record<string, unknown>);
           maybeBroadcast(params.table, "delete", params.id);
-          logger.info(admin.username, "admin deleted record", `${params.table}:${params.id}`);
+          logger.info(
+            admin.username,
+            "admin deleted record",
+            `${params.table}:${params.id}`,
+          );
           return { data: row };
         },
       ),

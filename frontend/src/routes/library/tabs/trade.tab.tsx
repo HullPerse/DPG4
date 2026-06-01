@@ -170,7 +170,7 @@ function TradeTab({ id }: { id: string }) {
           src={`${getFileUrl(item)}`}
           alt={item.label}
           className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-          type="contain"
+          type="cover"
         />
 
         <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center my-1">

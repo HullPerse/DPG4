@@ -6,12 +6,12 @@ const memoryStore = new Map<string, { value: CacheValue; ttl: number; expiresAt:
 let redis: Redis | null = null;
 let redisAvailable = false;
 
-function getRedis(): Redis | null {
+function initRedis(): Redis | null {
   if (redis) return redis;
   try {
     redis = new Redis({
-      host: process.env.REDIS_HOST || "127.0.0.1",
-      port: Number(process.env.REDIS_PORT) || 6379,
+      host: Bun.env.REDIS_HOST || "127.0.0.1",
+      port: Number(Bun.env.REDIS_PORT) || 6379,
       lazyConnect: true,
       maxRetriesPerRequest: 0,
       retryStrategy: () => null,
@@ -49,7 +49,7 @@ function now(): number {
 }
 
 export async function cacheGet<T extends CacheValue>(key: string): Promise<T | null> {
-  const r = getRedis();
+  const r = initRedis();
   if (r && redisAvailable) {
     try {
       const raw = await r.get(key);
@@ -70,7 +70,7 @@ export async function cacheGet<T extends CacheValue>(key: string): Promise<T | n
 }
 
 export async function cacheSet(key: string, value: CacheValue, ttlMs: number): Promise<void> {
-  const r = getRedis();
+  const r = initRedis();
   if (r && redisAvailable) {
     try {
       const raw = serialize(value);
@@ -85,7 +85,7 @@ export async function cacheSet(key: string, value: CacheValue, ttlMs: number): P
 }
 
 export async function cacheDel(key: string): Promise<void> {
-  const r = getRedis();
+  const r = initRedis();
   if (r && redisAvailable) {
     try {
       await r.del(key);
@@ -97,7 +97,7 @@ export async function cacheDel(key: string): Promise<void> {
 }
 
 export async function cacheFlush(): Promise<void> {
-  const r = getRedis();
+  const r = initRedis();
   if (r && redisAvailable) {
     try {
       await r.flushdb();
@@ -110,4 +110,17 @@ export async function cacheFlush(): Promise<void> {
 
 export function isRedisAvailable(): boolean {
   return redisAvailable;
+}
+
+export async function checkRedis(): Promise<boolean> {
+  const r = initRedis();
+  if (!r) return false;
+  try {
+    await r.ping();
+    redisAvailable = true;
+    return true;
+  } catch {
+    redisAvailable = false;
+    return false;
+  }
 }

@@ -45,6 +45,7 @@ import { User } from "@/types/user";
 import { useUserStore } from "@/store/user.store";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
+import { unbanDice } from "@/api/gambling.api";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -59,6 +60,7 @@ function GameLibrary({
 }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
@@ -214,6 +216,9 @@ function GameLibrary({
 
           setStoreItems([]);
           setRerollPrice(2);
+
+          await unbanDice(String(user?.id));
+          setGamblingBanned(false);
         }
 
         setInput(false);

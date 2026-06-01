@@ -2,15 +2,15 @@ import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
 import { config } from "../config";
+import { db } from "../db";
 import * as schema from "../db/schema";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 
 export type JwtUser = { sub: string; isAdmin: boolean; username: string | null };
 
 const usernameCache = new Map<string, { username: string; expiresAt: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
-async function resolveUsername(userId: string, db: BunSQLiteDatabase<typeof schema>): Promise<string | null> {
+async function resolveUsername(userId: string): Promise<string | null> {
   const cached = usernameCache.get(userId);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.username;
@@ -36,7 +36,7 @@ export const authPlugin = new Elysia({ name: "auth" })
       exp: "7d",
     }),
   )
-  .derive({ as: "scoped" }, async ({ jwt, headers, db }) => {
+  .derive({ as: "scoped" }, async ({ jwt, headers }) => {
     const header = headers.authorization;
     const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
@@ -49,7 +49,7 @@ export const authPlugin = new Elysia({ name: "auth" })
       return { user: null as JwtUser | null, token };
     }
 
-    const username = await resolveUsername(payload.sub, db);
+    const username = await resolveUsername(payload.sub);
 
     return {
       user: {

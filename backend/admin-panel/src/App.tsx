@@ -9,6 +9,7 @@ import { CellsBoardPage } from "@/pages/CellsBoard";
 import { ConsolePage } from "@/pages/Console";
 import { Dashboard } from "@/pages/Dashboard";
 import { GrantItemPage } from "@/pages/GrantItem";
+import { HealthPage } from "@/pages/Health";
 import { LogsPage } from "@/pages/Logs";
 import { SearchPage } from "@/pages/Search";
 import { LoginPage } from "@/pages/Login";
@@ -55,6 +56,7 @@ export function App() {
             <Route element={<AdminShell schema={schema} />}>
               <Route index element={<Dashboard schema={schema} />} />
               <Route path="grant-item" element={<GrantItemPage />} />
+              <Route path="health" element={<HealthPage />} />
               <Route path="cells-board" element={<CellsBoardPage />} />
               <Route path="console" element={<ConsolePage />} />
               <Route path="logs" element={<LogsPage />} />

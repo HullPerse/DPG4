@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -73,37 +73,35 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   .get(
     "/",
     async ({ db, query }) => {
-    const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
-    const offset = query.offset ? Number(query.offset) : 0;
-    let q = db
-      .select()
-      .from(schema.games);
-    const conditions: ReturnType<typeof eq>[] = [];
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
+      const offset = query.offset ? Number(query.offset) : 0;
+      let q = db.select().from(schema.games);
+      const conditions: SQL[] = [];
 
-    if (query.userId) {
-      conditions.push(eq(schema.games.userId, query.userId));
-    }
+      if (query.userId) {
+        conditions.push(eq(schema.games.userId, query.userId));
+      }
 
-    if (query.search) {
-      conditions.push(sql`${schema.games.data} LIKE ${`%${query.search}%`}`);
-    }
+      if (query.search) {
+        conditions.push(sql`${schema.games.data} LIKE ${`%${query.search}%`}`);
+      }
 
-    if (query.status) {
-      conditions.push(eq(schema.games.status, query.status));
-    }
+      if (query.status) {
+        conditions.push(eq(schema.games.status, query.status));
+      }
 
-    if (query.hasReview === "true") {
-      conditions.push(sql`${schema.games.review} IS NOT NULL`);
-    }
+      if (query.hasReview === "true") {
+        conditions.push(sql`${schema.games.review} IS NOT NULL`);
+      }
 
-    if (conditions.length > 0) {
-      q = q.where(and(...conditions));
-    }
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions)) as typeof q;
+      }
 
-    q = q.orderBy(desc(schema.games.created)) as typeof q;
-    const rows = await q.limit(limit).offset(offset);
-    return rows.map(mapGame);
-  },
+      q = q.orderBy(desc(schema.games.created)) as typeof q;
+      const rows = await q.limit(limit).offset(offset);
+      return rows.map(mapGame);
+    },
   {
     query: t.Optional(
       t.Object({
@@ -333,7 +331,7 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
   .get("/", async ({ db, query }) => {
     let q = db.select().from(schema.presets);
     if (query.search) {
-      q = q.where(sql`${schema.presets.label} LIKE ${`%${query.search}%`}`);
+      q = q.where(sql`${schema.presets.label} LIKE ${`%${query.search}%`}`) as typeof q;
     }
     const rows = await q;
     return rows.map((r) => withRecordMeta(r, "presets"));

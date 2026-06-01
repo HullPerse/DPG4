@@ -10,6 +10,10 @@ export function unregisterClient(ws: WsClient) {
   clients.delete(ws);
 }
 
+export function getClientCount(): number {
+  return clients.size;
+}
+
 export function broadcast(channel: string, action: string, id?: string) {
   const payload = JSON.stringify({ channel, action, id });
   for (const client of clients) {
@@ -38,7 +42,6 @@ export function broadcastAll(action: string, id?: string) {
   }
 }
 
-/** Tell clients to invalidate caches and refresh stores */
 export function broadcastAdminReload() {
   broadcast("admin", "reload");
   broadcastAll("update");

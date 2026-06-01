@@ -74,6 +74,8 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         currentDice: 1,
         status: [],
         place: "0",
+        gamblingWinnings: 0,
+        gamblingBanned: false,
         created: ts,
         updated: ts,
       };

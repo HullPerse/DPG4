@@ -120,7 +120,7 @@ function UserItems({
               src={`${getFileUrl(result)}`}
               alt={result.label}
               className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
-              type="contain"
+              type="cover"
             />
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
@@ -161,7 +161,7 @@ function UserItems({
                 src={`${getFileUrl(item)}`}
                 alt={item.label}
                 className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background "
-                type="contain"
+                type="cover"
               />
 
               <div className="flex flex-col ml-2">

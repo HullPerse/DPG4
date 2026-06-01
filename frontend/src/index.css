@@ -172,6 +172,42 @@ input[type="number"]::-webkit-outer-spin-button {
   animation: toast-out 0.2s ease-in forwards;
 }
 
+@keyframes dice-shake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-6px) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(2px) rotate(6deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(-4deg);
+  }
+}
+
+@keyframes dice-land {
+  0% {
+    transform: translateY(-12px) scale(1.08);
+  }
+  60% {
+    transform: translateY(2px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dice-shake {
+  animation: dice-shake 0.18s ease-in-out infinite;
+}
+
+.animate-dice-land {
+  animation: dice-land 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @font-face {
   font-family: DPGfont;
   src: url(/font.ttf);

@@ -85,47 +85,47 @@ function FriendsTab() {
       />
       <section className="flex flex-wrap gap-2 overflow-y-auto w-full pb-2 items-start justify-start">
         {data?.users.map((user) => {
-            const game = data.games.find((g) => g.user.id === user.id);
-            const unread = data.chats?.filter(
-              (c) => c.data.sender.id === user.id,
-            );
+          const game = data.games.find((g) => g.user.id === user.id);
+          const unread = data.chats?.filter(
+            (c) => c.data.sender.id === user.id,
+          );
 
-            return (
-              <button
-                role="button"
-                key={user.id}
-                type="button"
-                className="relative flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
-                onClick={() => {
-                  setUserProfile({
-                    type: "profile",
-                    id: String(user.id),
-                  });
+          return (
+            <button
+              role="button"
+              key={user.id}
+              type="button"
+              className="relative flex flex-row max-h-18 h-18 max-w-70 w-70 items-center border-2 border-highlight-high shadow-sharp-sm hover:cursor-pointer hover:opacity-100 opacity-85 active:translate-y-0.5"
+              onClick={() => {
+                setUserProfile({
+                  type: "profile",
+                  id: String(user.id),
+                });
+              }}
+            >
+              {unread.length > 0 && (
+                <span className="absolute top-0 right-1 text-primary animate-pulse">
+                  [{unread.length}]
+                </span>
+              )}
+
+              <section
+                className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl relative"
+                style={{
+                  borderColor: getStatusColor(game?.status ?? "PLAYING"),
                 }}
               >
-                {unread.length > 0 && (
-                  <span className="absolute top-0 right-1 text-primary animate-pulse">
-                    [{unread.length}]
-                  </span>
-                )}
-
-                <section
-                  className="min-w-17 w-17 min-h-17 h-17 border-r-4 bg-background flex items-center justify-center text-4xl relative"
-                  style={{
-                    borderColor: getStatusColor(game?.status ?? "PLAYING"),
-                  }}
-                >
                   {user.avatar}
                 </section>
-                <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">
-                  <span className="font-bold">{user.username}</span>
-                  <span className="truncate font-light text-ellipsis">
-                    {game?.data.name}
-                  </span>
-                </section>
-              </button>
-            );
-          })}
+              <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">
+                <span className="font-bold">{user.username}</span>
+                <span className="truncate font-light text-ellipsis">
+                  {game?.data.name}
+                </span>
+              </section>
+            </button>
+          );
+        })}
       </section>
     </main>
   );

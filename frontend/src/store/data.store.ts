@@ -33,9 +33,14 @@ export const useDataStore = create<DataStore>()(
         storeItems: [],
         rerollPrice: 2,
         negativeScoreModal: false,
+        gamblingBanned: false,
 
         setNegativeScoreModal: (negativeScoreModal: boolean) => {
           set({ negativeScoreModal });
+        },
+
+        setGamblingBanned: (gamblingBanned: boolean) => {
+          set({ gamblingBanned });
         },
 
         setSavedWheel: (savedWheel: string[]) => {
@@ -115,6 +120,7 @@ export const useDataStore = create<DataStore>()(
             noAction: false,
             isEditing: false,
             negativeScoreModal: false,
+            gamblingBanned: false,
           });
         },
 
@@ -143,6 +149,7 @@ export const useDataStore = create<DataStore>()(
             accessToken: "",
             storeItems: [],
             rerollPrice: 2,
+            gamblingBanned: false,
           });
         },
 

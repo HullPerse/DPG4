@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import sharp from "sharp";
+import { compressSquare, compressWebp } from "../src/lib/images";
 
 const db = new Database("data/db.sqlite");
 
@@ -18,16 +18,6 @@ const TABLES: TableDef[] = [
   { name: "ads", mimeField: "image_mime", process: "webp90" },
   { name: "drawings", mimeField: "image_mime", process: "webp90" },
 ];
-
-function processImage(buffer: Buffer, mode: "square" | "webp90") {
-  if (mode === "square") {
-    return sharp(buffer)
-      .resize(215, 215, { fit: "cover", position: "center" })
-      .webp({ quality: 80 })
-      .toBuffer();
-  }
-  return sharp(buffer).webp({ quality: 90 }).toBuffer();
-}
 
 async function processTable(table: TableDef) {
   const rows = db
@@ -49,7 +39,7 @@ async function processTable(table: TableDef) {
   for (const row of rows) {
     if (!row.image) { skip++; continue; }
     try {
-      const compressed = await processImage(row.image, table.process);
+      const compressed = await (table.process === "square" ? compressSquare(row.image) : compressWebp(row.image));
       update.run(compressed, row.id);
       ok++;
       if (ok % 10 === 0) process.stdout.write(".");

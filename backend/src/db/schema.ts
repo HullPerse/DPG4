@@ -25,6 +25,8 @@ export const users = sqliteTable("users", {
   currentDice: integer("current_dice").notNull().default(1),
   status: text("status", { mode: "json" }).$type<string[]>().default([]),
   place: text("place").notNull().default("0"),
+  gamblingWinnings: integer("gambling_winnings").notNull().default(0),
+  gamblingBanned: integer("gambling_banned", { mode: "boolean" }).notNull().default(false),
   ...timestamps,
 });
 
