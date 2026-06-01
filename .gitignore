@@ -167,7 +167,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # database
-/data
+/backend/data
 
 # drizzle
 /drizzle
