@@ -1,13 +1,20 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
-import { config } from "../config";
+import { config } from "../server.config";
 import { db } from "../db";
 import * as schema from "../db/schema";
 
-export type JwtUser = { sub: string; isAdmin: boolean; username: string | null };
+export type JwtUser = {
+  sub: string;
+  isAdmin: boolean;
+  username: string | null;
+};
 
-const usernameCache = new Map<string, { username: string; expiresAt: number }>();
+const usernameCache = new Map<
+  string,
+  { username: string; expiresAt: number }
+>();
 const CACHE_TTL = 5 * 60 * 1000;
 
 async function resolveUsername(userId: string): Promise<string | null> {
@@ -21,7 +28,10 @@ async function resolveUsername(userId: string): Promise<string | null> {
       .from(schema.users)
       .where(eq(schema.users.id, userId));
     if (row) {
-      usernameCache.set(userId, { username: row.username, expiresAt: Date.now() + CACHE_TTL });
+      usernameCache.set(userId, {
+        username: row.username,
+        expiresAt: Date.now() + CACHE_TTL,
+      });
       return row.username;
     }
   } catch {}

@@ -9,13 +9,11 @@ import {
   or,
   type SQL,
 } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../db/schema";
+
 import { ADMIN_SCHEMA } from "./adminSchema";
 import { ADMIN_TABLES, adminTableColumn, type AdminTable } from "./adminTables";
 import { cacheGet, cacheSet, cacheDel } from "./cache";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import { Db } from "@/types";
 
 function buildWhere(
   table: AdminTable,
@@ -78,8 +76,7 @@ export async function listAdminRows(
       ? query._sort
       : defaultSort;
   const sortCol =
-    adminTableColumn(table, sortField) ??
-    adminTableColumn(table, defaultSort);
+    adminTableColumn(table, sortField) ?? adminTableColumn(table, defaultSort);
   const sortDir =
     String(query._order ?? "ASC").toLowerCase() === "desc" ? desc : asc;
 

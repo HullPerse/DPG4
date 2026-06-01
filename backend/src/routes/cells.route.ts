@@ -5,7 +5,7 @@ import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import { createActivity } from "../services/activity.service";
+import createActivity from "@/services/activity.service";
 import { dbPlugin } from "../plugins/db.plugin";
 
 const cellPatchBody = t.Object({
@@ -23,45 +23,53 @@ const cellPatchBody = t.Object({
 
 export const cellsRoute = new Elysia({ prefix: "/cells" })
   .use(dbPlugin)
-  .get("/", async ({ db, query }) => {
-    let q = db.select().from(schema.cells);
-    const conditions: SQL[] = [];
+  .get(
+    "/",
+    async ({ db, query }) => {
+      let q = db.select().from(schema.cells);
+      const conditions: SQL[] = [];
 
-    if (query.type) {
-      conditions.push(eq(schema.cells.type, query.type));
-    }
+      if (query.type) {
+        conditions.push(eq(schema.cells.type, query.type));
+      }
 
-    if (query.excludeType) {
-      conditions.push(not(eq(schema.cells.type, query.excludeType)));
-    }
+      if (query.excludeType) {
+        conditions.push(not(eq(schema.cells.type, query.excludeType)));
+      }
 
-    if (query.excludeNumber) {
-      conditions.push(not(eq(schema.cells.number, Number(query.excludeNumber))));
-    }
+      if (query.excludeNumber) {
+        conditions.push(
+          not(eq(schema.cells.number, Number(query.excludeNumber))),
+        );
+      }
 
-    if (conditions.length > 0) {
-      q = q.where(and(...conditions)) as typeof q;
-    }
+      if (conditions.length > 0) {
+        q = q.where(and(...conditions)) as typeof q;
+      }
 
-    if (query.sort === "number") {
-      q = q.orderBy(
-        query.order === "desc" ? descOrder(schema.cells.number) : asc(schema.cells.number),
-      ) as typeof q;
-    }
+      if (query.sort === "number") {
+        q = q.orderBy(
+          query.order === "desc"
+            ? descOrder(schema.cells.number)
+            : asc(schema.cells.number),
+        ) as typeof q;
+      }
 
-    const rows = await q;
-    return rows.map((r) => withRecordMeta(r, "cells"));
-  }, {
-    query: t.Optional(
-      t.Object({
-        type: t.Optional(t.String()),
-        excludeType: t.Optional(t.String()),
-        excludeNumber: t.Optional(t.String()),
-        sort: t.Optional(t.String()),
-        order: t.Optional(t.String()),
-      }),
-    ),
-  })
+      const rows = await q;
+      return rows.map((r) => withRecordMeta(r, "cells"));
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          type: t.Optional(t.String()),
+          excludeType: t.Optional(t.String()),
+          excludeNumber: t.Optional(t.String()),
+          sort: t.Optional(t.String()),
+          order: t.Optional(t.String()),
+        }),
+      ),
+    },
+  )
   .get("/by-number/:number", async ({ params, db, set }) => {
     const num = Number(params.number);
     const [row] = await db

@@ -1,36 +1,12 @@
-import Redis from "ioredis";
+import {
+  initRedis,
+  isRedisAvailable,
+  setRedisAvailable,
+} from "./redis.client";
 
 type CacheValue = string | number | boolean | null | Record<string, unknown> | unknown[];
 
 const memoryStore = new Map<string, { value: CacheValue; ttl: number; expiresAt: number }>();
-let redis: Redis | null = null;
-let redisAvailable = false;
-
-function initRedis(): Redis | null {
-  if (redis) return redis;
-  try {
-    redis = new Redis({
-      host: Bun.env.REDIS_HOST || "127.0.0.1",
-      port: Number(Bun.env.REDIS_PORT) || 6379,
-      lazyConnect: true,
-      maxRetriesPerRequest: 0,
-      retryStrategy: () => null,
-    });
-    redis.on("error", () => {
-      redisAvailable = false;
-    });
-    redis.on("ready", () => {
-      redisAvailable = true;
-    });
-    redis.connect().catch(() => {
-      redisAvailable = false;
-    });
-    return redis;
-  } catch {
-    redisAvailable = false;
-    return null;
-  }
-}
 
 function serialize(value: CacheValue): string {
   return JSON.stringify(value);
@@ -50,13 +26,13 @@ function now(): number {
 
 export async function cacheGet<T extends CacheValue>(key: string): Promise<T | null> {
   const r = initRedis();
-  if (r && redisAvailable) {
+  if (r && isRedisAvailable()) {
     try {
       const raw = await r.get(key);
-      if (raw === null || raw === undefined) return null;
+      if (raw === null) return null;
       return deserialize(raw) as T;
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
 
@@ -71,13 +47,13 @@ export async function cacheGet<T extends CacheValue>(key: string): Promise<T | n
 
 export async function cacheSet(key: string, value: CacheValue, ttlMs: number): Promise<void> {
   const r = initRedis();
-  if (r && redisAvailable) {
+  if (r && isRedisAvailable()) {
     try {
       const raw = serialize(value);
-      await r.set(key, raw, "PX", ttlMs);
+      await r.psetex(key, ttlMs, raw);
       return;
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
 
@@ -86,11 +62,11 @@ export async function cacheSet(key: string, value: CacheValue, ttlMs: number): P
 
 export async function cacheDel(key: string): Promise<void> {
   const r = initRedis();
-  if (r && redisAvailable) {
+  if (r && isRedisAvailable()) {
     try {
       await r.del(key);
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
   memoryStore.delete(key);
@@ -98,29 +74,27 @@ export async function cacheDel(key: string): Promise<void> {
 
 export async function cacheFlush(): Promise<void> {
   const r = initRedis();
-  if (r && redisAvailable) {
+  if (r && isRedisAvailable()) {
     try {
-      await r.flushdb();
+      await r.send("FLUSHDB", []);
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
   memoryStore.clear();
 }
 
-export function isRedisAvailable(): boolean {
-  return redisAvailable;
-}
+export { isRedisAvailable };
 
 export async function checkRedis(): Promise<boolean> {
   const r = initRedis();
   if (!r) return false;
   try {
     await r.ping();
-    redisAvailable = true;
+    setRedisAvailable(true);
     return true;
   } catch {
-    redisAvailable = false;
+    setRedisAvailable(false);
     return false;
   }
 }

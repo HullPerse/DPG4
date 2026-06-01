@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
 import * as schema from "../db/schema";
-import { config } from "../config";
+import { config } from "../server.config";
 import { dbPlugin } from "../plugins/db.plugin";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";

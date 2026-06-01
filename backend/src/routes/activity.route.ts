@@ -1,9 +1,8 @@
 import { Elysia, t } from "elysia";
-import {
+import createActivity, {
   listActivity,
   getLatestActivity,
   getActivityById,
-  createActivity,
 } from "../services/activity.service";
 
 import { dbPlugin } from "../plugins/db.plugin";
@@ -36,15 +35,11 @@ export const activityRoute = new Elysia({ prefix: "/activity" })
     }
     return row;
   })
-  .post(
-    "/",
-    async ({ body, db }) => createActivity(db, body),
-    {
-      body: t.Object({
-        text: t.String(),
-        author: t.Optional(t.String()),
-        image: t.Optional(t.String()),
-        type: t.Optional(t.String()),
-      }),
-    },
-  );
+  .post("/", async ({ body, db }) => createActivity(db, body), {
+    body: t.Object({
+      text: t.String(),
+      author: t.Optional(t.String()),
+      image: t.Optional(t.String()),
+      type: t.Optional(t.String()),
+    }),
+  });

@@ -1,17 +1,10 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../db/schema";
-import { getUserById, scoreUser } from "./user.service";
-import { logger } from "../lib/logger";
-import { nowIso } from "../lib/dates";
-
-type Db = BunSQLiteDatabase<typeof schema>;
-
-interface DiceResult {
-  payout: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-}
+import * as schema from "../../db/schema";
+import { getUserById, scoreUser } from "../user.service";
+import { logger } from "../../lib/logger";
+import { nowIso } from "../../lib/dates";
+import { DiceResult } from "@/types/gambling";
+import { Db } from "@/types";
 
 function getRandomDice(): [number, number, number] {
   return [
@@ -21,7 +14,10 @@ function getRandomDice(): [number, number, number] {
   ];
 }
 
-function calculateResult(values: [number, number, number], bid: number): DiceResult {
+function calculateResult(
+  values: [number, number, number],
+  bid: number,
+): DiceResult {
   const sorted = [...values].sort((a, b) => a - b);
   const [a, b, c] = sorted;
   const unique = new Set(values);
@@ -69,7 +65,7 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
 
   const win = Math.random() >= 0.5;
   return {
-    payout: win ? bid * 2 + Math.ceil(bid * 2 / 3) : Math.ceil(bid * 2 / 3),
+    payout: win ? bid * 2 + Math.ceil((bid * 2) / 3) : Math.ceil((bid * 2) / 3),
     label: win ? "Разные числа — выигрыш" : "Разные числа — проигрыш",
     tone: "chance",
   };
@@ -88,7 +84,8 @@ export async function rollDice(
   balance: number;
   banned: boolean;
 }> {
-  if (bid < 1 || bid > 10 || !Number.isInteger(bid)) throw new Error("Invalid bid");
+  if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+    throw new Error("Invalid bid");
 
   const user = await getUserById(db, userId);
   if (!user) throw new Error("User not found");
@@ -126,11 +123,6 @@ export async function rollDice(
     .where(eq(schema.users.id, userId));
 
   const updatedUser = await getUserById(db, userId);
-
-  const netLabel =
-    net >= 0
-      ? `${label} · итого +${net}`
-      : `${label} · итого ${net}`;
 
   logger.info(user.username, "rolled dice", values.join(", "), `net:${net}`);
 

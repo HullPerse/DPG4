@@ -1,3 +1,5 @@
+import { resolveBackendPath } from "./paths";
+
 function parseCorsOrigin(
   value: string | undefined,
 ): boolean | string | string[] {
@@ -20,7 +22,7 @@ function parseCorsOrigin(
 export const config = {
   port: Number(Bun.env.PORT) || 3000,
   jwtSecret: Bun.env.JWT_SECRET || "dpg-local-jwt",
-  dbPath: Bun.env.DB_PATH || "data/db.sqlite",
+  dbPath: resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite"),
   corsOrigin: parseCorsOrigin(Bun.env.CORS_ORIGIN),
   steamApiKey: Bun.env.STEAM_API_KEY ?? "",
 };

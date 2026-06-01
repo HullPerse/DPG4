@@ -3,14 +3,14 @@ import { eq } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { calculateCost, calculateScore } from "../lib/game.utils";
 import { dbPlugin } from "../plugins/db.plugin";
-import { rollDice } from "../services/dice.service";
+import { rollDice } from "../services/gambling/dice.service";
 import {
   blackjackDeal,
   blackjackHit,
   blackjackStand,
   getBlackjackState,
   abandonBlackjack,
-} from "../services/blackjack.service";
+} from "../services/gambling/blackjack.service";
 import { nowIso } from "../lib/dates";
 
 export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
@@ -18,10 +18,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .get(
     "/calculate-score",
     ({ query }) => ({
-      score: calculateScore(
-        Number(query.realTime),
-        Number(query.hltbTime),
-      ),
+      score: calculateScore(Number(query.realTime), Number(query.hltbTime)),
     }),
     {
       query: t.Object({
@@ -34,13 +31,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       },
     },
   )
-  .get(
-    "/calculate-cost",
-    () => ({ cost: calculateCost() }),
-    {
-      detail: { tags: ["utils"], summary: "Wheel spin cost" },
-    },
-  )
+  .get("/calculate-cost", () => ({ cost: calculateCost() }), {
+    detail: { tags: ["utils"], summary: "Wheel spin cost" },
+  })
   .post(
     "/dice-roll",
     async ({ body, db, set }) => {
@@ -58,7 +51,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       }),
       detail: {
         tags: ["utils"],
-        summary: "Server-authoritative dice roll — generates values, calculates payout, updates balance",
+        summary:
+          "Server-authoritative dice roll — generates values, calculates payout, updates balance",
       },
     },
   )

@@ -1,11 +1,9 @@
 import { desc, eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { broadcast } from "../lib/ws";
-import { createActivity } from "./activity.service";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import createActivity from "./activity.service";
+import { Db } from "@/types";
 
 const STATUSES: Record<string, string> = {
   PLAYING: "В ПРОЦЕССЕ",

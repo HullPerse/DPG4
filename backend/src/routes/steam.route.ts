@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { config } from "../config";
+import { config } from "../server.config";
 
 function steamKey() {
   const key = config.steamApiKey;

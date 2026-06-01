@@ -1,14 +1,12 @@
 import { eq, inArray } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
-import { createActivity } from "./activity.service";
+import createActivity from "./activity.service";
 import { changeUserStatus, getUserById, scoreUser } from "./user.service";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import { Db } from "@/types";
 
 function mapInventory(row: typeof schema.inventory.$inferSelect) {
   return withRecordMeta(row, "inventory");

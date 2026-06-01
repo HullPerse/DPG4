@@ -1,65 +1,19 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../db/schema";
-import { getUserById, scoreUser } from "./user.service";
-import { logger } from "../lib/logger";
-import { nowIso } from "../lib/dates";
-
-type Db = BunSQLiteDatabase<typeof schema>;
-
-export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
-export type Rank =
-  | "A"
-  | "2"
-  | "3"
-  | "4"
-  | "5"
-  | "6"
-  | "7"
-  | "8"
-  | "9"
-  | "10"
-  | "J"
-  | "Q"
-  | "K";
-
-export interface Card {
-  suit: Suit;
-  rank: Rank;
-}
-
-interface ActiveGame {
-  userId: string;
-  bid: number;
-  deck: Card[];
-  playerHand: Card[];
-  dealerHand: Card[];
-  phase: "player" | "ended";
-}
-
-export interface BlackjackResult {
-  outcome: "blackjack" | "win" | "lose" | "push";
-  payout: number;
-  net: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-  banned: boolean;
-}
-
-export interface BlackjackState {
-  phase: "player" | "ended";
-  playerHand: Card[];
-  dealerHand: Card[];
-  dealerHoleHidden: boolean;
-  playerValue: number;
-  dealerValue: number | null;
-  bid: number;
-  balance: number;
-  result: BlackjackResult | null;
-}
+import * as schema from "../../db/schema";
+import { getUserById, scoreUser } from "../user.service";
+import { logger } from "../../lib/logger";
+import { nowIso } from "../../lib/dates";
+import { Db } from "@/types";
+import {
+  ActiveGame,
+  BlackjackResult,
+  BlackjackState,
+  Card,
+  Rank,
+  Suit,
+} from "@/types/gambling";
 
 const games = new Map<string, ActiveGame>();
-
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const RANKS: Rank[] = [
   "A",
@@ -186,7 +140,10 @@ function resolveLabels(
     case "push":
       return { label: `Ничья ${playerValue} — ${dealerValue}`, tone: "chance" };
     case "lose":
-      return { label: `Проигрыш ${playerValue} — ${dealerValue}`, tone: "lose" };
+      return {
+        label: `Проигрыш ${playerValue} — ${dealerValue}`,
+        tone: "lose",
+      };
   }
 }
 
@@ -223,10 +180,7 @@ function computeOutcome(game: ActiveGame): {
   return { payout: game.bid, outcome: "push" };
 }
 
-async function finishGame(
-  db: Db,
-  game: ActiveGame,
-): Promise<BlackjackState> {
+async function finishGame(db: Db, game: ActiveGame): Promise<BlackjackState> {
   game.phase = "ended";
 
   const { payout, outcome } = computeOutcome(game);
@@ -276,9 +230,7 @@ function toState(
   return {
     phase: game.phase,
     playerHand: [...game.playerHand],
-    dealerHand: ended
-      ? [...game.dealerHand]
-      : [game.dealerHand[0]],
+    dealerHand: ended ? [...game.dealerHand] : [game.dealerHand[0]],
     dealerHoleHidden: !ended && game.dealerHand.length > 1,
     playerValue: handValue(game.playerHand),
     dealerValue: ended ? handValue(game.dealerHand) : null,
