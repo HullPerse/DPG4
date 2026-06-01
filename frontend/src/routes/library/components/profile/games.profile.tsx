@@ -42,7 +42,7 @@ export default function Games({ games }: { games: Game[] }) {
 
   const filteredGames = useMemo(() => {
     const list = games.filter((game) => matchesSearch(game, searchTerm));
-    return [...list].reverse();
+    return [...list];
   }, [games, searchTerm]);
 
   return (

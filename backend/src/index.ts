@@ -90,8 +90,11 @@ const app = new Elysia()
   .use(searchRoute)
   .listen(config.port);
 
-logger.info(null, `DPG API running on http://${app.server?.hostname}:${app.server?.port}`);
-logger.info(null, `Docs at /docs  |  Admin at /admin`);
+logger.info(
+  "SYSTEM",
+  `🐀 DPG API -> http://${app.server?.hostname}:${app.server?.port}`,
+);
+logger.info(null, `Docs -> /docs  |  Admin -> /admin`);
 
 initAutoBackup();
 

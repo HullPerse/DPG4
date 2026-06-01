@@ -40,14 +40,12 @@ function UserGames({
   values,
   setValues,
   setFilters,
-  filters,
   selectedFilter,
 }: {
   selected: number;
   values: string[];
   setValues: (values: string[]) => void;
   setFilters: (filters: string[]) => void;
-  filters: string[];
   selectedFilter: number;
 }) {
   const queryClient = useQueryClient();
@@ -66,13 +64,17 @@ function UserGames({
         setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
       }
 
-      const status = selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
+      const status =
+        selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
 
       if (selected !== 0) {
         const user = users.find((u) => u.username === values[selected]);
 
         return {
-          games: await gameApi.getGamesFiltered({ userId: String(user?.id), status }),
+          games: await gameApi.getGamesFiltered({
+            userId: String(user?.id),
+            status,
+          }),
           users,
         };
       }
@@ -145,11 +147,11 @@ function UserGames({
         <Wheel
           key={`wheel-${selected}-${selectedFilter}-${hiddenItems.join(",")}`}
           list={visibleItems.map((item) => ({
-              id: String(item.id),
-              label: item.data.name,
-              image: item.data.capsuleImage,
-              type: "image",
-            }))}
+            id: String(item.id),
+            label: item.data.name,
+            image: item.data.capsuleImage,
+            type: "image",
+          }))}
           onResult={(item) => {
             return setResult(
               data?.games.find(
@@ -197,57 +199,55 @@ function UserGames({
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
         {data?.games.map((item) => (
-            <section
-              key={item.id}
-              className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
-              style={{
-                opacity:
-                  hiddenItems.find((h) => h === String(item.id)) && "50%",
-              }}
-            >
-              <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
-                <ImageComponent
-                  src={item.data.capsuleImage ?? "https://placehold.co/16x10"}
-                  alt={item.data.name}
-                />
-              </div>
+          <section
+            key={item.id}
+            className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
+            style={{
+              opacity: hiddenItems.find((h) => h === String(item.id)) && "50%",
+            }}
+          >
+            <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
+              <ImageComponent
+                src={item.data.capsuleImage ?? "https://placehold.co/16x10"}
+                alt={item.data.name}
+              />
+            </div>
 
-              <div className="flex flex-col ml-2">
-                <span className="font-bold text-xl">{item.data.name}</span>
-              </div>
-              <div className="ml-auto flex flex-row gap-1">
-                <Button
-                  size="icon"
-                  onClick={() => {
-                    const existingGame =
-                      hiddenItems.filter((h) => h === String(item.id)).length >
-                      0;
+            <div className="flex flex-col ml-2">
+              <span className="font-bold text-xl">{item.data.name}</span>
+            </div>
+            <div className="ml-auto flex flex-row gap-1">
+              <Button
+                size="icon"
+                onClick={() => {
+                  const existingGame =
+                    hiddenItems.filter((h) => h === String(item.id)).length > 0;
 
-                    if (!existingGame)
-                      return setHiddenItems([...hiddenItems, String(item.id)]);
+                  if (!existingGame)
+                    return setHiddenItems([...hiddenItems, String(item.id)]);
 
-                    return setHiddenItems(
-                      hiddenItems.filter((h) => h !== String(item.id)),
-                    );
-                  }}
-                >
-                  {hiddenItems.find((h) => h === String(item.id)) ? (
-                    <EyeIcon size={20} />
-                  ) : (
-                    <EyeOffIcon size={20} />
-                  )}
-                </Button>
-                <Button
-                  title="Добавить в библиотеку"
-                  variant="success"
-                  size="icon"
-                  onClick={() => handleAddGame(String(item.id))}
-                >
-                  <Plus />
-                </Button>
-              </div>
-            </section>
-          ))}
+                  return setHiddenItems(
+                    hiddenItems.filter((h) => h !== String(item.id)),
+                  );
+                }}
+              >
+                {hiddenItems.find((h) => h === String(item.id)) ? (
+                  <EyeIcon size={20} />
+                ) : (
+                  <EyeOffIcon size={20} />
+                )}
+              </Button>
+              <Button
+                title="Добавить в библиотеку"
+                variant="success"
+                size="icon"
+                onClick={() => handleAddGame(String(item.id))}
+              >
+                <Plus />
+              </Button>
+            </div>
+          </section>
+        ))}
       </section>
     </main>
   );

@@ -35,7 +35,6 @@ export default function Wheels() {
           values={values}
           setValues={setValues}
           setFilters={setFilters}
-          filters={filters}
           selectedFilter={selectedFilter}
         />
       ),
