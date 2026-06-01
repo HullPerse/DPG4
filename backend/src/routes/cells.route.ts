@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, eq, not, asc, desc as descOrder } from "drizzle-orm";
+import { and, asc, desc as descOrder, eq, not, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
@@ -25,7 +25,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
   .use(dbPlugin)
   .get("/", async ({ db, query }) => {
     let q = db.select().from(schema.cells);
-    const conditions: ReturnType<typeof eq>[] = [];
+    const conditions: SQL[] = [];
 
     if (query.type) {
       conditions.push(eq(schema.cells.type, query.type));
@@ -40,11 +40,13 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
     }
 
     if (conditions.length > 0) {
-      q = q.where(and(...conditions));
+      q = q.where(and(...conditions)) as typeof q;
     }
 
     if (query.sort === "number") {
-      q = q.orderBy(query.order === "desc" ? descOrder(schema.cells.number) : asc(schema.cells.number));
+      q = q.orderBy(
+        query.order === "desc" ? descOrder(schema.cells.number) : asc(schema.cells.number),
+      ) as typeof q;
     }
 
     const rows = await q;
@@ -109,7 +111,8 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
         .select()
         .from(schema.cells)
         .where(eq(schema.cells.id, params.id));
-      logger.info(null, "updated cell", row?.title ?? `#${row?.number}` ?? params.id);
+      const label = row?.title || (row != null ? `#${row.number}` : params.id);
+      logger.info(null, "updated cell", label);
       return withRecordMeta(row!, "cells");
     },
     { body: cellPatchBody },

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -7,6 +7,7 @@ import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
+import { dbPlugin } from "../plugins/db.plugin";
 import { getUserById } from "../services/user.service";
 
 function mapChat(row: typeof schema.chats.$inferSelect) {
@@ -16,12 +17,10 @@ function mapChat(row: typeof schema.chats.$inferSelect) {
   };
 }
 
-import { dbPlugin } from "../plugins/db.plugin";
-
 export const chatsRoute = new Elysia({ prefix: "/chats" })
   .use(dbPlugin)
   .get("/", async ({ db, query }) => {
-    const conditions: ReturnType<typeof sql>[] = [];
+    const conditions: SQL[] = [];
 
     if (query.receiverId && query.senderId) {
       conditions.push(
@@ -43,7 +42,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
         and(
           sql`json_extract(data, '$.receiver.id') = ${query.unreadFor}`,
           eq(schema.chats.isRead, false),
-        ),
+        )!,
       );
     }
 

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, desc, eq, inArray, like, not, asc, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, not, sql, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -18,6 +18,7 @@ import {
   tradeInventory,
 } from "../services/economy.service";
 import { authPlugin } from "../plugins/auth.plugin";
+import { dbPlugin } from "../plugins/db.plugin";
 import { executeInventoryUse } from "../services/items/effect.items";
 
 const itemListColumns = {
@@ -37,17 +38,15 @@ function mapItem(row: typeof schema.items.$inferSelect) {
   return withRecordMeta(row, "items");
 }
 
-import { dbPlugin } from "../plugins/db.plugin";
-
 export const itemsRoute = new Elysia({ prefix: "/items" })
   .use(dbPlugin)
   .get(
     "/",
     async ({ db, query, set }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : undefined;
       const offset = query.offset ? Number(query.offset) : 0;
       let q = db.select(itemListColumns).from(schema.items);
-      const conditions: ReturnType<typeof eq>[] = [];
+      const conditions: SQL[] = [];
 
       if (query.labels) {
         const labels = query.labels.split(",").map((l) => l.trim()).filter(Boolean);
@@ -76,17 +75,17 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       }
 
       if (conditions.length > 0) {
-        q = q.where(and(...conditions));
+        q = q.where(and(...conditions)) as typeof q;
       }
 
       if (query.sort === "label") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.label) : asc(schema.items.label));
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.label) : asc(schema.items.label)) as typeof q;
       } else if (query.sort === "created") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.created) : asc(schema.items.created));
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.created) : asc(schema.items.created)) as typeof q;
       } else if (query.sort === "charge") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.charge) : asc(schema.items.charge));
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.charge) : asc(schema.items.charge)) as typeof q;
       } else if (query.sort === "type") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type));
+        q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type)) as typeof q;
       }
 
       if (query.random) {
@@ -97,7 +96,8 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
       }
 
-      const rows = await q.limit(limit).offset(offset);
+      const rows =
+        limit !== undefined ? await q.limit(limit).offset(offset) : await q;
       set.headers["Cache-Control"] = "no-store";
       return rows.map((r) => withRecordMeta(r, "items"));
     },
@@ -233,7 +233,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
       let q = db.select().from(schema.inventory);
-      const conditions: ReturnType<typeof eq>[] = [];
+      const conditions: SQL[] = [];
 
       if (query.owner) {
         conditions.push(eq(schema.inventory.owner, query.owner));
@@ -255,7 +255,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }
 
       if (conditions.length > 0) {
-        q = q.where(and(...conditions));
+        q = q.where(and(...conditions)) as typeof q;
       }
 
       const rows = await q.limit(limit).offset(offset);
@@ -362,19 +362,19 @@ export const marketRoute = new Elysia({ prefix: "/market" })
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      let q = db
-        .select()
-        .from(schema.market)
-        .orderBy(desc(schema.market.created));
+      let q = db.select().from(schema.market);
 
       if (query.search) {
         const pattern = `%${query.search}%`;
         q = q.where(
           sql`(${schema.market.label} LIKE ${pattern} OR ${schema.market.owner} LIKE ${pattern})`,
-        );
+        ) as typeof q;
       }
 
-      const rows = await q.limit(limit).offset(offset);
+      const rows = await q
+        .orderBy(desc(schema.market.created))
+        .limit(limit)
+        .offset(offset);
       return rows.map((r) => withRecordMeta(r, "market"));
     },
     {

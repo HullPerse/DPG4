@@ -1,11 +1,9 @@
-import { formatISO } from "date-fns";
-
 export function nowIso(): string {
-  return formatISO(new Date());
+  return new Date().toISOString();
 }
 
 export function formatRecordDate(value: string | Date | number | null | undefined): string {
   if (!value) return nowIso();
   if (typeof value === "string") return value;
-  return formatISO(new Date(value));
+  return new Date(value).toISOString();
 }

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, eq, not, sql } from "drizzle-orm";
+import { and, eq, not, sql, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { authPlugin } from "../plugins/auth.plugin";
 import { nowIso } from "../lib/dates";
@@ -24,7 +24,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
       let q = db.select().from(schema.users);
-      const conditions: ReturnType<typeof eq>[] = [];
+      const conditions: SQL[] = [];
 
       if (query.search) {
         conditions.push(sql`${schema.users.username} LIKE ${`%${query.search}%`}`);
@@ -39,7 +39,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       }
 
       if (conditions.length > 0) {
-        q = q.where(and(...conditions));
+        q = q.where(and(...conditions)) as typeof q;
       }
 
       const rows = await q.limit(limit).offset(offset);

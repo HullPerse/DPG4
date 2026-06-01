@@ -1,11 +1,10 @@
-import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
+import { mkdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
 import { config } from "../config";
 import { logger } from "./logger";
 
-const TRACKER_PATH = join(process.cwd(), "data", "backup-tracker.json");
-const BACKUP_DIR = join(process.cwd(), "backups");
+const TRACKER_PATH = join(import.meta.dir, "..", "..", "data", "backup-tracker.json");
+const BACKUP_DIR = join(import.meta.dir, "..", "..", "backups");
 const INTERVAL_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,7 +14,7 @@ interface Tracker {
 
 async function readTracker(): Promise<Tracker> {
   try {
-    const raw = await readFile(TRACKER_PATH, "utf-8");
+    const raw = await Bun.file(TRACKER_PATH).text();
     return JSON.parse(raw) as Tracker;
   } catch {
     return { lastBackup: null };
@@ -23,15 +22,15 @@ async function readTracker(): Promise<Tracker> {
 }
 
 async function writeTracker(tracker: Tracker) {
-  await mkdir(join(process.cwd(), "data"), { recursive: true });
-  await writeFile(TRACKER_PATH, JSON.stringify(tracker, null, 2), "utf-8");
+  await mkdir(join(import.meta.dir, "..", "..", "data"), { recursive: true });
+  await Bun.write(TRACKER_PATH, JSON.stringify(tracker, null, 2));
 }
 
 async function doBackup(): Promise<boolean> {
   try {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const dbPath = config.dbPath;
-    if (!existsSync(dbPath)) {
+    if (!(await Bun.file(dbPath).exists())) {
       logger.warn(null, "Auto-backup skipped: database file not found", dbPath);
       return false;
     }

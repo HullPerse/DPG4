@@ -18,11 +18,11 @@ function parseCorsOrigin(
 }
 
 export const config = {
-  port: Number(process.env.PORT) || 3000,
-  jwtSecret: process.env.JWT_SECRET || "dpg-local-jwt",
-  dbPath: process.env.DB_PATH || "data/db.sqlite",
-  corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
-  steamApiKey: process.env.STEAM_API_KEY ?? "",
+  port: Number(Bun.env.PORT) || 3000,
+  jwtSecret: Bun.env.JWT_SECRET || "dpg-local-jwt",
+  dbPath: Bun.env.DB_PATH || "data/db.sqlite",
+  corsOrigin: parseCorsOrigin(Bun.env.CORS_ORIGIN),
+  steamApiKey: Bun.env.STEAM_API_KEY ?? "",
 };
 
 export const COLLECTION_IDS: Record<string, string> = {

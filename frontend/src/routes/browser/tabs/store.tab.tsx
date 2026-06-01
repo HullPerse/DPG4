@@ -125,7 +125,7 @@ function StoreTab() {
                     src={`${getFileUrl(entry.item)}`}
                     alt={entry.item.label}
                     className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                    type="contain"
+                    type="cover"
                   />
 
                   <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
