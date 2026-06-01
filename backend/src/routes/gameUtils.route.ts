@@ -38,7 +38,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     "/dice-roll",
     async ({ body, db, set }) => {
       try {
-        return await rollDice(db, body.userId);
+        return await rollDice(db, body.userId, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -47,6 +47,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
+        bid: t.Integer({ minimum: 1, maximum: 10 }),
       }),
       detail: {
         tags: ["utils"],

@@ -2,16 +2,12 @@ import { Button } from "@/components/ui/button.component";
 import { Dices } from "lucide-react";
 import { memo } from "react";
 
-function HomeTab({
-  setTab,
-}: {
-  setTab: (tab: "home" | "dice") => void;
-}) {
+function HomeTab({ setTab }: { setTab: (tab: "home" | "dice") => void }) {
   const tabs = [
     {
       value: "dice" as const,
-      label: "Кости",
-      description: "Классическая игра в кости. Брось три кубика и выиграй!",
+      label: "Чинчирорин",
+      description: "Кидай кубики и получи МНОГО чубриков",
       icon: <Dices className="size-10" />,
     },
   ];

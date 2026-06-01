@@ -1,7 +1,7 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { useRef, useCallback, useState, memo } from "react";
+import { useRef, useCallback, useState, useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
 import { rollDice } from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
@@ -9,16 +9,18 @@ import { SmallLoader } from "@/components/shared/loader.component";
 import { getResultColor } from "@/lib/gambling/dice.utils";
 import { DicePending, DiceResult, DiceRevealed } from "@/types/gamble";
 
-const BASE_PRICE = 3;
+const BIDS = [1, 2, 3, 5, 8, 10] as const;
 
-const RULES = [
-  { text: "1 · 2 · 3", result: "−6" },
-  { text: "4 · 5 · 6", result: "+3" },
-  { text: "1 · 1 · 1", result: "+15 (джекпот)" },
-  { text: "Три одинаковых (кроме 1)", result: "+6" },
-  { text: "Пара", result: "50%: +4 / −2" },
-  { text: "Остальное", result: "50%: +5 / −1" },
-];
+function rules(bid: number) {
+  return [
+    { text: "1 · 2 · 3", result: `−${bid * 2}` },
+    { text: "4 · 5 · 6", result: `+${bid}` },
+    { text: "1 · 1 · 1", result: `+${bid * 5} (джекпот)` },
+    { text: "Три одинаковых (кроме 1)", result: `+${bid * 2}` },
+    { text: "Пара", result: `50%: +${bid + Math.ceil(bid / 3)} / −${bid - Math.ceil(bid / 3)}` },
+    { text: "Остальное", result: `50%: +${bid + Math.ceil(bid * 2 / 3)} / −${bid - Math.ceil(bid * 2 / 3)}` },
+  ];
+}
 
 function DiceTab() {
   const user = useUserStore((state) => state.user);
@@ -34,6 +36,7 @@ function DiceTab() {
     null,
     null,
   ]);
+  const [bid, setBid] = useState<number>(3);
 
   const pendingRef = useRef<DicePending>(null);
   const revealTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -43,6 +46,7 @@ function DiceTab() {
   } | null>(null);
 
   const balance = user?.money ?? 0;
+  const RULES = useMemo(() => rules(bid), [bid]);
 
   const waitForAllDice = useCallback(
     () =>
@@ -86,7 +90,7 @@ function DiceTab() {
   };
 
   const handleRoll = async () => {
-    if (rolling || !user || balance < BASE_PRICE || gamblingBanned) return;
+    if (rolling || !user || balance < bid || gamblingBanned) return;
 
     revealTimeoutsRef.current.forEach(clearTimeout);
     revealTimeoutsRef.current = [];
@@ -95,7 +99,7 @@ function DiceTab() {
     setRolling(true);
 
     try {
-      const result = await rollDice(String(user.id));
+      const result = await rollDice(String(user.id), bid);
 
       pendingRef.current = result.values;
       setPendingValues(result.values);
@@ -129,15 +133,31 @@ function DiceTab() {
       {/*INFO*/}
       <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2">
         <span className="text-lg font-bold">{balance} чубриков</span>
-        <span className="text-sm text-muted">
-          Стоимость броска: {BASE_PRICE}
-        </span>
         {displayLine() && (
           <span className="text-sm text-primary tracking-widest">
             {displayLine()}
           </span>
         )}
       </section>
+      {/*BID*/}
+      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
+        <span className="text-sm text-muted mr-1">Ставка</span>
+        {BIDS.map((v) => (
+          <button
+            key={v}
+            onClick={() => setBid(v)}
+            className={cn(
+              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer",
+              bid === v
+                ? "bg-highlight-high text-background"
+                : "bg-foreground/10 text-muted hover:bg-foreground/20",
+            )}
+          >
+            {v}
+          </button>
+        ))}
+      </section>
+
       {/*DICE*/}
       <section className="relative w-full h-64 overflow-hidden border-2 border-highlight-high bg-background">
         <DiceScene
@@ -163,9 +183,9 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           onClick={handleRoll}
-          disabled={rolling || balance < BASE_PRICE || gamblingBanned}
+          disabled={rolling || balance < bid || gamblingBanned}
         >
-          {gamblingBanned ? "Вы забанены" : rolling ? <SmallLoader /> : `Кинуть (${BASE_PRICE})`}
+          {gamblingBanned ? "Вы забанены" : rolling ? <SmallLoader /> : `Кинуть (${bid})`}
         </Button>
 
         <details

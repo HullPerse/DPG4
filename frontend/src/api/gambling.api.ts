@@ -10,10 +10,10 @@ export interface DiceRollResult {
   banned: boolean;
 }
 
-export async function rollDice(userId: string): Promise<DiceRollResult> {
+export async function rollDice(userId: string, bid: number): Promise<DiceRollResult> {
   return apiFetch<DiceRollResult>("/utils/dice-roll", {
     method: "POST",
-    body: { userId },
+    body: { userId, bid },
   });
 }
 
