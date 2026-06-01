@@ -1,3 +1,4 @@
+import { PCFShadowMap } from "three";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import DiceMesh from "../components/mesh.dice";
@@ -13,7 +14,7 @@ function DiceScene({
 }) {
   return (
     <Canvas
-      shadows
+      shadows={{ type: PCFShadowMap }}
       camera={{ position: [0, 9, 7], fov: 30 }}
       className="h-full w-full"
       gl={{ antialias: true, alpha: true }}

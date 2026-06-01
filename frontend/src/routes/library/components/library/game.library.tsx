@@ -60,6 +60,7 @@ function GameLibrary({
 }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
@@ -217,6 +218,7 @@ function GameLibrary({
           setRerollPrice(2);
 
           await unbanDice(String(user?.id));
+          setGamblingBanned(false);
         }
 
         setInput(false);
