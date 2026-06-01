@@ -4,6 +4,7 @@ type WsMessage = {
   channel: string;
   action: string;
   id?: string;
+  channels?: string[];
 };
 
 type Listener = (data: WsMessage) => void;

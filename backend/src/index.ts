@@ -25,6 +25,8 @@ import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
+import { sentinelRoute } from "./routes/sentinel.route";
+import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()
   .use(
@@ -33,6 +35,7 @@ const app = new Elysia()
       credentials: true,
     }),
   )
+  .use(sentinelRoute)
   .use(
     swagger({
       documentation: {
@@ -125,8 +128,12 @@ const app = new Elysia()
   .use(filesRoute)
   .use(gameUtilsRoute)
   .use(steamRoute)
-  .use(searchRoute)
-  .listen(config.port);
+  .use(searchRoute);
+
+runMigrations();
+logger.info("SYSTEM", "DB migrations applied");
+
+app.listen(config.port);
 
 logger.info(
   "SYSTEM",

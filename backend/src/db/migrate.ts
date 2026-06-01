@@ -1,8 +1,6 @@
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import { db, rawDb } from "./index";
 
-migrate(db, { migrationsFolder: "./drizzle" });
-
 const pendingMigrations: { hash: string; sql: string[] }[] = [
   {
     hash: "0002_add_user_id_and_indexes",
@@ -15,40 +13,48 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
   },
 ];
 
-for (const migration of pendingMigrations) {
-  const applied = rawDb
-    .query("SELECT hash FROM __drizzle_migrations WHERE hash = ?")
-    .get(migration.hash) as { hash: string } | null;
+export function runMigrations() {
+  migrate(db, { migrationsFolder: "./drizzle" });
 
-  if (applied) {
-    console.log(`Skipping ${migration.hash} (already applied)`);
-    continue;
-  }
+  for (const migration of pendingMigrations) {
+    const applied = rawDb
+      .query("SELECT hash FROM __drizzle_migrations WHERE hash = ?")
+      .get(migration.hash) as { hash: string } | null;
 
-  console.log(`Running ${migration.hash}...`);
-  for (const stmt of migration.sql) {
-    try {
-      rawDb.run(stmt);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (
-        msg.includes("duplicate column") ||
-        msg.includes("already exists")
-      ) {
-        console.log(`  Skipped: ${msg}`);
-      } else {
-        console.error(`Error: ${msg}`);
-        throw e;
+    if (applied) {
+      console.log(`Skipping ${migration.hash} (already applied)`);
+      continue;
+    }
+
+    console.log(`Running ${migration.hash}...`);
+    for (const stmt of migration.sql) {
+      try {
+        rawDb.run(stmt);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (
+          msg.includes("duplicate column") ||
+          msg.includes("already exists")
+        ) {
+          console.log(`  Skipped: ${msg}`);
+        } else {
+          console.error(`Error: ${msg}`);
+          throw e;
+        }
       }
     }
+
+    rawDb
+      .prepare(
+        "INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)",
+      )
+      .run(migration.hash, Date.now());
+    console.log(`Done ${migration.hash}`);
   }
 
-  rawDb
-    .prepare(
-      "INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)",
-    )
-    .run(migration.hash, Date.now());
-  console.log(`Done ${migration.hash}`);
+  console.log("Migrations applied");
 }
 
-console.log("Migrations applied");
+if (import.meta.main) {
+  runMigrations();
+}
