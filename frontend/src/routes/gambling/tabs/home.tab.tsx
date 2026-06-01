@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button.component";
-import { Dices, Club, Gamepad2 } from "lucide-react";
+import { Dices, Club } from "lucide-react";
 import { memo } from "react";
 
 function HomeTab({
   setTab,
 }: {
-  setTab: (tab: "home" | "dice" | "blackjack" | "slots") => void;
+  setTab: (tab: "home" | "dice" | "blackjack") => void;
 }) {
   const tabs = [
     {
@@ -19,12 +19,6 @@ function HomeTab({
       label: "Блэкджек",
       description: "fallout new vegas опять",
       icon: <Club className="size-10" />,
-    },
-    {
-      value: "slots" as const,
-      label: "Слоты",
-      description: "Крути слоты и срывай джекпот",
-      icon: <Gamepad2 className="size-10" />,
     },
   ];
 

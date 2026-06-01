@@ -34,6 +34,31 @@ function measureTableResponseTimes(): Record<string, number> {
   return result;
 }
 
+function measureTableSizes(): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const table of TABLES) {
+    try {
+      const cols = rawDb
+        .prepare(`PRAGMA table_info("${table}")`)
+        .all() as { name: string }[];
+      if (!cols.length) {
+        result[table] = 0;
+        continue;
+      }
+      const sumExpr = cols
+        .map((c) => `COALESCE(LENGTH(CAST("${c.name}" AS BLOB)), 0)`)
+        .join(" + ");
+      const row = rawDb
+        .prepare(`SELECT SUM(${sumExpr}) AS bytes FROM "${table}"`)
+        .get() as { bytes: number | null };
+      result[table] = Math.max(0, Number(row?.bytes) || 0);
+    } catch {
+      result[table] = -1;
+    }
+  }
+  return result;
+}
+
 export const sentinelRoute = new Elysia({ prefix: "/api" })
   .get("/sentinel/health", async () => {
     const dbOk = checkDb();
@@ -51,5 +76,6 @@ export const sentinelRoute = new Elysia({ prefix: "/api" })
       redis: redisOk,
       ws: { clients: getClientCount() },
       tableResponseTimes: measureTableResponseTimes(),
+      tableSizes: measureTableSizes(),
     };
   });

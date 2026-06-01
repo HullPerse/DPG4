@@ -228,10 +228,10 @@ export const WINDOWS = [
     title: "Азарт",
     icon: <Trophy className="size-7" />,
     size: {
-      minWidth: 800,
-      minHeight: 600,
-      width: 800,
-      height: 600,
+      minWidth: 970,
+      minHeight: 720,
+      width: 970,
+      height: 720,
     },
   },
   {

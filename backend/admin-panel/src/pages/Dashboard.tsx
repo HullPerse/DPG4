@@ -5,11 +5,13 @@ import { adminFetch } from "@/adminApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { resourceIcons } from "@/config/resourceIcons";
+import { formatTableSize } from "@/lib/formatTableSize";
 import type { AdminSchema } from "@/types";
 
 export function Dashboard({ schema }: { schema: AdminSchema }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
   const [responseTimes, setResponseTimes] = useState<Record<string, number> | null>(null);
+  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(null);
   const [broadcasting, setBroadcasting] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -21,8 +23,14 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
 
   useEffect(() => {
     const fetch = () =>
-      adminFetch<{ tableResponseTimes: Record<string, number> }>("/api/sentinel/health")
-        .then((r) => setResponseTimes(r.tableResponseTimes))
+      adminFetch<{
+        tableResponseTimes: Record<string, number>;
+        tableSizes: Record<string, number>;
+      }>("/api/sentinel/health")
+        .then((r) => {
+          setResponseTimes(r.tableResponseTimes);
+          setTableSizes(r.tableSizes);
+        })
         .catch(() => {});
     fetch();
     const id = setInterval(fetch, 5000);
@@ -102,10 +110,15 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
                     {counts[key] ?? 0}
                   </div>
                   {responseTimes?.[key] !== undefined && (
-                    <span className="text-muted absolute top-2 right-2 text-[10px]">
+                    <span className="text-muted absolute top-2 right-2 text-[10px] font-medium tabular-nums">
                       {responseTimes[key] >= 0
                         ? `${responseTimes[key].toFixed(2)}ms`
                         : "err"}
+                    </span>
+                  )}
+                  {tableSizes?.[key] !== undefined && (
+                    <span className="text-muted absolute right-2 bottom-2 text-[10px] font-medium tabular-nums">
+                      {formatTableSize(tableSizes[key])}
                     </span>
                   )}
                 </Link>

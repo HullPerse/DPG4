@@ -4,17 +4,15 @@ import { useCallback, useState } from "react";
 import HomeTab from "./tabs/home.tab";
 import DiceTab from "./tabs/dice.tab";
 import BlackjackTab from "./tabs/blackjack.tab";
-import SlotsTab from "./tabs/slots.tab";
 
 export default function Gambling() {
-  const [tab, setTab] = useState<"home" | "dice" | "blackjack" | "slots">("home");
+  const [tab, setTab] = useState<"home" | "dice" | "blackjack">("home");
 
   const getComponent = useCallback(() => {
     const tabMap = {
       home: <HomeTab setTab={setTab} />,
       dice: <DiceTab />,
       blackjack: <BlackjackTab />,
-      slots: <SlotsTab />,
     };
     return tabMap[tab];
   }, [tab]);
