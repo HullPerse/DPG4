@@ -17,8 +17,14 @@ function rules(bid: number) {
     { text: "4 · 5 · 6", result: `+${bid}` },
     { text: "1 · 1 · 1", result: `+${bid * 5} (джекпот)` },
     { text: "Три одинаковых (кроме 1)", result: `+${bid * 2}` },
-    { text: "Пара", result: `50%: +${bid + Math.ceil(bid / 3)} / −${bid - Math.ceil(bid / 3)}` },
-    { text: "Остальное", result: `50%: +${bid + Math.ceil(bid * 2 / 3)} / −${bid - Math.ceil(bid * 2 / 3)}` },
+    {
+      text: "Пара",
+      result: `50%: +${bid + Math.ceil(bid / 3)} / −${bid - Math.ceil(bid / 3)}`,
+    },
+    {
+      text: "Остальное",
+      result: `50%: +${bid + Math.ceil((bid * 2) / 3)} / −${bid - Math.ceil((bid * 2) / 3)}`,
+    },
   ];
 }
 
@@ -111,10 +117,7 @@ function DiceTab() {
         user: { ...user, money: result.balance },
       });
 
-      const netLabel =
-        result.net >= 0
-          ? `${result.label} · итого +${result.net}`
-          : `${result.label} · итого ${result.net}`;
+      const netLabel = result.net >= 0 ? `${result.label}` : `${result.label}`;
 
       if (result.banned) {
         setGamblingBanned(true);
@@ -185,7 +188,13 @@ function DiceTab() {
           onClick={handleRoll}
           disabled={rolling || balance < bid || gamblingBanned}
         >
-          {gamblingBanned ? "Вы забанены" : rolling ? <SmallLoader /> : `Кинуть (${bid})`}
+          {gamblingBanned ? (
+            "Вы забанены"
+          ) : rolling ? (
+            <SmallLoader />
+          ) : (
+            `Кинуть (${bid})`
+          )}
         </Button>
 
         <details

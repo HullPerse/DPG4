@@ -7,33 +7,44 @@ export const PACHINKO_SLOT_COUNT = PACHINKO_SLOT_MULTIPLIERS.length;
 
 export const BOARD_WIDTH = 13;
 
-/** Variable slot widths: inversely proportional to multiplier (sqrt of inverse).
- *  0.5x → widest, 5x → narrowest. Normalized to sum to BOARD_WIDTH. */
-const _rawWidths = PACHINKO_SLOT_MULTIPLIERS.map((m) => Math.sqrt(1 / m));
-const _rawSum = _rawWidths.reduce((a, b) => a + b, 0);
-export const PACHINKO_SLOT_WIDTHS: number[] = _rawWidths.map(
-  (w) => (w / _rawSum) * BOARD_WIDTH,
-);
+/** Bid-dependent slot widths: higher bid → wider bad slots, narrower good slots.
+ *  sqrt(1/m) base weighted by (1 + (bid-1)*0.005*(2-m)) so m=2 is pivot. */
+const AVG_M = 2;
+const BID_SLOPE = 0.005;
 
-/** Left-edge X position of each slot (cumulative from -BOARD_HALF). */
-export const PACHINKO_SLOT_EDGES: number[] = (() => {
+export function getSlotWidths(bid: number): number[] {
+  const raw = PACHINKO_SLOT_MULTIPLIERS.map((m) => {
+    const base = Math.sqrt(1 / m);
+    const factor = 1 + (bid - 1) * BID_SLOPE * (AVG_M - m);
+    return base * Math.max(0.2, factor);
+  });
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return raw.map((w) => (w / sum) * BOARD_WIDTH);
+}
+
+export function getSlotEdges(bid: number): number[] {
+  const widths = getSlotWidths(bid);
   const edges: number[] = [];
   let x = -BOARD_WIDTH / 2;
-  for (const w of PACHINKO_SLOT_WIDTHS) {
+  for (const w of widths) {
     edges.push(x);
     x += w;
   }
   return edges;
-})();
-
-export function slotCenterX(index: number): number {
-  return PACHINKO_SLOT_EDGES[index] + PACHINKO_SLOT_WIDTHS[index] / 2;
 }
 
-export function slotIndexFromX(x: number): number {
+export function slotCenterX(index: number, bid: number): number {
+  const edges = getSlotEdges(bid);
+  const widths = getSlotWidths(bid);
+  return edges[index] + widths[index] / 2;
+}
+
+export function slotIndexFromX(x: number, bid: number): number {
   if (!Number.isFinite(x)) return Math.floor(PACHINKO_SLOT_COUNT / 2);
+  const edges = getSlotEdges(bid);
+  const widths = getSlotWidths(bid);
   for (let i = 0; i < PACHINKO_SLOT_COUNT; i++) {
-    if (x < PACHINKO_SLOT_EDGES[i] + PACHINKO_SLOT_WIDTHS[i]) return i;
+    if (x < edges[i] + widths[i]) return i;
   }
   return PACHINKO_SLOT_COUNT - 1;
 }
@@ -52,7 +63,7 @@ export type PachinkoUiResult = {
 };
 
 export function formatPachinkoResultLabel(label: string, net: number): string {
-  return net >= 0 ? `${label} · итого +${net}` : `${label} · итого ${net}`;
+  return net >= 0 ? `${label}` : `${label}`;
 }
 
 export function getPachinkoResultColor(

@@ -54,11 +54,8 @@ export type RocketUiResult = {
   tone: "jackpot" | "win" | "lose" | "chance" | "";
 };
 
-export function formatRocketResultLabel(
-  label: string,
-  net: number,
-): string {
-  return net >= 0 ? `${label} · итого +${net}` : `${label} · итого ${net}`;
+export function formatRocketResultLabel(label: string, net: number): string {
+  return net >= 0 ? `${label}` : `${label}`;
 }
 
 export function getRocketResultColor(result: RocketUiResult | null): string {

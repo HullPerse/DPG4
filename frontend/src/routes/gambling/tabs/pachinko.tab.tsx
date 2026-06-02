@@ -15,7 +15,7 @@ import type { PachinkoState } from "@/types/gamble";
 import {
   BOARD_WIDTH,
   PACHINKO_SLOT_MULTIPLIERS,
-  PACHINKO_SLOT_WIDTHS,
+  getSlotWidths,
   formatPachinkoResultLabel,
   getPachinkoResultColor,
   randomDropOffsetX,
@@ -151,24 +151,27 @@ function PachinkoTab() {
       </section>
 
       <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto items-center justify-center">
-        {PACHINKO_SLOT_MULTIPLIERS.map((mult, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex flex-none flex-col items-center justify-center py-1 rounded text-[10px] font-mono font-bold border transition-colors",
-              highlightSlot === i
-                ? "border-white/70 scale-105 z-10"
-                : "border-transparent",
-            )}
-            style={{
-              width: `${(PACHINKO_SLOT_WIDTHS[i] / BOARD_WIDTH) * 95}%`,
-              color: slotColor(mult),
-              backgroundColor: `${slotColor(mult)}22`,
-            }}
-          >
-            <span>{mult}x</span>
-          </div>
-        ))}
+        {(() => {
+          const slotWidths = getSlotWidths(bid);
+          return PACHINKO_SLOT_MULTIPLIERS.map((mult, i) => (
+            <div
+              key={i}
+              className={cn(
+                "flex flex-none flex-col items-center justify-center py-1 rounded text-[10px] font-mono font-bold border transition-colors",
+                highlightSlot === i
+                  ? "border-white/70 scale-105 z-10"
+                  : "border-transparent",
+              )}
+              style={{
+                width: `${(slotWidths[i] / BOARD_WIDTH) * 95}%`,
+                color: slotColor(mult),
+                backgroundColor: `${slotColor(mult)}22`,
+              }}
+            >
+              <span>{mult}x</span>
+            </div>
+          ));
+        })()}
       </section>
 
       <section className="relative w-full flex-1 min-h-80 max-h-128 overflow-hidden border-2 border-highlight-high bg-background">
@@ -179,6 +182,7 @@ function PachinkoTab() {
           simulating={inDrop}
           highlightIndex={highlightSlot}
           onSettled={handleSettled}
+          bid={bid}
         />
         {result && (
           <span

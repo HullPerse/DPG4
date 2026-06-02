@@ -78,8 +78,8 @@ function BlackjackTab() {
       if (state.result) {
         const netLabel =
           state.result.net >= 0
-            ? `${state.result.label} · итого +${state.result.net}`
-            : `${state.result.label} · итого ${state.result.net}`;
+            ? `${state.result.label}`
+            : `${state.result.label}`;
         setUiResult({
           net: state.result.net,
           label: netLabel,
@@ -104,8 +104,8 @@ function BlackjackTab() {
       if (state.result) {
         const netLabel =
           state.result.net >= 0
-            ? `${state.result.label} · итого +${state.result.net}`
-            : `${state.result.label} · итого ${state.result.net}`;
+            ? `${state.result.label}`
+            : `${state.result.label}`;
         setUiResult({
           net: state.result.net,
           label: netLabel,

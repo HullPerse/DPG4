@@ -193,12 +193,6 @@ function FlightChart({
       ctx.fillStyle = "rgba(224, 222, 244, 0.7)";
       ctx.fillText(`Выигрыш: ${payout} чубриков`, w / 2, h / 2 + 8);
     }
-
-    if (crashed) {
-      const pulse = 0.12 + Math.sin(Date.now() / 180) * 0.06;
-      ctx.fillStyle = `rgba(235, 111, 146, ${pulse})`;
-      ctx.fillRect(0, 0, w, h);
-    }
   }, [phase, multiplier, crashPoint, bid, flightStart]);
 
   useEffect(() => {

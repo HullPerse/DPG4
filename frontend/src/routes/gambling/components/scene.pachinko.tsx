@@ -12,9 +12,9 @@ import * as THREE from "three";
 import {
   BOARD_WIDTH,
   PACHINKO_SLOT_COUNT,
-  PACHINKO_SLOT_EDGES,
   PACHINKO_SLOT_MULTIPLIERS,
-  PACHINKO_SLOT_WIDTHS,
+  getSlotEdges,
+  getSlotWidths,
   slotCenterX,
   slotColor,
   slotIndexFromX,
@@ -53,8 +53,7 @@ function buildPegPositions(): [number, number][] {
 
   for (let row = 0; row < PEG_ROWS; row++) {
     const y = topY - row * stepY;
-    const offset =
-      row % 2 === 0 ? 0 : (BOARD_WIDTH / PACHINKO_SLOT_COUNT) * 0.5;
+    const offset = row % 2 === 0 ? 0 : 0.5;
 
     for (let col = 0; col < PEG_COLS; col++) {
       const x = -usable / 2 + col * stepX + offset;
@@ -117,11 +116,18 @@ function BoardBackdrop() {
   );
 }
 
-function SlotStrip({ highlightIndex }: { highlightIndex: number | null }) {
+function SlotStrip({
+  highlightIndex,
+  bid,
+}: {
+  highlightIndex: number | null;
+  bid: number;
+}) {
+  const slotWidths = getSlotWidths(bid);
   return (
     <group position={[0, 1.38, 0.02]}>
       {PACHINKO_SLOT_MULTIPLIERS.map((mult, i) => {
-        const x = slotCenterX(i);
+        const x = slotCenterX(i, bid);
         const lit = highlightIndex === i;
         const color = slotColor(mult);
         const label = `${mult}x`;
@@ -129,7 +135,7 @@ function SlotStrip({ highlightIndex }: { highlightIndex: number | null }) {
           <group key={i} position={[x, 0, 0]}>
             <mesh>
               <boxGeometry
-                args={[PACHINKO_SLOT_WIDTHS[i] * 0.88, 0.62, 0.08]}
+                args={[slotWidths[i] * 0.88, 0.62, 0.08]}
               />
               <meshStandardMaterial
                 color={color}
@@ -192,7 +198,8 @@ function PegField() {
   );
 }
 
-function BoardWalls() {
+function BoardWalls({ bid }: { bid: number }) {
+  const slotEdges = getSlotEdges(bid);
   return (
     <>
       {/* Side walls */}
@@ -239,7 +246,7 @@ function BoardWalls() {
       </RigidBody>
       {/* Slot dividers - placed at the edge between each adjacent slot */}
       {Array.from({ length: PACHINKO_SLOT_COUNT - 1 }, (_, i) => {
-        const x = PACHINKO_SLOT_EDGES[i + 1];
+        const x = slotEdges[i + 1];
         return (
           <RigidBody
             key={i}
@@ -263,10 +270,12 @@ function RatBall({
   startX,
   simulating,
   onSettled,
+  bid,
 }: {
   startX: number;
   simulating: boolean;
   onSettled: (slotIndex: number) => void;
+  bid: number;
 }) {
   const bodyRef = useRef<RapierRigidBody>(null);
   const settledRef = useRef(false);
@@ -322,7 +331,7 @@ function RatBall({
       settledRef.current = true;
       bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
       bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      onSettled(slotIndexFromX(t.x));
+      onSettled(slotIndexFromX(t.x, bid));
     }
   });
 
@@ -354,16 +363,18 @@ function PachinkoWorld({
   showRat,
   simulating,
   onSettled,
+  bid,
 }: {
   dropKey: number;
   startX: number;
   showRat: boolean;
   simulating: boolean;
   onSettled: (slotIndex: number) => void;
+  bid: number;
 }) {
   return (
     <>
-      <BoardWalls />
+      <BoardWalls bid={bid} />
       <PegField />
       {showRat && (
         <RatBall
@@ -371,6 +382,7 @@ function PachinkoWorld({
           startX={startX}
           simulating={simulating}
           onSettled={onSettled}
+          bid={bid}
         />
       )}
     </>
@@ -384,6 +396,7 @@ function SceneContent({
   simulating,
   highlightIndex,
   onSettled,
+  bid,
 }: {
   dropKey: number;
   startX: number;
@@ -391,6 +404,7 @@ function SceneContent({
   simulating: boolean;
   highlightIndex: number | null;
   onSettled: (slotIndex: number) => void;
+  bid: number;
 }) {
   return (
     <>
@@ -401,7 +415,7 @@ function SceneContent({
       <directionalLight position={[-3, 6, 4]} intensity={0.3} color="#c4a7e7" />
 
       <BoardBackdrop />
-      <SlotStrip highlightIndex={highlightIndex} />
+      <SlotStrip highlightIndex={highlightIndex} bid={bid} />
 
       <Suspense fallback={null}>
         <Physics gravity={[0, -11, 0]} timeStep={1 / 60}>
@@ -411,6 +425,7 @@ function SceneContent({
             showRat={showRat}
             simulating={simulating}
             onSettled={onSettled}
+            bid={bid}
           />
         </Physics>
       </Suspense>
@@ -425,6 +440,7 @@ function PachinkoScene({
   simulating,
   highlightIndex,
   onSettled,
+  bid,
 }: {
   dropKey: number;
   startX: number;
@@ -432,6 +448,7 @@ function PachinkoScene({
   simulating: boolean;
   highlightIndex: number | null;
   onSettled: (slotIndex: number) => void;
+  bid: number;
 }) {
   return (
     <Canvas
@@ -453,6 +470,7 @@ function PachinkoScene({
         simulating={simulating}
         highlightIndex={highlightIndex}
         onSettled={onSettled}
+        bid={bid}
       />
     </Canvas>
   );
