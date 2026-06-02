@@ -5,7 +5,7 @@ import { authPlugin, signToken } from "../plugins/auth.plugin";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { omitPassword, withRecordMeta } from "../lib/record";
-import { createActivity } from "../services/activity.service";
+import createActivity from "@/services/activity.service";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";

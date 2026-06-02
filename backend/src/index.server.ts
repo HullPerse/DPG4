@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
-import { config } from "./config";
+import { config } from "./server.config";
 import { dbPlugin } from "./plugins/db.plugin";
 import { authRoute } from "./routes/auth.route";
 import { usersRoute } from "./routes/users.route";
@@ -25,7 +25,7 @@ import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
-import { sentinelRoute } from "./routes/sentinel.route";
+import { sentinelRoute } from "./routes/response.route";
 import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()

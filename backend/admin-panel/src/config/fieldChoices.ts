@@ -1,22 +1,22 @@
 /** Mirrors game/domain enums for admin selects (also declared in backend adminSchema). */
 export const ITEM_TYPE_CHOICES = [
-  { value: "effect", label: "effect — эффект" },
-  { value: "item", label: "item — предмет" },
-  { value: "roll", label: "roll — бросок" },
-  { value: "other", label: "other — прочее" },
+  { value: "effect", label: "effect - эффект" },
+  { value: "item", label: "item - предмет" },
+  { value: "roll", label: "roll - бросок" },
+  { value: "other", label: "other - прочее" },
 ] as const;
 
 export const GAME_STATUS_CHOICES = [
-  { value: "PLAYING", label: "PLAYING — играет" },
-  { value: "COMPLETED", label: "COMPLETED — завершена" },
-  { value: "DROPPED", label: "DROPPED — брошена" },
-  { value: "REROLLED", label: "REROLLED — перекинут" },
+  { value: "PLAYING", label: "PLAYING - играет" },
+  { value: "COMPLETED", label: "COMPLETED - завершена" },
+  { value: "DROPPED", label: "DROPPED - брошена" },
+  { value: "REROLLED", label: "REROLLED - перекинут" },
 ] as const;
 
 export const CELL_TYPE_CHOICES = [
-  { value: "start", label: "start — старт" },
-  { value: "finish", label: "finish — финиш" },
-  { value: "grid", label: "grid — клетка" },
+  { value: "start", label: "start - старт" },
+  { value: "finish", label: "finish - финиш" },
+  { value: "grid", label: "grid - клетка" },
 ] as const;
 
 export const CELL_CELL_TYPE_CHOICES = [

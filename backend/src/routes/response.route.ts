@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { rawDb } from "../db";
 import { checkRedis } from "../lib/cache";
-import { config } from "../config";
+import { config } from "../server.config";
 import { getClientCount } from "../lib/ws";
 
 const startTime = Date.now();
@@ -16,8 +16,18 @@ function checkDb(): boolean {
 }
 
 const TABLES = [
-  "users", "games", "presets", "items", "inventory", "market",
-  "activity", "chats", "rules", "ads", "drawings", "cells",
+  "users",
+  "games",
+  "presets",
+  "items",
+  "inventory",
+  "market",
+  "activity",
+  "chats",
+  "rules",
+  "ads",
+  "drawings",
+  "cells",
 ];
 
 function measureTableResponseTimes(): Record<string, number> {
@@ -38,9 +48,9 @@ function measureTableSizes(): Record<string, number> {
   const result: Record<string, number> = {};
   for (const table of TABLES) {
     try {
-      const cols = rawDb
-        .prepare(`PRAGMA table_info("${table}")`)
-        .all() as { name: string }[];
+      const cols = rawDb.prepare(`PRAGMA table_info("${table}")`).all() as {
+        name: string;
+      }[];
       if (!cols.length) {
         result[table] = 0;
         continue;
@@ -59,8 +69,9 @@ function measureTableSizes(): Record<string, number> {
   return result;
 }
 
-export const sentinelRoute = new Elysia({ prefix: "/api" })
-  .get("/sentinel/health", async () => {
+export const sentinelRoute = new Elysia({ prefix: "/api" }).get(
+  "/sentinel/health",
+  async () => {
     const dbOk = checkDb();
     const mem = process.memoryUsage();
     const redisOk = await checkRedis();
@@ -78,4 +89,5 @@ export const sentinelRoute = new Elysia({ prefix: "/api" })
       tableResponseTimes: measureTableResponseTimes(),
       tableSizes: measureTableSizes(),
     };
-  });
+  },
+);

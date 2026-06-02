@@ -1,4 +1,4 @@
-import { COLLECTION_IDS } from "../config";
+import { COLLECTION_IDS } from "../server.config";
 
 export type DbTimestamps = {
   created: string;
@@ -19,7 +19,9 @@ export function withRecordMeta<T extends DbTimestamps>(
   };
 }
 
-export function omitPassword<T extends { passwordHash?: string }>(row: T): Omit<T, "passwordHash"> {
+export function omitPassword<T extends { passwordHash?: string }>(
+  row: T,
+): Omit<T, "passwordHash"> {
   const { passwordHash: _, ...rest } = row;
   return rest;
 }

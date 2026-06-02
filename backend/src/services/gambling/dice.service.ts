@@ -1,17 +1,10 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../db/schema";
-import { getUserById, scoreUser } from "./user.service";
-import { logger } from "../lib/logger";
-import { nowIso } from "../lib/dates";
-
-type Db = BunSQLiteDatabase<typeof schema>;
-
-interface DiceResult {
-  payout: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-}
+import * as schema from "../../db/schema";
+import { getUserById, scoreUser } from "../user.service";
+import { logger } from "../../lib/logger";
+import { nowIso } from "../../lib/dates";
+import { DiceResult } from "@/types/gambling";
+import { Db } from "@/types";
 
 function getRandomDice(): [number, number, number] {
   return [
@@ -21,7 +14,10 @@ function getRandomDice(): [number, number, number] {
   ];
 }
 
-function calculateResult(values: [number, number, number], bid: number): DiceResult {
+function calculateResult(
+  values: [number, number, number],
+  bid: number,
+): DiceResult {
   const sorted = [...values].sort((a, b) => a - b);
   const [a, b, c] = sorted;
   const unique = new Set(values);
@@ -29,7 +25,7 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
   if (a === 1 && b === 2 && c === 3) {
     return {
       payout: -bid,
-      label: "1 · 2 · 3 — проигрыш",
+      label: "1 · 2 · 3 - проигрыш",
       tone: "lose",
     };
   }
@@ -37,7 +33,7 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
   if (a === 4 && b === 5 && c === 6) {
     return {
       payout: bid * 2,
-      label: "4 · 5 · 6 — выигрыш",
+      label: "4 · 5 · 6 - выигрыш",
       tone: "win",
     };
   }
@@ -45,7 +41,7 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
   if (a === 1 && b === 1 && c === 1) {
     return {
       payout: bid * 6,
-      label: "Три единицы — джекпот",
+      label: "Три единицы - джекпот",
       tone: "jackpot",
     };
   }
@@ -53,7 +49,7 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
   if (unique.size === 1) {
     return {
       payout: bid * 3,
-      label: `Три ${a} — выигрыш`,
+      label: `Три ${a} - выигрыш`,
       tone: "win",
     };
   }
@@ -62,15 +58,15 @@ function calculateResult(values: [number, number, number], bid: number): DiceRes
     const win = Math.random() >= 0.5;
     return {
       payout: win ? bid * 2 + Math.ceil(bid / 3) : Math.ceil(bid / 3),
-      label: win ? "Пара — удача" : "Пара — не повезло",
+      label: win ? "Пара - удача" : "Пара - не повезло",
       tone: "chance",
     };
   }
 
   const win = Math.random() >= 0.5;
   return {
-    payout: win ? bid * 2 + Math.ceil(bid * 2 / 3) : Math.ceil(bid * 2 / 3),
-    label: win ? "Разные числа — выигрыш" : "Разные числа — проигрыш",
+    payout: win ? bid * 2 + Math.ceil((bid * 2) / 3) : Math.ceil((bid * 2) / 3),
+    label: win ? "Разные числа - выигрыш" : "Разные числа - проигрыш",
     tone: "chance",
   };
 }
@@ -88,7 +84,8 @@ export async function rollDice(
   balance: number;
   banned: boolean;
 }> {
-  if (bid < 1 || bid > 10 || !Number.isInteger(bid)) throw new Error("Invalid bid");
+  if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+    throw new Error("Invalid bid");
 
   const user = await getUserById(db, userId);
   if (!user) throw new Error("User not found");
@@ -126,11 +123,6 @@ export async function rollDice(
     .where(eq(schema.users.id, userId));
 
   const updatedUser = await getUserById(db, userId);
-
-  const netLabel =
-    net >= 0
-      ? `${label} · итого +${net}`
-      : `${label} · итого ${net}`;
 
   logger.info(user.username, "rolled dice", values.join(", "), `net:${net}`);
 

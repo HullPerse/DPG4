@@ -57,7 +57,7 @@ export function StringListInput({
     >
       {items.length === 0 ? (
         <p className="text-muted border-highlight-high mb-3 border-2 border-dashed p-6 text-center text-sm">
-          Нет элементов — добавьте первую строку
+          Нет элементов - добавьте первую строку
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -104,7 +104,13 @@ export function StringListInput({
           ))}
         </div>
       )}
-      <Button type="button" variant="outline" size="sm" className="mt-3" onClick={addItem}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="mt-3"
+        onClick={addItem}
+      >
         <Plus />
         Добавить строку
       </Button>
@@ -114,7 +120,7 @@ export function StringListInput({
 
 export function StringListPreview({ value }: { value: unknown }) {
   const items = normalizeStringList(value);
-  if (!items.length) return <span className="text-muted">—</span>;
+  if (!items.length) return <span className="text-muted">-</span>;
   return (
     <span className="bg-primary/10 text-primary border-primary/30 inline-flex max-w-[240px] flex-wrap items-center gap-1 border px-1.5 py-0.5 text-xs font-bold">
       {items.length} · {items.slice(0, 3).join(", ")}

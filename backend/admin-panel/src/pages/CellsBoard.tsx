@@ -43,7 +43,9 @@ export function CellsBoardPage() {
       "w-[72px] min-h-14 cursor-pointer border-2 p-1 text-[10px] leading-tight transition-colors hover:-translate-y-0.5",
       cell.ladderTo > 0 && "border-green-500/50 bg-green-500/10",
       cell.snakeTo > 0 && "border-love/50 bg-love/10",
-      !cell.ladderTo && !cell.snakeTo && "border-highlight-high bg-highlight-low",
+      !cell.ladderTo &&
+        !cell.snakeTo &&
+        "border-highlight-high bg-highlight-low",
     );
 
   return (
@@ -94,7 +96,7 @@ export function CellsBoardPage() {
                   onClick={() => navigate(`/cells/${cell.id}`)}
                 >
                   <strong>#{cell.number}</strong>
-                  <div>{cell.title || cell.cellType || "—"}</div>
+                  <div>{cell.title || cell.cellType || "-"}</div>
                   {cell.ladderTo > 0 && <div>↑{cell.ladderTo}</div>}
                   {cell.snakeTo > 0 && <div>↓{cell.snakeTo}</div>}
                 </button>

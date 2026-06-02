@@ -7,8 +7,12 @@ import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import { createActivity } from "../services/activity.service";
-import { changeUserStatus, getUserById, scoreUser } from "../services/user.service";
+import createActivity from "@/services/activity.service";
+import {
+  changeUserStatus,
+  getUserById,
+  scoreUser,
+} from "../services/user.service";
 
 export const SUBSCRIPTION_COST = 2;
 
@@ -41,7 +45,8 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
       });
 
       broadcast("ads", "create", id);
-      const ownerName = (body.owner as { username?: string } | undefined)?.username;
+      const ownerName = (body.owner as { username?: string } | undefined)
+        ?.username;
       logger.info(ownerName ?? null, "created ad", body.text);
       return withRecordMeta(
         (await db.select().from(schema.ads).where(eq(schema.ads.id, id)))[0]!,
@@ -68,7 +73,11 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
     async ({ body, db }) => {
       const user = await getUserById(db, body.userId);
       if (!user || user.money < SUBSCRIPTION_COST) {
-        logger.info(user?.username ?? null, "subscription failed", "insufficient funds");
+        logger.info(
+          user?.username ?? null,
+          "subscription failed",
+          "insufficient funds",
+        );
         return { ok: false };
       }
 

@@ -258,7 +258,7 @@ export function getDataUrlSizeMB(dataUrl: string): string {
 
 /** Size in megabytes for display (2 decimal places). */
 export function formatBytesToMB(bytes?: number | null): string {
-  if (bytes === undefined || bytes === null || bytes <= 0) return "—";
+  if (bytes === undefined || bytes === null || bytes <= 0) return "-";
   return (bytes / 1024 / 1024).toFixed(2);
 }
 

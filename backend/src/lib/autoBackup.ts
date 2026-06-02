@@ -1,10 +1,11 @@
 import { mkdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
-import { config } from "../config";
+import { config } from "../server.config";
+import { resolveBackendPath } from "./paths";
 import { logger } from "./logger";
 
-const TRACKER_PATH = join(import.meta.dir, "..", "..", "data", "backup-tracker.json");
-const BACKUP_DIR = join(import.meta.dir, "..", "..", "backups");
+const TRACKER_PATH = resolveBackendPath("data", "backup-tracker.json");
+const BACKUP_DIR = resolveBackendPath("backups");
 const INTERVAL_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,7 +23,7 @@ async function readTracker(): Promise<Tracker> {
 }
 
 async function writeTracker(tracker: Tracker) {
-  await mkdir(join(import.meta.dir, "..", "..", "data"), { recursive: true });
+  await mkdir(resolveBackendPath("data"), { recursive: true });
   await Bun.write(TRACKER_PATH, JSON.stringify(tracker, null, 2));
 }
 
@@ -41,7 +42,11 @@ async function doBackup(): Promise<boolean> {
     logger.info(null, `Auto-backup saved: ${dest}`);
     return true;
   } catch (err) {
-    logger.error(null, "Auto-backup failed", err instanceof Error ? err.message : String(err));
+    logger.error(
+      null,
+      "Auto-backup failed",
+      err instanceof Error ? err.message : String(err),
+    );
     return false;
   }
 }

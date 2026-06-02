@@ -22,16 +22,16 @@ if (!existsSync(backupPath)) {
 
 const rl = readline.createInterface({ input, output });
 const answer = await rl.question(
-  `⚠️  WARNING: This will REPLACE ${dbPath} with ${backupPath}.\n`
-  + `This action CANNOT be undone.\n`
-  + `Type "yes" to confirm: `,
+  `WARNING: This will REPLACE ${dbPath} with ${backupPath}.\n` +
+    `This action CANNOT be undone.\n` +
+    `Type "y" to confirm: `,
 );
 rl.close();
 
-if (answer.trim().toLowerCase() !== "yes") {
+if (answer.trim().toLowerCase() !== "y") {
   console.log("Restore cancelled.");
   process.exit(0);
 }
 
 await copyFile(backupPath, dbPath);
-console.log(`✅ Database restored from: ${backupPath}`);
+console.log(`Database restored from: ${backupPath}`);

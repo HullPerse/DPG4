@@ -11,7 +11,7 @@ export function JsonField({
   maxChars?: number;
 }) {
   if (value === null || value === undefined || value === "") {
-    return <span className="text-muted">—</span>;
+    return <span className="text-muted">-</span>;
   }
   const pretty = formatAlignedJsonText(value);
   const shown =

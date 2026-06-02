@@ -1,5 +1,4 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "@/db/schema";
 import {
   getFirstCellInNextRow,
@@ -14,7 +13,7 @@ import {
   ITEM_MODAL_LABELS,
   RAT_IDS,
 } from "@/items/constants";
-import { createActivity } from "@/services/activity.service";
+import createActivity from "@/services/activity.service";
 import {
   addInventory,
   chargeInventory,
@@ -31,8 +30,7 @@ import {
   getUserById,
   scoreUser,
 } from "@/services/user.service";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import { Db } from "@/types";
 
 type EffectCtx = {
   db: Db;

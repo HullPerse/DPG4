@@ -1,27 +1,5 @@
-export type DicePhase = "idle" | "flying" | "settle" | "done";
-
-export interface DiceSim {
-  phase: DicePhase;
-  pos: { x: number; y: number; z: number };
-  vel: { x: number; y: number; z: number };
-  rot: { x: number; y: number; z: number };
-  angVel: { x: number; y: number; z: number };
-  homeX: number;
-  throwStart: number;
-  settleStart: number;
-  bounceCount: number;
-}
-
-export type DiceRevealed = [number | null, number | null, number | null];
-export type DicePending = [number, number, number] | null;
-export type DiceResult = {
-  net: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-} | null;
-
-export type CardSuit = "hearts" | "diamonds" | "clubs" | "spades";
-export type CardRank =
+export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
+export type Rank =
   | "A"
   | "2"
   | "3"
@@ -36,12 +14,21 @@ export type CardRank =
   | "Q"
   | "K";
 
-export interface PlayingCard {
-  suit: CardSuit;
-  rank: CardRank;
+export interface Card {
+  suit: Suit;
+  rank: Rank;
 }
 
-export interface BlackjackGameResult {
+interface ActiveGame {
+  userId: string;
+  bid: number;
+  deck: Card[];
+  playerHand: Card[];
+  dealerHand: Card[];
+  phase: "player" | "ended";
+}
+
+export interface BlackjackResult {
   outcome: "blackjack" | "win" | "lose" | "push";
   payout: number;
   net: number;
@@ -52,23 +39,39 @@ export interface BlackjackGameResult {
 
 export interface BlackjackState {
   phase: "player" | "ended";
-  playerHand: PlayingCard[];
-  dealerHand: PlayingCard[];
+  playerHand: Card[];
+  dealerHand: Card[];
   dealerHoleHidden: boolean;
   playerValue: number;
   dealerValue: number | null;
   bid: number;
   balance: number;
-  result: BlackjackGameResult | null;
+  result: BlackjackResult | null;
 }
 
-export type BlackjackUiResult = {
+export interface DiceResult {
+  payout: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance";
+}
+
+export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";
+
+export interface ActiveRocketGame {
+  userId: string;
+  bid: number;
+  crashPoint: number;
+  launchedAt: number;
+  cashedOut: boolean;
+  cashoutMultiplier: number | null;
+}
+
+export interface RocketResult {
   net: number;
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
-} | null;
-
-export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";
+  banned: boolean;
+}
 
 export interface RocketState {
   phase: RocketPhase;
@@ -80,11 +83,6 @@ export interface RocketState {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance" | "";
   banned: boolean;
-}
-
-export interface RocketHistoryEntry {
-  crashPoint: number;
-  timestamp: number;
 }
 
 export type PachinkoPhase = "idle" | "dropping" | "done";

@@ -18,11 +18,11 @@ export function BlobField({
   record: Record<string, unknown>;
   resource: string;
 }) {
-  if (!record.id) return <span className="text-muted">—</span>;
+  if (!record.id) return <span className="text-muted">-</span>;
 
   const val = record[source];
   if (val === null || val === undefined || val === "") {
-    return <span className="text-muted">—</span>;
+    return <span className="text-muted">-</span>;
   }
 
   const url = fileUrl(resource, String(record.id), source);
@@ -39,7 +39,7 @@ export function BlobField({
           if (parent && !parent.querySelector("[data-fallback]")) {
             const span = document.createElement("span");
             span.dataset.fallback = "1";
-            span.textContent = isBlobPlaceholder(val) ? "—" : "нет";
+            span.textContent = isBlobPlaceholder(val) ? "-" : "нет";
             span.className = "text-muted text-xs";
             parent.appendChild(span);
           }
@@ -82,8 +82,7 @@ export function BlobInput({
   const hasDataUrl = typeof value === "string" && value.startsWith("data:");
   const previewSrc = hasDataUrl
     ? value
-    : currentUrl &&
-        (isBlobPlaceholder(value) || value == null || value === "")
+    : currentUrl && (isBlobPlaceholder(value) || value == null || value === "")
       ? currentUrl
       : null;
 
@@ -102,7 +101,12 @@ export function BlobInput({
             Нет файла
           </div>
         )}
-        <input type="file" accept="image/*" onChange={handleChange} className="text-sm" />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleChange}
+          className="text-sm"
+        />
       </div>
     </div>
   );
@@ -117,16 +121,21 @@ export function AudioField({
   record: Record<string, unknown>;
   resource: string;
 }) {
-  if (!record.id) return <span className="text-muted">—</span>;
+  if (!record.id) return <span className="text-muted">-</span>;
 
   const val = record[source];
   if (val === null || val === undefined || val === "") {
-    return <span className="text-muted">—</span>;
+    return <span className="text-muted">-</span>;
   }
 
   const url = fileUrl(resource, String(record.id), source);
   return (
-    <audio controls src={url} preload="metadata" className="max-w-[280px] h-8" />
+    <audio
+      controls
+      src={url}
+      preload="metadata"
+      className="max-w-[280px] h-8"
+    />
   );
 }
 
@@ -179,7 +188,12 @@ export function AudioInput({
         ) : (
           <span className="text-muted text-xs">Нет аудио</span>
         )}
-        <input type="file" accept="audio/*" onChange={handleChange} className="text-sm" />
+        <input
+          type="file"
+          accept="audio/*"
+          onChange={handleChange}
+          className="text-sm"
+        />
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button.component";
-import { Dices, Club } from "lucide-react";
+import { Dices, Club, Rocket, CircleDot } from "lucide-react";
 import { memo } from "react";
 
 function HomeTab({
   setTab,
 }: {
-  setTab: (tab: "home" | "dice" | "blackjack") => void;
+  setTab: (tab: "home" | "dice" | "blackjack" | "rocket" | "pachinko") => void;
 }) {
   const tabs = [
     {
@@ -19,6 +19,18 @@ function HomeTab({
       label: "Блэкджек",
       description: "fallout new vegas опять",
       icon: <Club className="size-10" />,
+    },
+    {
+      value: "pachinko" as const,
+      label: "Пачинко",
+      description: "Крыса паничко. ЖЕСТЬ КАК В КАЙДЖИ",
+      icon: <CircleDot className="size-10" />,
+    },
+    {
+      value: "rocket" as const,
+      label: "Ракетник",
+      description: "Крыса летит вверх - забери чубрики до краха",
+      icon: <Rocket className="size-10" />,
     },
   ];
 

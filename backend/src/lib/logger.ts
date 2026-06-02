@@ -1,5 +1,6 @@
+import { BunFile } from "bun";
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { resolveBackendPath } from "./paths";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -25,13 +26,13 @@ const config = {
   minLevel: (Bun.env.LOG_LEVEL as LogLevel) || "info",
 };
 
-const LOG_FILE = join(import.meta.dir, "..", "..", "logs", "server.log");
+const LOG_FILE = resolveBackendPath("logs", "server.log");
 
-let fileWriter: ReturnType<Bun.FileWriter> | null = null;
+let fileWriter: ReturnType<BunFile["writer"]> | null = null;
 
 async function ensureLogFile() {
   if (fileWriter) return;
-  await mkdir(join(import.meta.dir, "..", "..", "logs"), { recursive: true });
+  await mkdir(resolveBackendPath("logs"), { recursive: true });
   fileWriter = Bun.file(LOG_FILE).writer();
 }
 

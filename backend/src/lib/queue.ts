@@ -1,42 +1,29 @@
-import Redis from "ioredis";
 import { logger } from "./logger";
+import { initRedis, isRedisAvailable, setRedisAvailable } from "./redis.client";
 
 type Job = Record<string, unknown>;
 
 const memoryQueues = new Map<string, Job[]>();
 const memoryListeners = new Map<string, Set<(job: Job) => Promise<void>>>();
 
-let redis: Redis | null = null;
-let redisAvailable = false;
-
-function getRedis(): Redis | null {
-  if (redis) return redis;
-  try {
-    redis = new Redis({
-      host: Bun.env.REDIS_HOST || "127.0.0.1",
-      port: Number(Bun.env.REDIS_PORT) || 6379,
-      lazyConnect: true,
-      maxRetriesPerRequest: 0,
-      retryStrategy: () => null,
-    });
-    redis.on("error", () => { redisAvailable = false; });
-    redis.on("ready", () => { redisAvailable = true; });
-    redis.connect().catch(() => { redisAvailable = false; });
-    return redis;
-  } catch {
-    redisAvailable = false;
-    return null;
+function parseBrpopResult(result: unknown): string | null {
+  if (!result) return null;
+  if (Array.isArray(result) && typeof result[1] === "string") return result[1];
+  if (typeof result === "object" && result !== null && "element" in result) {
+    const element = (result as { element: unknown }).element;
+    return typeof element === "string" ? element : null;
   }
+  return null;
 }
 
 export async function pushJob(queue: string, job: Job): Promise<void> {
-  const r = getRedis();
-  if (r && redisAvailable) {
+  const r = initRedis();
+  if (r && isRedisAvailable()) {
     try {
       await r.lpush(queue, JSON.stringify(job));
       return;
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
   const mq = memoryQueues.get(queue) ?? [];
@@ -51,14 +38,15 @@ export async function pushJob(queue: string, job: Job): Promise<void> {
 }
 
 export async function popJob(queue: string, timeout = 0): Promise<Job | null> {
-  const r = getRedis();
-  if (r && redisAvailable) {
+  const r = initRedis();
+  if (r && isRedisAvailable()) {
     try {
       const result = await r.brpop(queue, timeout);
-      if (result) return JSON.parse(result[1]) as Job;
+      const raw = parseBrpopResult(result);
+      if (raw) return JSON.parse(raw) as Job;
       return null;
     } catch {
-      redisAvailable = false;
+      setRedisAvailable(false);
     }
   }
   const mq = memoryQueues.get(queue);
@@ -70,17 +58,17 @@ export function listenQueue(
   queue: string,
   handler: (job: Job) => Promise<void>,
 ): void {
-  const r = getRedis();
-  if (r && redisAvailable) {
+  const r = initRedis();
+  if (r && isRedisAvailable()) {
     (async function poll() {
       while (true) {
         try {
           const job = await popJob(queue, 0);
           if (job) await handler(job);
-          else await new Promise((r) => setTimeout(r, 1000));
+          else await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (err) {
           logger.error(null, `Queue ${queue} error`, err);
-          await new Promise((r) => setTimeout(r, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     })();

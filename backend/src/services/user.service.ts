@@ -1,13 +1,11 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { removeFirst, getNextDice } from "../lib/game.utils";
-import { createActivity } from "./activity.service";
+import createActivity from "./activity.service";
 import { broadcast } from "../lib/ws";
 import { omitPassword, withRecordMeta } from "../lib/record";
 import { nowIso } from "../lib/dates";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import { Db } from "@/types";
 
 export async function getUserById(db: Db, userId: string) {
   const [row] = await db

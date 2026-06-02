@@ -1,7 +1,7 @@
 /**
  * Migrate PocketBase to DPG server.
  *
- * bun run scripts/migrate-from-pb.ts
+ * bun run scripts/pocketbase.script.ts
  * PB_DB_PATH=../old backend/pb_data/data.db  (path to data.db)
  * PB_STORAGE=../old backend/pb_data/storage
  */

@@ -1,14 +1,12 @@
 import { eq, desc } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
+import { Db } from "@/types";
 
-type Db = BunSQLiteDatabase<typeof schema>;
-
-export async function createActivity(
+export default async function createActivity(
   db: Db,
   data: {
     author?: string;
