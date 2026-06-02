@@ -67,3 +67,37 @@ export type BlackjackUiResult = {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
 } | null;
+
+export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";
+
+export interface RocketState {
+  phase: RocketPhase;
+  multiplier: number;
+  crashPoint: number;
+  bid: number;
+  balance: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance" | "";
+  banned: boolean;
+}
+
+export interface RocketHistoryEntry {
+  crashPoint: number;
+  timestamp: number;
+}
+
+export type PachinkoPhase = "idle" | "dropping" | "done";
+
+export interface PachinkoState {
+  phase: PachinkoPhase;
+  bid: number;
+  balance: number;
+  slotIndex: number | null;
+  multiplier: number;
+  payout: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance" | "";
+  banned: boolean;
+}

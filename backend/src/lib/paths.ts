@@ -1,14 +1,22 @@
-import { basename, join } from "node:path";
+import { resolve, join, dirname } from "node:path";
+import { statSync } from "node:fs";
 
 /**
  * Backend project root (package.json, data/, logs/, backups/).
- * - From source: this file lives in src/ → one level up.
- * - From bundle (backend/server): import.meta.dir is already the root.
+ * Walks up from import.meta.dir until it finds a directory with package.json.
  */
-export const BACKEND_ROOT =
-  basename(import.meta.dir) === "src"
-    ? join(import.meta.dir, "..")
-    : import.meta.dir;
+export const BACKEND_ROOT = (() => {
+  let dir = import.meta.dir;
+  while (dir) {
+    try {
+      if (statSync(resolve(dir, "package.json")).isFile()) return dir;
+    } catch {}
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return import.meta.dir;
+})();
 
 export function resolveBackendPath(...segments: string[]): string {
   return join(BACKEND_ROOT, ...segments);
