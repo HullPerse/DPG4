@@ -1,13 +1,11 @@
 import type { FC } from "react";
 import type { ConsumeType, ModalType } from "@/types/effect";
 import type { effectInterface, ItemLabel } from "@/types/items";
+import { apiFetch } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
-import ActivityApi from "@/api/activity.api";
 import { useUserStore } from "@/store/user.store";
-import { Activity } from "@/types/activity";
 
 const itemsApi = new ItemsApi();
-const activityApi = new ActivityApi();
 
 export default class ItemFramework {
   constructor(private label: ItemLabel) {}
@@ -23,15 +21,10 @@ export default class ItemFramework {
 
     if (!inventory) return;
 
-    await itemsApi.chargeInventory(String(inventory.id), inventory.charge, -1);
-
-    const activityData = {
-      author: user.id,
-      image: user.avatar,
-      text: activityText,
-    } as Activity;
-
-    await activityApi.createActivity(activityData);
+    await apiFetch(`/inventory/${inventory.id}/consume`, {
+      method: "POST",
+      body: { activityText },
+    });
   };
 
   static effect(

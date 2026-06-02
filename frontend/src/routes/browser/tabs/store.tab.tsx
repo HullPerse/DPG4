@@ -1,11 +1,10 @@
 import ActivityApi from "@/api/activity.api";
-import { getFileUrl } from "@/api/client.api";
+import { apiFetch, getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
-import { weightedRandom } from "@/lib/utils";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { Activity } from "@/types/activity";
@@ -51,7 +50,10 @@ function StoreTab() {
       const finalArray: StoreItem[] = [];
 
       for (const item of randomSixItems) {
-        const price = weightedRandom(15);
+        const { result: price } = await apiFetch<{ result: number }>(
+          "/utils/weighted-random",
+          { method: "POST", body: { max: 15 } },
+        );
         finalArray.push({ item, price, bought: false });
       }
 

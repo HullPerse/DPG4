@@ -1,7 +1,4 @@
-export type FilePayload = {
-  data: Buffer;
-  mime: string;
-};
+import type { FilePayload } from "../types/files";
 
 export function bufferFromBase64(base64: string): Buffer {
   const raw = base64.includes(",") ? base64.split(",")[1]! : base64;

@@ -1,36 +1,4 @@
-export type AdminFieldType =
-  | "text"
-  | "number"
-  | "boolean"
-  | "date"
-  | "json"
-  | "objectList"
-  | "stringList"
-  | "blob"
-  | "audio"
-  | "password"
-  | "hidden"
-  | "select";
-
-export type AdminChoice = { value: string; label?: string };
-
-export type AdminColumnMeta = {
-  kind?: "text" | "number" | "boolean" | "select";
-  choices?: AdminChoice[];
-};
-
-export type AdminFieldMeta = {
-  source: string;
-  type: AdminFieldType;
-  hideInList?: boolean;
-  /** Columns for objectList editor (default: id, name if present) */
-  objectListColumns?: string[];
-  /** Per-column editor hints for objectList rows */
-  columns?: Record<string, AdminColumnMeta>;
-  /** Fixed options for select fields */
-  choices?: AdminChoice[];
-  reference?: { table: string; labelField: string };
-};
+import type { AdminChoice, AdminTableMeta } from "../types/admin";
 
 const ITEM_TYPES: AdminChoice[] = [
   { value: "effect", label: "effect" },
@@ -73,12 +41,6 @@ const ACTIVITY_TYPES: AdminChoice[] = [
   { value: "emoji" },
   { value: "chat" },
 ];
-
-export type AdminTableMeta = {
-  label: string;
-  searchFields: string[];
-  fields: AdminFieldMeta[];
-};
 
 export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
   users: {
@@ -168,7 +130,11 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
       { source: "type", type: "select", choices: ITEM_TYPES },
-      { source: "owner", type: "text", reference: { table: "users", labelField: "username" } },
+      {
+        source: "owner",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
       { source: "label", type: "text" },
       { source: "description", type: "text" },
       { source: "charge", type: "number" },
@@ -278,7 +244,12 @@ export const ADMIN_JSON_FIELDS: Record<string, string[]> = Object.fromEntries(
   Object.entries(ADMIN_SCHEMA).map(([table, meta]) => [
     table,
     meta.fields
-      .filter((f) => f.type === "json" || f.type === "objectList" || f.type === "stringList")
+      .filter(
+        (f) =>
+          f.type === "json" ||
+          f.type === "objectList" ||
+          f.type === "stringList",
+      )
       .map((f) => f.source),
   ]),
 );

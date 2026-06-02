@@ -31,7 +31,10 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["itemsWheel", searchTerms],
     queryFn: async (): Promise<Item[]> => {
-      return itemsApi.getItems({ rollable: true, search: searchTerms || undefined });
+      return itemsApi.getItems({
+        rollable: true,
+        search: searchTerms || undefined,
+      });
     },
   });
 
@@ -101,7 +104,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
         {result && (
           <section
             key={result.id}
-            className="relative p-2 flex flex-row max-w-full w-xl min-h-fit h-22 border-2 border-highlight-high items-center"
+            className="relative p-2 flex flex-row max-w-full w-xl h-fit min-h-22 max-h-50 border-2 border-highlight-high items-center"
           >
             <div className="flex flex-col gap-1">
               <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
@@ -123,7 +126,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
 
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
-              <span className="text-text/80">{result.description}</span>
+              <span className="text-text/80 overflow-hidden hover:overflow-y-auto max-h-40">
+                {result.description}
+              </span>
             </div>
             <div className="ml-auto flex flex-row gap-1">
               <Button
@@ -141,72 +146,70 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
         {data?.map((item) => (
-            <section
-              key={item.id}
-              className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
-              style={{
-                opacity:
-                  hiddenItems.find((h) => h === String(item.id)) && "50%",
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
-                  {translateItemType(item.type)}
-                </span>
-                <ImageViewer
-                  src={[`${getFileUrl(item)}`]}
-                  zoomable
-                  draggable
-                  trigger={
-                    <ImageComponent
-                      src={`${getFileUrl(item)}`}
-                      alt={item.label}
-                      className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
-                    />
-                  }
-                />
-              </div>
-              <div className="flex flex-col ml-2">
-                <span className="font-bold text-xl">
-                  {highlightText(item.label, searchTerms)}
-                </span>
-                <span className="text-text/80">
-                  {highlightText(item.description, searchTerms)}
-                </span>
-              </div>
-              <div className="ml-auto flex flex-row gap-1">
-                <Button
-                  size="icon"
-                  onClick={() => {
-                    const existingGame =
-                      hiddenItems.filter((h) => h === String(item.id)).length >
-                      0;
+          <section
+            key={item.id}
+            className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
+            style={{
+              opacity: hiddenItems.find((h) => h === String(item.id)) && "50%",
+            }}
+          >
+            <div className="flex flex-col gap-1">
+              <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                {translateItemType(item.type)}
+              </span>
+              <ImageViewer
+                src={[`${getFileUrl(item)}`]}
+                zoomable
+                draggable
+                trigger={
+                  <ImageComponent
+                    src={`${getFileUrl(item)}`}
+                    alt={item.label}
+                    className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                  />
+                }
+              />
+            </div>
+            <div className="flex flex-col ml-2">
+              <span className="font-bold text-xl">
+                {highlightText(item.label, searchTerms)}
+              </span>
+              <span className="text-text/80">
+                {highlightText(item.description, searchTerms)}
+              </span>
+            </div>
+            <div className="ml-auto flex flex-row gap-1">
+              <Button
+                size="icon"
+                onClick={() => {
+                  const existingGame =
+                    hiddenItems.filter((h) => h === String(item.id)).length > 0;
 
-                    if (!existingGame)
-                      return setHiddenItems([...hiddenItems, String(item.id)]);
+                  if (!existingGame)
+                    return setHiddenItems([...hiddenItems, String(item.id)]);
 
-                    return setHiddenItems(
-                      hiddenItems.filter((h) => h !== String(item.id)),
-                    );
-                  }}
-                >
-                  {hiddenItems.find((h) => h === String(item.id)) ? (
-                    <EyeIcon size={20} />
-                  ) : (
-                    <EyeOffIcon size={20} />
-                  )}
-                </Button>
-                <Button
-                  variant="success"
-                  size="icon"
-                  title="Добавить предмет в инвентарь"
-                  onClick={() => handleAddItem(String(item.id))}
-                >
-                  {loading ? <SmallLoader /> : <Plus />}
-                </Button>
-              </div>
-            </section>
-          ))}
+                  return setHiddenItems(
+                    hiddenItems.filter((h) => h !== String(item.id)),
+                  );
+                }}
+              >
+                {hiddenItems.find((h) => h === String(item.id)) ? (
+                  <EyeIcon size={20} />
+                ) : (
+                  <EyeOffIcon size={20} />
+                )}
+              </Button>
+              <Button
+                variant="success"
+                size="icon"
+                title="Добавить предмет в инвентарь"
+                onClick={() => handleAddItem(String(item.id))}
+              >
+                {loading ? <SmallLoader /> : <Plus />}
+              </Button>
+            </div>
+          </section>
+        ))}
       </section>
     </main>
   );

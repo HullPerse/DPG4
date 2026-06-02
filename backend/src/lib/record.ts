@@ -1,9 +1,5 @@
+import type { DbTimestamps } from "../types/record";
 import { COLLECTION_IDS } from "../server.config";
-
-export type DbTimestamps = {
-  created: string;
-  updated: string;
-};
 
 export function withRecordMeta<T extends DbTimestamps>(
   row: T,

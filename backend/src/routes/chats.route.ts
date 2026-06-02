@@ -8,7 +8,7 @@ import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { getUserById } from "../services/user.service";
+import { servicesPlugin } from "../services/services.plugin";
 
 function mapChat(row: typeof schema.chats.$inferSelect) {
   return {
@@ -19,6 +19,7 @@ function mapChat(row: typeof schema.chats.$inferSelect) {
 
 export const chatsRoute = new Elysia({ prefix: "/chats" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get("/", async ({ db, query }) => {
     const conditions: SQL[] = [];
 
@@ -61,18 +62,18 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
   })
   .post(
     "/",
-    async ({ body, db }) => {
+    async ({ body, db, userService }) => {
       const id = newId();
       const created = nowIso();
       const imageFile = parseFileInput(body.image);
 
       let data = body.data;
       if (body.senderId && body.receiverId) {
-        const sender = await getUserById(db, body.senderId);
+        const sender = await userService.getById(body.senderId);
         const isGlobal = body.receiverId === "global";
         const receiver = isGlobal
           ? null
-          : await getUserById(db, body.receiverId);
+          : await userService.getById(body.receiverId);
 
         data = {
           sender: {
@@ -82,12 +83,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
             color: sender?.color ?? "",
           },
           receiver: isGlobal
-            ? {
-                id: "global",
-                username: "Глобальный чат",
-                avatar: "🌐",
-                color: "#f6c177",
-              }
+            ? { id: "global", username: "Глобальный чат", avatar: "🌐", color: "#f6c177" }
             : {
                 id: body.receiverId,
                 username: receiver?.username ?? "",
@@ -111,10 +107,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       const senderUsername = (data as { sender?: { username?: string } } | undefined)?.sender?.username;
       const receiverLabel = (data as { receiver?: { username?: string } } | undefined)?.receiver?.username ?? "global";
       logger.info(senderUsername ?? null, "sent message", `to:${receiverLabel}`);
-      const [row] = await db
-        .select()
-        .from(schema.chats)
-        .where(eq(schema.chats.id, id));
+      const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, id));
       return mapChat(row!);
     },
     {
@@ -138,10 +131,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
         .set(patch)
         .where(eq(schema.chats.id, params.id));
       broadcast("chats", "update", params.id);
-      const [row] = await db
-        .select()
-        .from(schema.chats)
-        .where(eq(schema.chats.id, params.id));
+      const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, params.id));
       logger.info(null, "updated message", params.id);
       return mapChat(row!);
     },
@@ -164,9 +154,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       return { ok: true };
     },
     {
-      body: t.Object({
-        ids: t.Array(t.String()),
-      }),
+      body: t.Object({ ids: t.Array(t.String()) }),
     },
   )
   .delete("/:id", async ({ params, db }) => {
@@ -175,7 +163,7 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
     logger.info(null, "deleted message", params.id);
     return { ok: true };
   })
-  .get("/thread/:sender/:receiver", async ({ params, db }) => {
+  .get("/thread/:sender/:receiver", async ({ params, db, userService }) => {
     const chats = await db
       .select()
       .from(schema.chats)
@@ -191,20 +179,11 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
           ),
         ),
       );
-    const user = await getUserById(db, params.receiver);
-    return {
-      chat: chats.map(mapChat),
-      user,
-    };
+    const user = await userService.getById(params.receiver);
+    return { chat: chats.map(mapChat), user };
   })
   .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.chats)
-      .where(eq(schema.chats.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
+    const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, params.id));
+    if (!row) { set.status = 404; return { error: "Not found" }; }
     return mapChat(row);
   });

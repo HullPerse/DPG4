@@ -9,13 +9,8 @@ import { withRecordMeta } from "../lib/record";
 import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import createActivity from "@/services/activity.service";
-import {
-  changeUserStatus,
-  getUserById,
-  scoreUser,
-} from "../services/user.service";
 import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services/services.plugin";
 
 const STATUSES: Record<string, string> = {
   PLAYING: "В ПРОЦЕССЕ",
@@ -74,6 +69,7 @@ function mapGame(row: typeof schema.games.$inferSelect) {
 
 export const gamesRoute = new Elysia({ prefix: "/games" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/",
     async ({ db, query }) => {
@@ -132,7 +128,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   })
   .post(
     "/",
-    async ({ body, db }) => {
+    async ({ body, db, activityService }) => {
       const id = newId();
       const ts = nowIso();
       let imageFile = parseFileInput(body.image);
@@ -162,7 +158,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         updated: ts,
       });
 
-      await createActivity(db, {
+      await activityService.create({
         author: user.id,
         image: data.capsuleImage ?? "",
         type: "image",
@@ -225,7 +221,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
   )
   .post(
     "/:id/status",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, activityService, userService }) => {
       const [game] = await db
         .select()
         .from(schema.games)
@@ -239,28 +235,28 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
           ? { ...(game.playtime as object), user: body.time }
           : game.playtime;
 
-      await createActivity(db, {
+      await activityService.create({
         author: gameUser.id,
         image: gameData.capsuleImage ?? "",
         type: "image",
         text: `${gameUser.username} сменил статус игры ${gameData.name} на ${STATUSES[body.status] ?? body.status}`,
       });
 
-      const currentUser = await getUserById(db, gameUser.id);
+      const currentUser = await userService.getById(gameUser.id);
       if (
         currentUser &&
         Array.isArray(currentUser.status) &&
         currentUser.status.includes("subscribed")
       ) {
         if (currentUser.money >= SUBSCRIPTION_CONTINUE) {
-          await scoreUser(db, gameUser.id, -SUBSCRIPTION_CONTINUE);
+          await userService.score(gameUser.id, -SUBSCRIPTION_CONTINUE);
         } else {
-          await createActivity(db, {
+          await activityService.create({
             author: currentUser.id,
             image: currentUser.avatar,
             text: `${currentUser.username} не хватило денег на подписку`,
           });
-          await changeUserStatus(db, gameUser.id, "subscribed", "remove");
+          await userService.changeStatus(gameUser.id, "subscribed", "remove");
           broadcast("ads", "update");
         }
       }
@@ -270,8 +266,8 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         currentUser?.status?.includes("Борщ")
       ) {
         const finalScore = Math.floor(body.time / 2);
-        await scoreUser(db, gameUser.id, finalScore);
-        await changeUserStatus(db, gameUser.id, "Борщ", "remove");
+        await userService.score(gameUser.id, finalScore);
+        await userService.changeStatus(gameUser.id, "Борщ", "remove");
       }
 
       await db
