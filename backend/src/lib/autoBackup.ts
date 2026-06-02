@@ -1,7 +1,7 @@
 import { mkdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
 import { config } from "../server.config";
-import { resolveBackendPath } from "../paths";
+import { resolveBackendPath } from "./paths";
 import { logger } from "./logger";
 
 const TRACKER_PATH = resolveBackendPath("data", "backup-tracker.json");

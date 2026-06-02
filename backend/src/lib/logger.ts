@@ -1,7 +1,6 @@
 import { BunFile } from "bun";
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
-import { resolveBackendPath } from "../paths";
+import { resolveBackendPath } from "./paths";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 

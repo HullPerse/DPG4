@@ -1,4 +1,4 @@
-import { resolveBackendPath } from "./paths";
+import { resolveBackendPath } from "./lib/paths";
 
 function parseCorsOrigin(
   value: string | undefined,
