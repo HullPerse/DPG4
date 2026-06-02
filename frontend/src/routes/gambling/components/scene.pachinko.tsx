@@ -61,11 +61,6 @@ function buildPegPositions(): [number, number][] {
     }
   }
 
-  for (let y = 14; y >= 4; y -= 2) {
-    pegs.push([-(BOARD_HALF - 0.25), y]);
-    pegs.push([BOARD_HALF - 0.25, y]);
-  }
-
   return pegs;
 }
 
@@ -207,6 +202,14 @@ function BoardWalls({ bid }: { bid: number }) {
   const slotEdges = getSlotEdges(bid);
   return (
     <>
+      {/* Left guard strip — blocks ball from sliding along left wall to 5x */}
+      <RigidBody
+        type="fixed"
+        colliders={false}
+        position={[-(BOARD_HALF - 0.28), BOARD_CENTER_Y, PLANE_Z]}
+      >
+        <CuboidCollider args={[0.06, BOARD_HEIGHT / 2 - 0.3, LANE_HALF_Z]} />
+      </RigidBody>
       {/* Side walls */}
       <RigidBody
         type="fixed"
