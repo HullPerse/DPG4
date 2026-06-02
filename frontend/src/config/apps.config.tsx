@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  Cat,
   Clock,
   Dices,
   MoveDown,
@@ -32,6 +33,7 @@ const Paint = lazy(() => import("@/routes/paint/paint.root"));
 const ThemeApp = lazy(() => import("@/routes/desktop/apps/theme.app"));
 const WheelHistoryApp = lazy(() => import("@/routes/desktop/apps/history.app"));
 const GlobalChatApp = lazy(() => import("@/routes/desktop/apps/chat.app"));
+const RatApp = lazy(() => import("@/routes/desktop/apps/rat.app"));
 const Gambling = lazy(() => import("@/routes/gambling/gambling.root"));
 
 export const APPS = [
@@ -106,12 +108,19 @@ export const APPS = [
     priority: 10,
   },
   {
+    name: "rat",
+    label: "Крыса",
+    icon: <Cat className="size-7" />,
+    component: <RatApp />,
+    priority: 11,
+  },
+  {
     name: "howlongtobeat",
     label: "HLTB",
     icon: <Timer className="size-7" />,
     link: "https://howlongtobeat.com/",
     type: "window" as const,
-    priority: 11,
+    priority: 12,
   },
   {
     name: "gamewheel",
@@ -119,7 +128,7 @@ export const APPS = [
     link: "https://gamegauntlets.com/",
     icon: <Star className="size-7" />,
     type: "browser" as const,
-    priority: 12,
+    priority: 13,
   },
 ];
 
@@ -261,6 +270,15 @@ export const WINDOWS = [
       minHeight: 500,
       width: 500,
       height: 600,
+    },
+  },
+  {
+    id: "rat",
+    title: "Крыса",
+    icon: <Cat className="size-7" />,
+    size: {
+      width: 640,
+      height: 640,
     },
   },
 ];
