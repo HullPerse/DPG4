@@ -88,7 +88,7 @@ function CellComponent({
     return (
       <div className="absolute">
         {arrowMap[arrowType as keyof typeof arrowMap]}
-        <span className="absolute -top-1.5 -right-0.5 text-xs font-bold text-text">
+        <span className="absolute -top-1 -right-0.5 text-xs font-bold text-text">
           {destination}
         </span>
       </div>

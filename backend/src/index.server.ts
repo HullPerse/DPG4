@@ -26,6 +26,7 @@ import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
 import { sentinelRoute } from "./routes/response.route";
+import { servicesPlugin } from "./services/services.plugin";
 import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()
@@ -100,6 +101,7 @@ const app = new Elysia()
     }),
   )
   .use(dbPlugin)
+  .use(servicesPlugin)
   .use(adminRoute)
   .get("/health", () => ({ ok: true }))
   .ws("/ws", {

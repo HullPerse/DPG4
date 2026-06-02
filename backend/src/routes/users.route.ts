@@ -7,16 +7,11 @@ import { omitPassword, withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import {
-  changeUserDice,
-  changeUserStatus,
-  getUserById,
-  scoreUser,
-  updatePlace,
-} from "../services/user.service";
+import { servicesPlugin } from "../services/services.plugin";
 
 export const usersRoute = new Elysia({ prefix: "/users" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .use(authPlugin)
   .get(
     "/",
@@ -73,8 +68,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .get(
     "/:id",
-    async ({ params, db, set }) => {
-      const user = await getUserById(db, params.id);
+    async ({ params, set, userService }) => {
+      const user = await userService.getById(params.id);
       if (!user) {
         set.status = 404;
         return { error: "Not found" };
@@ -85,7 +80,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .patch(
     "/:id",
-    async ({ params, body, db, user }) => {
+    async ({ params, body, db, user, userService }) => {
       const { password: _pw, passwordHash: _ph, id: _id, created: _cr, ...rest } = body;
       await db
         .update(schema.users)
@@ -93,7 +88,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
       logger.info(user?.username, "updated profile", params.id);
-      return getUserById(db, params.id);
+      return userService.getById(params.id);
     },
     {
       body: t.Record(t.String(), t.Any()),
@@ -102,8 +97,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/status",
-    async ({ params, body, db, user }) => {
-      const result = await changeUserStatus(db, params.id, body.status, body.type);
+    async ({ params, body, user, userService }) => {
+      const result = await userService.changeStatus(params.id, body.status, body.type);
       logger.info(user?.username, "changed status", params.id, `${body.type}:${body.status}`);
       return result;
     },
@@ -117,8 +112,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/score",
-    async ({ params, body, db, user }) => {
-      const result = await scoreUser(db, params.id, body.score, body.trade);
+    async ({ params, body, user, userService }) => {
+      const result = await userService.score(params.id, body.score, body.trade);
       logger.info(user?.username, "changed score", params.id, body.score > 0 ? `+${body.score}` : String(body.score));
       return result;
     },
@@ -132,8 +127,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/dice",
-    async ({ params, body, db, user }) => {
-      const result = await changeUserDice(db, params.id, body.realTime, body.action);
+    async ({ params, body, user, userService }) => {
+      const result = await userService.changeDice(params.id, body.realTime, body.action);
       logger.info(user?.username, "changed dice", params.id, body.action);
       return result;
     },
@@ -150,8 +145,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/place",
-    async ({ params, db, user }) => {
-      const result = await updatePlace(db, params.id);
+    async ({ params, user, userService }) => {
+      const result = await userService.updatePlace(params.id);
       logger.info(user?.username, "assigned place", params.id);
       return result;
     },
@@ -159,14 +154,14 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   )
   .delete(
     "/:id/place",
-    async ({ params, db, user }) => {
+    async ({ params, db, user, userService }) => {
       await db
         .update(schema.users)
         .set({ place: "0", updated: nowIso() })
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
       logger.info(user?.username, "cleared place", params.id);
-      return getUserById(db, params.id);
+      return userService.getById(params.id);
     },
     { detail: { tags: ["users"], summary: "Clear podium place" } },
   );

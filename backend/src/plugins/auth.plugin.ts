@@ -1,15 +1,10 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
+import type { JwtUser } from "../types/auth";
 import { config } from "../server.config";
 import { db } from "../db";
 import * as schema from "../db/schema";
-
-export type JwtUser = {
-  sub: string;
-  isAdmin: boolean;
-  username: string | null;
-};
 
 const usernameCache = new Map<
   string,

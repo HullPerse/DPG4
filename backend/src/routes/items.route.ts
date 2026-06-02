@@ -8,18 +8,9 @@ import { compressSquare, isImageMime } from "../lib/images";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import {
-  addInventory,
-  buyMarket,
-  chargeInventory,
-  discountMarket,
-  removeMarketListing,
-  sellInventory,
-  tradeInventory,
-} from "../services/economy.service";
 import { authPlugin } from "../plugins/auth.plugin";
 import { dbPlugin } from "../plugins/db.plugin";
-import { executeInventoryUse } from "../services/items/effect.items";
+import { servicesPlugin } from "../services/services.plugin";
 
 const itemListColumns = {
   id: schema.items.id,
@@ -226,6 +217,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
 
 export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .use(authPlugin)
   .get(
     "/",
@@ -287,8 +279,8 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   })
   .post(
     "/add",
-    async ({ body, db, user }) => {
-      const result = await addInventory(db, body.userId, body.itemId);
+    async ({ body, user, economyService }) => {
+      const result = await economyService.addInventory(body.userId, body.itemId);
       logger.info(user?.username, "added item to inventory", `user:${body.userId}`, `item:${body.itemId}`);
       return result;
     },
@@ -318,12 +310,12 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/use",
-    async ({ params, user, db, set }) => {
+    async ({ params, user, set, effectService }) => {
       if (!user) {
         set.status = 401;
         return { error: "Unauthorized" };
       }
-      const result = await executeInventoryUse(db, user.sub, params.id);
+      const result = await effectService.executeUse(user.sub, params.id);
       logger.info(user.username, "used inventory item", params.id);
       return result;
     },
@@ -336,8 +328,8 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/charge",
-    async ({ params, body, db, user }) => {
-      const result = await chargeInventory(db, params.id, body.oldCharge, body.newCharge);
+    async ({ params, body, user, economyService }) => {
+      const result = await economyService.chargeInventory(params.id, body.oldCharge, body.newCharge);
       logger.info(user?.username, "charged inventory item", params.id, `${body.oldCharge}→${body.newCharge}`);
       return result;
     },
@@ -346,6 +338,45 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         oldCharge: t.Number(),
         newCharge: t.Number(),
       }),
+    },
+  )
+  .post(
+    "/:id/consume",
+    async ({ params, body, db, user, set, economyService, userService, activityService }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      const [inv] = await db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
+      if (!inv) {
+        set.status = 404;
+        return { error: "Предмет не найден" };
+      }
+      if (inv.owner !== user.sub) {
+        set.status = 403;
+        return { error: "Не ваш предмет" };
+      }
+      await economyService.chargeInventory(params.id, inv.charge, -1);
+      const userData = await userService.getById(user.sub);
+      await activityService.create({
+        author: user.sub,
+        image: userData?.avatar ?? "",
+        text: body.activityText,
+      });
+      logger.info(user.username, "consumed inventory item", params.id);
+      return { ok: true };
+    },
+    {
+      body: t.Object({
+        activityText: t.String(),
+      }),
+      detail: {
+        tags: ["items"],
+        summary: "Consume inventory item - charge and create activity in one call",
+      },
     },
   )
   .delete("/:id", async ({ params, db, user }) => {
@@ -357,6 +388,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
 
 export const marketRoute = new Elysia({ prefix: "/market" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/",
     async ({ db, query }) => {
@@ -400,8 +432,8 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   })
   .post(
     "/sell",
-    async ({ body, db }) => {
-      const result = await sellInventory(db, body.inventoryId, body.ownerId, body.price);
+    async ({ body, economyService }) => {
+      const result = await economyService.sellInventory(body.inventoryId, body.ownerId, body.price);
       logger.info(null, "listed item on market", `item:${body.inventoryId}`, `price:${body.price}`);
       return result;
     },
@@ -415,8 +447,8 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   )
   .post(
     "/:id/buy",
-    async ({ params, body, db }) => {
-      const result = await buyMarket(db, params.id, body.newOwnerId, body.oldOwnerId);
+    async ({ params, body, economyService }) => {
+      const result = await economyService.buyMarket(params.id, body.newOwnerId, body.oldOwnerId);
       logger.info(null, "bought market item", params.id, `buyer:${body.newOwnerId}`);
       return result;
     },
@@ -427,15 +459,15 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       }),
     },
   )
-  .post("/:id/remove", async ({ params, db }) => {
-    const result = await removeMarketListing(db, params.id);
+  .post("/:id/remove", async ({ params, economyService }) => {
+    const result = await economyService.removeMarketListing(params.id);
     logger.info(null, "removed market listing", params.id);
     return result;
   })
   .post(
     "/:id/discount",
-    async ({ params, body, db }) => {
-      const result = await discountMarket(db, params.id, body.ownerId, body.price, body.discountPrice);
+    async ({ params, body, economyService }) => {
+      const result = await economyService.discountMarket(params.id, body.ownerId, body.price, body.discountPrice);
       logger.info(null, "discounted market item", params.id, `${body.price}→${body.discountPrice}`);
       return result;
     },
@@ -455,11 +487,11 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   });
 
 export const tradeRoute = new Elysia({ prefix: "/trade" })
-  .use(dbPlugin)
+  .use(servicesPlugin)
   .post(
     "/",
-    async ({ body, db }) => {
-      const result = await tradeInventory(db, body.currentUser, body.otherUser);
+    async ({ body, economyService }) => {
+      const result = await economyService.tradeInventory(body.currentUser, body.otherUser);
       logger.info(null, "trade completed", `${body.currentUser.id} ↔ ${body.otherUser.id}`);
       return result;
     },

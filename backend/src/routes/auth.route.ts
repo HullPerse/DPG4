@@ -5,17 +5,18 @@ import { authPlugin, signToken } from "../plugins/auth.plugin";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { omitPassword, withRecordMeta } from "../lib/record";
-import createActivity from "@/services/activity.service";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services/services.plugin";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .use(authPlugin)
   .post(
     "/register",
-    async ({ body, db, jwt, set }) => {
+    async ({ body, db, jwt, set, activityService }) => {
       const username = body.username.toUpperCase();
       const existing = await db
         .select()
@@ -49,7 +50,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         updated: ts,
       });
 
-      await createActivity(db, {
+      await activityService.create({
         author: id,
         image: body.avatar ?? "",
         type: "emoji",

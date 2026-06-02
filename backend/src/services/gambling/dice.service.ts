@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
-import { getUserById, scoreUser } from "../user.service";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
 import { DiceResult } from "@/types/gambling";
 import { Db } from "@/types";
+import { UserService } from "../user.service";
 
 function getRandomDice(): [number, number, number] {
   return [
@@ -23,35 +23,19 @@ function calculateResult(
   const unique = new Set(values);
 
   if (a === 1 && b === 2 && c === 3) {
-    return {
-      payout: -bid,
-      label: "1 · 2 · 3 - проигрыш",
-      tone: "lose",
-    };
+    return { payout: -bid, label: "1 · 2 · 3 - проигрыш", tone: "lose" };
   }
 
   if (a === 4 && b === 5 && c === 6) {
-    return {
-      payout: bid * 2,
-      label: "4 · 5 · 6 - выигрыш",
-      tone: "win",
-    };
+    return { payout: bid * 2, label: "4 · 5 · 6 - выигрыш", tone: "win" };
   }
 
   if (a === 1 && b === 1 && c === 1) {
-    return {
-      payout: bid * 6,
-      label: "Три единицы - джекпот",
-      tone: "jackpot",
-    };
+    return { payout: bid * 6, label: "Три единицы - джекпот", tone: "jackpot" };
   }
 
   if (unique.size === 1) {
-    return {
-      payout: bid * 3,
-      label: `Три ${a} - выигрыш`,
-      tone: "win",
-    };
+    return { payout: bid * 3, label: `Три ${a} - выигрыш`, tone: "win" };
   }
 
   if (unique.size === 2) {
@@ -71,68 +55,73 @@ function calculateResult(
   };
 }
 
-export async function rollDice(
-  db: Db,
-  userId: string,
-  bid: number,
-): Promise<{
-  values: [number, number, number];
-  payout: number;
-  net: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-  balance: number;
-  banned: boolean;
-}> {
-  if (bid < 1 || bid > 10 || !Number.isInteger(bid))
-    throw new Error("Invalid bid");
+export class DiceService {
+  constructor(
+    private db: Db,
+    private userService: UserService,
+  ) {}
 
-  const user = await getUserById(db, userId);
-  if (!user) throw new Error("User not found");
-  if (user.money < bid) throw new Error("Insufficient balance");
-  if (user.gamblingBanned) throw new Error("Banned from gambling");
+  async roll(
+    userId: string,
+    bid: number,
+  ): Promise<{
+    values: [number, number, number];
+    payout: number;
+    net: number;
+    label: string;
+    tone: "jackpot" | "win" | "lose" | "chance";
+    balance: number;
+    banned: boolean;
+  }> {
+    if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+      throw new Error("Invalid bid");
 
-  const values = getRandomDice();
-  const result = calculateResult(values, bid);
-  const { payout, label, tone } = result;
-  const net = -bid + payout;
+    const user = await this.userService.getById(userId);
+    if (!user) throw new Error("User not found");
+    if (user.money < bid) throw new Error("Insufficient balance");
+    if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-  let gamblingWinnings: number = user.gamblingWinnings ?? 0;
-  let gamblingBanned: boolean = user.gamblingBanned ?? false;
+    const values = getRandomDice();
+    const result = calculateResult(values, bid);
+    const { payout, label, tone } = result;
+    const net = -bid + payout;
 
-  if (payout > 0) {
-    gamblingWinnings += payout;
-    if (gamblingWinnings >= 30 && !gamblingBanned) {
-      gamblingBanned = true;
+    let gamblingWinnings: number = user.gamblingWinnings ?? 0;
+    let gamblingBanned: boolean = user.gamblingBanned ?? false;
+
+    if (payout > 0) {
+      gamblingWinnings += payout;
+      if (gamblingWinnings >= 30 && !gamblingBanned) {
+        gamblingBanned = true;
+      }
     }
+
+    await this.userService.score(userId, -bid);
+    if (payout !== 0) {
+      await this.userService.score(userId, payout);
+    }
+
+    await this.db
+      .update(schema.users)
+      .set({
+        gamblingWinnings,
+        gamblingBanned,
+        updated: nowIso(),
+      })
+      .where(eq(schema.users.id, userId));
+
+    const updatedUser = await this.userService.getById(userId);
+
+    logger.info(user.username, "rolled dice", values.join(", "), `net:${net}`);
+
+    return {
+      values,
+      payout,
+      net,
+      label,
+      tone,
+      balance: updatedUser?.money ?? 0,
+      banned: gamblingBanned,
+    };
   }
-
-  await scoreUser(db, userId, -bid);
-
-  if (payout !== 0) {
-    await scoreUser(db, userId, payout);
-  }
-
-  await db
-    .update(schema.users)
-    .set({
-      gamblingWinnings,
-      gamblingBanned,
-      updated: nowIso(),
-    })
-    .where(eq(schema.users.id, userId));
-
-  const updatedUser = await getUserById(db, userId);
-
-  logger.info(user.username, "rolled dice", values.join(", "), `net:${net}`);
-
-  return {
-    values,
-    payout,
-    net,
-    label,
-    tone,
-    balance: updatedUser?.money ?? 0,
-    banned: gamblingBanned,
-  };
 }

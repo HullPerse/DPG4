@@ -1,7 +1,6 @@
 import { User } from "@/types/user";
 import { apiFetch } from "./client.api";
 import { useDataStore } from "@/store/data.store";
-import { calculateMovePath } from "@/lib/cell.utils";
 import CellApi from "./cell.api";
 import { usableCell } from "@/lib/cell.effects";
 
@@ -117,17 +116,20 @@ export default class UserApi {
     const currentUser = await this.getUserById(userId);
     const { startMoving } = useDataStore.getState();
     const fromPosition = currentUser.position || 0;
-    const cells = await cellApi.getCells();
+    const diceRoll = newPosition - fromPosition;
 
-    const { path, finalPosition } = calculateMovePath(
-      fromPosition,
-      newPosition - fromPosition,
-      cells,
-    );
+    const { path, finalPosition } = await apiFetch<{
+      path: number[];
+      finalPosition: number;
+    }>("/utils/calculate-move-path", {
+      method: "POST",
+      body: { startingPosition: fromPosition, diceRoll },
+    });
 
     startMoving(userId, fromPosition, newPosition, finalPosition, path);
     await this.moveUser(userId, finalPosition);
 
+    const cells = await cellApi.getCells();
     const targetCell = cells.find((c) => c.number === finalPosition);
     if (targetCell) await usableCell(targetCell, userId);
     await this.changeUserAction(userId, "GAMEADD");

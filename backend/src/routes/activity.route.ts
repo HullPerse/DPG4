@@ -1,19 +1,12 @@
 import { Elysia, t } from "elysia";
-import createActivity, {
-  listActivity,
-  getLatestActivity,
-  getActivityById,
-} from "../services/activity.service";
-
-import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services/services.plugin";
 
 export const activityRoute = new Elysia({ prefix: "/activity" })
-  .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/",
-    async ({ db, query }) =>
-      listActivity(
-        db,
+    async ({ query, activityService }) =>
+      activityService.list(
         query.limit ? Number(query.limit) : 50,
         query.offset ? Number(query.offset) : 0,
       ),
@@ -26,16 +19,16 @@ export const activityRoute = new Elysia({ prefix: "/activity" })
       ),
     },
   )
-  .get("/latest", async ({ db }) => getLatestActivity(db))
-  .get("/:id", async ({ params, db, set }) => {
-    const row = await getActivityById(db, params.id);
+  .get("/latest", async ({ activityService }) => activityService.getLatest())
+  .get("/:id", async ({ params, activityService, set }) => {
+    const row = await activityService.getById(params.id);
     if (!row) {
       set.status = 404;
       return { error: "Not found" };
     }
     return row;
   })
-  .post("/", async ({ body, db }) => createActivity(db, body), {
+  .post("/", async ({ body, activityService }) => activityService.create(body), {
     body: t.Object({
       text: t.String(),
       author: t.Optional(t.String()),

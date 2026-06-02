@@ -1,34 +1,19 @@
 import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
 import * as schema from "../db/schema";
-import { calculateCost, calculateScore } from "../lib/game.utils";
+import {
+  calculateCost,
+  calculateScore,
+  weightedRandom,
+} from "../lib/game.utils";
+import { calculateMovePath } from "../lib/cell.utils";
 import { dbPlugin } from "../plugins/db.plugin";
-import { rollDice } from "../services/gambling/dice.service";
-import {
-  blackjackDeal,
-  blackjackHit,
-  blackjackStand,
-  getBlackjackState,
-  abandonBlackjack,
-} from "../services/gambling/blackjack.service";
-import {
-  launchRocket,
-  cashoutRocket,
-  pollRocket,
-  abandonRocket,
-  dismissRocket,
-  getRocketHistory,
-} from "../services/gambling/rocket.service";
-import {
-  dropPachinko,
-  settlePachinko,
-  syncPachinko,
-  abandonPachinko,
-} from "../services/gambling/pachinko.service";
+import { servicesPlugin } from "../services/services.plugin";
 import { nowIso } from "../lib/dates";
 
 export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/calculate-score",
     ({ query }) => ({
@@ -50,9 +35,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   })
   .post(
     "/dice-roll",
-    async ({ body, db, set }) => {
+    async ({ body, set, diceService }) => {
       try {
-        return await rollDice(db, body.userId, body.bid);
+        return await diceService.roll(body.userId, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -72,9 +57,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-deal",
-    async ({ body, db, set }) => {
+    async ({ body, set, blackjackService }) => {
       try {
-        return await blackjackDeal(db, body.userId, body.bid);
+        return await blackjackService.deal(body.userId, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -93,9 +78,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-hit",
-    async ({ body, db, set }) => {
+    async ({ body, set, blackjackService }) => {
       try {
-        return await blackjackHit(db, body.userId);
+        return await blackjackService.hit(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -108,9 +93,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-stand",
-    async ({ body, db, set }) => {
+    async ({ body, set, blackjackService }) => {
       try {
-        return await blackjackStand(db, body.userId);
+        return await blackjackService.stand(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -123,8 +108,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-sync",
-    async ({ body, db }) => {
-      const state = await getBlackjackState(db, body.userId);
+    async ({ body, blackjackService }) => {
+      const state = await blackjackService.getState(body.userId);
       return { state };
     },
     {
@@ -137,8 +122,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-abandon",
-    async ({ body }) => {
-      abandonBlackjack(body.userId);
+    async ({ body, blackjackService }) => {
+      blackjackService.abandon(body.userId);
       return { success: true };
     },
     {
@@ -179,9 +164,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-launch",
-    async ({ body, db, set }) => {
+    async ({ body, set, rocketService }) => {
       try {
-        return await launchRocket(db, body.userId, body.bid);
+        return await rocketService.launch(body.userId, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -200,9 +185,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-cashout",
-    async ({ body, db, set }) => {
+    async ({ body, set, rocketService }) => {
       try {
-        return await cashoutRocket(db, body.userId);
+        return await rocketService.cashout(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -218,9 +203,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-poll",
-    async ({ body, db, set }) => {
+    async ({ body, set, rocketService }) => {
       try {
-        return await pollRocket(db, body.userId);
+        return await rocketService.poll(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -236,8 +221,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-abandon",
-    async ({ body }) => {
-      abandonRocket(body.userId);
+    async ({ body, rocketService }) => {
+      rocketService.abandon(body.userId);
       return { success: true };
     },
     {
@@ -250,8 +235,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-dismiss",
-    async ({ body }) => {
-      dismissRocket(body.userId);
+    async ({ body, rocketService }) => {
+      rocketService.dismiss(body.userId);
       return { success: true };
     },
     {
@@ -264,8 +249,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .get(
     "/rocket-history",
-    async () => {
-      return getRocketHistory();
+    async ({ rocketService }) => {
+      return rocketService.getHistory();
     },
     {
       detail: {
@@ -276,9 +261,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-drop",
-    async ({ body, db, set }) => {
+    async ({ body, set, pachinkoService }) => {
       try {
-        return await dropPachinko(db, body.userId, body.bid);
+        return await pachinkoService.drop(body.userId, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -297,9 +282,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-settle",
-    async ({ body, db, set }) => {
+    async ({ body, set, pachinkoService }) => {
       try {
-        return await settlePachinko(db, body.userId, body.slotIndex);
+        return await pachinkoService.settle(body.userId, body.slotIndex);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -318,9 +303,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-sync",
-    async ({ body, db, set }) => {
+    async ({ body, set, pachinkoService }) => {
       try {
-        return await syncPachinko(db, body.userId);
+        return await pachinkoService.sync(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -336,8 +321,8 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-abandon",
-    async ({ body }) => {
-      abandonPachinko(body.userId);
+    async ({ body, pachinkoService }) => {
+      pachinkoService.abandon(body.userId);
       return { success: true };
     },
     {
@@ -345,6 +330,47 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       detail: {
         tags: ["utils"],
         summary: "Abandon active pachinko drop",
+      },
+    },
+  )
+  .post(
+    "/weighted-random",
+    ({ body }) => ({
+      result: weightedRandom(body.max),
+    }),
+    {
+      body: t.Object({
+        max: t.Integer({ minimum: 1 }),
+      }),
+      detail: {
+        tags: ["utils"],
+        summary: "Server-authoritative weighted random number",
+      },
+    },
+  )
+  .post(
+    "/calculate-move-path",
+    async ({ body, db }) => {
+      const { startingPosition, diceRoll } = body;
+      const allCells = await db
+        .select({
+          number: schema.cells.number,
+          ladderTo: schema.cells.ladderTo,
+          snakeTo: schema.cells.snakeTo,
+        })
+        .from(schema.cells);
+      const result = calculateMovePath(startingPosition, diceRoll, allCells);
+      return result;
+    },
+    {
+      body: t.Object({
+        startingPosition: t.Number(),
+        diceRoll: t.Number(),
+      }),
+      detail: {
+        tags: ["utils"],
+        summary:
+          "Server-authoritative board movement path with snake/ladder resolution",
       },
     },
   );

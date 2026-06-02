@@ -2,8 +2,8 @@ import { desc, eq } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { nowIso } from "../lib/dates";
 import { broadcast } from "../lib/ws";
-import createActivity from "./activity.service";
 import { Db } from "@/types";
+import { ActivityService } from "./activity.service";
 
 const STATUSES: Record<string, string> = {
   PLAYING: "В ПРОЦЕССЕ",
@@ -12,80 +12,84 @@ const STATUSES: Record<string, string> = {
   REROLLED: "РЕРОЛЬНУТО",
 };
 
-export async function getLastGameForUser(db: Db, userId: string) {
-  const [row] = await db
-    .select()
-    .from(schema.games)
-    .where(eq(schema.games.userId, userId))
-    .orderBy(desc(schema.games.created))
-    .limit(1);
-  return row ?? null;
-}
+export class GameService {
+  constructor(
+    private db: Db,
+    private activityService: ActivityService,
+  ) {}
 
-export async function changeGameStatus(
-  db: Db,
-  gameId: string,
-  status: string,
-  time: number,
-  score: number,
-) {
-  const [game] = await db
-    .select()
-    .from(schema.games)
-    .where(eq(schema.games.id, gameId));
-  if (!game) return null;
+  async getLastForUser(userId: string) {
+    const [row] = await this.db
+      .select()
+      .from(schema.games)
+      .where(eq(schema.games.userId, userId))
+      .orderBy(desc(schema.games.created))
+      .limit(1);
+    return row ?? null;
+  }
 
-  const newTime =
-    status === "COMPLETED"
-      ? { ...(game.playtime as object), user: time }
-      : game.playtime;
+  async changeStatus(
+    gameId: string,
+    status: string,
+    time: number,
+    score: number,
+  ) {
+    const [game] = await this.db
+      .select()
+      .from(schema.games)
+      .where(eq(schema.games.id, gameId));
+    if (!game) return null;
 
-  await db
-    .update(schema.games)
-    .set({
-      status,
-      playtime: newTime,
-      score,
-      updated: nowIso(),
-    })
-    .where(eq(schema.games.id, gameId));
+    const newTime =
+      status === "COMPLETED"
+        ? { ...(game.playtime as object), user: time }
+        : game.playtime;
 
-  const gameUser = game.user as { id: string; username: string };
-  const gameData = game.data as { name: string; capsuleImage?: string };
+    await this.db
+      .update(schema.games)
+      .set({
+        status,
+        playtime: newTime,
+        score,
+        updated: nowIso(),
+      })
+      .where(eq(schema.games.id, gameId));
 
-  await createActivity(db, {
-    author: gameUser.id,
-    image: gameData.capsuleImage ?? "",
-    type: "image",
-    text: `${gameUser.username} сменил статус игры ${gameData.name} на ${STATUSES[status] ?? status}`,
-  });
+    const gameUser = game.user as { id: string; username: string };
+    const gameData = game.data as { name: string; capsuleImage?: string };
 
-  broadcast("games", "update", gameId);
-  return game;
-}
+    await this.activityService.create({
+      author: gameUser.id,
+      image: gameData.capsuleImage ?? "",
+      type: "image",
+      text: `${gameUser.username} сменил статус игры ${gameData.name} на ${STATUSES[status] ?? status}`,
+    });
 
-export async function rerollUserLastGame(db: Db, userId: string) {
-  const game = await getLastGameForUser(db, userId);
-  if (!game) return null;
-  await changeGameStatus(
-    db,
-    game.id,
-    "REROLLED",
-    Number((game.data as { time?: number })?.time ?? 0),
-    Number(game.score ?? 0),
-  );
-  return game;
-}
+    broadcast("games", "update", gameId);
+    return game;
+  }
 
-export async function dropUserPlayingGame(db: Db, userId: string) {
-  const game = await getLastGameForUser(db, userId);
-  if (!game || game.status !== "PLAYING") return null;
-  await changeGameStatus(
-    db,
-    game.id,
-    "DROPPED",
-    Number((game.data as { time?: number })?.time ?? 0),
-    Number(game.score ?? 0),
-  );
-  return game;
+  async rerollUserLastGame(userId: string) {
+    const game = await this.getLastForUser(userId);
+    if (!game) return null;
+    await this.changeStatus(
+      game.id,
+      "REROLLED",
+      Number((game.data as { time?: number })?.time ?? 0),
+      Number(game.score ?? 0),
+    );
+    return game;
+  }
+
+  async dropUserPlayingGame(userId: string) {
+    const game = await this.getLastForUser(userId);
+    if (!game || game.status !== "PLAYING") return null;
+    await this.changeStatus(
+      game.id,
+      "DROPPED",
+      Number((game.data as { time?: number })?.time ?? 0),
+      Number(game.score ?? 0),
+    );
+    return game;
+  }
 }

@@ -37,3 +37,17 @@ export function removeFirst(arr: string[], value: string): string[] {
   const index = arr.indexOf(value);
   return index === -1 ? arr : arr.filter((_, i) => i !== index);
 }
+
+export function weightedRandom(max: number): number {
+  const items = Array.from({ length: max }, (_, i) => i + 1);
+  const weights = Array.from({ length: max }, (_, i) =>
+    Math.min(i + 1, max - i),
+  );
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r < 0) return items[i];
+  }
+  return items[items.length - 1];
+}

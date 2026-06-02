@@ -7,19 +7,14 @@ import { parseFileInput } from "../lib/files";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import createActivity from "@/services/activity.service";
-import {
-  changeUserStatus,
-  getUserById,
-  scoreUser,
-} from "../services/user.service";
+import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services/services.plugin";
 
 export const SUBSCRIPTION_COST = 2;
 
-import { dbPlugin } from "../plugins/db.plugin";
-
 export const adsRoute = new Elysia({ prefix: "/ads" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get("/", async ({ db }) => {
     const rows = await db.select().from(schema.ads);
     return rows.map((r) => withRecordMeta(r, "ads"));
@@ -70,8 +65,8 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
   })
   .post(
     "/subscribe",
-    async ({ body, db }) => {
-      const user = await getUserById(db, body.userId);
+    async ({ body, userService, activityService }) => {
+      const user = await userService.getById(body.userId);
       if (!user || user.money < SUBSCRIPTION_COST) {
         logger.info(
           user?.username ?? null,
@@ -81,10 +76,10 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
         return { ok: false };
       }
 
-      await scoreUser(db, body.userId, -SUBSCRIPTION_COST);
-      await changeUserStatus(db, body.userId, "subscribed", "add");
+      await userService.score(body.userId, -SUBSCRIPTION_COST);
+      await userService.changeStatus(body.userId, "subscribed", "add");
 
-      await createActivity(db, {
+      await activityService.create({
         author: body.userId,
         image: user.avatar,
         text: `${user.username} оформил подписку за ${SUBSCRIPTION_COST} чубриков`,
@@ -97,12 +92,12 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
   )
   .post(
     "/unsubscribe",
-    async ({ body, db }) => {
-      const user = await getUserById(db, body.userId);
+    async ({ body, userService, activityService }) => {
+      const user = await userService.getById(body.userId);
       if (!user) return { ok: false };
 
-      await changeUserStatus(db, body.userId, "subscribed", "remove");
-      await createActivity(db, {
+      await userService.changeStatus(body.userId, "subscribed", "remove");
+      await activityService.create({
         author: body.userId,
         image: user.avatar,
         text: `${user.username} не хватило денег на подписку`,

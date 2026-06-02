@@ -5,8 +5,8 @@ import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
-import createActivity from "@/services/activity.service";
 import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services/services.plugin";
 
 const cellPatchBody = t.Object({
   type: t.Optional(t.String()),
@@ -23,6 +23,7 @@ const cellPatchBody = t.Object({
 
 export const cellsRoute = new Elysia({ prefix: "/cells" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/",
     async ({ db, query }) => {
@@ -127,7 +128,8 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
   )
   .post(
     "/:id/capture",
-    async ({ params, body, db }) => {
+    async ({ params, body, activityService }) => {
+      const { db } = await import("../db");
       const [cell] = await db
         .select()
         .from(schema.cells)
@@ -140,7 +142,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
         .set({ captured, updated: nowIso() })
         .where(eq(schema.cells.id, params.id));
 
-      await createActivity(db, {
+      await activityService.create({
         author: body.userId,
         image: "✅",
         type: "emoji",

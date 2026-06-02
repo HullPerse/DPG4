@@ -23,3 +23,57 @@ export function getFirstCellInNextRow(currentRow: number): number {
   const nextRow = currentRow + 1;
   return nextRow * 10 + (nextRow % 2 === 0 ? 1 : 10);
 }
+
+import type { CellPath } from "../types/cell";
+
+export function calculateMovePath(
+  startingPosition: number,
+  diceRoll: number,
+  cells: CellPath[],
+): { path: number[]; finalPosition: number } {
+  const path: number[] = [];
+  const steps = diceRoll > 0 ? diceRoll : -diceRoll;
+  const direction = diceRoll > 0 ? 1 : -1;
+  let currentPosition = startingPosition;
+
+  if (startingPosition === 100 && diceRoll > 0) {
+    path.push(101);
+    return { path, finalPosition: 101 };
+  }
+
+  if (startingPosition === 101 && diceRoll > 0) {
+    return { path, finalPosition: 101 };
+  }
+
+  for (let i = 0; i < steps; i++) {
+    currentPosition += direction;
+    if (currentPosition < 0) currentPosition = 0;
+    if (currentPosition === 100) currentPosition = 101;
+    if (currentPosition >= 100) currentPosition = 100;
+    path.push(currentPosition);
+  }
+
+  const cell = cells.find((c) => c.number === currentPosition);
+  if (!cell) {
+    return { path: [...path, currentPosition], finalPosition: currentPosition };
+  }
+
+  if (diceRoll < 0) {
+    if (cell.snakeTo && cell.snakeTo > 0) {
+      currentPosition = cell.snakeTo;
+      path.push(currentPosition);
+      return { path: [...path, currentPosition], finalPosition: currentPosition };
+    }
+    return { path, finalPosition: currentPosition };
+  }
+
+  if (cell.ladderTo && cell.ladderTo > 0) {
+    currentPosition = cell.ladderTo;
+    path.push(currentPosition);
+  } else if (cell.snakeTo && cell.snakeTo > 0) {
+    currentPosition = cell.snakeTo;
+    path.push(currentPosition);
+  }
+
+  return { path: [...path, currentPosition], finalPosition: currentPosition };
+}
