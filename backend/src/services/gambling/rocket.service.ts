@@ -13,9 +13,10 @@ const crashHistory: { crashPoint: number; timestamp: number }[] = [];
 const MAX_HISTORY = 50;
 const HOUSE_EDGE = 0.96;
 
-function generateCrashPoint(): number {
+function generateCrashPoint(bid: number): number {
   const e = Math.random();
-  return Math.max(1, Math.floor((HOUSE_EDGE / (1 - e)) * 100) / 100);
+  const edge = Math.max(0.8, HOUSE_EDGE - (bid - 1) * 0.01);
+  return Math.max(1, Math.floor((edge / (1 - e)) * 100) / 100);
 }
 
 function computeMultiplier(elapsedMs: number): number {
@@ -89,7 +90,7 @@ export async function launchRocket(
   if (user.money < bid) throw new Error("Insufficient balance");
   if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-  const crashPoint = generateCrashPoint();
+  const crashPoint = generateCrashPoint(bid);
   const now = Date.now();
 
   activeGames.set(userId, {
