@@ -107,6 +107,13 @@ export async function abandonRocket(userId: string): Promise<{ success: boolean 
   });
 }
 
+export async function dismissRocket(userId: string): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>("/utils/rocket-dismiss", {
+    method: "POST",
+    body: { userId },
+  });
+}
+
 export async function getRocketHistory(): Promise<RocketHistoryEntry[]> {
   return apiFetch<RocketHistoryEntry[]>("/utils/rocket-history", {
     method: "GET",

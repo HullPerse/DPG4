@@ -13,7 +13,9 @@ import PachinkoScene from "../components/scene.pachinko";
 import { SmallLoader } from "@/components/shared/loader.component";
 import type { PachinkoState } from "@/types/gamble";
 import {
+  BOARD_WIDTH,
   PACHINKO_SLOT_MULTIPLIERS,
+  PACHINKO_SLOT_WIDTHS,
   formatPachinkoResultLabel,
   getPachinkoResultColor,
   randomDropOffsetX,
@@ -108,10 +110,18 @@ function PachinkoTab() {
 
   const handleSettled = useCallback(
     async (slotIndex: number) => {
-      if (!user || settlingRef.current || gameStateRef.current.phase !== "dropping") return;
+      if (
+        !user ||
+        settlingRef.current ||
+        gameStateRef.current.phase !== "dropping"
+      )
+        return;
       settlingRef.current = true;
 
-      const slot = Math.max(0, Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(slotIndex)));
+      const slot = Math.max(
+        0,
+        Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(slotIndex)),
+      );
 
       try {
         const state = await settlePachinko(String(user.id), slot);
@@ -140,17 +150,18 @@ function PachinkoTab() {
         </div>
       </section>
 
-      <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto">
+      <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto items-center justify-center">
         {PACHINKO_SLOT_MULTIPLIERS.map((mult, i) => (
           <div
             key={i}
             className={cn(
-              "flex flex-1 min-w-0 flex-col items-center justify-center py-1 rounded text-[10px] font-mono font-bold border transition-colors",
+              "flex flex-none flex-col items-center justify-center py-1 rounded text-[10px] font-mono font-bold border transition-colors",
               highlightSlot === i
                 ? "border-white/70 scale-105 z-10"
                 : "border-transparent",
             )}
             style={{
+              width: `${(PACHINKO_SLOT_WIDTHS[i] / BOARD_WIDTH) * 95}%`,
               color: slotColor(mult),
               backgroundColor: `${slotColor(mult)}22`,
             }}
@@ -160,7 +171,7 @@ function PachinkoTab() {
         ))}
       </section>
 
-      <section className="relative w-full flex-1 min-h-80 max-h-[32rem] overflow-hidden border-2 border-highlight-high bg-background">
+      <section className="relative w-full flex-1 min-h-80 max-h-128 overflow-hidden border-2 border-highlight-high bg-background">
         <PachinkoScene
           dropKey={dropKey}
           startX={startX}
@@ -172,7 +183,7 @@ function PachinkoTab() {
         {result && (
           <span
             className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/85",
+              "absolute top-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/85",
               getPachinkoResultColor(result),
             )}
           >
@@ -181,7 +192,9 @@ function PachinkoTab() {
         )}
         {!showRat && !result && (
           <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-            <p className="text-muted text-sm font-mono tracking-widest">ПАЧИНКО</p>
+            <p className="text-muted text-sm font-mono tracking-widest">
+              ПАЧИНКО
+            </p>
           </div>
         )}
       </section>

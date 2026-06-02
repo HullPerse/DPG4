@@ -138,8 +138,8 @@ export async function settlePachinko(
 
   const label =
     net >= 0
-      ? `Слот ${multiplier}x — выигрыш +${net}`
-      : `Слот ${multiplier}x — проигрыш ${net}`;
+      ? `Слот ${multiplier}x - выигрыш +${net}`
+      : `Слот ${multiplier}x - проигрыш ${net}`;
 
   const tone = toneFromNet(net, game.bid, multiplier);
 

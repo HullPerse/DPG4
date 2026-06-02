@@ -136,12 +136,12 @@ function resolveLabels(
     case "blackjack":
       return { label: "Блэкджек!", tone: "jackpot" };
     case "win":
-      return { label: `Победа ${playerValue} — ${dealerValue}`, tone: "win" };
+      return { label: `Победа ${playerValue} - ${dealerValue}`, tone: "win" };
     case "push":
-      return { label: `Ничья ${playerValue} — ${dealerValue}`, tone: "chance" };
+      return { label: `Ничья ${playerValue} - ${dealerValue}`, tone: "chance" };
     case "lose":
       return {
-        label: `Проигрыш ${playerValue} — ${dealerValue}`,
+        label: `Проигрыш ${playerValue} - ${dealerValue}`,
         tone: "lose",
       };
   }

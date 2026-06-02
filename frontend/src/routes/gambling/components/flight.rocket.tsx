@@ -50,19 +50,13 @@ function drawGrid(
   }
 }
 
-function drawStars(ctx: CanvasRenderingContext2D, w: number, h: number, seed: number) {
-  for (let i = 0; i < 40; i++) {
-    const x = ((seed * 127 + i * 97) % 1000) / 1000 * w;
-    const y = ((seed * 53 + i * 211) % 1000) / 1000 * h;
-    const r = (i % 3) * 0.4 + 0.4;
-    ctx.fillStyle = `rgba(196, 167, 231, ${0.15 + (i % 5) * 0.08})`;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: FlightChartProps) {
+function FlightChart({
+  phase,
+  multiplier,
+  crashPoint,
+  bid,
+  flightStart,
+}: FlightChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ratRef = useRef<HTMLDivElement>(null);
   const displayMultRef = useRef(1);
@@ -110,8 +104,6 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    drawStars(ctx, w, h, Math.floor(elapsedMs / 500));
-
     const pathElapsed = crashed ? elapsedFromMultiplier(crashPoint) : elapsedMs;
     const { points, maxT, maxM, tip } = buildFlightPath(pathElapsed, w, h, pad);
 
@@ -125,10 +117,17 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
     drawGrid(ctx, w, h, pad, maxM, maxT);
 
     if (points.length > 1 && (active || crashed || cashed)) {
-      const lineColor = crashed ? "#eb6f92" : cashed ? "#9ccfd8" : multiplierColor(currentMult);
+      const lineColor = crashed
+        ? "#eb6f92"
+        : cashed
+          ? "#9ccfd8"
+          : multiplierColor(currentMult);
 
       const fillGrad = ctx.createLinearGradient(0, tip.y, 0, h - pad);
-      fillGrad.addColorStop(0, crashed ? "rgba(235, 111, 146, 0.25)" : "rgba(246, 193, 119, 0.2)");
+      fillGrad.addColorStop(
+        0,
+        crashed ? "rgba(235, 111, 146, 0.25)" : "rgba(246, 193, 119, 0.2)",
+      );
       fillGrad.addColorStop(1, "rgba(25, 23, 36, 0)");
 
       ctx.beginPath();
@@ -141,7 +140,8 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
 
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      for (let i = 1; i < points.length; i++)
+        ctx.lineTo(points[i].x, points[i].y);
 
       ctx.strokeStyle = lineColor;
       ctx.lineWidth = 3;
@@ -165,18 +165,20 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
           ? "rgba(156, 207, 216, 0.35)"
           : "rgba(246, 193, 119, 0.25)";
       ctx.fill();
-
     }
 
-    const labelColor = crashed ? "#eb6f92" : cashed ? "#9ccfd8" : multiplierColor(currentMult);
-    const labelText =
-      crashed
-        ? `КРАХ ${crashPoint.toFixed(2)}x`
-        : cashed
-          ? `ЗАБРАНО ${currentMult.toFixed(2)}x`
-          : active
-            ? `${currentMult.toFixed(2)}x`
-            : "Готов к запуску";
+    const labelColor = crashed
+      ? "#eb6f92"
+      : cashed
+        ? "#9ccfd8"
+        : multiplierColor(currentMult);
+    const labelText = crashed
+      ? `КРАХ ${crashPoint.toFixed(2)}x`
+      : cashed
+        ? `ЗАБРАНО ${currentMult.toFixed(2)}x`
+        : active
+          ? `${currentMult.toFixed(2)}x`
+          : "Готов к запуску";
 
     ctx.textAlign = "center";
     ctx.font = "bold 28px monospace";
@@ -217,7 +219,8 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
     return () => window.removeEventListener("resize", onResize);
   }, [draw]);
 
-  const showRat = isActivePhase(phase) || phase === "crashed" || phase === "cashed";
+  const showRat =
+    isActivePhase(phase) || phase === "crashed" || phase === "cashed";
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -227,13 +230,11 @@ function FlightChart({ phase, multiplier, crashPoint, bid, flightStart }: Flight
           ref={ratRef}
           className="absolute -translate-x-1/2 -translate-y-1/2 transition-none"
         >
-          <RatMarker multiplier={multiplier || displayMultRef.current} phase={phase} size={120} />
-        </div>
-      )}
-      {phase === "idle" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 pointer-events-none">
-          <p className="text-muted text-sm font-mono tracking-widest">КРЫСОЛЁТ</p>
-          <p className="text-muted/60 text-xs mt-1">Забери выигрыш до краха</p>
+          <RatMarker
+            multiplier={multiplier || displayMultRef.current}
+            phase={phase}
+            size={120}
+          />
         </div>
       )}
     </div>

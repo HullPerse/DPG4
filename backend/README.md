@@ -21,7 +21,7 @@ bun run dev
 | `JWT_SECRET` | (dev secret) | Секрет JWT |
 | `DB_PATH` | `data/db.sqlite` | Путь к SQLite |
 | `CORS_ORIGIN` | `true` | CORS |
-| `STEAM_API_KEY` | — | Steam Web API (прокси `/steam/*`) |
+| `STEAM_API_KEY` | - | Steam Web API (прокси `/steam/*`) |
 
 ## Резервная копия БД
 

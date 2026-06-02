@@ -14,7 +14,10 @@ import {
 } from "@/components/MediaInputs";
 import { ObjectListInput } from "@/components/ObjectListInput";
 import { ReferenceSelect } from "@/components/ReferenceSelect";
-import { StringListInput, StringListPreview } from "@/components/StringListInput";
+import {
+  StringListInput,
+  StringListPreview,
+} from "@/components/StringListInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -22,13 +25,16 @@ import { isObjectArray, isStringArray } from "@/lib/arrayFieldUtils";
 import type { AdminFieldMeta } from "@/types";
 
 function formatCell(value: unknown): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   if (typeof value === "boolean") return value ? "да" : "нет";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
-function findChoiceLabel(field: AdminFieldMeta, value: unknown): string | undefined {
+function findChoiceLabel(
+  field: AdminFieldMeta,
+  value: unknown,
+): string | undefined {
   const v = value === null || value === undefined ? "" : String(value);
   return field.choices?.find((c) => c.value === v)?.label ?? v;
 }
@@ -40,10 +46,14 @@ export function renderListCell(
 ) {
   const val = record[field.source];
   if (field.type === "blob") {
-    return <BlobField source={field.source} record={record} resource={resource} />;
+    return (
+      <BlobField source={field.source} record={record} resource={resource} />
+    );
   }
   if (field.type === "audio") {
-    return <AudioField source={field.source} record={record} resource={resource} />;
+    return (
+      <AudioField source={field.source} record={record} resource={resource} />
+    );
   }
   if (field.type === "stringList" || isStringArray(val)) {
     return <StringListPreview value={val} />;
@@ -56,18 +66,27 @@ export function renderListCell(
   }
   if (field.type === "select" || field.choices?.length) {
     const label = findChoiceLabel(field, val);
-    return val ? <ValueChip value={String(val)} label={label} /> : <span className="text-muted">—</span>;
+    return val ? (
+      <ValueChip value={String(val)} label={label} />
+    ) : (
+      <span className="text-muted">-</span>
+    );
   }
   if (field.type === "date") {
     if (val === null || val === undefined || val === "") {
-      return <span className="text-muted">—</span>;
+      return <span className="text-muted">-</span>;
     }
     const d = new Date(String(val));
     const text = Number.isNaN(d.getTime()) ? String(val) : d.toLocaleString();
     return <span className="whitespace-nowrap text-xs">{text}</span>;
   }
-  if (typeof val === "string" && (isBlobPlaceholder(val) || val.startsWith("data:"))) {
-    return <BlobField source={field.source} record={record} resource={resource} />;
+  if (
+    typeof val === "string" &&
+    (isBlobPlaceholder(val) || val.startsWith("data:"))
+  ) {
+    return (
+      <BlobField source={field.source} record={record} resource={resource} />
+    );
   }
   if (val !== null && val !== undefined && typeof val === "object") {
     return <JsonField value={val} maxChars={120} />;
@@ -94,10 +113,14 @@ export function renderShowField(
           <span className="bg-iris/20 text-iris px-1 text-[10px]">json</span>
         )}
         {field.type === "objectList" && (
-          <span className="bg-primary/20 text-primary px-1 text-[10px]">list</span>
+          <span className="bg-primary/20 text-primary px-1 text-[10px]">
+            list
+          </span>
         )}
         {field.type === "stringList" && (
-          <span className="bg-primary/20 text-primary px-1 text-[10px]">strings</span>
+          <span className="bg-primary/20 text-primary px-1 text-[10px]">
+            strings
+          </span>
         )}
         {(field.type === "select" || field.choices?.length) && (
           <span className="bg-iris/20 text-iris px-1 text-[10px]">select</span>
@@ -105,9 +128,17 @@ export function renderShowField(
       </div>
       <div>
         {field.type === "blob" ? (
-          <BlobField source={field.source} record={record} resource={resource} />
+          <BlobField
+            source={field.source}
+            record={record}
+            resource={resource}
+          />
         ) : field.type === "audio" ? (
-          <AudioField source={field.source} record={record} resource={resource} />
+          <AudioField
+            source={field.source}
+            record={record}
+            resource={resource}
+          />
         ) : field.type === "stringList" || isStringArray(val) ? (
           <StringListPreview value={val} />
         ) : field.type === "json" || field.type === "objectList" ? (
@@ -119,11 +150,15 @@ export function renderShowField(
               label={findChoiceLabel(field, val)}
             />
           ) : (
-            <span className="text-muted">—</span>
+            <span className="text-muted">-</span>
           )
         ) : typeof val === "string" &&
           (isBlobPlaceholder(val) || val.startsWith("data:")) ? (
-          <BlobField source={field.source} record={record} resource={resource} />
+          <BlobField
+            source={field.source}
+            record={record}
+            resource={resource}
+          />
         ) : val !== null && val !== undefined && typeof val === "object" ? (
           <JsonField value={val} />
         ) : (
@@ -203,14 +238,21 @@ export function SmartInput({
 
   if (field.type === "boolean") {
     return (
-      <FieldSection title={field.source} changed={changed} badge="bool" className="p-3">
+      <FieldSection
+        title={field.source}
+        changed={changed}
+        badge="bool"
+        className="p-3"
+      >
         <label className="flex cursor-pointer items-center gap-3">
           <Checkbox
             id={field.source}
             checked={!!val}
             onChange={(e) => set(e.target.checked)}
           />
-          <span className="text-sm font-medium">{val ? "Включено" : "Выключено"}</span>
+          <span className="text-sm font-medium">
+            {val ? "Включено" : "Выключено"}
+          </span>
         </label>
       </FieldSection>
     );
@@ -281,7 +323,12 @@ export function SmartInput({
 
   if (field.type === "blob") {
     return (
-      <FieldSection title={field.source} variant="media" changed={changed} badge="image">
+      <FieldSection
+        title={field.source}
+        variant="media"
+        changed={changed}
+        badge="image"
+      >
         <BlobInput
           source={field.source}
           value={val}
@@ -295,7 +342,12 @@ export function SmartInput({
 
   if (field.type === "audio") {
     return (
-      <FieldSection title={field.source} variant="media" changed={changed} badge="audio">
+      <FieldSection
+        title={field.source}
+        variant="media"
+        changed={changed}
+        badge="audio"
+      >
         <AudioInput
           source={field.source}
           value={val}
@@ -384,7 +436,7 @@ export function SmartInput({
 export function ObjectListPreview({ value }: { value: unknown }) {
   if (!isObjectArray(value)) return <JsonField value={value} maxChars={80} />;
   const arr = value as Record<string, unknown>[];
-  if (!arr.length) return <span className="text-muted">—</span>;
+  if (!arr.length) return <span className="text-muted">-</span>;
   const cols = Object.keys(arr[0]!).slice(0, 4);
   return (
     <span className="bg-primary/10 text-primary border-primary/30 inline-flex items-center gap-1 border px-1.5 py-0.5 text-xs font-bold">
@@ -392,4 +444,3 @@ export function ObjectListPreview({ value }: { value: unknown }) {
     </span>
   );
 }
-

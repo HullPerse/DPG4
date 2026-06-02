@@ -8,6 +8,7 @@ import {
   cashoutRocket,
   pollRocket,
   abandonRocket,
+  dismissRocket,
   getRocketHistory,
 } from "@/api/gambling.api";
 import FlightChart from "../components/flight.rocket";
@@ -66,7 +67,7 @@ function RocketTab() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollGenRef = useRef(0);
   const pollInFlightRef = useRef(false);
-  const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const roundEndedRef = useRef(false);
   const balance = user?.money ?? 0;
 
   const activeBid = isActivePhase(gameState.phase) ? gameState.bid : bid;
@@ -84,7 +85,9 @@ function RocketTab() {
     }
     let raf = 0;
     const tick = () => {
-      setCurrentMult(liveMultiplier(gameState.phase, flightStart, gameState.multiplier));
+      setCurrentMult(
+        liveMultiplier(gameState.phase, flightStart, gameState.multiplier),
+      );
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -92,7 +95,9 @@ function RocketTab() {
   }, [gameState.phase, gameState.multiplier, flightStart]);
 
   useEffect(() => {
-    getRocketHistory().then(setHistory).catch(() => {});
+    getRocketHistory()
+      .then(setHistory)
+      .catch(() => {});
   }, []);
 
   const stopPolling = useCallback(() => {
@@ -104,33 +109,39 @@ function RocketTab() {
     }
   }, []);
 
-  const clearResultTimer = useCallback(() => {
-    if (resultTimerRef.current) {
-      clearTimeout(resultTimerRef.current);
-      resultTimerRef.current = null;
-    }
-  }, []);
-
   const refreshHistory = useCallback(() => {
-    getRocketHistory().then(setHistory).catch(() => {});
+    getRocketHistory()
+      .then(setHistory)
+      .catch(() => {});
   }, []);
 
-  const applyRoundResult = useCallback((state: RocketState, delayMs = 0) => {
-    if (state.phase !== "crashed" && state.phase !== "cashed") return;
-    clearResultTimer();
+  /** Show result overlay when round ends - do not auto-clear on idle (only via «Готово») */
+  useEffect(() => {
+    if (gameState.phase === "crashed" || gameState.phase === "cashed") {
+      setResult({
+        net: gameState.net,
+        label: formatRocketResultLabel(gameState.label, gameState.net),
+        tone: gameState.tone || "chance",
+      });
+    }
+  }, [gameState.phase, gameState.net, gameState.label, gameState.tone]);
 
-    const payload: RocketUiResult = {
+  const applyRoundEnd = useCallback((state: RocketState) => {
+    roundEndedRef.current = true;
+    setGameState(state);
+    setResult({
       net: state.net,
       label: formatRocketResultLabel(state.label, state.net),
-      tone: state.tone,
-    };
+      tone: state.tone || "chance",
+    });
+  }, []);
 
-    if (delayMs > 0) {
-      resultTimerRef.current = setTimeout(() => setResult(payload), delayMs);
-    } else {
-      setResult(payload);
-    }
-  }, [clearResultTimer]);
+  const resetToIdle = useCallback(() => {
+    roundEndedRef.current = false;
+    setFlightStart(null);
+    setGameState(IDLE_STATE);
+    setResult(null);
+  }, []);
 
   const startPolling = useCallback(
     (userId: string) => {
@@ -146,66 +157,90 @@ function RocketTab() {
           if (gen !== pollGenRef.current) return;
 
           setGameState((prev) => {
-            if (prev.phase === "crashed" || prev.phase === "cashed") return prev;
+            if (prev.phase === "crashed" || prev.phase === "cashed")
+              return prev;
             if (polled.phase === "idle") return prev;
             return polled;
           });
 
-          if (polled.phase === "crashed") {
+          if (polled.phase === "crashed" || polled.phase === "cashed") {
             stopPolling();
             const u = useUserStore.getState().user;
-            if (u) useUserStore.setState({ user: { ...u, money: polled.balance } });
+            if (u)
+              useUserStore.setState({ user: { ...u, money: polled.balance } });
             if (polled.banned) setGamblingBanned(true);
-            applyRoundResult(polled, 700);
-            refreshHistory();
+            applyRoundEnd(polled);
+            if (polled.phase === "crashed") refreshHistory();
           }
 
-          if (polled.phase === "idle" && isActivePhase(gameStateRef.current.phase)) {
-            stopPolling();
-            setFlightStart(null);
-            setGameState(IDLE_STATE);
+          if (polled.phase === "idle") {
+            let resetActive = false;
+            setGameState((prev) => {
+              if (prev.phase === "crashed" || prev.phase === "cashed")
+                return prev;
+              if (roundEndedRef.current) return prev;
+              if (!isActivePhase(prev.phase)) return prev;
+              resetActive = true;
+              return IDLE_STATE;
+            });
+            if (resetActive) {
+              stopPolling();
+              setFlightStart(null);
+              setResult(null);
+            }
           }
         } catch {
           if (gen !== pollGenRef.current) return;
           stopPolling();
-          setFlightStart(null);
-          if (isActivePhase(gameStateRef.current.phase)) {
+          if (
+            isActivePhase(gameStateRef.current.phase) &&
+            !roundEndedRef.current
+          ) {
+            setFlightStart(null);
             setGameState(IDLE_STATE);
+            setResult(null);
           }
         } finally {
           pollInFlightRef.current = false;
         }
       }, 120);
     },
-    [stopPolling, refreshHistory, setGamblingBanned, applyRoundResult],
+    [stopPolling, refreshHistory, setGamblingBanned, applyRoundEnd],
   );
 
+  const userIdRef = useRef<string | null>(null);
+  userIdRef.current = user ? String(user.id) : null;
+
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     const userId = String(user.id);
 
     pollRocket(userId)
       .then((state) => {
+        const local = gameStateRef.current.phase;
+        if (local === "crashed" || local === "cashed") return;
+
         if (isActivePhase(state.phase)) {
           setGameState(state);
           setFlightStart(Date.now());
           startPolling(userId);
         } else if (state.phase === "crashed" || state.phase === "cashed") {
-          setGameState(state);
-          setFlightStart(null);
-          applyRoundResult(state);
-        } else {
-          setGameState(IDLE_STATE);
-          setFlightStart(null);
+          applyRoundEnd(state);
+        } else if (
+          state.phase === "idle" &&
+          local === "idle" &&
+          !roundEndedRef.current
+        ) {
+          resetToIdle();
         }
       })
       .catch(() => {});
-  }, [user, startPolling, applyRoundResult]);
+  }, [user?.id, startPolling, applyRoundEnd, resetToIdle]);
 
   const handleLaunch = async () => {
     if (loading || !user || balance < bid || gamblingBanned) return;
     setLoading(true);
-    clearResultTimer();
+    roundEndedRef.current = false;
     setResult(null);
 
     try {
@@ -216,8 +251,7 @@ function RocketTab() {
       startPolling(String(user.id));
     } catch {
       setLoading(false);
-      setFlightStart(null);
-      setGameState(IDLE_STATE);
+      resetToIdle();
     }
   };
 
@@ -227,34 +261,41 @@ function RocketTab() {
     try {
       stopPolling();
       const state = await cashoutRocket(String(user.id));
-      setGameState(state);
-      applyRoundResult(state, 400);
+      applyRoundEnd(state);
       useUserStore.setState({ user: { ...user, money: state.balance } });
       if (state.banned) setGamblingBanned(true);
       refreshHistory();
     } catch {
       stopPolling();
-      setFlightStart(null);
-      setGameState(IDLE_STATE);
+      resetToIdle();
     }
+  };
+
+  const handleDismiss = async () => {
+    resetToIdle();
+    if (user) dismissRocket(String(user.id)).catch(() => {});
   };
 
   useEffect(() => {
     return () => {
       stopPolling();
-      clearResultTimer();
+      const uid = userIdRef.current;
       const gs = gameStateRef.current;
-      if (user && (gs.phase === "flying" || gs.phase === "launching")) {
-        abandonRocket(String(user.id)).catch(() => {});
+      if (uid && (gs.phase === "flying" || gs.phase === "launching")) {
+        abandonRocket(uid).catch(() => {});
       }
     };
-  }, [stopPolling, clearResultTimer, user]);
+  }, [stopPolling]);
 
   const roundEnded =
-    gameState.phase === "idle" ||
-    gameState.phase === "crashed" ||
-    gameState.phase === "cashed";
+    gameState.phase === "crashed" || gameState.phase === "cashed";
   const roundActive = isActivePhase(gameState.phase);
+  const canLaunch =
+    !loading &&
+    !gamblingBanned &&
+    balance >= bid &&
+    !roundActive &&
+    !roundEnded;
   const canAffordBid = balance >= bid;
 
   return (
@@ -318,22 +359,13 @@ function RocketTab() {
       </section>
 
       <section className="flex flex-col gap-1 w-xl mt-auto">
-        {roundEnded ? (
+        {gameState.phase === "crashed" || gameState.phase === "cashed" ? (
           <Button
             variant="info"
             className="w-full h-11"
-            onClick={handleLaunch}
-            disabled={loading || gamblingBanned || !canAffordBid}
+            onClick={handleDismiss}
           >
-            {gamblingBanned ? (
-              "Вы забанены"
-            ) : loading ? (
-              <SmallLoader />
-            ) : !canAffordBid ? (
-              "Недостаточно чубриков"
-            ) : (
-              `Запустить крысу (${bid} чубриков)`
-            )}
+            {`Завершить`}
           </Button>
         ) : roundActive ? (
           <Button
@@ -353,18 +385,24 @@ function RocketTab() {
           <Button
             variant="info"
             className="w-full h-11"
-            onClick={() => {
-              setFlightStart(null);
-              setGameState(IDLE_STATE);
-            }}
+            onClick={handleLaunch}
+            disabled={!canLaunch}
           >
-            Новая игра
+            {gamblingBanned ? (
+              "Вы забанены"
+            ) : loading ? (
+              <SmallLoader />
+            ) : !canAffordBid ? (
+              "Недостаточно чубриков"
+            ) : (
+              `Запустить крысу (${bid} чубриков)`
+            )}
           </Button>
         )}
 
         <details className="w-full border-2 border-highlight-high bg-background px-2 text-sm">
           <summary className="cursor-pointer font-semibold text-muted select-none py-1">
-            График крахов
+            График проигрышей
           </summary>
           <div className="mt-1 mb-2 h-20">
             <CrashChart history={history} />

@@ -12,8 +12,9 @@ import * as THREE from "three";
 import {
   BOARD_WIDTH,
   PACHINKO_SLOT_COUNT,
+  PACHINKO_SLOT_EDGES,
   PACHINKO_SLOT_MULTIPLIERS,
-  SLOT_WIDTH,
+  PACHINKO_SLOT_WIDTHS,
   slotCenterX,
   slotColor,
   slotIndexFromX,
@@ -21,29 +22,30 @@ import {
 
 useGLTF.preload("/rat.glb");
 
-/** Physics & slot math share this width — do not change without updating utils */
+/** Physics & slot math share this width - do not change without updating utils */
 const BOARD_HALF = BOARD_WIDTH / 2;
 const BOARD_TOP = 17.2;
-const BOARD_HEIGHT = BOARD_TOP;
-const BOARD_CENTER_Y = BOARD_HEIGHT / 2;
+const BOARD_BOTTOM = 0.9;
+const BOARD_HEIGHT = BOARD_TOP - BOARD_BOTTOM;
+const BOARD_CENTER_Y = (BOARD_TOP + BOARD_BOTTOM) / 2;
 const DROP_Y = 16.4;
-const SETTLE_Y = 1.35;
+const SETTLE_Y = 2.35;
 const PLANE_Z = 0;
 
-const PEG_ROWS = 11;
-const PEG_COLS = 7;
+const PEG_ROWS = 15;
+const PEG_COLS = 11;
 const PEG_RADIUS = 0.13;
 const BALL_RADIUS = 0.2;
 const LANE_HALF_Z = 0.28;
 
-/** Tight crop — board fills most of the viewport */
+/** Tight crop - board fills most of the viewport */
 const VIEW_PAD_X = 0.45;
 const VIEW_PAD_TOP = 0.55;
 const VIEW_PAD_BOTTOM = 0.15;
 
 function buildPegPositions(): [number, number][] {
   const pegs: [number, number][] = [];
-  const rowSpan = 10.8;
+  const rowSpan = 12.6;
   const topY = 15.2;
   const stepY = rowSpan / (PEG_ROWS - 1);
   const usable = BOARD_WIDTH - 1.2;
@@ -51,11 +53,12 @@ function buildPegPositions(): [number, number][] {
 
   for (let row = 0; row < PEG_ROWS; row++) {
     const y = topY - row * stepY;
-    const offset = row % 2 === 0 ? 0 : SLOT_WIDTH * 0.5;
+    const offset =
+      row % 2 === 0 ? 0 : (BOARD_WIDTH / PACHINKO_SLOT_COUNT) * 0.5;
 
     for (let col = 0; col < PEG_COLS; col++) {
       const x = -usable / 2 + col * stepX + offset;
-      if (Math.abs(x) <= BOARD_HALF - 0.35) pegs.push([x, y]);
+      if (Math.abs(x) <= BOARD_HALF - 0.1) pegs.push([x, y]);
     }
   }
 
@@ -116,7 +119,7 @@ function BoardBackdrop() {
 
 function SlotStrip({ highlightIndex }: { highlightIndex: number | null }) {
   return (
-    <group position={[0, 0.38, 0.02]}>
+    <group position={[0, 1.38, 0.02]}>
       {PACHINKO_SLOT_MULTIPLIERS.map((mult, i) => {
         const x = slotCenterX(i);
         const lit = highlightIndex === i;
@@ -125,7 +128,9 @@ function SlotStrip({ highlightIndex }: { highlightIndex: number | null }) {
         return (
           <group key={i} position={[x, 0, 0]}>
             <mesh>
-              <boxGeometry args={[SLOT_WIDTH * 0.88, 0.62, 0.08]} />
+              <boxGeometry
+                args={[PACHINKO_SLOT_WIDTHS[i] * 0.88, 0.62, 0.08]}
+              />
               <meshStandardMaterial
                 color={color}
                 emissive={color}
@@ -159,7 +164,7 @@ function SlotStrip({ highlightIndex }: { highlightIndex: number | null }) {
   );
 }
 
-/** Sphere pegs — reliable Rapier contacts in a flat lane */
+/** Sphere pegs - reliable Rapier contacts in a flat lane */
 function PegField() {
   return (
     <>
@@ -213,7 +218,7 @@ function BoardWalls() {
       >
         <CuboidCollider args={[BOARD_HALF + 0.15, 0.14, LANE_HALF_Z]} />
       </RigidBody>
-      {/* Z lane — keeps ball on the board plane */}
+      {/* Z lane - keeps ball on the board plane */}
       <RigidBody
         type="fixed"
         colliders={false}
@@ -232,22 +237,22 @@ function BoardWalls() {
           args={[BOARD_HALF + 0.2, BOARD_HEIGHT / 2 + 0.5, 0.04]}
         />
       </RigidBody>
-      {/* Slot dividers */}
+      {/* Slot dividers - placed at the edge between each adjacent slot */}
       {Array.from({ length: PACHINKO_SLOT_COUNT - 1 }, (_, i) => {
-        const x = -BOARD_HALF + (i + 1) * SLOT_WIDTH;
+        const x = PACHINKO_SLOT_EDGES[i + 1];
         return (
           <RigidBody
             key={i}
             type="fixed"
             colliders={false}
-            position={[x, 0.72, PLANE_Z]}
+            position={[x, 1.72, PLANE_Z]}
           >
             <CuboidCollider args={[0.03, 0.72, LANE_HALF_Z * 0.85]} />
           </RigidBody>
         );
       })}
       {/* Floor */}
-      <RigidBody type="fixed" colliders={false} position={[0, -0.08, PLANE_Z]}>
+      <RigidBody type="fixed" colliders={false} position={[0, 0.92, PLANE_Z]}>
         <CuboidCollider args={[BOARD_HALF + 0.15, 0.08, LANE_HALF_Z]} />
       </RigidBody>
     </>

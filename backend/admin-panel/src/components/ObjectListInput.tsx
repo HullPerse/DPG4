@@ -47,10 +47,7 @@ function ObjectListCell({
 
   if (meta.kind === "boolean" || typeof val === "boolean") {
     return (
-      <Checkbox
-        checked={!!val}
-        onChange={(e) => onChange(e.target.checked)}
-      />
+      <Checkbox checked={!!val} onChange={(e) => onChange(e.target.checked)} />
     );
   }
 
@@ -148,7 +145,8 @@ export function ObjectListInput({
     commit(next);
   };
 
-  const removeRow = (index: number) => commit(rows.filter((_, i) => i !== index));
+  const removeRow = (index: number) =>
+    commit(rows.filter((_, i) => i !== index));
 
   const onDrop = (targetIndex: number) => {
     if (dragIndex === null || dragIndex === targetIndex) return;
@@ -165,11 +163,11 @@ export function ObjectListInput({
       variant="list"
       changed={changed}
       badge={`список · ${rows.length}`}
-      hint="Перетащите строку за ⋮⋮. Длинные поля — многострочные."
+      hint="Перетащите строку за ⋮⋮. Длинные поля - многострочные."
     >
       {rows.length === 0 ? (
         <p className="text-muted border-highlight-high mb-3 border-2 border-dashed p-6 text-center text-sm">
-          Нет элементов — добавьте первую строку
+          Нет элементов - добавьте первую строку
         </p>
       ) : (
         <div className="border-highlight-high max-h-80 overflow-auto overscroll-contain border-2">
@@ -200,7 +198,9 @@ export function ObjectListInput({
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => onDrop(rowIndex)}
                   className={
-                    rowIndex % 2 === 0 ? "bg-background/40" : "bg-highlight-low/30"
+                    rowIndex % 2 === 0
+                      ? "bg-background/40"
+                      : "bg-highlight-low/30"
                   }
                 >
                   <td className="border-highlight-high text-muted border px-1 py-1 text-center text-xs font-bold">
@@ -252,7 +252,13 @@ export function ObjectListInput({
           </table>
         </div>
       )}
-      <Button type="button" variant="outline" size="sm" className="mt-3" onClick={addRow}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="mt-3"
+        onClick={addRow}
+      >
         <Plus />
         Добавить строку
       </Button>

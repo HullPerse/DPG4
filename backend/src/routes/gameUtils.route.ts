@@ -16,6 +16,7 @@ import {
   cashoutRocket,
   pollRocket,
   abandonRocket,
+  dismissRocket,
   getRocketHistory,
 } from "../services/gambling/rocket.service";
 import {
@@ -65,7 +66,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       detail: {
         tags: ["utils"],
         summary:
-          "Server-authoritative dice roll — generates values, calculates payout, updates balance",
+          "Server-authoritative dice roll - generates values, calculates payout, updates balance",
       },
     },
   )
@@ -193,7 +194,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       }),
       detail: {
         tags: ["utils"],
-        summary: "Launch a rocket round — generates crash point",
+        summary: "Launch a rocket round - generates crash point",
       },
     },
   )
@@ -211,7 +212,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       body: t.Object({ userId: t.String() }),
       detail: {
         tags: ["utils"],
-        summary: "Cash out rocket — collect winnings at current multiplier",
+        summary: "Cash out rocket - collect winnings at current multiplier",
       },
     },
   )
@@ -247,6 +248,20 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       },
     },
   )
+  .post(
+    "/rocket-dismiss",
+    async ({ body }) => {
+      dismissRocket(body.userId);
+      return { success: true };
+    },
+    {
+      body: t.Object({ userId: t.String() }),
+      detail: {
+        tags: ["utils"],
+        summary: "Dismiss rocket result screen after crash or cashout",
+      },
+    },
+  )
   .get(
     "/rocket-history",
     async () => {
@@ -276,7 +291,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       }),
       detail: {
         tags: ["utils"],
-        summary: "Drop pachinko ball — deducts bid",
+        summary: "Drop pachinko ball - deducts bid",
       },
     },
   )
@@ -297,7 +312,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       }),
       detail: {
         tags: ["utils"],
-        summary: "Settle pachinko drop — payout from slot index",
+        summary: "Settle pachinko drop - payout from slot index",
       },
     },
   )

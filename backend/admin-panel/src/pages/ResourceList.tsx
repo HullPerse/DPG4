@@ -30,9 +30,9 @@ export function ResourceListPage() {
   const page = Number(searchParams.get("page") ?? "1");
   const q = searchParams.get("q") ?? "";
   const sortField = searchParams.get("sort") ?? "created";
-  const sortOrder = (
-    searchParams.get("order") ?? "ASC"
-  ).toUpperCase() as "ASC" | "DESC";
+  const sortOrder = (searchParams.get("order") ?? "ASC").toUpperCase() as
+    | "ASC"
+    | "DESC";
 
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
@@ -40,9 +40,10 @@ export function ResourceListPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState(q);
 
-  const listFields = meta?.fields.filter(
-    (f) => f.type !== "hidden" && f.type !== "password" && !f.hideInList,
-  ) ?? [];
+  const listFields =
+    meta?.fields.filter(
+      (f) => f.type !== "hidden" && f.type !== "password" && !f.hideInList,
+    ) ?? [];
 
   const load = useCallback(async () => {
     if (!meta) return;
@@ -165,8 +166,8 @@ export function ResourceListPage() {
                         title={
                           active
                             ? sortOrder === "ASC"
-                              ? "По возрастанию — нажмите для убывания"
-                              : "По убыванию — нажмите для возрастания"
+                              ? "По возрастанию - нажмите для убывания"
+                              : "По убыванию - нажмите для возрастания"
                             : "Сортировать"
                         }
                       >

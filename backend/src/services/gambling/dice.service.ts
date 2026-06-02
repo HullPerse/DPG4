@@ -25,7 +25,7 @@ function calculateResult(
   if (a === 1 && b === 2 && c === 3) {
     return {
       payout: -bid,
-      label: "1 · 2 · 3 — проигрыш",
+      label: "1 · 2 · 3 - проигрыш",
       tone: "lose",
     };
   }
@@ -33,7 +33,7 @@ function calculateResult(
   if (a === 4 && b === 5 && c === 6) {
     return {
       payout: bid * 2,
-      label: "4 · 5 · 6 — выигрыш",
+      label: "4 · 5 · 6 - выигрыш",
       tone: "win",
     };
   }
@@ -41,7 +41,7 @@ function calculateResult(
   if (a === 1 && b === 1 && c === 1) {
     return {
       payout: bid * 6,
-      label: "Три единицы — джекпот",
+      label: "Три единицы - джекпот",
       tone: "jackpot",
     };
   }
@@ -49,7 +49,7 @@ function calculateResult(
   if (unique.size === 1) {
     return {
       payout: bid * 3,
-      label: `Три ${a} — выигрыш`,
+      label: `Три ${a} - выигрыш`,
       tone: "win",
     };
   }
@@ -58,7 +58,7 @@ function calculateResult(
     const win = Math.random() >= 0.5;
     return {
       payout: win ? bid * 2 + Math.ceil(bid / 3) : Math.ceil(bid / 3),
-      label: win ? "Пара — удача" : "Пара — не повезло",
+      label: win ? "Пара - удача" : "Пара - не повезло",
       tone: "chance",
     };
   }
@@ -66,7 +66,7 @@ function calculateResult(
   const win = Math.random() >= 0.5;
   return {
     payout: win ? bid * 2 + Math.ceil((bid * 2) / 3) : Math.ceil((bid * 2) / 3),
-    label: win ? "Разные числа — выигрыш" : "Разные числа — проигрыш",
+    label: win ? "Разные числа - выигрыш" : "Разные числа - проигрыш",
     tone: "chance",
   };
 }

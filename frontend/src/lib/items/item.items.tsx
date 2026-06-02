@@ -579,7 +579,10 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const [inventory, users] = await Promise.all([itemsApi.getInventories({ excludeOwner: ctx.user.id }), userApi.getAllUsers()]);
+            const [inventory, users] = await Promise.all([
+              itemsApi.getInventories({ excludeOwner: ctx.user.id }),
+              userApi.getAllUsers(),
+            ]);
             return { inventory, users };
           },
         });
@@ -1413,7 +1416,9 @@ export const itemEffect: effectInterface[] = [
           queryKey: ["modalData"],
           queryFn: async () => {
             const allUsers = await userApi.getAllUsers();
-            const allItems = await itemsApi.getItems({ excludeLabel: "Ведьмин котел" });
+            const allItems = await itemsApi.getItems({
+              excludeLabel: "Ведьмин котел",
+            });
             const allInventories = await itemsApi.getInventories();
             return {
               items: allItems,
@@ -1948,7 +1953,10 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const [items, users] = await Promise.all([itemsApi.getInventories({ excludeOwner: ctx.user.id }), userApi.getAllUsers()]);
+            const [items, users] = await Promise.all([
+              itemsApi.getInventories({ excludeOwner: ctx.user.id }),
+              userApi.getAllUsers(),
+            ]);
             return { items, users };
           },
         });
@@ -2781,7 +2789,10 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            return userApi.getUsers({ excludeUserId: ctx.user.id, hasStatus: "Картошка" });
+            return userApi.getUsers({
+              excludeUserId: ctx.user.id,
+              hasStatus: "Картошка",
+            });
           },
         });
 
@@ -3081,7 +3092,11 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const [me, users] = await Promise.all([userApi.getUserById(ctx.user.id), userApi.getUsers({ excludeUserId: ctx.user.id })]); return { effects: me?.status, users };
+            const [me, users] = await Promise.all([
+              userApi.getUserById(ctx.user.id),
+              userApi.getUsers({ excludeUserId: ctx.user.id }),
+            ]);
+            return { effects: me?.status, users };
           },
         });
 
@@ -3476,7 +3491,7 @@ export const itemEffect: effectInterface[] = [
               деревни не подходил близко к её хлеву. Говорили, что Мэгги была не
               совсем обычной свиньёй. Её глаза, тёмные и блестящие, словно
               угольки, казалось, следили за каждым, кто проходил мимо. А по
-              ночам из хлева доносились странные звуки — не хрюканье, а что-то
+              ночам из хлева доносились странные звуки - не хрюканье, а что-то
               похожее на шёпот. Однажды мальчик из деревни, любопытный и глупый,
               решил подойти к хлеву. Он хотел посмотреть, что же там происходит.
               Когда он заглянул внутрь, Мэгги стояла в углу, неподвижно,
@@ -3584,7 +3599,10 @@ export const itemEffect: effectInterface[] = [
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
           queryKey: ["modalData"],
           queryFn: async () => {
-            const [users, items] = await Promise.all([userApi.getAllUsers(), itemsApi.getInventories()]);
+            const [users, items] = await Promise.all([
+              userApi.getAllUsers(),
+              itemsApi.getInventories(),
+            ]);
 
             return {
               items,

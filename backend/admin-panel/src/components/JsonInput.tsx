@@ -27,7 +27,8 @@ export function JsonInput({
   onChange: (v: unknown) => void;
   changed?: boolean;
 }) {
-  const canVisual = isPlainObject(value) || value === null || value === undefined;
+  const canVisual =
+    isPlainObject(value) || value === null || value === undefined;
   const [mode, setMode] = useState<"visual" | "raw">(
     canVisual && isPlainObject(value) ? "visual" : "raw",
   );
@@ -55,7 +56,7 @@ export function JsonInput({
       hint={
         canVisual && !Array.isArray(value)
           ? "Визуальный режим для объекта или сырой JSON для массивов и сложных значений."
-          : "Редактор JSON. Клик вне поля — выравнивание ключей."
+          : "Редактор JSON. Клик вне поля - выравнивание ключей."
       }
     >
       {canVisual && !Array.isArray(value) && (
@@ -82,10 +83,7 @@ export function JsonInput({
       )}
 
       {mode === "visual" && canVisual && !Array.isArray(value) ? (
-        <JsonObjectEditor
-          value={objectValue}
-          onChange={(v) => onChange(v)}
-        />
+        <JsonObjectEditor value={objectValue} onChange={(v) => onChange(v)} />
       ) : (
         <>
           <Textarea

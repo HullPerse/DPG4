@@ -9,18 +9,6 @@ function HomeTab({
 }) {
   const tabs = [
     {
-      value: "pachinko" as const,
-      label: "Пачинко",
-      description: "Крыса падает между колышками — слот решает множитель",
-      icon: <CircleDot className="size-10" />,
-    },
-    {
-      value: "rocket" as const,
-      label: "Ракета",
-      description: "Крыса летит вверх — забери чубрики до краха",
-      icon: <Rocket className="size-10" />,
-    },
-    {
       value: "dice" as const,
       label: "Чинчирорин",
       description: "Кидай кубики и получи МНОГО чубриков",
@@ -31,6 +19,18 @@ function HomeTab({
       label: "Блэкджек",
       description: "fallout new vegas опять",
       icon: <Club className="size-10" />,
+    },
+    {
+      value: "pachinko" as const,
+      label: "Пачинко",
+      description: "Крыса паничко. ЖЕСТЬ КАК В КАЙДЖИ",
+      icon: <CircleDot className="size-10" />,
+    },
+    {
+      value: "rocket" as const,
+      label: "Ракетник",
+      description: "Крыса летит вверх - забери чубрики до краха",
+      icon: <Rocket className="size-10" />,
     },
   ];
 

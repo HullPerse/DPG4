@@ -7,6 +7,8 @@ import type { ActiveRocketGame, RocketState } from "@/types/gambling";
 import type { Db } from "@/types";
 
 const activeGames = new Map<string, ActiveRocketGame>();
+/** Keeps crashed/cashed state until client dismisses - poll won't flip to idle early */
+const lastEndedGames = new Map<string, RocketState>();
 const crashHistory: { crashPoint: number; timestamp: number }[] = [];
 const MAX_HISTORY = 50;
 const HOUSE_EDGE = 0.96;
@@ -23,8 +25,15 @@ function computeMultiplier(elapsedMs: number): number {
 
 function idleState(): RocketState {
   return {
-    phase: "idle", multiplier: 0, crashPoint: 0,
-    bid: 0, balance: 0, net: 0, label: "", tone: "", banned: false,
+    phase: "idle",
+    multiplier: 0,
+    crashPoint: 0,
+    bid: 0,
+    balance: 0,
+    net: 0,
+    label: "",
+    tone: "",
+    banned: false,
   };
 }
 
@@ -41,11 +50,14 @@ async function processCrash(
   const user = await getUserById(db, userId);
   activeGames.delete(userId);
 
-  const label = `Крах на ${game.crashPoint.toFixed(2)}x — проигрыш -${game.bid}`;
+  const label = `Крах на ${game.crashPoint.toFixed(2)}x - проигрыш -${game.bid}`;
 
-  logger.info("system", `rocket crash user:${userId} bid:${game.bid} crash:${game.crashPoint}x`);
+  logger.info(
+    "system",
+    `rocket crash user:${userId} bid:${game.bid} crash:${game.crashPoint}x`,
+  );
 
-  return {
+  const state: RocketState = {
     phase: "crashed",
     multiplier: game.crashPoint,
     crashPoint: game.crashPoint,
@@ -56,6 +68,8 @@ async function processCrash(
     tone: "lose",
     banned: user?.gamblingBanned ?? false,
   };
+  lastEndedGames.set(userId, state);
+  return state;
 }
 
 export async function launchRocket(
@@ -68,6 +82,8 @@ export async function launchRocket(
 
   if (activeGames.has(userId)) throw new Error("Game already in progress");
 
+  lastEndedGames.delete(userId);
+
   const user = await getUserById(db, userId);
   if (!user) throw new Error("User not found");
   if (user.money < bid) throw new Error("Insufficient balance");
@@ -77,14 +93,31 @@ export async function launchRocket(
   const now = Date.now();
 
   activeGames.set(userId, {
-    userId, bid, crashPoint, launchedAt: now, cashedOut: false, cashoutMultiplier: null,
+    userId,
+    bid,
+    crashPoint,
+    launchedAt: now,
+    cashedOut: false,
+    cashoutMultiplier: null,
   });
 
-  logger.info(user.username, "launched rocket", `bid:${bid}`, `crash:${crashPoint}x`);
+  logger.info(
+    user.username,
+    "launched rocket",
+    `bid:${bid}`,
+    `crash:${crashPoint}x`,
+  );
 
   return {
-    phase: "launching", multiplier: 1, crashPoint,
-    bid, balance: user.money, net: 0, label: "", tone: "", banned: false,
+    phase: "launching",
+    multiplier: 1,
+    crashPoint,
+    bid,
+    balance: user.money,
+    net: 0,
+    label: "",
+    tone: "",
+    banned: false,
   };
 }
 
@@ -121,26 +154,39 @@ export async function cashoutRocket(
     .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
     .where(eq(schema.users.id, userId));
 
-  const label = `Кассаут ${currentMultiplier.toFixed(2)}x — выигрыш +${net}`;
+  const label = `Результат ${currentMultiplier.toFixed(2)}x - выигрыш +${net}`;
   const tone: "jackpot" | "win" | "chance" =
     net >= game.bid * 5 ? "jackpot" : net >= game.bid * 2 ? "win" : "chance";
 
   activeGames.delete(userId);
 
-  logger.info("system", `rocket cashout user:${userId} mult:${currentMultiplier}x net:${net}`);
+  logger.info(
+    "system",
+    `rocket cashout user:${userId} mult:${currentMultiplier}x net:${net}`,
+  );
 
-  return {
-    phase: "cashed", multiplier: currentMultiplier, crashPoint: game.crashPoint,
-    bid: game.bid, balance: user?.money ?? 0, net, label, tone, banned: gamblingBanned,
+  const state: RocketState = {
+    phase: "cashed",
+    multiplier: currentMultiplier,
+    crashPoint: game.crashPoint,
+    bid: game.bid,
+    balance: user?.money ?? 0,
+    net,
+    label,
+    tone,
+    banned: gamblingBanned,
   };
+  lastEndedGames.set(userId, state);
+  return state;
 }
 
-export async function pollRocket(
-  db: Db,
-  userId: string,
-): Promise<RocketState> {
+export async function pollRocket(db: Db, userId: string): Promise<RocketState> {
   const game = activeGames.get(userId);
-  if (!game) return idleState();
+  if (!game) {
+    const ended = lastEndedGames.get(userId);
+    if (ended) return ended;
+    return idleState();
+  }
 
   const elapsed = Date.now() - game.launchedAt;
   const currentMultiplier = computeMultiplier(elapsed);
@@ -150,15 +196,30 @@ export async function pollRocket(
   }
 
   return {
-    phase: "flying", multiplier: currentMultiplier, crashPoint: game.crashPoint,
-    bid: game.bid, balance: 0, net: 0, label: "", tone: "", banned: false,
+    phase: "flying",
+    multiplier: currentMultiplier,
+    crashPoint: game.crashPoint,
+    bid: game.bid,
+    balance: 0,
+    net: 0,
+    label: "",
+    tone: "",
+    banned: false,
   };
 }
 
 export function abandonRocket(userId: string): void {
   activeGames.delete(userId);
+  lastEndedGames.delete(userId);
 }
 
-export function getRocketHistory(): { crashPoint: number; timestamp: number }[] {
+export function dismissRocket(userId: string): void {
+  lastEndedGames.delete(userId);
+}
+
+export function getRocketHistory(): {
+  crashPoint: number;
+  timestamp: number;
+}[] {
   return [...crashHistory];
 }

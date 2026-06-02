@@ -1,7 +1,7 @@
 import { PCFShadowMap } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, useGLTF } from "@react-three/drei";
-import { useRef, useMemo, Suspense } from "react";
+import React, { useRef, useMemo, Suspense } from "react";
 import * as THREE from "three";
 
 useGLTF.preload("/rat.glb");
@@ -20,43 +20,25 @@ function RatModel({
   const cloned = useMemo(() => scene.clone(), [scene]);
 
   const flying = phase === "flying" || phase === "launching";
-  const crashed = phase === "crashed";
-  const cashed = phase === "cashed";
 
   const targetY = useMemo(() => {
     if (!flying) return compact ? -0.3 : 0;
     return Math.min((multiplier - 1) * (compact ? 0.35 : 0.55), compact ? 2.5 : 4);
   }, [multiplier, flying, compact]);
 
-  const targetRotZ = useMemo(() => {
-    if (crashed) return Math.PI / 4;
-    if (cashed) return -0.15;
-    if (flying) return -0.35 + Math.min(multiplier * 0.02, 0.15);
-    return 0;
-  }, [flying, crashed, cashed, multiplier]);
-
   useFrame((state, delta) => {
     if (!groupRef.current) return;
+    if (!flying) return;
     const g = groupRef.current;
 
     g.position.y += (targetY - g.position.y) * delta * 4;
-
-    if (flying) {
-      g.rotation.y += delta * 0.65;
-      g.rotation.z += (-0.35 - g.rotation.z) * delta * 2;
-      g.rotation.x = Math.sin(state.clock.elapsedTime * 3) * 0.04;
-      g.position.x = Math.sin(state.clock.elapsedTime * 2.5) * 0.05;
-    } else if (crashed) {
-      g.rotation.z += (Math.PI / 3 - g.rotation.z) * delta * 6;
-      g.position.y += (-1.2 - g.position.y) * delta * 4;
-    } else {
-      g.rotation.z += (targetRotZ - g.rotation.z) * delta * 4;
-      g.rotation.x *= 1 - delta * 4;
-      g.position.x *= 1 - delta * 4;
-    }
+    g.rotation.y += delta * 0.65;
+    g.rotation.z += (-0.35 - g.rotation.z) * delta * 2;
+    g.rotation.x = Math.sin(state.clock.elapsedTime * 3) * 0.04;
+    g.position.x = Math.sin(state.clock.elapsedTime * 2.5) * 0.05;
 
     const baseScale = compact ? 0.82 : 1.15;
-    const grow = flying ? Math.min((multiplier - 1) * 0.04, 0.2) : 0;
+    const grow = Math.min((multiplier - 1) * 0.04, 0.2);
     const s = baseScale + grow;
     g.scale.lerp(new THREE.Vector3(s, s, s), delta * 5);
   });
@@ -179,6 +161,20 @@ function SceneContent({
   );
 }
 
+class CanvasErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback ?? null;
+    return this.props.children;
+  }
+}
+
 export function RatMarker({
   multiplier,
   phase,
@@ -190,20 +186,23 @@ export function RatMarker({
 }) {
   return (
     <div style={{ width: size, height: size, pointerEvents: "none", background: "transparent" }}>
-      <Canvas
-        shadows={false}
-        camera={{ position: [2.2, 1.5, 3.9], fov: 32, near: 0.1, far: 50 }}
-        className="h-full w-full"
-        style={{ background: "transparent" }}
-        gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}
-        onCreated={({ gl }) => {
-          gl.setClearColor(0x000000, 0);
-        }}
-      >
-        <Suspense fallback={null}>
-          <SceneContent multiplier={multiplier} phase={phase} compact />
-        </Suspense>
-      </Canvas>
+      <CanvasErrorBoundary fallback={null}>
+        <Canvas
+          shadows={false}
+          camera={{ position: [2.2, 1.5, 3.9], fov: 32, near: 0.1, far: 50 }}
+          className="h-full w-full"
+          style={{ background: "transparent" }}
+          gl={{ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: "low-power" }}
+          onCreated={({ gl }) => {
+            gl.setClearColor(0x000000, 0);
+          }}
+          onError={(e) => console.warn("RatMarker canvas error:", e)}
+        >
+          <Suspense fallback={null}>
+            <SceneContent multiplier={multiplier} phase={phase} compact />
+          </Suspense>
+        </Canvas>
+      </CanvasErrorBoundary>
     </div>
   );
 }
