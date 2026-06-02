@@ -6,22 +6,31 @@ import {
   Boxes,
   Megaphone,
   Shuffle,
+  Rat,
 } from "lucide-react";
 import { memo } from "react";
 
-const TABS = ["items", "store", "randomStore", "rules", "list", "ads"];
+const TABS = ["items", "store", "randomStore", "rules", "list", "ads", "rat"];
 
 function HomeBrowser({
   setTab,
   searchTerms,
 }: {
   setTab: (
-    tab: "home" | "rules" | "items" | "store" | "list" | "ads" | "randomStore",
+    tab:
+      | "home"
+      | "rules"
+      | "items"
+      | "store"
+      | "list"
+      | "ads"
+      | "randomStore"
+      | "rat",
   ) => void;
   searchTerms: string;
 }) {
   const getTab = (
-    value: "rules" | "items" | "store" | "list" | "ads" | "randomStore",
+    value: "rules" | "items" | "store" | "list" | "ads" | "randomStore" | "rat",
   ) => {
     const tabMap = {
       rules: {
@@ -59,6 +68,12 @@ function HomeBrowser({
         label: "РЕКЛАМА",
         description: "Заказать рекламу",
         icon: <Megaphone className="size-10" />,
+      },
+      rat: {
+        value: "rat",
+        label: "Крыса",
+        description: "Крыса",
+        icon: <Rat className="size-10" />,
       },
     };
 

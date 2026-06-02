@@ -33,12 +33,24 @@ function SceneContent() {
         onEnd={() => setIsOrbiting(false)}
       />
       <Environment preset="city" />
-      <color attach="background" args={["#191724"]} />
+      <color attach="background" args={["#232136"]} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[5, 6, 4]} intensity={1.6} color="#f6c177" />
-      <directionalLight position={[-4, 3, -3]} intensity={0.6} color="#c4a7e7" />
-      <directionalLight position={[-2, -1, 6]} intensity={0.4} color="#eb6f92" />
-      <directionalLight position={[0, -4, -4]} intensity={0.25} color="#31748f" />
+      <directionalLight
+        position={[-4, 3, -3]}
+        intensity={0.6}
+        color="#c4a7e7"
+      />
+      <directionalLight
+        position={[-2, -1, 6]}
+        intensity={0.4}
+        color="#eb6f92"
+      />
+      <directionalLight
+        position={[0, -4, -4]}
+        intensity={0.25}
+        color="#31748f"
+      />
       <group position={[0, -0.8, 0]}>
         <Suspense fallback={null}>
           <RatModel spinning={!isOrbiting} />
@@ -48,7 +60,7 @@ function SceneContent() {
   );
 }
 
-function RatApp() {
+function RatTab() {
   return (
     <Canvas
       camera={{ position: [3.5, 2, 5], fov: 42 }}
@@ -62,4 +74,4 @@ function RatApp() {
   );
 }
 
-export default RatApp;
+export default RatTab;

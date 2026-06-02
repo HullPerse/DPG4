@@ -23,6 +23,7 @@ const ItemsTab = lazy(() => import("./tabs/items.tab"));
 const MarketBrowser = lazy(() => import("./tabs/market.tab"));
 const AdvertisementTab = lazy(() => import("./tabs/advertisement.tab"));
 const StoreTab = lazy(() => import("./tabs/store.tab"));
+const RatTab = lazy(() => import("./tabs/rat.tab"));
 
 export type SortMethod = "name" | "date" | "charges" | "type";
 export type SortDirection = "asc" | "desc";
@@ -48,7 +49,8 @@ type BrowserTab =
   | "items"
   | "store"
   | "ads"
-  | "randomStore";
+  | "randomStore"
+  | "rat";
 
 function BrowserTabContent({
   tab,
@@ -90,6 +92,8 @@ function BrowserTabContent({
       return <AdvertisementTab />;
     case "randomStore":
       return <StoreTab />;
+    case "rat":
+      return <RatTab />;
     default:
       return <HomeTab setTab={setTab} searchTerms={searchTerms} />;
   }
