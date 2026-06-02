@@ -61,6 +61,11 @@ function buildPegPositions(): [number, number][] {
     }
   }
 
+  for (let y = 14; y >= 4; y -= 2) {
+    pegs.push([-(BOARD_HALF - 0.25), y]);
+    pegs.push([BOARD_HALF - 0.25, y]);
+  }
+
   return pegs;
 }
 
