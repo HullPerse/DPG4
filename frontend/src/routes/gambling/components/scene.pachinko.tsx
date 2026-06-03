@@ -36,7 +36,7 @@ const PEG_ROWS = 15;
 const PEG_COLS = 11;
 const PEG_RADIUS = 0.13;
 const BALL_RADIUS = 0.2;
-const LANE_HALF_Z = 0.28;
+const LANE_HALF_Z = 0.35;
 
 /** Tight crop - board fills most of the viewport */
 const VIEW_PAD_X = 0.45;
@@ -204,17 +204,17 @@ function BoardWalls({ bid }: { bid: number }) {
       <RigidBody
         type="fixed"
         colliders={false}
-        position={[-(BOARD_HALF - 0.28), BOARD_CENTER_Y, PLANE_Z]}
+        position={[-(BOARD_HALF - 0.22), BOARD_CENTER_Y, PLANE_Z]}
       >
-        <CuboidCollider args={[0.06, BOARD_HEIGHT / 2 - 0.3, LANE_HALF_Z]} />
+        <CuboidCollider args={[0.1, BOARD_HEIGHT / 2 - 0.3, LANE_HALF_Z]} />
       </RigidBody>
       {/* Side walls */}
       <RigidBody
         type="fixed"
         colliders={false}
-        position={[-BOARD_HALF - 0.12, BOARD_CENTER_Y, PLANE_Z]}
+        position={[-BOARD_HALF - 0.18, BOARD_CENTER_Y, PLANE_Z]}
       >
-        <CuboidCollider args={[0.12, BOARD_HEIGHT / 2 + 0.4, LANE_HALF_Z]} />
+        <CuboidCollider args={[0.18, BOARD_HEIGHT / 2 + 0.4, LANE_HALF_Z]} />
       </RigidBody>
       <RigidBody
         type="fixed"
