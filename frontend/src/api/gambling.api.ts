@@ -1,5 +1,5 @@
 import { apiFetch } from "./client.api";
-import type { BlackjackState, RocketState, RocketHistoryEntry, PachinkoState } from "@/types/gamble";
+import type { BlackjackState, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult } from "@/types/gamble";
 
 export type {
   BlackjackState,
@@ -9,20 +9,26 @@ export type {
   PachinkoState,
 } from "@/types/gamble";
 
-export interface DiceRollResult {
-  values: [number, number, number];
-  payout: number;
-  net: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-  balance: number;
-  banned: boolean;
-}
+export type { DiceDealerResult, DiceGameResult };
 
-export async function rollDice(userId: string, bid: number): Promise<DiceRollResult> {
-  return apiFetch<DiceRollResult>("/utils/dice-roll", {
+export async function rollDiceDealer(userId: string, bid: number): Promise<DiceDealerResult> {
+  return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
     body: { userId, bid },
+  });
+}
+
+export async function rollDicePlayer(userId: string): Promise<DiceGameResult> {
+  return apiFetch<DiceGameResult>("/utils/dice-roll", {
+    method: "POST",
+    body: { userId },
+  });
+}
+
+export async function abortDice(userId: string): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>("/utils/dice-abort", {
+    method: "POST",
+    body: { userId },
   });
 }
 
