@@ -1,7 +1,7 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useRef, useState, memo, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import {
   dropPachinko,
@@ -9,7 +9,7 @@ import {
   syncPachinko,
   abandonPachinko,
 } from "@/api/gambling.api";
-import PachinkoScene from "../components/scene.pachinko";
+const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
 import { SmallLoader } from "@/components/shared/loader.component";
 import type { PachinkoState } from "@/types/gamble";
 import {
@@ -175,15 +175,17 @@ function PachinkoTab() {
       </section>
 
       <section className="relative w-full flex-1 min-h-80 max-h-128 overflow-hidden border-2 border-highlight-high bg-background">
-        <PachinkoScene
-          dropKey={dropKey}
-          startX={startX}
-          showRat={showRat}
-          simulating={inDrop}
-          highlightIndex={highlightSlot}
-          onSettled={handleSettled}
-          bid={bid}
-        />
+        <Suspense fallback={null}>
+          <PachinkoScene
+            dropKey={dropKey}
+            startX={startX}
+            showRat={showRat}
+            simulating={inDrop}
+            highlightIndex={highlightSlot}
+            onSettled={handleSettled}
+            bid={bid}
+          />
+        </Suspense>
         {result && (
           <span
             className={cn(

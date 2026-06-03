@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button.component";
 import { ChevronLeft } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, lazy, Suspense } from "react";
 import HomeTab from "./tabs/home.tab";
-import DiceTab from "./tabs/dice.tab";
-import BlackjackTab from "./tabs/blackjack.tab";
-import RocketTab from "./tabs/rocket.tab";
-import PachinkoTab from "./tabs/pachinko.tab";
+const DiceTab = lazy(() => import("./tabs/dice.tab"));
+const BlackjackTab = lazy(() => import("./tabs/blackjack.tab"));
+const RocketTab = lazy(() => import("./tabs/rocket.tab"));
+const PachinkoTab = lazy(() => import("./tabs/pachinko.tab"));
 
 export default function Gambling() {
   const [tab, setTab] = useState<"home" | "dice" | "blackjack" | "rocket" | "pachinko">("home");
@@ -36,7 +36,9 @@ export default function Gambling() {
         </section>
       )}
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
-        {getComponent()}
+        <Suspense fallback={null}>
+          {getComponent()}
+        </Suspense>
       </section>
     </main>
   );
