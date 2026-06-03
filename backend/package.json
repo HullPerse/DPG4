@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "LOG_LEVEL=error bun test",
     "dev": "bun run --watch src/index.server.ts",
     "prod": "bun install && bun admin:build && bun run db:build && bun run server",
     "db:clear": "rm -f data/db.sqlite data/db.sqlite-wal data/db.sqlite-shm",
