@@ -82,10 +82,6 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         conditions.push(eq(schema.games.userId, query.userId));
       }
 
-      if (query.search) {
-        conditions.push(sql`${schema.games.data} LIKE ${`%${query.search}%`}`);
-      }
-
       if (query.status) {
         conditions.push(eq(schema.games.status, query.status));
       }
@@ -99,7 +95,12 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       }
 
       q = q.orderBy(desc(schema.games.created)) as typeof q;
-      const rows = await q.limit(limit).offset(offset);
+      const all = await q;
+      const searchLower = query.search?.toLowerCase();
+      const matched = searchLower
+        ? all.filter((r) => String(r.data).toLowerCase().includes(searchLower))
+        : all;
+      const rows = matched.slice(offset, offset + limit);
       return rows.map(mapGame);
     },
     {
@@ -353,14 +354,12 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
   .get(
     "/",
     async ({ db, query }) => {
-      let q = db.select().from(schema.presets);
-      if (query.search) {
-        q = q.where(
-          sql`${schema.presets.label} LIKE ${`%${query.search}%`}`,
-        ) as typeof q;
-      }
-      const rows = await q;
-      return rows.map((r) => withRecordMeta(r, "presets"));
+      const all = await db.select().from(schema.presets);
+      const searchLower = query.search?.toLowerCase();
+      const matched = searchLower
+        ? all.filter((r) => r.label?.toLowerCase().includes(searchLower))
+        : all;
+      return matched.map((r) => withRecordMeta(r, "presets"));
     },
     {
       query: t.Optional(

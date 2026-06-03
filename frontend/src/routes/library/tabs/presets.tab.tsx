@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { memo, useCallback, useRef, useState } from "react";
 
+import { useDebounce } from "@/hooks/debounce.hook";
 import { useUserStore } from "@/store/user.store";
 
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -32,6 +33,8 @@ function PresetsTab() {
   const refetchPresetsRef = useRef<(() => void) | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
   const [loading, setLoadinng] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<{
     id: string;
@@ -46,13 +49,13 @@ function PresetsTab() {
     await gameApi.addPreset(searchTerm);
     setSearchTerm("");
     setLoadinng(false);
-  }, [searchTerm]);
+  }, []);
 
   const getComponent = () => {
     if (!currentPreset)
       return (
         <PresetsList
-          searchTerms={searchTerm}
+          searchTerms={debouncedSearch}
           setCurrentPreset={setCurrentPreset}
           setCurrentTab={setCurrentTab}
           refetchPresetsRef={refetchPresetsRef}
@@ -62,7 +65,7 @@ function PresetsTab() {
     const buttonMap = {
       presetWheel: <PresetsWheel id={currentPreset.id} />,
       presetList: (
-        <PresetSettings id={currentPreset.id} searchTerms={searchTerm} />
+        <PresetSettings id={currentPreset.id} searchTerms={debouncedSearch} />
       ),
       addPresetGame: (
         <NewGameLibrary

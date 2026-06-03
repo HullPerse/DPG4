@@ -45,6 +45,7 @@ export default class UserApi {
     excludeUserId?: string;
     hasStatus?: string;
     fields?: string;
+    signal?: AbortSignal;
   }): Promise<User[]> => {
     const searchParams = new URLSearchParams();
     if (params?.search) searchParams.set("search", params.search);
@@ -52,7 +53,7 @@ export default class UserApi {
     if (params?.hasStatus) searchParams.set("hasStatus", params.hasStatus);
     if (params?.fields) searchParams.set("fields", params.fields);
     else searchParams.set("fields", "id,username,avatar,color,money,position,status");
-    return apiFetch<User[]>(`/users?${searchParams.toString()}`);
+    return apiFetch<User[]>(`/users?${searchParams.toString()}`, { signal: params?.signal });
   };
 
   getUserPositions = async (): Promise<User[]> => {

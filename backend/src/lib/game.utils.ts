@@ -1,13 +1,21 @@
 /** @see frontend calculateScore */
 export function calculateScore(realTime: number, hltbTime: number): number {
-  if (Number.isNaN(realTime) || Number.isNaN(hltbTime) || hltbTime <= 0) return 3;
+  if (Number.isNaN(realTime) || Number.isNaN(hltbTime) || hltbTime <= 0)
+    return 3;
 
   const ratio = realTime / hltbTime;
   const multiplier = Math.max(0.5, Math.min(1.7, 0.5 + 0.6 * ratio));
   const score = multiplier * hltbTime;
   const finalScore = Math.max(3, Math.floor(score));
   const bonus = Math.floor(finalScore / 3);
-  return finalScore + bonus;
+
+  let maxScore = Math.min(finalScore + bonus, 100);
+
+  if (maxScore > 60) {
+    maxScore = Math.floor(maxScore * 0.9);
+  }
+
+  return maxScore;
 }
 
 /** @see frontend calculateCost */

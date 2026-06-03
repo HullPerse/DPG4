@@ -26,6 +26,10 @@ export async function fetchWithTimeout(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  if (options.signal) {
+    options.signal.addEventListener("abort", () => controller.abort());
+  }
+
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } finally {
@@ -47,6 +51,7 @@ type ApiOptions = {
   body?: unknown;
   auth?: boolean;
   timeoutMs?: number;
+  signal?: AbortSignal;
 };
 
 export async function apiFetch<T>(
@@ -72,6 +77,7 @@ export async function apiFetch<T>(
       method,
       cache: method === "GET" ? "no-store" : undefined,
       headers,
+      signal: options.signal,
       body:
         options.body === undefined
           ? undefined

@@ -113,7 +113,7 @@ export default function PresetsWheel({ id }: { id: string }) {
         username: String(user?.username),
       },
       playtime: {
-        hltb: Number(time ?? 1),
+        hltb: Number(time ?? game.time ?? 1),
       },
       status: "PLAYING" as GameStatus,
       data: {

@@ -16,8 +16,24 @@ import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { highlightText, translateItemType } from "@/lib/utils";
 import ImageViewer from "@/components/shared/viewer.component";
+import { CreateModal } from "@/components/shared/items.modal";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
+import { User } from "@/types/user";
+import UserApi from "@/api/user.api";
+import { Input } from "@/components/ui/input.component";
+import { Activity } from "@/types/activity";
+import ActivityApi from "@/api/activity.api";
 
 const itemsApi = new ItemsApi();
+const userApi = new UserApi();
+const activityApi = new ActivityApi();
 
 function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();
@@ -25,16 +41,25 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
 
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
   const [result, setResult] = useState<Item | null>(null);
+  const [itemData, setItemData] = useState<Item | null>(null);
+  const [selected, setSelected] = useState<User | null>(user ? user : null);
+  const [input, setInput] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["itemsWheel", searchTerms],
-    queryFn: async (): Promise<Item[]> => {
-      return itemsApi.getItems({
+    queryFn: async (): Promise<{ items: Item[]; users: User[] }> => {
+      const items = await itemsApi.getItems({
         rollable: true,
         search: searchTerms || undefined,
       });
+      const users = await userApi.getAllUsers();
+
+      return {
+        items,
+        users,
+      };
     },
   });
 
@@ -63,7 +88,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     );
 
   const handleAddItem = async (id: string) => {
-    const item = data?.find((Item) => Item.id === id);
+    const item = data?.items.find((Item) => Item.id === id);
     if (!item) return;
 
     setLoading(true);
@@ -79,10 +104,105 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   };
 
   const visibleItems =
-    data?.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+    data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
+      {itemData && (
+        <CreateModal
+          label={itemData.label}
+          body={() => (
+            <main className="flex flex-col gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="font-bold">Игроки</span>
+                <Select
+                  value={selected?.id ?? ""}
+                  onValueChange={(e) => {
+                    if (!e) return;
+                    const item = data?.users?.find((i) => i.id === e);
+                    if (item) setSelected(item);
+                  }}
+                >
+                  <SelectTrigger className="w-full py-5">
+                    <SelectValue
+                      placeholder="Игрок"
+                      style={{ color: selected?.color }}
+                    >
+                      {selected?.username}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {data?.users?.map((item, index) => (
+                        <SelectItem
+                          key={item.id}
+                          value={item.id!}
+                          style={{ color: item.color }}
+                        >
+                          {`${index + 1}: `}
+                          {item.username}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </label>
+
+              <label>
+                <span className="font-bold">Примечание</span>
+                <Input
+                  placeholder="Примечание"
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              </label>
+
+              <section className="flex flex-row items-center justify-between gap-2 p-1">
+                <Button
+                  className="flex flex-1"
+                  variant="success"
+                  onClick={async () => {
+                    if (!selected || !itemData) return;
+
+                    await itemsApi.addInventory(
+                      String(selected?.id),
+                      String(itemData.id),
+                    );
+
+                    queryClient.invalidateQueries({
+                      queryKey: ["inventoryTab", selected.id],
+                      refetchType: "active",
+                    });
+
+                    if (selected.id !== user?.id) {
+                      const activityData = {
+                        author: user?.id,
+                        image: user?.avatar,
+                        text: `${user?.username} добавил ${itemData.label} игроку ${selected.username}`,
+                      } as Activity;
+
+                      await activityApi.createActivity(activityData);
+                    }
+
+                    setSelected(null);
+                    setInput("");
+                    return setItemData(null);
+                  }}
+                  disabled={!selected}
+                >
+                  Применить
+                </Button>
+              </section>
+            </main>
+          )}
+          open={!!itemData}
+          setOpen={(open) => {
+            if (!open) setItemData(null);
+          }}
+        />
+      )}
+
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
@@ -95,7 +215,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
           }))}
           onResult={(it) => {
             return setResult(
-              data?.find((item) => String(item.id) === String(it?.id)) as Item,
+              data?.items.find(
+                (item) => String(item.id) === String(it?.id),
+              ) as Item,
             );
           }}
           free={false}
@@ -126,16 +248,20 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
 
             <div className="flex flex-col ml-2">
               <span className="font-bold text-xl">{result.label}</span>
-              <span className="text-text/80 overflow-hidden hover:overflow-y-auto max-h-40">
-                {result.description}
-              </span>
+              <div className="overflow-y-auto max-h-40 p-1 mr-1">
+                <span className="text-text/80 ">{result.description}</span>
+              </div>
             </div>
             <div className="ml-auto flex flex-row gap-1">
               <Button
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
-                onClick={() => handleAddItem(String(result.id))}
+                onClick={() => {
+                  setLoading(true);
+                  setItemData(result);
+                  setLoading(false);
+                }}
               >
                 {loading ? <SmallLoader /> : <Plus />}
               </Button>
@@ -145,7 +271,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       </section>
       {/* LIST */}
       <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
-        {data?.map((item) => (
+        {data?.items.map((item) => (
           <section
             key={item.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
@@ -203,7 +329,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
-                onClick={() => handleAddItem(String(item.id))}
+                onClick={() => {
+                  setLoading(true);
+
+                  setItemData(item);
+
+                  setLoading(false);
+                }}
+                disabled={loading}
               >
                 {loading ? <SmallLoader /> : <Plus />}
               </Button>

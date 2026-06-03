@@ -16,6 +16,7 @@ export default class ItemsApi {
     order?: "asc" | "desc";
     labels?: string[];
     random?: number;
+    signal?: AbortSignal;
   }): Promise<Item[]> => {
     const searchParams = new URLSearchParams();
     if (params?.search) searchParams.set("search", params.search);
@@ -27,7 +28,7 @@ export default class ItemsApi {
     if (params?.random) searchParams.set("random", String(params.random));
     if (params?.labels?.length) searchParams.set("labels", params.labels.join(","));
     const qs = searchParams.toString();
-    return apiFetch<Item[]>(`/items${qs ? `?${qs}` : ""}`);
+    return apiFetch<Item[]>(`/items${qs ? `?${qs}` : ""}`, { signal: params?.signal });
   };
 
   getAllInventories = async (): Promise<Inventory[]> => {

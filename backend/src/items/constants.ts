@@ -34,6 +34,9 @@ export const ITEM_MODAL_LABELS = new Set([
   "Ебанутый дед",
   "Картонная упаковка",
   "Кайджи",
+  "Гидразинокарбонилметилбромфенилдигидробенздиазепин",
+  "Дырявый сапог",
+  "Пустой пакет",
 ]);
 
 export const RAT_IDS = [
@@ -72,7 +75,7 @@ export const GREMLIN_IDS = ["Гремлин", "Гремлинизатор", "Г�
 export const ITEM_DB_IDS = {
   rat: "dswpfvayiqxul1b",
   poop: "diy82ugngg95mek",
-  chestRats: "a29c7tdphmwlrbc",
+  chestRats: "dswpfvayiqxul1b",
   gremlin: "evexf52un87e8ju",
   borsch: "kqxuqyz17ttndnm",
   bucket1: "jgew0bwjc69xo0g",

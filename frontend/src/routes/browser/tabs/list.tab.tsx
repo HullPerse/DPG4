@@ -1,11 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  memo,
-  startTransition,
-  useCallback,
-  useRef,
-  useState,
-} from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
@@ -66,28 +60,43 @@ function ListBrowser({
   const [selected, setSelected] = useState<User | null>(user ? user : null);
   const [input, setInput] = useState<string>("");
 
-  const sortFieldMap: Record<string, string> = { name: "label", date: "created", charges: "charge", type: "type" };
+  const sortFieldMap: Record<string, string> = {
+    name: "label",
+    date: "created",
+    charges: "charge",
+    type: "type",
+  };
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["listTab", searchTerms, sortMethod, sortDirection],
-    queryFn: async (): Promise<{ items: Item[]; users: User[] }> => {
-      return {
-        items: await itemsApi.getItems({ search: searchTerms || undefined, sort: sortFieldMap[sortMethod] as "label" | "created" | "charge" | "type", order: sortDirection }),
-        users: await usersApi.getUsers({ search: searchTerms || undefined }),
-      };
+    queryFn: async ({ signal }): Promise<{ items: Item[]; users: User[] }> => {
+      const [items, users] = await Promise.all([
+        itemsApi.getItems({
+          search: searchTerms || undefined,
+          sort: sortFieldMap[sortMethod] as
+            | "label"
+            | "created"
+            | "charge"
+            | "type",
+          order: sortDirection,
+          signal,
+        }),
+        usersApi.getUsers({ search: searchTerms || undefined, signal }),
+      ]);
+      return { items, users };
     },
+    placeholderData: (prev) => prev,
   });
 
   const invalidateQuery = useCallback(() => {
-    startTransition(() => {
-      queryClient.invalidateQueries({
-        queryKey: ["listTab"],
-        refetchType: "active",
-      });
+    queryClient.invalidateQueries({
+      queryKey: ["listTab", searchTerms, sortMethod, sortDirection],
+      refetchType: "active",
     });
-  }, [queryClient]);
+  }, [queryClient, searchTerms, sortMethod, sortDirection]);
 
   useSubscription("items", "*", invalidateQuery);
+  useSubscription("users", "*", invalidateQuery);
 
   const filteredItems = data?.items ?? [];
 
@@ -101,7 +110,7 @@ function ListBrowser({
   });
   const virtualItems = virtualizer.getVirtualItems();
 
-  if (isLoading) return <WindowLoader />;
+  if (isLoading && !data) return <WindowLoader />;
   if (isError)
     return (
       <WindowError

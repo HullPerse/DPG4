@@ -150,7 +150,7 @@ function PresetSettings({
 
   return (
     <main
-      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto pb-10"
+      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto"
       ref={listRef}
       style={{
         scrollBehavior: "smooth",
@@ -184,7 +184,7 @@ function PresetSettings({
                 />
               </div>
               <span
-                className={`font-bold truncate line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
+                className={`font-bold line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (!item.steamLink) return;
