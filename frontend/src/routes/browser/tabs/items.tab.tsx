@@ -87,22 +87,6 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const handleAddItem = async (id: string) => {
-    const item = data?.items.find((Item) => Item.id === id);
-    if (!item) return;
-
-    setLoading(true);
-
-    return await itemsApi
-      .addInventory(String(user?.id), String(item.id))
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["libraryGames"] });
-        queryClient.invalidateQueries({ queryKey: ["inventoryTab", user?.id] });
-        setLoading(false);
-        setResult(null);
-      });
-  };
-
   const visibleItems =
     data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
 

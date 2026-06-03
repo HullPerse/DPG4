@@ -1,6 +1,7 @@
 import { mkdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
 import { config } from "../src/server.config";
+import { resolveBackendPath } from "../src/lib/paths";
 
 const nameIndex = process.argv.indexOf("--name");
 const customName =
@@ -9,7 +10,7 @@ const customName =
     : null;
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-const backupDir = join(process.cwd(), "backups");
+const backupDir = resolveBackendPath("backups");
 const filename = customName ? `${customName}.sqlite` : `db-${stamp}.sqlite`;
 const dest = join(backupDir, filename);
 
