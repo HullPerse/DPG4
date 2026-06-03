@@ -66,7 +66,7 @@ export function isPeekCard(card: Card): boolean {
 }
 
 export function blackjackPayout(bid: number): number {
-  return Math.floor(bid * 2.5);
+  return Math.floor(bid * 2.2);
 }
 
 export function resolveLabels(
