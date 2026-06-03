@@ -94,8 +94,12 @@ export default function PresetsList({
       )}
 
       {data?.presets
+        ?.filter((preset) => {
+          if (!searchTerms || searchTerms.trim() === "") return true;
 
-        ?.sort((a, b) => a.label.localeCompare(b.label))
+          return preset.label.toUpperCase().includes(searchTerms.toUpperCase());
+        })
+        .sort((a, b) => a.label.localeCompare(b.label))
         .map((preset) => (
           <PresetComponent
             key={preset.id}

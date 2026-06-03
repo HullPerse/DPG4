@@ -3,8 +3,11 @@ import type { DiceResult, DiceSim } from "@/types/gamble";
 
 export const REST_Y = 0.8;
 export const GRAVITY = 22;
-export const STAGGER_S = 0.65;
+export const STAGGER_S = 1.8;
 export const MIN_AIR_TIME = 0.55;
+export const MAX_AIR_TIME = 5;
+export const DEALER_Z = -2.2;
+export const PLAYER_Z = 1.5;
 
 // +x, -x, +y, -y, +z, -z
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
@@ -84,20 +87,21 @@ export function lerpAngle(a: number, b: number, t: number) {
   return a + diff * t;
 }
 
-export function createThrowSim(index: number, now: number): DiceSim {
+export function createThrowSim(index: number, now: number, homeZ = 0): DiceSim {
   const homeX = (index - 1) * 2.4;
   const spread = (Math.random() - 0.5) * 1.2;
 
   return {
     phase: "flying",
     homeX,
+    homeZ,
     throwStart: now,
     settleStart: 0,
     bounceCount: 0,
     pos: {
       x: homeX + spread * 0.4,
       y: 3.8 + Math.random() * 1.2,
-      z: -4.2 - Math.random() * 1.5,
+      z: homeZ - 4.2 - Math.random() * 1.5,
     },
     vel: {
       x: (homeX - spread) * 0.35 + (Math.random() - 0.5) * 2.2,
@@ -117,15 +121,16 @@ export function createThrowSim(index: number, now: number): DiceSim {
   };
 }
 
-export function createIdleSim(index: number): DiceSim {
+export function createIdleSim(index: number, homeZ = 0): DiceSim {
   const homeX = (index - 1) * 2.4;
   return {
     phase: "idle",
     homeX,
+    homeZ,
     throwStart: 0,
     settleStart: 0,
     bounceCount: 0,
-    pos: { x: homeX, y: REST_Y, z: 0 },
+    pos: { x: homeX, y: REST_Y, z: homeZ },
     vel: { x: 0, y: 0, z: 0 },
     rot: { x: 0.25, y: 0.35 + index * 0.4, z: 0 },
     angVel: { x: 0, y: 0, z: 0 },

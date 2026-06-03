@@ -1,13 +1,15 @@
-import { mkdir, copyFile } from "node:fs/promises";
+import { mkdir, readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { config } from "../server.config";
 import { resolveBackendPath } from "./paths";
 import { logger } from "./logger";
+import { rawDb } from "../db";
 
 const TRACKER_PATH = resolveBackendPath("data", "backup-tracker.json");
 const BACKUP_DIR = resolveBackendPath("backups");
 const INTERVAL_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_AUTO_BACKUPS = 5;
 
 interface Tracker {
   lastBackup: string | null;
@@ -27,18 +29,43 @@ async function writeTracker(tracker: Tracker) {
   await Bun.write(TRACKER_PATH, JSON.stringify(tracker, null, 2));
 }
 
+async function rotateAutoBackups() {
+  try {
+    const files = await readdir(BACKUP_DIR);
+    const autoBackups = files
+      .filter((f) => f.startsWith("auto-db-") && f.endsWith(".sqlite"))
+      .sort()
+      .reverse();
+
+    if (autoBackups.length > MAX_AUTO_BACKUPS) {
+      for (const file of autoBackups.slice(MAX_AUTO_BACKUPS)) {
+        await unlink(join(BACKUP_DIR, file));
+        logger.info(null, `Removed old auto-backup: ${file}`);
+      }
+    }
+  } catch (err) {
+    logger.error(
+      null,
+      "Auto-backup rotation failed",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+}
+
 async function doBackup(): Promise<boolean> {
   try {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const dbPath = config.dbPath;
-    if (!(await Bun.file(dbPath).exists())) {
-      logger.warn(null, "Auto-backup skipped: database file not found", dbPath);
+    if (!(await Bun.file(config.dbPath).exists())) {
+      logger.warn(null, "Auto-backup skipped: database file not found", config.dbPath);
       return false;
     }
     await mkdir(BACKUP_DIR, { recursive: true });
-    const dest = join(BACKUP_DIR, `db-${stamp}.sqlite`);
-    await copyFile(dbPath, dest);
+    const filename = `auto-db-${stamp}.sqlite`;
+    const dest = join(BACKUP_DIR, filename);
+    const escapedDest = dest.replace(/'/g, "''");
+    rawDb.exec(`VACUUM INTO '${escapedDest}'`);
     await writeTracker({ lastBackup: new Date().toISOString() });
+    await rotateAutoBackups();
     logger.info(null, `Auto-backup saved: ${dest}`);
     return true;
   } catch (err) {

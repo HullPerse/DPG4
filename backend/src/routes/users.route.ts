@@ -21,10 +21,6 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       let q = db.select().from(schema.users);
       const conditions: SQL[] = [];
 
-      if (query.search) {
-        conditions.push(sql`${schema.users.username} LIKE ${`%${query.search}%`}`);
-      }
-
       if (query.excludeUserId) {
         conditions.push(not(eq(schema.users.id, query.excludeUserId)));
       }
@@ -37,8 +33,15 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         q = q.where(and(...conditions)) as typeof q;
       }
 
-      const rows = await q.limit(limit).offset(offset);
-      let list = rows.map((r) => withRecordMeta(omitPassword(r), "users"));
+      const all = await q;
+      let list = all.map((r) => withRecordMeta(omitPassword(r), "users"));
+
+      if (query.search) {
+        const s = query.search.toLowerCase();
+        list = list.filter((r) => r.username?.toLowerCase().includes(s));
+      }
+
+      list = list.slice(offset, offset + limit);
 
       if (query.fields) {
         const fields = query.fields.split(",").map((f) => f.trim());

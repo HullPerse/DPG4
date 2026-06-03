@@ -7,6 +7,7 @@ export interface DiceSim {
   rot: { x: number; y: number; z: number };
   angVel: { x: number; y: number; z: number };
   homeX: number;
+  homeZ: number;
   throwStart: number;
   settleStart: number;
   bounceCount: number;
@@ -19,6 +20,23 @@ export type DiceResult = {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
 } | null;
+
+export interface DiceDealerResult {
+  phase: "dealer";
+  values: [number, number, number];
+  target: number | null;
+  autoResult: string | null;
+}
+
+export interface DiceGameResult {
+  playerValues: [number, number, number];
+  payout: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance";
+  balance: number;
+  banned: boolean;
+}
 
 export type CardSuit = "hearts" | "diamonds" | "clubs" | "spades";
 export type CardRank =

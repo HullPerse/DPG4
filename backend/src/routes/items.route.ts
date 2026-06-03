@@ -46,13 +46,6 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         }
       }
 
-      if (query.search) {
-        const pattern = `%${query.search}%`;
-        conditions.push(
-          sql`(${schema.items.label} LIKE ${pattern} OR ${schema.items.description} LIKE ${pattern})`,
-        );
-      }
-
       if (query.type) {
         conditions.push(eq(schema.items.type, query.type));
       }
@@ -79,16 +72,25 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type)) as typeof q;
       }
 
+      const searchLower = query.search?.toLowerCase();
+      const all = await q;
+
+      const matched = searchLower
+        ? all.filter(
+            (r) =>
+              r.label?.toLowerCase().includes(searchLower) ||
+              r.description?.toLowerCase().includes(searchLower),
+          )
+        : all;
+
       if (query.random) {
         const count = Math.min(Number(query.random), 100);
-        const all = await q;
-        const shuffled = [...all].sort(() => Math.random() - 0.5);
+        const shuffled = [...matched].sort(() => Math.random() - 0.5);
         set.headers["Cache-Control"] = "no-store";
         return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
       }
 
-      const rows =
-        limit !== undefined ? await q.limit(limit).offset(offset) : await q;
+      const rows = matched.slice(offset, offset + (limit ?? matched.length));
       set.headers["Cache-Control"] = "no-store";
       return rows.map((r) => withRecordMeta(r, "items"));
     },
@@ -239,18 +241,20 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         conditions.push(eq(schema.inventory.type, query.type));
       }
 
-      if (query.search) {
-        const pattern = `%${query.search}%`;
-        conditions.push(
-          sql`(${schema.inventory.label} LIKE ${pattern} OR ${schema.inventory.description} LIKE ${pattern})`,
-        );
-      }
-
       if (conditions.length > 0) {
         q = q.where(and(...conditions)) as typeof q;
       }
 
-      const rows = await q.limit(limit).offset(offset);
+      const all = await q;
+      const searchLower = query.search?.toLowerCase();
+      const matched = searchLower
+        ? all.filter(
+            (r) =>
+              r.label?.toLowerCase().includes(searchLower) ||
+              r.description?.toLowerCase().includes(searchLower),
+          )
+        : all;
+      const rows = matched.slice(offset, offset + limit);
       return rows.map((r) => withRecordMeta(r, "inventory"));
     },
     {
@@ -396,17 +400,16 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       const offset = query.offset ? Number(query.offset) : 0;
       let q = db.select().from(schema.market);
 
-      if (query.search) {
-        const pattern = `%${query.search}%`;
-        q = q.where(
-          sql`(${schema.market.label} LIKE ${pattern} OR ${schema.market.owner} LIKE ${pattern})`,
-        ) as typeof q;
-      }
-
-      const rows = await q
-        .orderBy(desc(schema.market.created))
-        .limit(limit)
-        .offset(offset);
+      const all = await q.orderBy(desc(schema.market.created));
+      const searchLower = query.search?.toLowerCase();
+      const matched = searchLower
+        ? all.filter(
+            (r) =>
+              r.label?.toLowerCase().includes(searchLower) ||
+              r.owner?.toLowerCase().includes(searchLower),
+          )
+        : all;
+      const rows = matched.slice(offset, offset + limit);
       return rows.map((r) => withRecordMeta(r, "market"));
     },
     {

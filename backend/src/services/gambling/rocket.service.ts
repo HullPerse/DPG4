@@ -16,7 +16,7 @@ export class RocketService {
   private lastEndedGames = new Map<string, RocketState>();
   private crashHistory: { crashPoint: number; timestamp: number }[] = [];
   private MAX_HISTORY = 50;
-  private HOUSE_EDGE = 0.96;
+  private HOUSE_EDGE = 0.90;
 
   private generateCrashPoint(bid: number): number {
     const e = Math.random();

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { Input } from "@/components/ui/input.component";
+import { useDebounce } from "@/hooks/debounce.hook";
 import { Button } from "@/components/ui/button.component";
 import {
   Battery,
@@ -104,6 +105,7 @@ export default function Browser() {
   const [sortMethod, setSortMethod] = useState<SortMethod>("date");
   const [tab, setTab] = useState<BrowserTab>("home");
   const [searchTerms, setSearchTerms] = useState<string>("");
+  const debouncedSearch = useDebounce(searchTerms, 300);
 
   const SortMethodIcon = sortMethodIcons[sortMethod];
 
@@ -171,7 +173,7 @@ export default function Browser() {
         <Suspense fallback={<WindowLoader />}>
           <BrowserTabContent
             tab={tab}
-            searchTerms={searchTerms}
+            searchTerms={debouncedSearch}
             setTab={setTab}
             sortMethod={sortMethod}
             sortDirection={sortDirection}

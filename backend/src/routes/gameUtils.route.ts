@@ -37,7 +37,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     "/dice-roll",
     async ({ body, set, diceService }) => {
       try {
-        return await diceService.roll(body.userId, body.bid);
+        if (body.bid !== undefined) {
+          return await diceService.rollDealer(body.userId, body.bid);
+        }
+        return await diceService.rollPlayer(body.userId);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -46,13 +49,24 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
-        bid: t.Integer({ minimum: 1, maximum: 10 }),
+        bid: t.Optional(t.Integer({ minimum: 1, maximum: 10 })),
       }),
       detail: {
         tags: ["utils"],
         summary:
-          "Server-authoritative dice roll - generates values, calculates payout, updates balance",
+          "Two-phase Chinchirorin dice roll - phase 1 (with bid) rolls dealer, phase 2 (no bid) rolls player and settles",
       },
+    },
+  )
+  .post(
+    "/dice-abort",
+    async ({ body, diceService }) => {
+      await diceService.abort(body.userId);
+      return { success: true };
+    },
+    {
+      body: t.Object({ userId: t.String() }),
+      detail: { tags: ["utils"], summary: "Abort active dice game" },
     },
   )
   .post(

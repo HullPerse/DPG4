@@ -52,7 +52,33 @@ export interface BlackjackState {
 export interface DiceResult {
   payout: number;
   label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
+  tone: "jackpot" | "win" | "lose" | "chance" | "reroll";
+}
+
+export interface ActiveDiceGame {
+  dealerValues: [number, number, number];
+  dealerTarget: number | null;
+  phase: "dealer" | "player" | "done";
+  bid: number;
+  userId: string;
+  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
+}
+
+export interface DiceRollPhaseResult {
+  phase: "dealer";
+  values: [number, number, number];
+  target: number | null;
+  autoResult: string | null;
+}
+
+export interface DiceGameResult {
+  playerValues: [number, number, number];
+  payout: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance" | "reroll";
+  balance: number;
+  banned: boolean;
 }
 
 export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";

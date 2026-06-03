@@ -134,9 +134,7 @@ function SlotStrip({
         return (
           <group key={i} position={[x, 0, 0]}>
             <mesh>
-              <boxGeometry
-                args={[slotWidths[i] * 0.88, 0.62, 0.08]}
-              />
+              <boxGeometry args={[slotWidths[i] * 0.88, 0.62, 0.08]} />
               <meshStandardMaterial
                 color={color}
                 emissive={color}
@@ -202,7 +200,7 @@ function BoardWalls({ bid }: { bid: number }) {
   const slotEdges = getSlotEdges(bid);
   return (
     <>
-      {/* Left guard strip — blocks ball from sliding along left wall to 5x */}
+      {/* Left guard strip - blocks ball from sliding along left wall to 5x */}
       <RigidBody
         type="fixed"
         colliders={false}

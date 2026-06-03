@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { config } from "../src/server.config";
+import { resolveBackendPath } from "../src/lib/paths";
 
 const backupName = process.argv[2];
 if (!backupName) {
@@ -11,9 +13,9 @@ if (!backupName) {
   process.exit(1);
 }
 
-const backupDir = join(process.cwd(), "backups");
+const backupDir = resolveBackendPath("backups");
 const backupPath = join(backupDir, backupName);
-const dbPath = join(process.cwd(), "data", "db.sqlite");
+const dbPath = config.dbPath;
 
 if (!existsSync(backupPath)) {
   console.error(`Backup not found: ${backupPath}`);

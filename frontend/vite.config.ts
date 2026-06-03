@@ -9,6 +9,18 @@ export default defineConfig(() => ({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: "no-rapier-preload",
+      transformIndexHtml: {
+        order: "post",
+        handler(html: string) {
+          return html.replace(
+            /<link rel="modulepreload" crossorigin href="\/assets\/rapier-[^"]+\.js">\s*/,
+            "",
+          );
+        },
+      },
+    },
     viteCompression({
       algorithm: "brotliCompress",
       ext: ".br",

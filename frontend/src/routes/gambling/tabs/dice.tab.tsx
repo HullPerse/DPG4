@@ -1,146 +1,168 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { useRef, useCallback, useState, useMemo, memo } from "react";
+import { useRef, useCallback, useState, memo } from "react";
 import { cn } from "@/lib/utils";
-import { rollDice } from "@/api/gambling.api";
+import { rollDiceDealer, rollDicePlayer, abortDice } from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { getResultColor } from "@/lib/gambling/dice.utils";
-import { DicePending, DiceResult, DiceRevealed } from "@/types/gamble";
+import { DiceResult } from "@/types/gamble";
 
 const BIDS = [1, 2, 3, 5, 8, 10] as const;
-
-function rules(bid: number) {
-  return [
-    { text: "1 · 2 · 3", result: `−${bid * 2}` },
-    { text: "4 · 5 · 6", result: `+${bid}` },
-    { text: "1 · 1 · 1", result: `+${bid * 5} (джекпот)` },
-    { text: "Три одинаковых (кроме 1)", result: `+${bid * 2}` },
-    {
-      text: "Пара",
-      result: `50%: +${bid + Math.ceil(bid / 3)} / −${bid - Math.ceil(bid / 3)}`,
-    },
-    {
-      text: "Остальное",
-      result: `50%: +${bid + Math.ceil((bid * 2) / 3)} / −${bid - Math.ceil((bid * 2) / 3)}`,
-    },
-  ];
-}
 
 function DiceTab() {
   const user = useUserStore((state) => state.user);
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
-  const [rolling, setRolling] = useState<boolean>(false);
-  const [rollKey, setRollKey] = useState<number>(0);
-  const [result, setResult] = useState<DiceResult>(null);
-  const [pendingValues, setPendingValues] = useState<DicePending>(null);
-  const [revealedValues, setRevealedValues] = useState<DiceRevealed>([
-    null,
-    null,
-    null,
-  ]);
-  const [bid, setBid] = useState<number>(3);
+  const [rolling, setRolling] = useState(false);
+  const [bid, setBid] = useState(3);
+  const [gamePhase, setGamePhase] = useState<
+    "idle" | "dealer" | "player" | "result"
+  >("idle");
 
-  const pendingRef = useRef<DicePending>(null);
+  const [dealerValues, setDealerValues] = useState<
+    [number, number, number] | null
+  >(null);
+  const [playerValues, setPlayerValues] = useState<
+    [number, number, number] | null
+  >(null);
+  const [dealerTarget, setDealerTarget] = useState<number | null>(null);
+  const [result, setResult] = useState<DiceResult>(null);
+
+  const [dealerThrowKey, setDealerThrowKey] = useState(0);
+  const [playerThrowKey, setPlayerThrowKey] = useState(0);
+  const [displayBalance, setDisplayBalance] = useState(user?.money ?? 0);
+
   const revealTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const settleWaitRef = useRef<{
+  const waiterRef = useRef<{
     resolve: () => void;
     settled: Set<number>;
   } | null>(null);
+  const autoRollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const balance = user?.money ?? 0;
-  const RULES = useMemo(() => rules(bid), [bid]);
 
   const waitForAllDice = useCallback(
     () =>
       new Promise<void>((resolve) => {
-        settleWaitRef.current = { resolve, settled: new Set() };
+        waiterRef.current = { resolve, settled: new Set() };
+        setTimeout(() => {
+          if (waiterRef.current) {
+            console.error("Dice settle timeout - forcing resolve");
+            waiterRef.current.resolve();
+            waiterRef.current = null;
+          }
+        }, 7000);
       }),
     [],
   );
 
-  const displayLine = () => {
-    const values = revealedValues.some((v) => v);
-
-    if (values) return `[${revealedValues.map((v) => v ?? "·").join(" · ")}]`;
-    else if (rolling) return "[ · · · ]";
-    else return null;
+  const makeSettleHandler = () => {
+    return (_index: number) => {
+      const waiter = waiterRef.current;
+      if (!waiter) return;
+      waiter.settled.add(_index);
+      if (waiter.settled.size === 3) {
+        waiter.resolve();
+        waiterRef.current = null;
+      }
+    };
   };
 
-  const handleDiceSettled = (index: number) => {
-    const values = pendingRef.current;
-
-    if (!values) return;
-
-    const timeoutId = setTimeout(() => {
-      setRevealedValues((prev) => {
-        const next: [number | null, number | null, number | null] = [...prev];
-        next[index] = values[index];
-        return next;
-      });
-    }, index * 300);
-
-    revealTimeoutsRef.current.push(timeoutId);
-
-    const waiter = settleWaitRef.current;
-    if (!waiter) return;
-
-    waiter.settled.add(index);
-    if (waiter.settled.size === 3) {
-      waiter.resolve();
-      settleWaitRef.current = null;
-    }
-  };
-
-  const handleRoll = async () => {
-    if (rolling || !user || balance < bid || gamblingBanned) return;
+  const startGame = async () => {
+    if (!user || balance < bid || gamblingBanned) return;
 
     revealTimeoutsRef.current.forEach(clearTimeout);
     revealTimeoutsRef.current = [];
+    if (autoRollTimerRef.current) clearTimeout(autoRollTimerRef.current);
     setResult(null);
-    setRevealedValues([null, null, null]);
+    setDealerValues(null);
+    setPlayerValues(null);
+    setDealerTarget(null);
+    setDisplayBalance(balance);
     setRolling(true);
+    setGamePhase("dealer");
 
     try {
-      const result = await rollDice(String(user.id), bid);
+      await abortDice(String(user.id));
+      const dealer = await rollDiceDealer(String(user.id), bid);
 
-      pendingRef.current = result.values;
-      setPendingValues(result.values);
-      setRollKey((k) => k + 1);
+      setDealerValues(dealer.values);
+      setDealerTarget(dealer.target);
+      setDealerThrowKey((k) => k + 1);
 
       await waitForAllDice();
 
+      setGamePhase("player");
+      autoRollTimerRef.current = setTimeout(async () => {
+        try {
+          const result = await rollDicePlayer(String(user.id));
+
+          setPlayerValues(result.playerValues);
+          setPlayerThrowKey((k) => k + 1);
+
+          await waitForAllDice();
+
+          setDisplayBalance(result.balance);
+          useUserStore.setState({
+            user: { ...user, money: result.balance },
+          });
+
+          if (result.banned) {
+            setGamblingBanned(true);
+          }
+
+          setResult({
+            net: result.net,
+            label: result.label,
+            tone: result.tone,
+          });
+          setGamePhase("result");
+          setRolling(false);
+        } catch (e) {
+          console.error("Player roll failed:", e);
+          useUserStore.setState({
+            user: { ...useUserStore.getState().user! },
+          });
+          setDisplayBalance(useUserStore.getState().user?.money ?? 0);
+          setResult({
+            net: 0,
+            label: "Ошибка",
+            tone: "chance",
+          });
+          setGamePhase("result");
+          setRolling(false);
+        }
+      }, 1200);
+    } catch (e) {
+      console.error("Dealer roll failed:", e);
       useUserStore.setState({
-        user: { ...user, money: result.balance },
+        user: { ...useUserStore.getState().user! },
       });
-
-      const netLabel = result.net >= 0 ? `${result.label}` : `${result.label}`;
-
-      if (result.banned) {
-        setGamblingBanned(true);
-      }
-
-      setResult({ net: result.net, label: netLabel, tone: result.tone });
+      setDisplayBalance(useUserStore.getState().user?.money ?? 0);
+      setResult({
+        net: 0,
+        label: "Ошибка сервера. Попробуй ещё раз.",
+        tone: "chance",
+      });
+      setGamePhase("result");
       setRolling(false);
-    } catch {
-      setRolling(false);
-      setPendingValues(null);
     }
   };
+
+  const handleDealerSettled = dealerValues ? makeSettleHandler() : () => {};
+
+  const handlePlayerSettled = playerValues ? makeSettleHandler() : () => {};
+
+  const showDealerLabel = gamePhase !== "idle";
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
       {/*INFO*/}
       <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2">
-        <span className="text-lg font-bold">{balance} чубриков</span>
-        {displayLine() && (
-          <span className="text-sm text-primary tracking-widest">
-            {displayLine()}
-          </span>
-        )}
+        <span className="text-lg font-bold">{displayBalance} чубриков</span>
       </section>
       {/*BID*/}
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
@@ -149,11 +171,13 @@ function DiceTab() {
           <button
             key={v}
             onClick={() => setBid(v)}
+            disabled={rolling}
             className={cn(
               "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer",
               bid === v
                 ? "bg-highlight-high text-background"
                 : "bg-foreground/10 text-muted hover:bg-foreground/20",
+              rolling && "opacity-40 pointer-events-none",
             )}
           >
             {v}
@@ -162,11 +186,16 @@ function DiceTab() {
       </section>
 
       {/*DICE*/}
-      <section className="relative w-full h-64 overflow-hidden border-2 border-highlight-high bg-background">
+      <section className="relative w-full h-110 min-h-110 overflow-hidden border-2 border-highlight-high bg-background">
         <DiceScene
-          throwKey={rollKey}
-          finalValues={pendingValues}
-          onDieSettled={handleDiceSettled}
+          dealerThrowKey={dealerThrowKey}
+          playerThrowKey={playerThrowKey}
+          dealerValues={dealerValues}
+          playerValues={playerValues}
+          dealerTarget={dealerTarget}
+          onDealerSettled={handleDealerSettled}
+          onPlayerSettled={handlePlayerSettled}
+          showDealerLabel={showDealerLabel}
         />
 
         {result && (
@@ -176,7 +205,8 @@ function DiceTab() {
               getResultColor(result),
             )}
           >
-            {result.label}
+            {result.label} {result.net > 0 && <span>+{result.net}</span>}
+            {result.net < 0 && <span>{result.net}</span>}
           </span>
         )}
       </section>
@@ -185,7 +215,7 @@ function DiceTab() {
         <Button
           variant="info"
           className="w-xl"
-          onClick={handleRoll}
+          onClick={startGame}
           disabled={rolling || balance < bid || gamblingBanned}
         >
           {gamblingBanned ? (
@@ -197,21 +227,72 @@ function DiceTab() {
           )}
         </Button>
 
-        <details
-          className="w-xl border-2 border-highlight-high bg-background px-2 text-sm"
-          open
-        >
+        <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">
           <summary className="cursor-pointer font-semibold text-muted select-none">
             Правила
           </summary>
-          <ul className="mt-2 flex flex-col gap-1 pl-1">
-            {RULES.map((rule) => (
-              <li key={rule.text} className="flex justify-between gap-2">
-                <span>{rule.text}</span>
-                <span className="text-right font-medium">{rule.result}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-2 flex flex-col gap-2 pl-1">
+            <div>
+              <span className="font-semibold text-primary">Бросок дилера:</span>
+              <ul className="flex flex-col gap-0.5 pl-2">
+                <li className="flex justify-between">
+                  <span>1·2·3</span>
+                  <span className="text-emerald-400">Дилер проигрывает</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>4·5·6</span>
+                  <span className="text-red-400">Дилер побеждает</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Три одинаковых</span>
+                  <span className="text-red-400">Дилер побеждает</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>1·1·1</span>
+                  <span className="text-muted">Ничья</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Пара + число</span>
+                  <span className="text-muted">Цель = число</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <span className="font-semibold text-primary">Твой бросок:</span>
+              <ul className="flex flex-col gap-0.5 pl-2">
+                <li className="flex justify-between">
+                  <span>4·5·6</span>
+                  <span className="text-emerald-400">
+                    +{Math.floor(bid * 1.5)}
+                  </span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Три одинаковых</span>
+                  <span className="text-emerald-400">+{bid * 2}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>1·1·1</span>
+                  <span className="text-amber-400">+{bid * 3} (джекпот)</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>1·2·3</span>
+                  <span className="text-red-400">−{bid}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Пара → число &gt; цели</span>
+                  <span className="text-emerald-400">+{bid}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Пара → число = цели</span>
+                  <span className="text-muted">Ничья</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Пара → число &lt; цели</span>
+                  <span className="text-red-400">−{bid}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </details>
       </section>
     </main>
