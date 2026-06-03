@@ -79,6 +79,7 @@ const ratIds: string[] = [
   "Проклятие Крысиного Короля",
   "Благословление Крысиного Короля",
   "Крысиная шкатулка",
+  "3д крыса",
 ];
 
 const pigIds = [
@@ -1948,6 +1949,117 @@ export const itemEffect: effectInterface[] = [
 
   ItemFramework.modal(
     "Крыса",
+    () =>
+      function (ctx: ModalType) {
+        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+          queryKey: ["modalData"],
+          queryFn: async () => {
+            const [items, users] = await Promise.all([
+              itemsApi.getInventories({ excludeOwner: ctx.user.id }),
+              userApi.getAllUsers(),
+            ]);
+            return { items, users };
+          },
+        });
+
+        useEffect(() => {
+          refetch();
+        }, []);
+
+        const [selected, setSelected] = useState<Inventory | null>(null);
+
+        if (isLoading || isRefetching) return <WindowLoader />;
+        if (isError)
+          return (
+            <WindowError
+              error={new Error("Произошла ошибка при соединении с сервером")}
+              icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+            />
+          );
+
+        return (
+          <main className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="font-bold">Предметы</span>
+              <div className="flex flex-row gap-1">
+                <Select
+                  value={selected?.id ?? ""}
+                  onValueChange={(e) => {
+                    if (!e) return;
+                    const item = data?.items.find((i) => i.id === e);
+                    if (item) setSelected(item);
+                  }}
+                >
+                  <SelectTrigger className="w-full py-5">
+                    <SelectValue placeholder="Предмет">
+                      {selected?.label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {data?.items
+                        .sort((a, b) =>
+                          (a.owner ?? "").localeCompare(b.owner ?? ""),
+                        )
+                        .map((item, index) => (
+                          <SelectItem key={item.id} value={item.id!}>
+                            {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <HoverCard>
+                  <HoverCardTrigger delay={0} className="z-1000">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                    >
+                      <CircleQuestionMark />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent
+                    className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                    side="top"
+                  >
+                    <ItemHelper item={selected} />
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+            </label>
+
+            <section className="flex flex-row items-center justify-between gap-2 p-1">
+              <Button
+                className="flex flex-1"
+                variant="success"
+                onClick={async () => {
+                  if (!selected) return;
+
+                  await itemsApi.sendInventory(
+                    String(selected.id),
+                    ctx.user.id,
+                  );
+
+                  await ctx.consume(
+                    `${ctx.user.username} украл ${selected.label} у ${data?.users.find((u) => u.id === selected.owner)?.username}`,
+                  );
+
+                  ctx.close();
+                }}
+                disabled={!selected}
+              >
+                Применить
+              </Button>
+            </section>
+          </main>
+        );
+      },
+  ),
+
+  ItemFramework.modal(
+    "3д крыса",
     () =>
       function (ctx: ModalType) {
         const { data, isLoading, isError, refetch, isRefetching } = useQuery({
