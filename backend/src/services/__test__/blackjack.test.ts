@@ -189,7 +189,7 @@ describe("BlackjackService", () => {
     expect(services.blackjackService.deal(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.blackjackService.deal(userId, 11)).rejects.toThrow(
+    expect(services.blackjackService.deal(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });

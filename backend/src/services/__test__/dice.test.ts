@@ -46,7 +46,7 @@ describe("DiceService", () => {
     expect(services.diceService.rollDealer(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.diceService.rollDealer(userId, 11)).rejects.toThrow(
+    expect(services.diceService.rollDealer(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });

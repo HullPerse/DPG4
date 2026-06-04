@@ -46,7 +46,7 @@ describe("RocketService", () => {
     expect(services.rocketService.launch(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.rocketService.launch(userId, 11)).rejects.toThrow(
+    expect(services.rocketService.launch(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });

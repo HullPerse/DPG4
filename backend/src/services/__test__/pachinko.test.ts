@@ -31,7 +31,7 @@ describe("PachinkoService", () => {
     expect(services.pachinkoService.drop(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.pachinkoService.drop(userId, 11)).rejects.toThrow(
+    expect(services.pachinkoService.drop(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });
