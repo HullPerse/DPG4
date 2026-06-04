@@ -7,7 +7,13 @@ import {
   type RapierRigidBody,
 } from "@react-three/rapier";
 import { Html, useGLTF } from "@react-three/drei";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import * as THREE from "three";
 import {
   BOARD_WIDTH,
@@ -36,7 +42,7 @@ const PEG_ROWS = 15;
 const PEG_COLS = 11;
 const PEG_RADIUS = 0.13;
 const BALL_RADIUS = 0.2;
-const LANE_HALF_Z = 0.28;
+const LANE_HALF_Z = 0.35;
 
 /** Tight crop - board fills most of the viewport */
 const VIEW_PAD_X = 0.45;
@@ -204,17 +210,17 @@ function BoardWalls({ bid }: { bid: number }) {
       <RigidBody
         type="fixed"
         colliders={false}
-        position={[-(BOARD_HALF - 0.28), BOARD_CENTER_Y, PLANE_Z]}
+        position={[-(BOARD_HALF - 0.22), BOARD_CENTER_Y, PLANE_Z]}
       >
-        <CuboidCollider args={[0.06, BOARD_HEIGHT / 2 - 0.3, LANE_HALF_Z]} />
+        <CuboidCollider args={[0.1, BOARD_HEIGHT / 2 - 0.3, LANE_HALF_Z]} />
       </RigidBody>
       {/* Side walls */}
       <RigidBody
         type="fixed"
         colliders={false}
-        position={[-BOARD_HALF - 0.12, BOARD_CENTER_Y, PLANE_Z]}
+        position={[-BOARD_HALF - 0.18, BOARD_CENTER_Y, PLANE_Z]}
       >
-        <CuboidCollider args={[0.12, BOARD_HEIGHT / 2 + 0.4, LANE_HALF_Z]} />
+        <CuboidCollider args={[0.18, BOARD_HEIGHT / 2 + 0.4, LANE_HALF_Z]} />
       </RigidBody>
       <RigidBody
         type="fixed"
@@ -277,15 +283,18 @@ function RatBall({
   simulating,
   onSettled,
   bid,
+  kickTrigger,
 }: {
   startX: number;
   simulating: boolean;
   onSettled: (slotIndex: number) => void;
   bid: number;
+  kickTrigger: number;
 }) {
   const bodyRef = useRef<RapierRigidBody>(null);
   const settledRef = useRef(false);
   const dropTimeRef = useRef(Date.now());
+  const prevKickRef = useRef(0);
   const { scene } = useGLTF("/rat.glb");
   const cloned = useMemo(() => scene.clone(), [scene]);
 
@@ -310,6 +319,17 @@ function RatBall({
     bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
   }, [startX, initialVel]);
 
+  useEffect(() => {
+    if (kickTrigger === 0 || kickTrigger === prevKickRef.current) return;
+    prevKickRef.current = kickTrigger;
+    if (!bodyRef.current || settledRef.current) return;
+    const vx = (Math.random() - 0.5) * 6;
+    const vy = -(3 + Math.random() * 4);
+    const vz = (Math.random() - 0.5) * 8;
+    bodyRef.current.setLinvel({ x: vx, y: vy, z: 0 }, true);
+    bodyRef.current.setAngvel({ x: 0, y: 0, z: vz }, true);
+  }, [kickTrigger]);
+
   useFrame(() => {
     if (!bodyRef.current) return;
 
@@ -333,7 +353,7 @@ function RatBall({
     const speed = Math.hypot(v.x, v.y);
     const elapsed = Date.now() - dropTimeRef.current;
 
-    if ((t.y < SETTLE_Y && speed < 0.35) || elapsed > 28_000) {
+    if ((t.y < SETTLE_Y && speed < 0.35) || elapsed > 30_000) {
       settledRef.current = true;
       bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
       bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
@@ -370,6 +390,7 @@ function PachinkoWorld({
   simulating,
   onSettled,
   bid,
+  kickTrigger,
 }: {
   dropKey: number;
   startX: number;
@@ -377,6 +398,7 @@ function PachinkoWorld({
   simulating: boolean;
   onSettled: (slotIndex: number) => void;
   bid: number;
+  kickTrigger: number;
 }) {
   return (
     <>
@@ -389,6 +411,7 @@ function PachinkoWorld({
           simulating={simulating}
           onSettled={onSettled}
           bid={bid}
+          kickTrigger={kickTrigger}
         />
       )}
     </>
@@ -403,6 +426,7 @@ function SceneContent({
   highlightIndex,
   onSettled,
   bid,
+  kickTrigger,
 }: {
   dropKey: number;
   startX: number;
@@ -411,6 +435,7 @@ function SceneContent({
   highlightIndex: number | null;
   onSettled: (slotIndex: number) => void;
   bid: number;
+  kickTrigger: number;
 }) {
   return (
     <>
@@ -432,6 +457,7 @@ function SceneContent({
             simulating={simulating}
             onSettled={onSettled}
             bid={bid}
+            kickTrigger={kickTrigger}
           />
         </Physics>
       </Suspense>
@@ -447,6 +473,7 @@ function PachinkoScene({
   highlightIndex,
   onSettled,
   bid,
+  kickTrigger,
 }: {
   dropKey: number;
   startX: number;
@@ -455,6 +482,7 @@ function PachinkoScene({
   highlightIndex: number | null;
   onSettled: (slotIndex: number) => void;
   bid: number;
+  kickTrigger: number;
 }) {
   return (
     <Canvas
@@ -477,6 +505,7 @@ function PachinkoScene({
         highlightIndex={highlightIndex}
         onSettled={onSettled}
         bid={bid}
+        kickTrigger={kickTrigger}
       />
     </Canvas>
   );

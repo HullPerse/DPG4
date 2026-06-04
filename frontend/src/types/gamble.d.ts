@@ -18,14 +18,17 @@ export type DicePending = [number, number, number] | null;
 export type DiceResult = {
   net: number;
   label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
+  tone: "jackpot" | "win" | "lose" | "chance" | "reroll";
+  reroll?: boolean;
 } | null;
 
 export interface DiceDealerResult {
   phase: "dealer";
   values: [number, number, number];
   target: number | null;
-  autoResult: string | null;
+  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
+  reroll?: boolean;
+  label?: string;
 }
 
 export interface DiceGameResult {
@@ -33,9 +36,10 @@ export interface DiceGameResult {
   payout: number;
   net: number;
   label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
+  tone: "jackpot" | "win" | "lose" | "chance" | "reroll";
   balance: number;
   banned: boolean;
+  reroll?: boolean;
 }
 
 export type CardSuit = "hearts" | "diamonds" | "clubs" | "spades";
@@ -57,6 +61,14 @@ export type CardRank =
 export interface PlayingCard {
   suit: CardSuit;
   rank: CardRank;
+}
+
+export interface GamblingConfig {
+  banThreshold: number;
+  minBet: number;
+  maxBet: number;
+  rerollPrice: number;
+  spinCost: number;
 }
 
 export interface BlackjackGameResult {

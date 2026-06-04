@@ -7,6 +7,7 @@ import {
   seedRandom,
   resetRandom,
 } from "./helpers";
+import { isVoidHand } from "../gambling/dice.service";
 
 function d(...roll: number[]): number[] {
   return roll.map((d) => (d - 1) / 6);
@@ -76,15 +77,15 @@ describe("DiceService", () => {
     expect(user!.money).toBe(105);
   });
 
-  test("dealer 4-5-6 auto win -> player loses 2x bid", async () => {
+  test("dealer 4-5-6 auto win -> player loses bid", async () => {
     seedRandom(d(4, 5, 6));
     await services.diceService.rollDealer(userId, 3);
     seedRandom(d(1, 2, 3));
     const result = await services.diceService.rollPlayer(userId);
     expect(result.payout).toBe(0);
-    expect(result.net).toBe(-6);
+    expect(result.net).toBe(-3);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(94);
+    expect(user!.money).toBe(97);
   });
 
   test("dealer 1-1-1 auto push -> player gets bid back", async () => {
@@ -98,13 +99,13 @@ describe("DiceService", () => {
     expect(user!.money).toBe(100);
   });
 
-  test("player 4-5-6 wins 1.5x", async () => {
+  test("player 4-5-6 wins 2x", async () => {
     seedRandom(d(2, 2, 5));
     await services.diceService.rollDealer(userId, 4);
     seedRandom(d(4, 5, 6));
     const result = await services.diceService.rollPlayer(userId);
-    expect(result.payout).toBe(10);
-    expect(result.net).toBe(6);
+    expect(result.payout).toBe(12);
+    expect(result.net).toBe(8);
     expect(result.label).toContain("4·5·6");
   });
 
@@ -167,10 +168,10 @@ describe("DiceService", () => {
     expect(result.net).toBe(-3);
   });
 
-  test("gambling ban triggers at 30+ winnings", async () => {
+  test("gambling ban triggers at 100+ winnings", async () => {
     const nearUser = await createUser(db, {
       money: 100,
-      gamblingWinnings: 25,
+      gamblingWinnings: 95,
       gamblingBanned: false,
     });
     seedRandom(d(2, 2, 5));
@@ -180,13 +181,13 @@ describe("DiceService", () => {
     expect(result.banned).toBe(true);
     const user = await getUser(db, nearUser.id);
     expect(user!.gamblingBanned).toBe(true);
-    expect(user!.gamblingWinnings).toBeGreaterThanOrEqual(30);
+    expect(user!.gamblingWinnings).toBeGreaterThanOrEqual(100);
   });
 
   test("abort removes active game", async () => {
     seedRandom(d(2, 2, 5));
     await services.diceService.rollDealer(userId, 3);
-    services.diceService.abort(userId);
+    await services.diceService.abort(userId);
     expect(services.diceService.rollPlayer(userId)).rejects.toThrow(
       "No active dice game",
     );
@@ -196,5 +197,53 @@ describe("DiceService", () => {
     expect(services.diceService.rollPlayer(userId)).rejects.toThrow(
       "No active dice game",
     );
+  });
+
+  test("isVoidHand detects unplayable triples", () => {
+    expect(isVoidHand([2, 4, 6])).toBe(true);
+    expect(isVoidHand([1, 2, 3])).toBe(false);
+    expect(isVoidHand([4, 5, 6])).toBe(false);
+    expect(isVoidHand([2, 2, 5])).toBe(false);
+  });
+
+  test("dealer void hand rerolls up to 3 rolls then push", async () => {
+    seedRandom([...d(2, 4, 6), ...d(1, 3, 5), ...d(2, 5, 6)]);
+    const first = await services.diceService.rollDealer(userId, 3);
+    expect(first.reroll).toBe(true);
+    expect(first.values).toEqual([2, 4, 6]);
+
+    const second = await services.diceService.rerollDealer(userId);
+    expect(second.reroll).toBe(true);
+
+    const third = await services.diceService.rerollDealer(userId);
+    expect(third.reroll).toBe(false);
+    expect(third.autoResult).toBe("push");
+
+    seedRandom(d(2, 2, 5));
+    const player = await services.diceService.rollPlayer(userId);
+    expect(player.net).toBe(0);
+    expect(player.payout).toBe(3);
+  });
+
+  test("player void hand rerolls then settles push", async () => {
+    seedRandom(d(2, 2, 5));
+    await services.diceService.rollDealer(userId, 3);
+    seedRandom([...d(2, 4, 6), ...d(1, 3, 5), ...d(3, 3, 5)]);
+    const first = await services.diceService.rollPlayer(userId);
+    expect(first.reroll).toBe(true);
+    const second = await services.diceService.rollPlayer(userId);
+    expect(second.reroll).toBe(true);
+    const third = await services.diceService.rollPlayer(userId);
+    expect(third.reroll).toBeUndefined();
+    expect(third.net).toBe(0);
+    expect(third.label).toContain("5 = 5");
+  });
+
+  test("abort during dealer phase refunds bid", async () => {
+    seedRandom(d(2, 4, 6));
+    await services.diceService.rollDealer(userId, 5);
+    await services.diceService.abort(userId);
+    const user = await getUser(db, userId);
+    expect(user!.money).toBe(100);
   });
 });

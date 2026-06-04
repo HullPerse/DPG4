@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/client.api";
+import type { GamblingConfig } from "@/types/gamble";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-let cachedCost: number | null = null;
+let cachedConfig: GamblingConfig | null = null;
 
 /** Server-side score calculation */
 export async function calculateScore(
@@ -33,16 +34,15 @@ export async function calculateScore(
 
 /** Wheel spin cost from server */
 export async function calculateCost(): Promise<number> {
-  if (cachedCost !== null) return cachedCost;
-  const res = await apiFetch<{ cost: number }>("/utils/calculate-cost", {
+  if (cachedConfig) return cachedConfig.spinCost;
+  cachedConfig = await apiFetch<GamblingConfig>("/utils/gambling-config", {
     auth: false,
   });
-  cachedCost = res.cost;
-  return res.cost;
+  return cachedConfig.spinCost;
 }
 
 export function calculateCostSync(): number {
-  return cachedCost ?? 2;
+  return cachedConfig?.spinCost ?? 2;
 }
 
 export function networkClass(connection: boolean) {

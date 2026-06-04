@@ -61,6 +61,8 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "isAdmin", type: "boolean" },
       { source: "position", type: "number" },
       { source: "money", type: "number" },
+      { source: "gamblingWinnings", type: "number" },
+      { source: "gamblingBanned", type: "boolean" },
       { source: "steam", type: "text" },
       { source: "currentAction", type: "text" },
       { source: "currentDice", type: "number" },

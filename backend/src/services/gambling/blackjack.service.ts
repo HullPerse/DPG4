@@ -15,6 +15,7 @@ import {
   dealerPlay,
 } from "../../lib/blackjack.utils";
 import { UserService } from "../user.service";
+import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
 
 interface ActiveGame {
   userId: string;
@@ -46,7 +47,7 @@ export class BlackjackService {
 
     if (payout > 0) {
       gamblingWinnings += payout;
-      if (gamblingWinnings >= 30 && !gamblingBanned) {
+      if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
       await this.userService.score(userId, payout);
@@ -134,7 +135,7 @@ export class BlackjackService {
   }
 
   async deal(userId: string, bid: number): Promise<BlackjackState> {
-    if (bid < 1 || bid > 10 || !Number.isInteger(bid)) {
+    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid)) {
       throw new Error("Invalid bid");
     }
 

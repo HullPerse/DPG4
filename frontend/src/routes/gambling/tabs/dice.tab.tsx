@@ -1,15 +1,34 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { useRef, useCallback, useState, memo } from "react";
+import { useRef, useCallback, useState, memo, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
-import { rollDiceDealer, rollDicePlayer, abortDice } from "@/api/gambling.api";
+import {
+  rollDiceDealer,
+  rerollDiceDealer,
+  rollDicePlayer,
+  abortDice,
+} from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
 import { SmallLoader } from "@/components/shared/loader.component";
-import { getResultColor } from "@/lib/gambling/dice.utils";
-import { DiceResult } from "@/types/gamble";
+import {
+  getResultColor,
+  DICE_SETTLE_HOLD_MS,
+  DICE_REROLL_PAUSE_MS,
+  DICE_PLAYER_AUTO_MS,
+} from "@/lib/gambling/dice.utils";
+import {
+  DiceRollCoordinator,
+  DiceRow,
+} from "@/lib/gambling/diceRollCoordinator";
+import { DiceDealerResult, DiceGameResult, DiceResult } from "@/types/gamble";
 
 const BIDS = [1, 2, 3, 5, 8, 10] as const;
+
+function pause(ms: number) {
+  return new Promise<void>((r) => setTimeout(r, ms));
+}
 
 function DiceTab() {
   const user = useUserStore((state) => state.user);
@@ -33,53 +52,142 @@ function DiceTab() {
 
   const [dealerThrowKey, setDealerThrowKey] = useState(0);
   const [playerThrowKey, setPlayerThrowKey] = useState(0);
+  const [playerDiceActive, setPlayerDiceActive] = useState(false);
   const [displayBalance, setDisplayBalance] = useState(user?.money ?? 0);
 
-  const revealTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const waiterRef = useRef<{
-    resolve: () => void;
-    settled: Set<number>;
-  } | null>(null);
-  const autoRollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rollCoordinatorRef = useRef(new DiceRollCoordinator());
+  const dealerKeyRef = useRef(0);
+  const playerKeyRef = useRef(0);
+  const roundIdRef = useRef(0);
 
   const balance = user?.money ?? 0;
 
-  const waitForAllDice = useCallback(
-    () =>
-      new Promise<void>((resolve) => {
-        waiterRef.current = { resolve, settled: new Set() };
-        setTimeout(() => {
-          if (waiterRef.current) {
-            console.error("Dice settle timeout - forcing resolve");
-            waiterRef.current.resolve();
-            waiterRef.current = null;
-          }
-        }, 7000);
-      }),
-    [],
-  );
+  useEffect(() => {
+    return () => rollCoordinatorRef.current.cancel();
+  }, []);
 
-  const makeSettleHandler = () => {
-    return (_index: number) => {
-      const waiter = waiterRef.current;
-      if (!waiter) return;
-      waiter.settled.add(_index);
-      if (waiter.settled.size === 3) {
-        waiter.resolve();
-        waiterRef.current = null;
+  const isRoundActive = (round: number) => round === roundIdRef.current;
+
+  const handleDealerSettled = useCallback((index: number, throwKey: number) => {
+    rollCoordinatorRef.current.notify("dealer", index, throwKey);
+  }, []);
+
+  const handlePlayerSettled = useCallback((index: number, throwKey: number) => {
+    rollCoordinatorRef.current.notify("player", index, throwKey);
+  }, []);
+
+  const playDiceRoll = async (
+    values: [number, number, number],
+    row: DiceRow,
+  ) => {
+    const nextKey =
+      row === "dealer" ? dealerKeyRef.current + 1 : playerKeyRef.current + 1;
+
+    const settledPromise = rollCoordinatorRef.current.waitFor(row, nextKey);
+
+    flushSync(() => {
+      if (row === "dealer") {
+        dealerKeyRef.current = nextKey;
+        setDealerValues(values);
+        setDealerThrowKey(nextKey);
+      } else {
+        playerKeyRef.current = nextKey;
+        setPlayerValues(values);
+        setPlayerThrowKey(nextKey);
+        setPlayerDiceActive(true);
       }
-    };
+    });
+
+    await settledPromise;
+    await pause(DICE_SETTLE_HOLD_MS);
+  };
+
+  const settleDealer = async (
+    initial: DiceDealerResult,
+    round: number,
+  ): Promise<DiceDealerResult> => {
+    let dealer = initial;
+
+    await playDiceRoll(dealer.values, "dealer");
+    if (!isRoundActive(round)) return dealer;
+
+    while (dealer.reroll) {
+      await pause(DICE_REROLL_PAUSE_MS);
+      if (!isRoundActive(round)) return dealer;
+
+      dealer = await rerollDiceDealer(String(user!.id));
+      if (!isRoundActive(round)) return dealer;
+
+      await playDiceRoll(dealer.values, "dealer");
+      if (!isRoundActive(round)) return dealer;
+    }
+
+    setDealerTarget(dealer.target);
+
+    return dealer;
+  };
+
+  const settlePlayer = async (round: number): Promise<DiceGameResult> => {
+    setGamePhase("player");
+
+    let playerResult = await rollDicePlayer(String(user!.id));
+    if (!isRoundActive(round)) return playerResult;
+
+    await playDiceRoll(playerResult.playerValues, "player");
+    if (!isRoundActive(round)) return playerResult;
+
+    while (playerResult.reroll) {
+      await pause(DICE_REROLL_PAUSE_MS);
+      if (!isRoundActive(round)) return playerResult;
+
+      playerResult = await rollDicePlayer(String(user!.id));
+      if (!isRoundActive(round)) return playerResult;
+
+      await playDiceRoll(playerResult.playerValues, "player");
+      if (!isRoundActive(round)) return playerResult;
+    }
+
+    return playerResult;
+  };
+
+  const finishRound = (finalResult: DiceGameResult) => {
+    setDisplayBalance(finalResult.balance);
+    useUserStore.setState({
+      user: { ...user!, money: finalResult.balance },
+    });
+    if (finalResult.banned) setGamblingBanned(true);
+    setResult({
+      net: finalResult.net,
+      label: finalResult.label,
+      tone: finalResult.tone,
+    });
+    setGamePhase("result");
+    setRolling(false);
+  };
+
+  const failRound = (label: string) => {
+    useUserStore.setState({
+      user: { ...useUserStore.getState().user! },
+    });
+    setDisplayBalance(useUserStore.getState().user?.money ?? 0);
+    setResult({ net: 0, label, tone: "chance" });
+    setGamePhase("result");
+    setRolling(false);
+  };
+
+  const resetDiceVisuals = () => {
+    rollCoordinatorRef.current.cancel();
+    setDealerValues(null);
+    setPlayerValues(null);
+    setPlayerDiceActive(false);
   };
 
   const startGame = async () => {
-    if (!user || balance < bid || gamblingBanned) return;
+    if (!user || balance < bid || gamblingBanned || rolling) return;
 
-    revealTimeoutsRef.current.forEach(clearTimeout);
-    revealTimeoutsRef.current = [];
-    if (autoRollTimerRef.current) clearTimeout(autoRollTimerRef.current);
+    const round = ++roundIdRef.current;
+    resetDiceVisuals();
     setResult(null);
-    setDealerValues(null);
-    setPlayerValues(null);
     setDealerTarget(null);
     setDisplayBalance(balance);
     setRolling(true);
@@ -87,84 +195,41 @@ function DiceTab() {
 
     try {
       await abortDice(String(user.id));
-      const dealer = await rollDiceDealer(String(user.id), bid);
+      if (!isRoundActive(round)) return;
 
-      setDealerValues(dealer.values);
-      setDealerTarget(dealer.target);
-      setDealerThrowKey((k) => k + 1);
+      const dealerInitial = await rollDiceDealer(String(user.id), bid);
+      if (!isRoundActive(round)) return;
 
-      await waitForAllDice();
+      setDisplayBalance(balance - bid);
 
-      setGamePhase("player");
-      autoRollTimerRef.current = setTimeout(async () => {
-        try {
-          const result = await rollDicePlayer(String(user.id));
+      const dealer = await settleDealer(dealerInitial, round);
+      if (!isRoundActive(round)) return;
 
-          setPlayerValues(result.playerValues);
-          setPlayerThrowKey((k) => k + 1);
+      if (!dealer.autoResult) {
+        await pause(DICE_PLAYER_AUTO_MS);
+        if (!isRoundActive(round)) return;
+      }
 
-          await waitForAllDice();
+      const finalResult = await settlePlayer(round);
+      if (!isRoundActive(round)) return;
 
-          setDisplayBalance(result.balance);
-          useUserStore.setState({
-            user: { ...user, money: result.balance },
-          });
-
-          if (result.banned) {
-            setGamblingBanned(true);
-          }
-
-          setResult({
-            net: result.net,
-            label: result.label,
-            tone: result.tone,
-          });
-          setGamePhase("result");
-          setRolling(false);
-        } catch (e) {
-          console.error("Player roll failed:", e);
-          useUserStore.setState({
-            user: { ...useUserStore.getState().user! },
-          });
-          setDisplayBalance(useUserStore.getState().user?.money ?? 0);
-          setResult({
-            net: 0,
-            label: "Ошибка",
-            tone: "chance",
-          });
-          setGamePhase("result");
-          setRolling(false);
-        }
-      }, 1200);
-    } catch (e) {
-      console.error("Dealer roll failed:", e);
-      useUserStore.setState({
-        user: { ...useUserStore.getState().user! },
-      });
-      setDisplayBalance(useUserStore.getState().user?.money ?? 0);
-      setResult({
-        net: 0,
-        label: "Ошибка сервера. Попробуй ещё раз.",
-        tone: "chance",
-      });
-      setGamePhase("result");
-      setRolling(false);
+      finishRound(finalResult);
+    } catch {
+      if (!isRoundActive(round)) return;
+      failRound("Ошибка сервера. Попробуй ещё раз.");
     }
   };
 
-  const handleDealerSettled = dealerValues ? makeSettleHandler() : () => {};
-
-  const handlePlayerSettled = playerValues ? makeSettleHandler() : () => {};
-
   const showDealerLabel = gamePhase !== "idle";
+  const showPlayerLabel =
+    gamePhase === "player" || gamePhase === "result" || playerDiceActive;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      {/*INFO*/}
       <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2">
         <span className="text-lg font-bold">{displayBalance} чубриков</span>
       </section>
-      {/*BID*/}
+
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
         <span className="text-sm text-muted mr-1">Ставка</span>
         {BIDS.map((v) => (
@@ -185,7 +250,6 @@ function DiceTab() {
         ))}
       </section>
 
-      {/*DICE*/}
       <section className="relative w-full h-110 min-h-110 overflow-hidden border-2 border-highlight-high bg-background">
         <DiceScene
           dealerThrowKey={dealerThrowKey}
@@ -196,21 +260,24 @@ function DiceTab() {
           onDealerSettled={handleDealerSettled}
           onPlayerSettled={handlePlayerSettled}
           showDealerLabel={showDealerLabel}
+          showPlayerLabel={showPlayerLabel}
+          playerDiceActive={playerDiceActive}
         />
 
         {result && (
           <span
             className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full",
+              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full pb-1",
               getResultColor(result),
             )}
           >
-            {result.label} {result.net > 0 && <span>+{result.net}</span>}
-            {result.net < 0 && <span>{result.net}</span>}
+            {result.label}
+            {result.net > 0 && <span> +{result.net}</span>}
+            {result.net < 0 && <span> {result.net}</span>}
           </span>
         )}
       </section>
-      {/*BUTTON AND RULES*/}
+
       <section className="flex flex-col mt-auto gap-1">
         <Button
           variant="info"
@@ -232,6 +299,10 @@ function DiceTab() {
             Правила
           </summary>
           <div className="mt-2 flex flex-col gap-2 pl-1">
+            <p className="text-muted text-xs">
+              Если нет комбинации (3 разных числа, не 1·2·3 и не 4·5·6) -
+              переброс до 2 раз (всего 3 броска), затем играют последние кости.
+            </p>
             <div>
               <span className="font-semibold text-primary">Бросок дилера:</span>
               <ul className="flex flex-col gap-0.5 pl-2">
@@ -262,9 +333,7 @@ function DiceTab() {
               <ul className="flex flex-col gap-0.5 pl-2">
                 <li className="flex justify-between">
                   <span>4·5·6</span>
-                  <span className="text-emerald-400">
-                    +{Math.floor(bid * 1.5)}
-                  </span>
+                  <span className="text-emerald-400">+{bid * 2}</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Три одинаковых</span>
@@ -281,6 +350,10 @@ function DiceTab() {
                 <li className="flex justify-between">
                   <span>Пара → число &gt; цели</span>
                   <span className="text-emerald-400">+{bid}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Ничего (3 уникальных)</span>
+                  <span className="text-muted">Ничья</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Пара → число = цели</span>

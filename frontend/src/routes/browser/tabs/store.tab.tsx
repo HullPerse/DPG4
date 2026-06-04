@@ -10,7 +10,8 @@ import { useUserStore } from "@/store/user.store";
 import { Activity } from "@/types/activity";
 import type { Item } from "@/types/items";
 import type { StoreItem } from "@/types/store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchGamblingConfig } from "@/api/gambling.api";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -27,6 +28,14 @@ function StoreTab() {
 
   const [active, setActive] = useState<number>(-1);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchGamblingConfig().then((config) => {
+      if (rerollPrice < config.rerollPrice) {
+        setRerollPrice(config.rerollPrice);
+      }
+    });
+  }, []);
 
   const markBought = (index: number) => {
     setStoreItems(
