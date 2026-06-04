@@ -6,6 +6,7 @@ import {
   calculateScore,
   weightedRandom,
 } from "../lib/game.utils";
+import { GAMBLING_MIN_BET, GAMBLING_MAX_BET, REROLL_PRICE, SPIN_COST, GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
 import { calculateMovePath } from "../lib/cell.utils";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services/services.plugin";
@@ -33,12 +34,24 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .get("/calculate-cost", () => ({ cost: calculateCost() }), {
     detail: { tags: ["utils"], summary: "Wheel spin cost" },
   })
+  .get("/gambling-config", () => ({
+    banThreshold: GAMBLING_BAN_THRESHOLD,
+    minBet: GAMBLING_MIN_BET,
+    maxBet: GAMBLING_MAX_BET,
+    rerollPrice: REROLL_PRICE,
+    spinCost: SPIN_COST,
+  }), {
+    detail: { tags: ["utils"], summary: "Server gambling config" },
+  })
   .post(
     "/dice-roll",
     async ({ body, set, diceService }) => {
       try {
         if (body.bid !== undefined) {
           return await diceService.rollDealer(body.userId, body.bid);
+        }
+        if (diceService.getActiveGame(body.userId)?.phase === "dealer") {
+          return await diceService.rerollDealer(body.userId);
         }
         return await diceService.rollPlayer(body.userId);
       } catch (err) {
@@ -49,7 +62,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
-        bid: t.Optional(t.Integer({ minimum: 1, maximum: 10 })),
+        bid: t.Optional(t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET })),
       }),
       detail: {
         tags: ["utils"],
@@ -82,7 +95,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
-        bid: t.Integer({ minimum: 1, maximum: 10 }),
+        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
         tags: ["utils"],
@@ -189,7 +202,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
-        bid: t.Integer({ minimum: 1, maximum: 10 }),
+        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
         tags: ["utils"],
@@ -286,7 +299,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       body: t.Object({
         userId: t.String(),
-        bid: t.Integer({ minimum: 1, maximum: 10 }),
+        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
         tags: ["utils"],

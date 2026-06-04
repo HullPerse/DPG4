@@ -13,15 +13,20 @@ function DiceScene({
   onDealerSettled,
   onPlayerSettled,
   showDealerLabel,
+  showPlayerLabel,
+  playerDiceActive,
 }: {
   dealerThrowKey: number;
   playerThrowKey: number;
   dealerValues: [number, number, number] | null;
   playerValues: [number, number, number] | null;
   dealerTarget: number | null;
-  onDealerSettled: (index: number) => void;
-  onPlayerSettled: (index: number) => void;
+  onDealerSettled: (index: number, throwKey: number) => void;
+  onPlayerSettled: (index: number, throwKey: number) => void;
   showDealerLabel?: boolean;
+  showPlayerLabel?: boolean;
+  /** Player row only simulates throws after the first player roll */
+  playerDiceActive: boolean;
 }) {
   return (
     <Canvas
@@ -78,20 +83,34 @@ function DiceScene({
             rowZ={DEALER_Z}
             throwKey={dealerThrowKey}
             targetValue={dealerValues?.[i] ?? 1}
-            onSettled={() => onDealerSettled(i)}
+            onSettled={(idx, key) => onDealerSettled(idx, key)}
           />
         ))}
 
-        {([0, 1, 2] as const).map((i) => (
-          <DiceMesh
-            key={`p-${i}`}
-            index={i}
-            rowZ={PLAYER_Z}
-            throwKey={playerThrowKey}
-            targetValue={playerValues?.[i] ?? 1}
-            onSettled={() => onPlayerSettled(i)}
-          />
-        ))}
+        {showPlayerLabel && (
+          <Billboard>
+            <Text
+              position={[-5.0, 2.5, PLAYER_Z + 2]}
+              fontSize={0.45}
+              color="#908caa"
+              anchorX="left"
+            >
+              Ты
+            </Text>
+          </Billboard>
+        )}
+        {playerDiceActive &&
+          ([0, 1, 2] as const).map((i) => (
+            <DiceMesh
+              key={`p-${i}`}
+              index={i}
+              rowZ={PLAYER_Z}
+              throwKey={playerThrowKey}
+              enabled
+              targetValue={playerValues?.[i] ?? 1}
+              onSettled={(idx, key) => onPlayerSettled(idx, key)}
+            />
+          ))}
       </group>
 
       <ContactShadows

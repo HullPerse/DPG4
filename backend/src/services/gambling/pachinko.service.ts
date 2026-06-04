@@ -5,6 +5,7 @@ import { nowIso } from "../../lib/dates";
 import type { Db } from "@/types";
 import type { PachinkoState } from "@/types/gambling";
 import { UserService } from "../user.service";
+import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
 
 export const PACHINKO_SLOT_MULTIPLIERS = [
   5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5,
@@ -51,7 +52,7 @@ export class PachinkoService {
   }
 
   async drop(userId: string, bid: number): Promise<PachinkoState> {
-    if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid))
       throw new Error("Invalid bid");
 
     if (this.activeGames.has(userId)) throw new Error("Drop already in progress");
@@ -106,7 +107,7 @@ export class PachinkoService {
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, payout);
     let gamblingBanned = user?.gamblingBanned ?? false;
 
-    if (payout > 0 && gamblingWinnings >= 30 && !gamblingBanned) {
+    if (payout > 0 && gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
       gamblingBanned = true;
     }
 

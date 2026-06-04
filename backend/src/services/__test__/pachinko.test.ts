@@ -144,7 +144,7 @@ describe("PachinkoService", () => {
   test("gambling ban triggers on big win", async () => {
     const nearBan = await createUser(db, {
       money: 100,
-      gamblingWinnings: 25,
+      gamblingWinnings: 95,
       gamblingBanned: false,
     });
     await services.pachinkoService.drop(nearBan.id, 10);
@@ -154,6 +154,6 @@ describe("PachinkoService", () => {
     expect(state.banned).toBe(true);
     const user = await getUser(db, nearBan.id);
     expect(user!.gamblingBanned).toBe(true);
-    expect(user!.gamblingWinnings).toBe(25 + 50);
+    expect(user!.gamblingWinnings).toBe(95 + 50);
   });
 });

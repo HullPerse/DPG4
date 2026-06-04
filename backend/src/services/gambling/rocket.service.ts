@@ -5,6 +5,7 @@ import { nowIso } from "../../lib/dates";
 import type { ActiveRocketGame, RocketState } from "@/types/gambling";
 import type { Db } from "@/types";
 import { UserService } from "../user.service";
+import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
 
 export class RocketService {
   constructor(
@@ -75,7 +76,7 @@ export class RocketService {
   }
 
   async launch(userId: string, bid: number): Promise<RocketState> {
-    if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid))
       throw new Error("Invalid bid");
 
     if (this.activeGames.has(userId)) throw new Error("Game already in progress");
@@ -137,7 +138,7 @@ export class RocketService {
 
     const user = await this.userService.getById(userId);
     const gamblingWinnings = (user?.gamblingWinnings ?? 0) + payout;
-    const gamblingBanned = gamblingWinnings >= 30;
+    const gamblingBanned = gamblingWinnings >= GAMBLING_BAN_THRESHOLD;
 
     await this.db
       .update(schema.users)

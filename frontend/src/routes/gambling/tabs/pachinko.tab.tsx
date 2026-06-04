@@ -1,7 +1,15 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
-import { useCallback, useEffect, useRef, useState, memo, lazy, Suspense } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  memo,
+  lazy,
+  Suspense,
+} from "react";
 import { cn } from "@/lib/utils";
 import {
   dropPachinko,
@@ -53,6 +61,9 @@ function PachinkoTab() {
   const [startX, setStartX] = useState(0);
   const [result, setResult] = useState<PachinkoUiResult | null>(null);
   const settlingRef = useRef(false);
+  const [kickTrigger, setKickTrigger] = useState(0);
+  const [showKickButton, setShowKickButton] = useState(false);
+  const kickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const balance = user?.money ?? 0;
 
   const inDrop = gameState.phase === "dropping";
@@ -141,6 +152,31 @@ function PachinkoTab() {
     [user, setGamblingBanned],
   );
 
+  useEffect(() => {
+    if (inDrop) {
+      kickTimerRef.current = setTimeout(() => {
+        setShowKickButton(true);
+      }, 10_000);
+    } else {
+      setShowKickButton(false);
+      if (kickTimerRef.current) {
+        clearTimeout(kickTimerRef.current);
+        kickTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (kickTimerRef.current) {
+        clearTimeout(kickTimerRef.current);
+        kickTimerRef.current = null;
+      }
+    };
+  }, [inDrop]);
+
+  const handleKick = () => {
+    setKickTrigger((k) => k + 1);
+    setShowKickButton(false);
+  };
+
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
       <section className="flex flex-col w-xl items-stretch gap-1 border-2 border-highlight-high bg-background px-2 py-1.5">
@@ -184,6 +220,7 @@ function PachinkoTab() {
             highlightIndex={highlightSlot}
             onSettled={handleSettled}
             bid={bid}
+            kickTrigger={kickTrigger}
           />
         </Suspense>
         {result && (
@@ -195,6 +232,14 @@ function PachinkoTab() {
           >
             {result.label}
           </span>
+        )}
+        {showKickButton && inDrop && (
+          <Button
+            onClick={handleKick}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 px-4 py-2 text-lg font-bold"
+          >
+            Пнуть
+          </Button>
         )}
         {!showRat && !result && (
           <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">

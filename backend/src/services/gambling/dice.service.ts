@@ -9,6 +9,13 @@ import {
 } from "@/types/gambling";
 import { Db } from "@/types";
 import { UserService } from "../user.service";
+import {
+  GAMBLING_BAN_THRESHOLD,
+  GAMBLING_MIN_BET,
+  GAMBLING_MAX_BET,
+} from "../../lib/gambling.constants";
+
+const MAX_VOID_REROLLS = 2;
 
 function getRandomDice(): [number, number, number] {
   return [
@@ -16,6 +23,16 @@ function getRandomDice(): [number, number, number] {
     Math.floor(Math.random() * 6) + 1,
     Math.floor(Math.random() * 6) + 1,
   ];
+}
+
+/** Three unique faces that are not 1·2·3 or 4·5·6 - no playable hand */
+export function isVoidHand(values: [number, number, number]): boolean {
+  const sorted = [...values].sort((a, b) => a - b);
+  const [a, b, c] = sorted;
+  if (new Set(values).size !== 3) return false;
+  if (a === 1 && b === 2 && c === 3) return false;
+  if (a === 4 && b === 5 && c === 6) return false;
+  return true;
 }
 
 function resolveDealerRoll(values: [number, number, number]): {
@@ -43,7 +60,6 @@ function resolveDealerRoll(values: [number, number, number]): {
     const target = values.filter((v) => v !== pairValue)[0];
     return { target, autoResult: null };
   }
-  // 3 unique faces (not 1·2·3 or 4·5·6) → void round, return bid
   return { target: null, autoResult: "push" };
 }
 
@@ -68,7 +84,7 @@ function resolvePlayerResult(
     return {
       playerValues: values,
       payout: 0,
-      net: -bid * 2,
+      net: -bid,
       label: "Дилер победил автоматически",
       tone: "lose",
       balance: 0,
@@ -80,7 +96,7 @@ function resolvePlayerResult(
       playerValues: values,
       payout: bid,
       net: 0,
-      label: "Дилер выкинул 1·1·1 - ничья",
+      label: "Ничья - ставка возвращена",
       tone: "chance",
       balance: 0,
       banned: false,
@@ -103,7 +119,7 @@ function resolvePlayerResult(
     };
   }
   if (a === 4 && b === 5 && c === 6) {
-    const net = Math.floor(bid * 1.5);
+    const net = bid * 2;
     return {
       playerValues: values,
       payout: bid + net,
@@ -178,15 +194,34 @@ function resolvePlayerResult(
     };
   }
 
-  // 3 unique non-sequential faces → loss
   return {
     playerValues: values,
-    payout: 0,
-    net: -bid,
-    label: "Ничего - проигрыш",
-    tone: "lose",
+    payout: bid,
+    net: 0,
+    label: "Ничего - ничья",
+    tone: "reroll",
     balance: 0,
     banned: false,
+    reroll: true,
+  };
+}
+
+function finalizeDealerPhase(
+  game: ActiveDiceGame,
+  values: [number, number, number],
+): DiceRollPhaseResult {
+  const resolved = resolveDealerRoll(values);
+  game.dealerValues = values;
+  game.dealerTarget = resolved.target;
+  game.autoResult = resolved.autoResult;
+  game.phase = "player";
+
+  return {
+    phase: "dealer",
+    values,
+    target: resolved.target,
+    autoResult: resolved.autoResult,
+    reroll: false,
   };
 }
 
@@ -198,8 +233,16 @@ export class DiceService {
     private userService: UserService,
   ) {}
 
+  getActiveGame(userId: string): ActiveDiceGame | undefined {
+    return this.games.get(userId);
+  }
+
   async rollDealer(userId: string, bid: number): Promise<DiceRollPhaseResult> {
-    if (bid < 1 || bid > 10 || !Number.isInteger(bid))
+    if (
+      bid < GAMBLING_MIN_BET ||
+      bid > GAMBLING_MAX_BET ||
+      !Number.isInteger(bid)
+    )
       throw new Error("Invalid bid");
 
     const user = await this.userService.getById(userId);
@@ -207,36 +250,66 @@ export class DiceService {
     if (user.money < bid) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-    let values: [number, number, number];
-    let target: number | null;
-    let autoResult: "dealer_win" | "dealer_lose" | "push" | null;
-
-    do {
-      values = getRandomDice();
-      const resolved = resolveDealerRoll(values);
-      target = resolved.target;
-      autoResult = resolved.autoResult;
-    } while (target === null && autoResult === null);
+    const values = getRandomDice();
 
     await this.userService.score(userId, -bid);
 
-    this.games.set(userId, {
+    const game: ActiveDiceGame = {
       dealerValues: values,
-      dealerTarget: target,
-      phase: "player",
+      dealerTarget: null,
+      phase: "dealer",
       bid,
       userId,
-      autoResult,
-    });
+      autoResult: null,
+      dealerRerolls: 0,
+      playerRerolls: 0,
+    };
+    this.games.set(userId, game);
 
     logger.info(user.username, "dealer rolled", values.join(", "));
 
-    return {
-      phase: "dealer",
-      values,
-      target,
-      autoResult,
-    };
+    if (isVoidHand(values) && game.dealerRerolls < MAX_VOID_REROLLS) {
+      game.dealerRerolls++;
+      game.dealerValues = values;
+      return {
+        phase: "dealer",
+        values,
+        target: null,
+        autoResult: null,
+        reroll: true,
+        label: "У дилера нет комбинации - переброс",
+      };
+    }
+
+    return finalizeDealerPhase(game, values);
+  }
+
+  async rerollDealer(userId: string): Promise<DiceRollPhaseResult> {
+    const game = this.games.get(userId);
+    if (!game || game.phase !== "dealer")
+      throw new Error("No active dealer roll");
+
+    const user = await this.userService.getById(userId);
+    if (!user) throw new Error("User not found");
+
+    const values = getRandomDice();
+    game.dealerValues = values;
+
+    logger.info(user.username, "dealer reroll", values.join(", "));
+
+    if (isVoidHand(values) && game.dealerRerolls < MAX_VOID_REROLLS) {
+      game.dealerRerolls++;
+      return {
+        phase: "dealer",
+        values,
+        target: null,
+        autoResult: null,
+        reroll: true,
+        label: "У дилера нет комбинации - переброс",
+      };
+    }
+
+    return finalizeDealerPhase(game, values);
   }
 
   async rollPlayer(userId: string): Promise<DiceGameResult> {
@@ -247,22 +320,27 @@ export class DiceService {
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
 
-    let values: [number, number, number];
-    let result: DiceGameResult;
+    const values = getRandomDice();
 
-    do {
-      values = getRandomDice();
-      result = resolvePlayerResult(
-        values,
-        game.dealerTarget,
-        game.autoResult,
-        game.bid,
-      );
-    } while (result.tone === "reroll");
+    const result = resolvePlayerResult(
+      values,
+      game.dealerTarget,
+      game.autoResult,
+      game.bid,
+    );
 
-    if (game.autoResult === "dealer_win") {
-      await this.userService.score(userId, -game.bid);
+    if (result.tone === "reroll" && game.playerRerolls < MAX_VOID_REROLLS) {
+      game.playerRerolls++;
+      logger.info(user.username, "player reroll", values.join(", "));
+      return {
+        ...result,
+        balance: user.money,
+        reroll: true,
+        label: "Нет комбинации - переброс",
+      };
     }
+
+    this.games.delete(userId);
 
     const net = result.net;
 
@@ -272,7 +350,7 @@ export class DiceService {
     if (result.payout > game.bid) {
       const profit = result.payout - game.bid;
       gamblingWinnings += profit;
-      if (gamblingWinnings >= 30 && !gamblingBanned) {
+      if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
     }
@@ -292,8 +370,6 @@ export class DiceService {
 
     const updatedUser = await this.userService.getById(userId);
 
-    this.games.delete(userId);
-
     logger.info(
       user.username,
       "rolled player",
@@ -306,11 +382,19 @@ export class DiceService {
       net,
       balance: updatedUser?.money ?? 0,
       banned: gamblingBanned,
-      tone: result.tone,
+      tone: result.tone === "reroll" ? "chance" : result.tone,
     };
   }
 
   async abort(userId: string): Promise<void> {
+    const game = this.games.get(userId);
+    if (!game) return;
+
+    const user = await this.userService.getById(userId);
+    if (user && game.phase === "dealer") {
+      await this.userService.score(userId, game.bid);
+    }
+
     this.games.delete(userId);
   }
 }

@@ -4,6 +4,7 @@ import {
   GRAVITY,
   MIN_AIR_TIME,
   MAX_AIR_TIME,
+  MIN_BOUNCES_BEFORE_SETTLE,
   FACE_VALUES,
   TARGET_ROTATION,
   createDiceFaceTexture,
@@ -19,13 +20,16 @@ function DiceMesh({
   index,
   targetValue,
   throwKey,
+  enabled = true,
   onSettled,
   rowZ = 0,
 }: {
   index: number;
   targetValue: number;
   throwKey: number;
-  onSettled: () => void;
+  /** When false, dice stay parked and ignore throwKey */
+  enabled?: boolean;
+  onSettled: (index: number, throwKey: number) => void;
   rowZ?: number;
 }) {
   const groupRef = useRef<Group>(null);
@@ -52,10 +56,25 @@ function DiceMesh({
     const dt = Math.min(delta, 0.033);
     const now = state.clock.elapsedTime;
 
-    if (throwKey !== lastThrowKey.current) {
+    if (!enabled) {
+      if (simRef.current.phase !== "idle") {
+        lastThrowKey.current = throwKey;
+        settledRef.current = true;
+        simRef.current = createIdleSim(index, homeZRef.current);
+        group.position.set(simRef.current.pos.x, simRef.current.pos.y, simRef.current.pos.z);
+        group.rotation.set(simRef.current.rot.x, simRef.current.rot.y, simRef.current.rot.z);
+      }
+      return;
+    }
+
+    if (throwKey > lastThrowKey.current) {
       lastThrowKey.current = throwKey;
       settledRef.current = false;
       simRef.current = createThrowSim(index, now, homeZRef.current);
+    } else if (throwKey < lastThrowKey.current) {
+      lastThrowKey.current = throwKey;
+      settledRef.current = true;
+      simRef.current = createIdleSim(index, homeZRef.current);
     }
 
     const sim = simRef.current;
@@ -113,9 +132,15 @@ function DiceMesh({
       const speed = Math.hypot(sim.vel.x, sim.vel.y, sim.vel.z);
       const angSpeed = Math.hypot(sim.angVel.x, sim.angVel.y, sim.angVel.z);
       const airTime = now - sim.throwStart;
-      const onTable = sim.pos.y <= REST_Y + 0.02 && sim.bounceCount >= 1;
+      const onTable =
+        sim.pos.y <= REST_Y + 0.02 &&
+        sim.bounceCount >= MIN_BOUNCES_BEFORE_SETTLE;
 
-      if (onTable && airTime >= MIN_AIR_TIME && ((speed < 1.35 && angSpeed < 2.5) || airTime > MAX_AIR_TIME)) {
+      if (
+        onTable &&
+        airTime >= MIN_AIR_TIME &&
+        ((speed < 0.95 && angSpeed < 1.8) || airTime > MAX_AIR_TIME)
+      ) {
         sim.phase = "settle";
         sim.settleStart = now;
         sim.vel = { x: 0, y: 0, z: 0 };
@@ -129,7 +154,7 @@ function DiceMesh({
 
     if (sim.phase === "settle") {
       const [tx, ty, tz] = TARGET_ROTATION[targetValue];
-      const t = Math.min((now - sim.settleStart) * 2.8, 1);
+      const t = Math.min((now - sim.settleStart) * 2.2, 1);
       const ease = 1 - Math.pow(1 - t, 3);
 
       sim.pos.x += (sim.homeX - sim.pos.x) * ease * 0.18;
@@ -146,7 +171,7 @@ function DiceMesh({
       if (t >= 1 && !settledRef.current) {
         settledRef.current = true;
         sim.phase = "done";
-        onSettled();
+        onSettled(index, lastThrowKey.current);
       }
       return;
     }

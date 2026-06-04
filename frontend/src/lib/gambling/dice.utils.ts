@@ -4,10 +4,18 @@ import type { DiceResult, DiceSim } from "@/types/gamble";
 export const REST_Y = 0.8;
 export const GRAVITY = 22;
 export const STAGGER_S = 1.8;
-export const MIN_AIR_TIME = 0.55;
-export const MAX_AIR_TIME = 5;
+export const MIN_AIR_TIME = 0.7;
+export const MAX_AIR_TIME = 6;
+/** Min bounces on table before snap-to-face settle phase */
+export const MIN_BOUNCES_BEFORE_SETTLE = 2;
 export const DEALER_Z = -2.2;
 export const PLAYER_Z = 1.5;
+/** Show settled faces before dealer→player or void reroll */
+export const DICE_SETTLE_HOLD_MS = 550;
+/** Extra pause before next throw after hold */
+export const DICE_REROLL_PAUSE_MS = 450;
+/** Delay before auto player roll after dealer phase fully done */
+export const DICE_PLAYER_AUTO_MS = 1100;
 
 // +x, -x, +y, -y, +z, -z
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;

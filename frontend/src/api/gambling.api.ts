@@ -1,5 +1,5 @@
 import { apiFetch } from "./client.api";
-import type { BlackjackState, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult } from "@/types/gamble";
+import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult } from "@/types/gamble";
 
 export type {
   BlackjackState,
@@ -15,6 +15,13 @@ export async function rollDiceDealer(userId: string, bid: number): Promise<DiceD
   return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
     body: { userId, bid },
+  });
+}
+
+export async function rerollDiceDealer(userId: string): Promise<DiceDealerResult> {
+  return apiFetch<DiceDealerResult>("/utils/dice-roll", {
+    method: "POST",
+    body: { userId },
   });
 }
 
@@ -150,6 +157,12 @@ export async function syncPachinko(userId: string): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-sync", {
     method: "POST",
     body: { userId },
+  });
+}
+
+export async function fetchGamblingConfig(): Promise<GamblingConfig> {
+  return apiFetch<GamblingConfig>("/utils/gambling-config", {
+    method: "GET",
   });
 }
 
