@@ -67,6 +67,7 @@ export interface GamblingConfig {
   banThreshold: number;
   minBet: number;
   maxBet: number;
+  bidOptions: number[];
   rerollPrice: number;
   spinCost: number;
 }
@@ -130,4 +131,5 @@ export interface PachinkoState {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance" | "";
   banned: boolean;
+  kickAvailable: boolean;
 }

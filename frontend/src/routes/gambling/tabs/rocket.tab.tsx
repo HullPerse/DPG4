@@ -10,6 +10,7 @@ import {
   abandonRocket,
   dismissRocket,
   getRocketHistory,
+  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import FlightChart from "../components/flight.rocket";
 import CrashChart, { CrashHistoryPills } from "../components/chart.rocket";
@@ -25,7 +26,7 @@ import {
   type RocketUiResult,
 } from "@/lib/gambling/rocket.utils";
 
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
 
 const IDLE_STATE: RocketState = {
   phase: "idle",
@@ -44,6 +45,7 @@ function RocketTab() {
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
+  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [gameState, setGameState] = useState<RocketState>({
     phase: "idle",
     multiplier: 0,
@@ -55,6 +57,10 @@ function RocketTab() {
     tone: "",
     banned: false,
   });
+
+  useEffect(() => {
+    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
+  }, []);
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
@@ -144,7 +150,7 @@ function RocketTab() {
   }, []);
 
   const startPolling = useCallback(
-    (userId: string) => {
+    () => {
       stopPolling();
       const gen = pollGenRef.current;
 
@@ -153,7 +159,7 @@ function RocketTab() {
         pollInFlightRef.current = true;
 
         try {
-          const polled = await pollRocket(userId);
+          const polled = await pollRocket();
           if (gen !== pollGenRef.current) return;
 
           setGameState((prev) => {
@@ -208,14 +214,10 @@ function RocketTab() {
     [stopPolling, refreshHistory, setGamblingBanned, applyRoundEnd],
   );
 
-  const userIdRef = useRef<string | null>(null);
-  userIdRef.current = user ? String(user.id) : null;
-
   useEffect(() => {
     if (!user?.id) return;
-    const userId = String(user.id);
 
-    pollRocket(userId)
+    pollRocket()
       .then((state) => {
         const local = gameStateRef.current.phase;
         if (local === "crashed" || local === "cashed") return;
@@ -223,7 +225,7 @@ function RocketTab() {
         if (isActivePhase(state.phase)) {
           setGameState(state);
           setFlightStart(Date.now());
-          startPolling(userId);
+          startPolling();
         } else if (state.phase === "crashed" || state.phase === "cashed") {
           applyRoundEnd(state);
         } else if (
@@ -244,11 +246,11 @@ function RocketTab() {
     setResult(null);
 
     try {
-      const state = await launchRocket(String(user.id), bid);
+      const state = await launchRocket(bid);
       setGameState(state);
       setFlightStart(Date.now());
       setLoading(false);
-      startPolling(String(user.id));
+      startPolling();
     } catch {
       setLoading(false);
       resetToIdle();
@@ -260,7 +262,7 @@ function RocketTab() {
 
     try {
       stopPolling();
-      const state = await cashoutRocket(String(user.id));
+      const state = await cashoutRocket();
       applyRoundEnd(state);
       useUserStore.setState({ user: { ...user, money: state.balance } });
       if (state.banned) setGamblingBanned(true);
@@ -273,16 +275,15 @@ function RocketTab() {
 
   const handleDismiss = async () => {
     resetToIdle();
-    if (user) dismissRocket(String(user.id)).catch(() => {});
+    dismissRocket().catch(() => {});
   };
 
   useEffect(() => {
     return () => {
       stopPolling();
-      const uid = userIdRef.current;
       const gs = gameStateRef.current;
-      if (uid && (gs.phase === "flying" || gs.phase === "launching")) {
-        abandonRocket(uid).catch(() => {});
+      if (gs.phase === "flying" || gs.phase === "launching") {
+        abandonRocket().catch(() => {});
       }
     };
   }, [stopPolling]);
@@ -341,7 +342,7 @@ function RocketTab() {
 
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
         <span className="text-sm text-muted mr-1">Ставка</span>
-        {BIDS.map((v) => (
+        {bidOptions.map((v) => (
           <button
             key={v}
             onClick={() => setBid(v)}

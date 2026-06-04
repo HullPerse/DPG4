@@ -37,6 +37,7 @@ export class PachinkoService {
       label: "",
       tone: "",
       banned: false,
+      kickAvailable: false,
     };
   }
 
@@ -79,6 +80,7 @@ export class PachinkoService {
       label: "",
       tone: "",
       banned: false,
+      kickAvailable: false,
     };
   }
 
@@ -143,6 +145,7 @@ export class PachinkoService {
       label,
       tone,
       banned: gamblingBanned,
+      kickAvailable: false,
     };
   }
 
@@ -155,6 +158,7 @@ export class PachinkoService {
     if (!game) return this.idleState();
 
     const user = await this.userService.getById(userId);
+    const kickAvailable = Date.now() - game.droppedAt > 15_000;
 
     return {
       phase: "dropping",
@@ -167,6 +171,7 @@ export class PachinkoService {
       label: "",
       tone: "",
       banned: user?.gamblingBanned ?? false,
+      kickAvailable,
     };
   }
 }

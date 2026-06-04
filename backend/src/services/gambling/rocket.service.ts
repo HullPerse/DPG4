@@ -137,8 +137,11 @@ export class RocketService {
     await this.userService.score(userId, payout);
 
     const user = await this.userService.getById(userId);
-    const gamblingWinnings = (user?.gamblingWinnings ?? 0) + payout;
-    const gamblingBanned = gamblingWinnings >= GAMBLING_BAN_THRESHOLD;
+    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + payout;
+    let gamblingBanned = user?.gamblingBanned ?? false;
+    if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
+      gamblingBanned = true;
+    }
 
     await this.db
       .update(schema.users)

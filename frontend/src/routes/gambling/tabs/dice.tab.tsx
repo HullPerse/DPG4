@@ -9,6 +9,7 @@ import {
   rerollDiceDealer,
   rollDicePlayer,
   abortDice,
+  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -24,7 +25,7 @@ import {
 } from "@/lib/gambling/diceRollCoordinator";
 import { DiceDealerResult, DiceGameResult, DiceResult } from "@/types/gamble";
 
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -35,8 +36,13 @@ function DiceTab() {
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
+  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [rolling, setRolling] = useState(false);
   const [bid, setBid] = useState(3);
+
+  useEffect(() => {
+    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
+  }, []);
   const [gamePhase, setGamePhase] = useState<
     "idle" | "dealer" | "player" | "result"
   >("idle");
@@ -115,7 +121,7 @@ function DiceTab() {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return dealer;
 
-      dealer = await rerollDiceDealer(String(user!.id));
+      dealer = await rerollDiceDealer();
       if (!isRoundActive(round)) return dealer;
 
       await playDiceRoll(dealer.values, "dealer");
@@ -130,7 +136,7 @@ function DiceTab() {
   const settlePlayer = async (round: number): Promise<DiceGameResult> => {
     setGamePhase("player");
 
-    let playerResult = await rollDicePlayer(String(user!.id));
+    let playerResult = await rollDicePlayer();
     if (!isRoundActive(round)) return playerResult;
 
     await playDiceRoll(playerResult.playerValues, "player");
@@ -140,7 +146,7 @@ function DiceTab() {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return playerResult;
 
-      playerResult = await rollDicePlayer(String(user!.id));
+      playerResult = await rollDicePlayer();
       if (!isRoundActive(round)) return playerResult;
 
       await playDiceRoll(playerResult.playerValues, "player");
@@ -194,10 +200,10 @@ function DiceTab() {
     setGamePhase("dealer");
 
     try {
-      await abortDice(String(user.id));
+      await abortDice();
       if (!isRoundActive(round)) return;
 
-      const dealerInitial = await rollDiceDealer(String(user.id), bid);
+      const dealerInitial = await rollDiceDealer(bid);
       if (!isRoundActive(round)) return;
 
       setDisplayBalance(balance - bid);
@@ -232,7 +238,7 @@ function DiceTab() {
 
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
         <span className="text-sm text-muted mr-1">Ставка</span>
-        {BIDS.map((v) => (
+        {bidOptions.map((v) => (
           <button
             key={v}
             onClick={() => setBid(v)}

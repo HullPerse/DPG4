@@ -6,15 +6,18 @@ import {
   calculateScore,
   weightedRandom,
 } from "../lib/game.utils";
-import { GAMBLING_MIN_BET, GAMBLING_MAX_BET, REROLL_PRICE, SPIN_COST, GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
+import { GAMBLING_MIN_BET, GAMBLING_MAX_BET, GAMBLING_BID_OPTIONS, REROLL_PRICE, SPIN_COST, GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
 import { calculateMovePath } from "../lib/cell.utils";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services/services.plugin";
 import { nowIso } from "../lib/dates";
 
+import { authPlugin } from "../plugins/auth.plugin";
+
 export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .use(dbPlugin)
   .use(servicesPlugin)
+  .use(authPlugin)
   .get(
     "/calculate-score",
     ({ query }) => ({
@@ -38,6 +41,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     banThreshold: GAMBLING_BAN_THRESHOLD,
     minBet: GAMBLING_MIN_BET,
     maxBet: GAMBLING_MAX_BET,
+    bidOptions: GAMBLING_BID_OPTIONS,
     rerollPrice: REROLL_PRICE,
     spinCost: SPIN_COST,
   }), {
@@ -45,23 +49,24 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   })
   .post(
     "/dice-roll",
-    async ({ body, set, diceService }) => {
+    async ({ body, set, diceService, user }) => {
       try {
+        const uid = user!.sub;
         if (body.bid !== undefined) {
-          return await diceService.rollDealer(body.userId, body.bid);
+          return await diceService.rollDealer(uid, body.bid);
         }
-        if (diceService.getActiveGame(body.userId)?.phase === "dealer") {
-          return await diceService.rerollDealer(body.userId);
+        if (diceService.getActiveGame(uid)?.phase === "dealer") {
+          return await diceService.rerollDealer(uid);
         }
-        return await diceService.rollPlayer(body.userId);
+        return await diceService.rollPlayer(uid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
+      requireAuth: true,
       body: t.Object({
-        userId: t.String(),
         bid: t.Optional(t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET })),
       }),
       detail: {
@@ -73,28 +78,28 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/dice-abort",
-    async ({ body, diceService }) => {
-      await diceService.abort(body.userId);
+    async ({ diceService, user }) => {
+      await diceService.abort(user!.sub);
       return { success: true };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: { tags: ["utils"], summary: "Abort active dice game" },
     },
   )
   .post(
     "/blackjack-deal",
-    async ({ body, set, blackjackService }) => {
+    async ({ body, set, blackjackService, user }) => {
       try {
-        return await blackjackService.deal(body.userId, body.bid);
+        return await blackjackService.deal(user!.sub, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
+      requireAuth: true,
       body: t.Object({
-        userId: t.String(),
         bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
@@ -105,42 +110,42 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-hit",
-    async ({ body, set, blackjackService }) => {
+    async ({ set, blackjackService, user }) => {
       try {
-        return await blackjackService.hit(body.userId);
+        return await blackjackService.hit(user!.sub);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: { tags: ["utils"], summary: "Hit in blackjack" },
     },
   )
   .post(
     "/blackjack-stand",
-    async ({ body, set, blackjackService }) => {
+    async ({ set, blackjackService, user }) => {
       try {
-        return await blackjackService.stand(body.userId);
+        return await blackjackService.stand(user!.sub);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: { tags: ["utils"], summary: "Stand in blackjack" },
     },
   )
   .post(
     "/blackjack-sync",
-    async ({ body, blackjackService }) => {
-      const state = await blackjackService.getState(body.userId);
+    async ({ blackjackService, user }) => {
+      const state = await blackjackService.getState(user!.sub);
       return { state };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Get in-progress blackjack hand for client restore",
@@ -149,12 +154,12 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-abandon",
-    async ({ body, blackjackService }) => {
-      blackjackService.abandon(body.userId);
+    async ({ blackjackService, user }) => {
+      blackjackService.abandon(user!.sub);
       return { success: true };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Clear stuck blackjack session (forfeit hand)",
@@ -163,7 +168,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/dice-unban",
-    async ({ body, db, set }) => {
+    async ({ db, set, user }) => {
       try {
         await db
           .update(schema.users)
@@ -172,7 +177,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
             gamblingBanned: false,
             updated: nowIso(),
           })
-          .where(eq(schema.users.id, body.userId));
+          .where(eq(schema.users.id, user!.sub));
         return { success: true };
       } catch (err) {
         set.status = 400;
@@ -180,28 +185,26 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       }
     },
     {
-      body: t.Object({
-        userId: t.String(),
-      }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
-        summary: "Reset gambling ban for a user",
+        summary: "Reset gambling ban for the authenticated user",
       },
     },
   )
   .post(
     "/rocket-launch",
-    async ({ body, set, rocketService }) => {
+    async ({ body, set, rocketService, user }) => {
       try {
-        return await rocketService.launch(body.userId, body.bid);
+        return await rocketService.launch(user!.sub, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
+      requireAuth: true,
       body: t.Object({
-        userId: t.String(),
         bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
@@ -212,16 +215,16 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-cashout",
-    async ({ body, set, rocketService }) => {
+    async ({ set, rocketService, user }) => {
       try {
-        return await rocketService.cashout(body.userId);
+        return await rocketService.cashout(user!.sub);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Cash out rocket - collect winnings at current multiplier",
@@ -230,16 +233,16 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-poll",
-    async ({ body, set, rocketService }) => {
+    async ({ set, rocketService, user }) => {
       try {
-        return await rocketService.poll(body.userId);
+        return await rocketService.poll(user!.sub);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Poll current rocket state (multiplier, crash detection)",
@@ -248,12 +251,12 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-abandon",
-    async ({ body, rocketService }) => {
-      rocketService.abandon(body.userId);
+    async ({ rocketService, user }) => {
+      rocketService.abandon(user!.sub);
       return { success: true };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Abandon active rocket game",
@@ -262,12 +265,12 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-dismiss",
-    async ({ body, rocketService }) => {
-      rocketService.dismiss(body.userId);
+    async ({ rocketService, user }) => {
+      rocketService.dismiss(user!.sub);
       return { success: true };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Dismiss rocket result screen after crash or cashout",
@@ -288,17 +291,17 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-drop",
-    async ({ body, set, pachinkoService }) => {
+    async ({ body, set, pachinkoService, user }) => {
       try {
-        return await pachinkoService.drop(body.userId, body.bid);
+        return await pachinkoService.drop(user!.sub, body.bid);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
+      requireAuth: true,
       body: t.Object({
-        userId: t.String(),
         bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
       }),
       detail: {
@@ -309,17 +312,17 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-settle",
-    async ({ body, set, pachinkoService }) => {
+    async ({ body, set, pachinkoService, user }) => {
       try {
-        return await pachinkoService.settle(body.userId, body.slotIndex);
+        return await pachinkoService.settle(user!.sub, body.slotIndex);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
+      requireAuth: true,
       body: t.Object({
-        userId: t.String(),
         slotIndex: t.Integer({ minimum: 0, maximum: 12 }),
       }),
       detail: {
@@ -330,16 +333,16 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-sync",
-    async ({ body, set, pachinkoService }) => {
+    async ({ set, pachinkoService, user }) => {
       try {
-        return await pachinkoService.sync(body.userId);
+        return await pachinkoService.sync(user!.sub);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
       }
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Sync active pachinko drop state",
@@ -348,12 +351,12 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-abandon",
-    async ({ body, pachinkoService }) => {
-      pachinkoService.abandon(body.userId);
+    async ({ pachinkoService, user }) => {
+      pachinkoService.abandon(user!.sub);
       return { success: true };
     },
     {
-      body: t.Object({ userId: t.String() }),
+      requireAuth: true,
       detail: {
         tags: ["utils"],
         summary: "Abandon active pachinko drop",

@@ -129,4 +129,5 @@ export interface PachinkoState {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance" | "";
   banned: boolean;
+  kickAvailable: boolean;
 }

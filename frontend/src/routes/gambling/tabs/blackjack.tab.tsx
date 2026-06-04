@@ -9,6 +9,7 @@ import {
   blackjackStand,
   syncBlackjack,
   abandonBlackjack,
+  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import BlackjackScene from "../components/scene.blackjack";
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -23,7 +24,7 @@ import type {
   PlayingCard,
 } from "@/types/gamble";
 
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -40,9 +41,14 @@ function BlackjackTab() {
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
+  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [game, setGame] = useState<BlackjackState | null>(null);
   const [bid, setBid] = useState(3);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
+  }, []);
   const [flyingCards, setFlyingCards] = useState<Set<string>>(() => new Set());
   const [uiResult, setUiResult] = useState<BlackjackUiResult>(null);
   const [revealHole, setRevealHole] = useState(false);
@@ -129,7 +135,7 @@ function BlackjackTab() {
 
     (async () => {
       try {
-        const state = await syncBlackjack(String(user.id));
+        const state = await syncBlackjack();
         if (!cancelled && state) restoreGame(state);
       } finally {
         if (!cancelled) setSyncing(false);
@@ -151,14 +157,14 @@ function BlackjackTab() {
     setFlyingCards(new Set());
 
     try {
-      const state = await blackjackDeal(String(user.id), bid);
+      const state = await blackjackDeal(bid);
       const fly = buildDealFlyingCards(state);
       setFlyingCards(fly);
       applyState(state);
       scheduleFlyClear(fly.size);
     } catch {
       try {
-        const existing = await syncBlackjack(String(user.id));
+        const existing = await syncBlackjack();
         if (existing) restoreGame(existing);
       } catch {
         /* ignore */
@@ -173,7 +179,7 @@ function BlackjackTab() {
 
     setBusy(true);
     try {
-      const state = await blackjackHit(String(user.id));
+      const state = await blackjackHit();
       const newIndex = state.playerHand.length - 1;
       const fly = new Set<string>([`p-${newIndex}`]);
       setFlyingCards(fly);
@@ -192,7 +198,7 @@ function BlackjackTab() {
     setBusy(true);
     try {
       const hadHole = game.dealerHoleHidden;
-      const state = await blackjackStand(String(user.id));
+      const state = await blackjackStand();
       const fly = new Set<string>();
 
       if (hadHole && state.dealerHand.length > 1) {
@@ -220,7 +226,7 @@ function BlackjackTab() {
   const newHand = async () => {
     if (user && game?.phase === "player") {
       try {
-        await abandonBlackjack(String(user.id));
+        await abandonBlackjack();
       } catch {
         /* server may already be clear */
       }
@@ -256,7 +262,7 @@ function BlackjackTab() {
       {!inRound && (
         <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
           <span className="text-sm text-muted mr-1">Ставка</span>
-          {BIDS.map((v) => (
+          {bidOptions.map((v) => (
             <button
               key={v}
               type="button"

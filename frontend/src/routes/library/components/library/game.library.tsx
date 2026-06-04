@@ -217,7 +217,7 @@ function GameLibrary({
           setStoreItems([]);
           setRerollPrice(2);
 
-          await unbanDice(String(user?.id));
+          await unbanDice();
           setGamblingBanned(false);
         }
 

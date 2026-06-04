@@ -16,6 +16,7 @@ import {
   settlePachinko,
   syncPachinko,
   abandonPachinko,
+  fetchGamblingConfig,
 } from "@/api/gambling.api";
 const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -31,7 +32,7 @@ import {
   type PachinkoUiResult,
 } from "@/lib/gambling/pachinko.utils";
 
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
 
 const IDLE_STATE: PachinkoState = {
   phase: "idle",
@@ -44,6 +45,7 @@ const IDLE_STATE: PachinkoState = {
   label: "",
   tone: "",
   banned: false,
+  kickAvailable: false,
 };
 
 function PachinkoTab() {
@@ -51,19 +53,24 @@ function PachinkoTab() {
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
 
+  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [gameState, setGameState] = useState<PachinkoState>(IDLE_STATE);
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
   const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState<number>(3);
+
+  useEffect(() => {
+    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
+  }, []);
   const [dropKey, setDropKey] = useState(0);
   const [startX, setStartX] = useState(0);
   const [result, setResult] = useState<PachinkoUiResult | null>(null);
   const settlingRef = useRef(false);
   const [kickTrigger, setKickTrigger] = useState(0);
   const [showKickButton, setShowKickButton] = useState(false);
-  const kickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const balance = user?.money ?? 0;
 
   const inDrop = gameState.phase === "dropping";
@@ -73,8 +80,7 @@ function PachinkoTab() {
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
-    if (!user) return;
-    syncPachinko(String(user.id))
+    syncPachinko()
       .then((state) => {
         if (state.phase === "dropping") {
           setGameState(state);
@@ -84,16 +90,12 @@ function PachinkoTab() {
         }
       })
       .catch(() => {});
-  }, [user?.id]);
-
-  const userIdRef = useRef<string | null>(null);
-  userIdRef.current = user ? String(user.id) : null;
+  }, []);
 
   useEffect(() => {
     return () => {
-      const uid = userIdRef.current;
-      if (uid && gameStateRef.current.phase === "dropping") {
-        abandonPachinko(uid).catch(() => {});
+      if (gameStateRef.current.phase === "dropping") {
+        abandonPachinko().catch(() => {});
       }
     };
   }, []);
@@ -108,7 +110,7 @@ function PachinkoTab() {
     setStartX(offset);
 
     try {
-      const state = await dropPachinko(String(user.id), bid);
+      const state = await dropPachinko(bid);
       setGameState(state);
       setDropKey((k) => k + 1);
       useUserStore.setState({ user: { ...user, money: state.balance } });
@@ -135,7 +137,7 @@ function PachinkoTab() {
       );
 
       try {
-        const state = await settlePachinko(String(user.id), slot);
+        const state = await settlePachinko(slot);
         setGameState(state);
         useUserStore.setState({ user: { ...user, money: state.balance } });
         if (state.banned) setGamblingBanned(true);
@@ -153,21 +155,32 @@ function PachinkoTab() {
   );
 
   useEffect(() => {
-    if (inDrop) {
-      kickTimerRef.current = setTimeout(() => {
-        setShowKickButton(true);
-      }, 10_000);
-    } else {
+    if (!inDrop) {
       setShowKickButton(false);
-      if (kickTimerRef.current) {
-        clearTimeout(kickTimerRef.current);
-        kickTimerRef.current = null;
+      if (kickPollRef.current) {
+        clearInterval(kickPollRef.current);
+        kickPollRef.current = null;
       }
+      return;
     }
+
+    kickPollRef.current = setInterval(async () => {
+      try {
+        const state = await syncPachinko();
+        if (state.kickAvailable) {
+          setShowKickButton(true);
+          if (kickPollRef.current) {
+            clearInterval(kickPollRef.current);
+            kickPollRef.current = null;
+          }
+        }
+      } catch {}
+    }, 3_000);
+
     return () => {
-      if (kickTimerRef.current) {
-        clearTimeout(kickTimerRef.current);
-        kickTimerRef.current = null;
+      if (kickPollRef.current) {
+        clearInterval(kickPollRef.current);
+        kickPollRef.current = null;
       }
     };
   }, [inDrop]);
@@ -252,7 +265,7 @@ function PachinkoTab() {
 
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
         <span className="text-sm text-muted mr-1">Ставка</span>
-        {BIDS.map((v) => (
+        {bidOptions.map((v) => (
           <button
             key={v}
             onClick={() => setBid(v)}
