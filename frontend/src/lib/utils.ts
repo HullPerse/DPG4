@@ -1,15 +1,11 @@
+import { createElement } from "react";
 import { GameStatus } from "@/types/games";
 import { ItemType } from "@/types/items";
 import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/client.api";
 import type { GamblingConfig } from "@/types/gamble";
@@ -17,6 +13,13 @@ import type { GamblingConfig } from "@/types/gamble";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const BORDER_WINDOW = "border-2 border-highlight-high";
+
+export const ANIMATE_IN_OUT =
+  "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95";
+
+export const FOCUS_RING = "focus:border-primary focus:outline-none";
 
 let cachedConfig: GamblingConfig | null = null;
 
@@ -109,12 +112,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
         result.push(part);
       } else {
         result.push(
-          <span
-            key={index}
-            className="bg-amber-500/20 text-white rounded font-bold"
-          >
-            {part}
-          </span>,
+          createElement("span", { key: index, className: "bg-amber-500/20 text-white rounded font-bold" }, part),
         );
       }
     });
@@ -137,12 +135,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
           result.push(subPart);
         } else {
           result.push(
-            <span
-              key={`${index}-${subIndex}`}
-              className="bg-amber-500/20 text-white rounded font-bold"
-            >
-              {subPart}
-            </span>,
+            createElement("span", { key: `${index}-${subIndex}`, className: "bg-amber-500/20 text-white rounded font-bold" }, subPart),
           );
         }
       });
@@ -151,13 +144,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
     if (index < urlMatches.length) {
       const url = urlMatches[index];
       result.push(
-        <span
-          key={`url-${index}`}
-          className="text-blue-500 underline hover:cursor-pointer"
-          onClick={() => openWindow(`url-${Date.now()}`, url, "Ссылка")}
-        >
-          {url}
-        </span>,
+        createElement("span", { key: `url-${index}`, className: "text-blue-500 underline hover:cursor-pointer", onClick: () => openWindow(`url-${Date.now()}`, url, "Ссылка") }, url),
       );
     }
   });
@@ -240,10 +227,10 @@ export function getAdPosition(position: 1 | 2 | 3 | 4) {
 
 export function getAdPositionIcon(position: 1 | 2 | 3 | 4) {
   const positionMap = {
-    1: <ChevronDown />, //go bottom
-    2: <ChevronLeft />, //go left
-    3: <ChevronUp />, //go up
-    4: <ChevronRight />, //go right
+    1: createElement(ChevronDown), //go bottom
+    2: createElement(ChevronLeft), //go left
+    3: createElement(ChevronUp), //go up
+    4: createElement(ChevronRight), //go right
   };
 
   return positionMap[position as keyof typeof positionMap];

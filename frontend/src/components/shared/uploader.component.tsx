@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo } from "react";
 import { ImagePlus, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
 import Image from "@/components/shared/image.component";
+import { useFileUpload } from "@/hooks/upload.hook";
 
 interface ImageUploaderProps {
   value: File | null;
@@ -12,52 +13,20 @@ interface ImageUploaderProps {
   className?: string;
 }
 
-export function ImageUploader({
+const ImageUploader = memo(function ImageUploader({
   value,
   onChange,
   existingImageUrl,
   onRemove,
   className,
 }: ImageUploaderProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<string | null>(
-    value
-      ? URL.createObjectURL(value)
-      : existingImageUrl
-        ? existingImageUrl
-        : null,
-  );
-
-  const processFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        console.error("Invalid file type");
-        return;
-      }
-      onChange(file);
-    },
-    [onChange],
-  );
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        processFile(files[0]);
-      }
-    },
-    [processFile],
-  );
-
-  useEffect(() => {
-    if (value) {
-      setImage(URL.createObjectURL(value));
-    } else if (existingImageUrl) {
-      setImage(existingImageUrl);
-    } else {
-      setImage(null);
-    }
-  }, [value, existingImageUrl]);
+  const { inputRef, objectUrl, handleFileSelect, clear, openFileDialog } =
+    useFileUpload({
+      acceptPrefix: "image/",
+      value,
+      onChange,
+      existingUrl: existingImageUrl,
+    });
 
   return (
     <div
@@ -67,10 +36,10 @@ export function ImageUploader({
       )}
       tabIndex={0}
     >
-      {image ? (
+      {objectUrl ? (
         <div className="group relative aspect-video w-full overflow-hidden rounded">
           <Image
-            src={image}
+            src={objectUrl}
             alt="Preview"
             className="h-full w-full object-contain"
             type="contain"
@@ -82,8 +51,7 @@ export function ImageUploader({
               className="size-10"
               onClick={(e) => {
                 e.stopPropagation();
-                onChange(null);
-                setImage(null);
+                clear();
                 onRemove?.();
               }}
               type="button"
@@ -98,7 +66,7 @@ export function ImageUploader({
               className="opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
-                inputRef.current?.click();
+                openFileDialog();
               }}
               type="button"
             >
@@ -109,10 +77,9 @@ export function ImageUploader({
         </div>
       ) : (
         <button
-          role="button"
           type="button"
           className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-3 p-4 transition-colors hover:bg-muted/30"
-          onClick={() => inputRef.current?.click()}
+          onClick={openFileDialog}
         >
           <ImagePlus />
         </button>
@@ -126,4 +93,6 @@ export function ImageUploader({
       />
     </div>
   );
-}
+});
+
+export { ImageUploader };

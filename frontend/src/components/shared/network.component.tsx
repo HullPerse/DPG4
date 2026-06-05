@@ -1,14 +1,14 @@
 import { checkConnection } from "@/api/client.api";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Loader, Wifi, WifiOff, WifiSync } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, memo } from "react";
 import { useDataStore } from "@/store/data.store";
 import { cn, networkClass, checkForUpdates, installUpdate } from "@/lib/utils";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useToastStore } from "@/store/toast.store";
 import type { UpdateData, Activity } from "@/types/activity";
 
-export default function NetworkConnection() {
+const NetworkConnection = memo(function NetworkConnection() {
   const network = useNetworkState();
   const setConnected = useDataStore((state) => state.setConnected);
   const addToast = useToastStore((s) => s.addToast);
@@ -116,4 +116,6 @@ export default function NetworkConnection() {
       onClick={handleRefetch}
     />
   );
-}
+});
+
+export default NetworkConnection;

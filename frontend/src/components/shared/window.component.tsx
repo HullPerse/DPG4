@@ -12,6 +12,7 @@ import {
   useMemo,
   RefObject,
   isValidElement,
+  memo,
 } from "react";
 import { WindowLoader } from "./loader.component";
 import React from "react";
@@ -21,7 +22,7 @@ import { useWindowResize } from "@/hooks/resize.hook";
 import { useClickAway } from "@uidotdev/usehooks";
 import { lockCursor } from "@/lib/cursor.utils";
 
-function Window(props: WindowProps) {
+const Window = memo(function Window(props: WindowProps) {
   const isConnected = useDataStore((state) => state.isConnected);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -353,6 +354,6 @@ function Window(props: WindowProps) {
       ))}
     </main>
   );
-}
+});
 
 export default Window;

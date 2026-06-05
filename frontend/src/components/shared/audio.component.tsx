@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { Music, X, Play, Pause, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
+import { useFileUpload } from "@/hooks/upload.hook";
 
 interface AudioUploaderProps {
   value: File | null;
@@ -14,7 +15,7 @@ interface AudioUploaderProps {
   compressedSize?: number;
 }
 
-export function AudioUploader({
+const AudioUploader = memo(function AudioUploader({
   value,
   onChange,
   existingAudioUrl,
@@ -23,22 +24,14 @@ export function AudioUploader({
   volume = 1,
   onVolumeChange,
 }: AudioUploaderProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
-  useEffect(() => {
-    if (value) {
-      const url = URL.createObjectURL(value);
-      setAudioUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else if (existingAudioUrl) {
-      setAudioUrl(existingAudioUrl);
-    } else {
-      setAudioUrl(null);
-    }
-  }, [value, existingAudioUrl]);
+  const { inputRef, objectUrl, handleFileSelect, clear } = useFileUpload({
+    acceptPrefix: "audio/",
+    value,
+    onChange,
+    existingUrl: existingAudioUrl,
+  });
 
   const handleVolumeChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,34 +48,13 @@ export function AudioUploader({
     if (audioRef.current) {
       audioRef.current.volume = volume;
     }
-  }, [volume, audioUrl]);
+  }, [volume, objectUrl]);
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
-
-  const processFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith("audio/")) {
-        console.error("Invalid file type");
-        return;
-      }
-      onChange(file);
-    },
-    [onChange],
-  );
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        processFile(files[0]);
-      }
-    },
-    [processFile],
-  );
 
   const togglePlayback = useCallback(() => {
     if (!audioRef.current) return;
@@ -97,12 +69,11 @@ export function AudioUploader({
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onChange(null);
-      setAudioUrl(null);
+      clear();
       setIsPlaying(false);
       onRemove?.();
     },
-    [onChange, onRemove],
+    [clear, onRemove],
   );
 
   return (
@@ -113,11 +84,11 @@ export function AudioUploader({
       )}
       tabIndex={0}
     >
-      {audioUrl ? (
+      {objectUrl ? (
         <div className="group flex flex-col gap-2">
           <audio
             ref={audioRef}
-            src={audioUrl}
+            src={objectUrl}
             onEnded={() => setIsPlaying(false)}
             className="hidden"
           />
@@ -186,4 +157,6 @@ export function AudioUploader({
       />
     </div>
   );
-}
+});
+
+export { AudioUploader };

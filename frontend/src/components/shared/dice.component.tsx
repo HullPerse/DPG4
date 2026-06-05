@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, memo } from "react";
 import { Button } from "../ui/button.component";
 import { DiceItem, DiceType } from "@/types/dice";
 import {
@@ -29,7 +29,7 @@ interface DiceComponentProps {
   additional: string;
 }
 
-export default function DiceComponent({
+const DiceComponent = memo(function DiceComponent({
   minDice = 1,
   action,
   handleMove,
@@ -318,4 +318,6 @@ export default function DiceComponent({
       </div>
     </main>
   );
-}
+});
+
+export default DiceComponent;

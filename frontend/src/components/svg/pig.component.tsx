@@ -1,23 +1,20 @@
+import { SvgWrapper } from "@/components/ui/svg.component";
+
 const PigSvg = ({ className }: { className?: string }) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+    <SvgWrapper
       viewBox="-5 0 64 50"
+      width={24}
+      height={24}
       fill="currentColor"
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
+      title="Pig Emoji"
+      decorative={className?.includes("decorative")}
       className={className}
-      aria-hidden={className?.includes("decorative") ? "true" : undefined}
-      role="img"
     >
-      {/* Accessible name */}
-      <title>Pig Emoji</title>
-      <desc></desc>
-
       <g>
         <g>
           <path
@@ -46,7 +43,7 @@ const PigSvg = ({ className }: { className?: string }) => {
           />
         </g>
       </g>
-    </svg>
+    </SvgWrapper>
   );
 };
 
