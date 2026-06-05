@@ -1,20 +1,16 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
 import { useRef, useCallback, useState, memo, useEffect } from "react";
 import { flushSync } from "react-dom";
-import { cn } from "@/lib/utils";
 import {
   rollDiceDealer,
   rerollDiceDealer,
   rollDicePlayer,
   abortDice,
-  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
 import { SmallLoader } from "@/components/shared/loader.component";
 import {
-  getResultColor,
   DICE_SETTLE_HOLD_MS,
   DICE_REROLL_PAUSE_MS,
   DICE_PLAYER_AUTO_MS,
@@ -24,25 +20,23 @@ import {
   DiceRow,
 } from "@/lib/gambling/diceRollCoordinator";
 import { DiceDealerResult, DiceGameResult, DiceResult } from "@/types/gamble";
-
-const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
 function DiceTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
-  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
-  const [rolling, setRolling] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState(3);
 
-  useEffect(() => {
-    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
-  }, []);
   const [gamePhase, setGamePhase] = useState<
     "idle" | "dealer" | "player" | "result"
   >("idle");
@@ -65,8 +59,6 @@ function DiceTab() {
   const dealerKeyRef = useRef(0);
   const playerKeyRef = useRef(0);
   const roundIdRef = useRef(0);
-
-  const balance = user?.money ?? 0;
 
   useEffect(() => {
     return () => rollCoordinatorRef.current.cancel();
@@ -168,7 +160,7 @@ function DiceTab() {
       tone: finalResult.tone,
     });
     setGamePhase("result");
-    setRolling(false);
+    setLoading(false);
   };
 
   const failRound = (label: string) => {
@@ -178,7 +170,7 @@ function DiceTab() {
     setDisplayBalance(useUserStore.getState().user?.money ?? 0);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
-    setRolling(false);
+    setLoading(false);
   };
 
   const resetDiceVisuals = () => {
@@ -189,14 +181,14 @@ function DiceTab() {
   };
 
   const startGame = async () => {
-    if (!user || balance < bid || gamblingBanned || rolling) return;
+    if (!user || balance < bid || gamblingBanned || loading) return;
 
     const round = ++roundIdRef.current;
     resetDiceVisuals();
     setResult(null);
     setDealerTarget(null);
     setDisplayBalance(balance);
-    setRolling(true);
+    setLoading(true);
     setGamePhase("dealer");
 
     try {
@@ -230,29 +222,14 @@ function DiceTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2">
-        <span className="text-lg font-bold">{displayBalance} чубриков</span>
-      </section>
+      <BalanceDisplay balance={displayBalance} />
 
-      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-        <span className="text-sm text-muted mr-1">Ставка</span>
-        {bidOptions.map((v) => (
-          <button
-            key={v}
-            onClick={() => setBid(v)}
-            disabled={rolling}
-            className={cn(
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer",
-              bid === v
-                ? "bg-highlight-high text-background"
-                : "bg-foreground/10 text-muted hover:bg-foreground/20",
-              rolling && "opacity-40 pointer-events-none",
-            )}
-          >
-            {v}
-          </button>
-        ))}
-      </section>
+      <BidSelector
+        bidOptions={bidOptions}
+        bid={bid}
+        onBidChange={setBid}
+        disabled={loading}
+      />
 
       <section className="relative w-full h-110 min-h-110 overflow-hidden border-2 border-highlight-high bg-background">
         <DiceScene
@@ -267,18 +244,7 @@ function DiceTab() {
           playerDiceActive={playerDiceActive}
         />
 
-        {result && (
-          <span
-            className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full pb-1",
-              getResultColor(result),
-            )}
-          >
-            {result.label}
-            {result.net > 0 && <span> +{result.net}</span>}
-            {result.net < 0 && <span> {result.net}</span>}
-          </span>
-        )}
+        <GameResult result={result} />
       </section>
 
       <section className="flex flex-col mt-auto gap-1">
@@ -286,11 +252,11 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           onClick={startGame}
-          disabled={rolling || balance < bid || gamblingBanned}
+          disabled={loading || balance < bid || gamblingBanned}
         >
           {gamblingBanned ? (
             "Вы забанены"
-          ) : rolling ? (
+          ) : loading ? (
             <SmallLoader />
           ) : (
             `Кинуть (${bid})`

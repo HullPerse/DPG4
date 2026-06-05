@@ -56,3 +56,31 @@
 .shadow-sharp-sm {
   box-shadow: var(--shadow-sharp-sm);
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-iris) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 6px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track:horizontal {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb:horizontal {
+  background: var(--color-iris);
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background: var(--color-love);
+}

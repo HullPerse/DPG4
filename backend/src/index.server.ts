@@ -19,6 +19,7 @@ import { drawingsRoute } from "./routes/drawings.route";
 import { cellsRoute, rulesRoute } from "./routes/cells.route";
 import { filesRoute } from "./routes/files.route";
 import { gameUtilsRoute } from "./routes/gameUtils.route";
+import { configRoute } from "./routes/config.route";
 import { steamRoute } from "./routes/steam.route";
 import { searchRoute } from "./routes/search.route";
 import { adminRoute } from "./routes/admin.route";
@@ -129,6 +130,7 @@ const app = new Elysia()
   .use(rulesRoute)
   .use(filesRoute)
   .use(gameUtilsRoute)
+  .use(configRoute)
   .use(steamRoute)
   .use(searchRoute);
 

@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import {
   useCallback,
@@ -10,13 +10,11 @@ import {
   lazy,
   Suspense,
 } from "react";
-import { cn } from "@/lib/utils";
 import {
   dropPachinko,
   settlePachinko,
   syncPachinko,
   abandonPachinko,
-  fetchGamblingConfig,
 } from "@/api/gambling.api";
 const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -26,13 +24,14 @@ import {
   PACHINKO_SLOT_MULTIPLIERS,
   getSlotWidths,
   formatPachinkoResultLabel,
-  getPachinkoResultColor,
   randomDropOffsetX,
   slotColor,
   type PachinkoUiResult,
 } from "@/lib/gambling/pachinko.utils";
-
-const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 const IDLE_STATE: PachinkoState = {
   phase: "idle",
@@ -49,11 +48,10 @@ const IDLE_STATE: PachinkoState = {
 };
 
 function PachinkoTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
-  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [gameState, setGameState] = useState<PachinkoState>(IDLE_STATE);
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
@@ -61,9 +59,6 @@ function PachinkoTab() {
   const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState<number>(3);
 
-  useEffect(() => {
-    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
-  }, []);
   const [dropKey, setDropKey] = useState(0);
   const [startX, setStartX] = useState(0);
   const [result, setResult] = useState<PachinkoUiResult | null>(null);
@@ -71,8 +66,6 @@ function PachinkoTab() {
   const [kickTrigger, setKickTrigger] = useState(0);
   const [showKickButton, setShowKickButton] = useState(false);
   const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const balance = user?.money ?? 0;
-
   const inDrop = gameState.phase === "dropping";
   const roundDone = gameState.phase === "done";
   const showRat = inDrop || roundDone;
@@ -192,12 +185,7 @@ function PachinkoTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-stretch gap-1 border-2 border-highlight-high bg-background px-2 py-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted">Баланс</span>
-          <span className="text-lg font-bold">{balance} чубриков</span>
-        </div>
-      </section>
+      <BalanceDisplay balance={balance} />
 
       <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto items-center justify-center">
         {(() => {
@@ -236,16 +224,7 @@ function PachinkoTab() {
             kickTrigger={kickTrigger}
           />
         </Suspense>
-        {result && (
-          <span
-            className={cn(
-              "absolute top-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/85",
-              getPachinkoResultColor(result),
-            )}
-          >
-            {result.label}
-          </span>
-        )}
+        <GameResult result={result} />
         {showKickButton && inDrop && (
           <Button
             onClick={handleKick}
@@ -263,24 +242,12 @@ function PachinkoTab() {
         )}
       </section>
 
-      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-        <span className="text-sm text-muted mr-1">Ставка</span>
-        {bidOptions.map((v) => (
-          <button
-            key={v}
-            onClick={() => setBid(v)}
-            disabled={inDrop || loading}
-            className={cn(
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-              bid === v
-                ? "bg-highlight-high text-background"
-                : "bg-foreground/10 text-muted hover:bg-foreground/20",
-            )}
-          >
-            {v}
-          </button>
-        ))}
-      </section>
+      <BidSelector
+        bidOptions={bidOptions}
+        bid={bid}
+        onBidChange={setBid}
+        disabled={inDrop || loading}
+      />
 
       <section className="flex flex-col gap-1 w-xl mt-auto">
         <Button

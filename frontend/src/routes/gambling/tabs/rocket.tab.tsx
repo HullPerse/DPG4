@@ -1,8 +1,7 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { useCallback, useEffect, useRef, useState, memo } from "react";
-import { cn } from "@/lib/utils";
 import {
   launchRocket,
   cashoutRocket,
@@ -10,7 +9,6 @@ import {
   abandonRocket,
   dismissRocket,
   getRocketHistory,
-  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import FlightChart from "../components/flight.rocket";
 import CrashChart, { CrashHistoryPills } from "../components/chart.rocket";
@@ -22,11 +20,12 @@ import {
   potentialNet,
   potentialPayout,
   formatRocketResultLabel,
-  getRocketResultColor,
   type RocketUiResult,
 } from "@/lib/gambling/rocket.utils";
-
-const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 const IDLE_STATE: RocketState = {
   phase: "idle",
@@ -41,11 +40,10 @@ const IDLE_STATE: RocketState = {
 };
 
 function RocketTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
-  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [gameState, setGameState] = useState<RocketState>({
     phase: "idle",
     multiplier: 0,
@@ -58,9 +56,6 @@ function RocketTab() {
     banned: false,
   });
 
-  useEffect(() => {
-    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
-  }, []);
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
@@ -74,8 +69,6 @@ function RocketTab() {
   const pollGenRef = useRef(0);
   const pollInFlightRef = useRef(false);
   const roundEndedRef = useRef(false);
-  const balance = user?.money ?? 0;
-
   const activeBid = isActivePhase(gameState.phase) ? gameState.bid : bid;
   const potentialWin = isActivePhase(gameState.phase)
     ? potentialPayout(activeBid, currentMult)
@@ -149,70 +142,66 @@ function RocketTab() {
     setResult(null);
   }, []);
 
-  const startPolling = useCallback(
-    () => {
-      stopPolling();
-      const gen = pollGenRef.current;
+  const startPolling = useCallback(() => {
+    stopPolling();
+    const gen = pollGenRef.current;
 
-      pollRef.current = setInterval(async () => {
-        if (pollInFlightRef.current) return;
-        pollInFlightRef.current = true;
+    pollRef.current = setInterval(async () => {
+      if (pollInFlightRef.current) return;
+      pollInFlightRef.current = true;
 
-        try {
-          const polled = await pollRocket();
-          if (gen !== pollGenRef.current) return;
+      try {
+        const polled = await pollRocket();
+        if (gen !== pollGenRef.current) return;
 
+        setGameState((prev) => {
+          if (prev.phase === "crashed" || prev.phase === "cashed") return prev;
+          if (polled.phase === "idle") return prev;
+          return polled;
+        });
+
+        if (polled.phase === "crashed" || polled.phase === "cashed") {
+          stopPolling();
+          const u = useUserStore.getState().user;
+          if (u)
+            useUserStore.setState({ user: { ...u, money: polled.balance } });
+          if (polled.banned) setGamblingBanned(true);
+          applyRoundEnd(polled);
+          if (polled.phase === "crashed") refreshHistory();
+        }
+
+        if (polled.phase === "idle") {
+          let resetActive = false;
           setGameState((prev) => {
             if (prev.phase === "crashed" || prev.phase === "cashed")
               return prev;
-            if (polled.phase === "idle") return prev;
-            return polled;
+            if (roundEndedRef.current) return prev;
+            if (!isActivePhase(prev.phase)) return prev;
+            resetActive = true;
+            return IDLE_STATE;
           });
-
-          if (polled.phase === "crashed" || polled.phase === "cashed") {
+          if (resetActive) {
             stopPolling();
-            const u = useUserStore.getState().user;
-            if (u)
-              useUserStore.setState({ user: { ...u, money: polled.balance } });
-            if (polled.banned) setGamblingBanned(true);
-            applyRoundEnd(polled);
-            if (polled.phase === "crashed") refreshHistory();
-          }
-
-          if (polled.phase === "idle") {
-            let resetActive = false;
-            setGameState((prev) => {
-              if (prev.phase === "crashed" || prev.phase === "cashed")
-                return prev;
-              if (roundEndedRef.current) return prev;
-              if (!isActivePhase(prev.phase)) return prev;
-              resetActive = true;
-              return IDLE_STATE;
-            });
-            if (resetActive) {
-              stopPolling();
-              setFlightStart(null);
-              setResult(null);
-            }
-          }
-        } catch {
-          if (gen !== pollGenRef.current) return;
-          stopPolling();
-          if (
-            isActivePhase(gameStateRef.current.phase) &&
-            !roundEndedRef.current
-          ) {
             setFlightStart(null);
-            setGameState(IDLE_STATE);
             setResult(null);
           }
-        } finally {
-          pollInFlightRef.current = false;
         }
-      }, 120);
-    },
-    [stopPolling, refreshHistory, setGamblingBanned, applyRoundEnd],
-  );
+      } catch {
+        if (gen !== pollGenRef.current) return;
+        stopPolling();
+        if (
+          isActivePhase(gameStateRef.current.phase) &&
+          !roundEndedRef.current
+        ) {
+          setFlightStart(null);
+          setGameState(IDLE_STATE);
+          setResult(null);
+        }
+      } finally {
+        pollInFlightRef.current = false;
+      }
+    }, 120);
+  }, [stopPolling, refreshHistory, setGamblingBanned, applyRoundEnd]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -301,11 +290,7 @@ function RocketTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-stretch gap-1 border-2 border-highlight-high bg-background px-2 py-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted">Баланс</span>
-          <span className="text-lg font-bold">{balance} чубриков</span>
-        </div>
+      <BalanceDisplay balance={balance}>
         {isActivePhase(gameState.phase) && (
           <div className="flex items-center justify-between border-t border-foreground/10 pt-1">
             <span className="text-sm text-muted">Текущий выигрыш</span>
@@ -314,7 +299,7 @@ function RocketTab() {
             </span>
           </div>
         )}
-      </section>
+      </BalanceDisplay>
 
       <section className="w-xl border-2 border-highlight-high bg-background">
         <CrashHistoryPills history={history} />
@@ -328,36 +313,15 @@ function RocketTab() {
           bid={activeBid}
           flightStart={flightStart}
         />
-        {result && (
-          <span
-            className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/80",
-              getRocketResultColor(result),
-            )}
-          >
-            {result.label}
-          </span>
-        )}
+        <GameResult result={result} />
       </section>
 
-      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-        <span className="text-sm text-muted mr-1">Ставка</span>
-        {bidOptions.map((v) => (
-          <button
-            key={v}
-            onClick={() => setBid(v)}
-            disabled={roundActive}
-            className={cn(
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-              bid === v
-                ? "bg-highlight-high text-background"
-                : "bg-foreground/10 text-muted hover:bg-foreground/20",
-            )}
-          >
-            {v}
-          </button>
-        ))}
-      </section>
+      <BidSelector
+        bidOptions={bidOptions}
+        bid={bid}
+        onBidChange={setBid}
+        disabled={roundActive}
+      />
 
       <section className="flex flex-col gap-1 w-xl mt-auto">
         {gameState.phase === "crashed" || gameState.phase === "cashed" ? (

@@ -1,30 +1,25 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
-import { cn } from "@/lib/utils";
 import {
   blackjackDeal,
   blackjackHit,
   blackjackStand,
   syncBlackjack,
   abandonBlackjack,
-  fetchGamblingConfig,
 } from "@/api/gambling.api";
 import BlackjackScene from "../components/scene.blackjack";
 import { SmallLoader } from "@/components/shared/loader.component";
-import {
-  animDelayMs,
-  getBlackjackResultColor,
-  rules,
-} from "@/lib/gambling/blackjack.utils";
+import { animDelayMs, rules } from "@/lib/gambling/blackjack.utils";
 import type {
   BlackjackState,
   BlackjackUiResult,
   PlayingCard,
 } from "@/types/gamble";
-
-const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -37,18 +32,14 @@ function buildDealFlyingCards(state: BlackjackState): Set<string> {
 }
 
 function BlackjackTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
-  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
   const [game, setGame] = useState<BlackjackState | null>(null);
   const [bid, setBid] = useState(3);
-  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
-  }, []);
   const [flyingCards, setFlyingCards] = useState<Set<string>>(() => new Set());
   const [uiResult, setUiResult] = useState<BlackjackUiResult>(null);
   const [revealHole, setRevealHole] = useState(false);
@@ -56,7 +47,6 @@ function BlackjackTab() {
   const [syncing, setSyncing] = useState(true);
   const flyClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const balance = user?.money ?? 0;
   const RULES = useMemo(() => rules(bid), [bid]);
 
   const scheduleFlyClear = useCallback((count: number) => {
@@ -148,9 +138,9 @@ function BlackjackTab() {
   }, [user?.id, restoreGame]);
 
   const handleDeal = async () => {
-    if (busy || !user || balance < bid || gamblingBanned) return;
+    if (loading || !user || balance < bid || gamblingBanned) return;
 
-    setBusy(true);
+    setLoading(true);
     setUiResult(null);
     setRevealHole(false);
     setHoleCard(null);
@@ -170,14 +160,14 @@ function BlackjackTab() {
         /* ignore */
       }
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   };
 
   const handleHit = async () => {
-    if (busy || !user || !game || game.phase !== "player") return;
+    if (loading || !user || !game || game.phase !== "player") return;
 
-    setBusy(true);
+    setLoading(true);
     try {
       const state = await blackjackHit();
       const newIndex = state.playerHand.length - 1;
@@ -188,14 +178,14 @@ function BlackjackTab() {
     } catch {
       /* keep current game */
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   };
 
   const handleStand = async () => {
-    if (busy || !user || !game || game.phase !== "player") return;
+    if (loading || !user || !game || game.phase !== "player") return;
 
-    setBusy(true);
+    setLoading(true);
     try {
       const hadHole = game.dealerHoleHidden;
       const state = await blackjackStand();
@@ -219,7 +209,7 @@ function BlackjackTab() {
     } catch {
       /* keep current game */
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   };
 
@@ -249,36 +239,22 @@ function BlackjackTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2 py-1">
-        <span className="text-lg font-bold">{balance} чубриков</span>
+      <BalanceDisplay balance={balance}>
         {game && (
           <span className="text-sm text-primary">
             Вы: {game.playerValue}
             {game.dealerValue !== null && ` · Дилер: ${game.dealerValue}`}
           </span>
         )}
-      </section>
+      </BalanceDisplay>
 
       {!inRound && (
-        <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-          <span className="text-sm text-muted mr-1">Ставка</span>
-          {bidOptions.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setBid(v)}
-              disabled={busy || gamblingBanned}
-              className={cn(
-                "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer",
-                bid === v
-                  ? "bg-highlight-high text-background"
-                  : "bg-foreground/10 text-muted hover:bg-foreground/20",
-              )}
-            >
-              {v}
-            </button>
-          ))}
-        </section>
+        <BidSelector
+          bidOptions={bidOptions}
+          bid={bid}
+          onBidChange={setBid}
+          disabled={loading || gamblingBanned}
+        />
       )}
 
       <section className="relative w-full min-h-106 overflow-hidden border-2 border-highlight-high bg-background">
@@ -291,16 +267,7 @@ function BlackjackTab() {
           revealHole={revealHole}
         />
 
-        {uiResult && (
-          <span
-            className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 bg-black p-1",
-              getBlackjackResultColor(uiResult),
-            )}
-          >
-            {uiResult.label} чубриков
-          </span>
-        )}
+        <GameResult result={uiResult} />
       </section>
 
       <section className="flex flex-col mt-auto gap-1 w-xl">
@@ -313,11 +280,11 @@ function BlackjackTab() {
             variant="info"
             className="w-full"
             onClick={handleDeal}
-            disabled={busy || balance < bid || gamblingBanned}
+            disabled={loading || balance < bid || gamblingBanned}
           >
             {gamblingBanned ? (
               "Вы забанены"
-            ) : busy ? (
+            ) : loading ? (
               <SmallLoader />
             ) : (
               `Раздать (${bid})`
@@ -330,24 +297,24 @@ function BlackjackTab() {
                 variant="success"
                 className="flex-1"
                 onClick={handleHit}
-                disabled={busy}
+                disabled={loading}
               >
-                {busy ? <SmallLoader /> : "Взять"}
+                {loading ? <SmallLoader /> : "Взять"}
               </Button>
               <Button
                 variant="info"
                 className="flex-1"
                 onClick={handleStand}
-                disabled={busy}
+                disabled={loading}
               >
-                {busy ? <SmallLoader /> : "Хватит"}
+                {loading ? <SmallLoader /> : "Хватит"}
               </Button>
             </div>
             <Button
               variant="error"
               className="w-full"
               onClick={newHand}
-              disabled={busy}
+              disabled={loading}
             >
               Сбросить руку
             </Button>
@@ -357,7 +324,7 @@ function BlackjackTab() {
             variant="info"
             className="w-full"
             onClick={newHand}
-            disabled={busy}
+            disabled={loading}
           >
             Новая рука
           </Button>

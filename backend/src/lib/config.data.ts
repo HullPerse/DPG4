@@ -1,4 +1,115 @@
-export const browserGames = [
+export const APP_META = [
+  { name: "tabletop", label: "Карта", priority: 1 },
+  { name: "library", label: "Библиотека", priority: 2 },
+  { name: "browser", label: "Браузер", priority: 3 },
+  { name: "allWheels", label: "Все Колёса", priority: 4 },
+  { name: "notepad", label: "Заметки", priority: 5 },
+  { name: "paint", label: "Рисовач", priority: 6 },
+  { name: "gambling", label: "Азарт", priority: 7 },
+  { name: "wheelHistory", label: "История колес", priority: 8 },
+  { name: "globalChat", label: "Общий чат", priority: 9 },
+  { name: "theme", label: "Тема", priority: 10 },
+  {
+    name: "admin",
+    label: "Админка",
+    priority: 11,
+    adminOnly: true,
+  },
+  {
+    name: "howlongtobeat",
+    label: "HLTB",
+    priority: 12,
+    link: "https://howlongtobeat.com/",
+    type: "window",
+  },
+  {
+    name: "gamewheel",
+    label: "Колесо Игр",
+    priority: 13,
+    link: "https://gamegauntlets.com/",
+    type: "browser",
+  },
+];
+
+export const WINDOW_META = [
+  {
+    id: "auth",
+    title: "Авторизация",
+    overflow: true,
+    size: { width: 640, height: 480 },
+    disabled: { minimize: true, close: true },
+  },
+  {
+    id: "signout",
+    title: "Выход",
+    size: { width: 640, height: 480 },
+  },
+  {
+    id: "wallpaper",
+    title: "Обои",
+    size: { minWidth: 840, minHeight: 680, width: 840, height: 680 },
+  },
+  {
+    id: "tabletop",
+    title: "Карта",
+    overflow: true,
+    size: { minWidth: 840, minHeight: 680, width: 840, height: 680 },
+  },
+  {
+    id: "library",
+    title: "Библиотека",
+    size: { minWidth: 910, minHeight: 680, width: 910, height: 680 },
+  },
+  {
+    id: "browser",
+    title: "Браузер",
+    size: { minWidth: 910, minHeight: 680, width: 910, height: 680 },
+  },
+  {
+    id: "allWheels",
+    title: "Все Колёса",
+    size: { minWidth: 910, minHeight: 680, width: 910, height: 680 },
+  },
+  {
+    id: "notepad",
+    title: "Заметки",
+    size: { minWidth: 910, minHeight: 680, width: 910, height: 680 },
+  },
+  {
+    id: "paint",
+    title: "Рисовач",
+    size: { minWidth: 910, minHeight: 680, width: 910, height: 680 },
+  },
+  {
+    id: "gambling",
+    title: "Азарт",
+    size: { minWidth: 970, minHeight: 720, width: 970, height: 720 },
+  },
+  {
+    id: "theme",
+    title: "Редактор темы",
+    size: { width: 500, height: 600 },
+  },
+  {
+    id: "wheelHistory",
+    title: "История колес",
+    size: { width: 600, height: 700 },
+  },
+  {
+    id: "globalChat",
+    title: "Общий чат",
+    size: { minWidth: 400, minHeight: 500, width: 500, height: 600 },
+  },
+  {
+    id: "admin",
+    title: "Админ панель",
+    size: { minWidth: 1000, minHeight: 700, width: 1200, height: 800 },
+  },
+];
+
+export type LinkEntry = { description: string; link: string };
+
+export const BROWSER_GAMES: LinkEntry[] = [
   {
     description: "Набрать 5 из 7 правильных ответов",
     link: "https://encyklop.com/games/time-zones/",
@@ -750,9 +861,13 @@ export const browserGames = [
   { description: "Набрать 42 из 50 на Hard", link: "https://dialed.gg/" },
   { description: "Набрать миллион очков", link: "https://pinball.alula.me/" },
   { description: "Выиграть катку With Bots", link: "https://dos.zone/ut99/" },
-  { description: "Убить 50 солдатов: https://1-games.io/army-paintball", link: "https://1-games.io/army-paintball" },
+  {
+    description: "Убить 50 солдатов: https://1-games.io/army-paintball",
+    link: "https://1-games.io/army-paintball",
+  },
 ];
-export const logicalGames = [
+
+export const LOGICAL_GAMES: LinkEntry[] = [
   {
     description: "Набрать 6000 очков в поле 6х6",
     link: "https://mozgotren.com/trening/trenagor/matrica",
@@ -791,7 +906,7 @@ export const logicalGames = [
   },
   {
     description: "Набрать 3500 очков, сложность все",
-    link: "https://mozgotren.com/trening/trenagor/strana-valyta",
+    link: "https://mozgotren.com/trening/trenagor/strana-valyuta",
   },
   {
     description: "Набрать 10000 очков, сложность все",
@@ -1606,7 +1721,8 @@ export const logicalGames = [
     link: "https://ru.puzzle-binairo.com/binairo-14x14-hard/",
   },
 ];
-export const flashGames = [
+
+export const FLASH_GAMES: LinkEntry[] = [
   {
     description: "Пройти 6 уровней",
     link: "https://games.rgg.land/flash/?game=Super%20Mario:%20Time%20Attack%20Remix",
@@ -1793,7 +1909,7 @@ export const flashGames = [
   },
   {
     description: "Пройти дистанцию 500 метров",
-    link: "https://games.rgg.land/flash/?game=Strollin%27",
+    link: "https://games.rgg.land/flash/?game=Strollin'",
   },
   {
     description: "Убить 50 зомби",
@@ -2032,3 +2148,9 @@ export const flashGames = [
     link: "https://games.rgg.land/flash/?game=Bone:%20Whack-a-Rat",
   },
 ];
+
+export const LINKS = {
+  browserGames: BROWSER_GAMES,
+  logicalGames: LOGICAL_GAMES,
+  flashGames: FLASH_GAMES,
+};

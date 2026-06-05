@@ -5,8 +5,8 @@ import { Mail } from "lucide-react";
 import ChatApi from "@/api/chat.api";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowProps } from "@/types/window";
-import { WINDOWS } from "@/config/apps.config";
 import { createWindow } from "@/lib/window.utils";
+import { getWindowMeta } from "@/lib/window-meta";
 import { AppProps } from "@/types/desktop";
 import { useDataStore } from "@/store/data.store";
 import { SmallLoader } from "@/components/shared/loader.component";
@@ -85,7 +85,7 @@ export default function MessagesDesktop({
                   setActiveApps((prev) =>
                     createWindow(
                       prev,
-                      WINDOWS.find((w) => w.id === app.name) as WindowProps,
+                      getWindowMeta(app.name) as WindowProps,
                       app.component,
                     ),
                   );
