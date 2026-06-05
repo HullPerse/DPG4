@@ -7,7 +7,7 @@ import { useUserStore } from "@/store/user.store";
 import { AppProps } from "@/types/desktop";
 import { createWindow } from "@/lib/window.utils";
 import { fetchUiConfig, type AppMeta } from "@/api/config.api";
-import { getWindowMeta, setWindowMetaList } from "@/lib/window-meta";
+import { getWindowMeta, setWindowMetaList } from "@/lib/window.utils";
 
 import { lazy, useEffect, useState } from "react";
 import NetworkConnection from "@/components/shared/network.component";
@@ -73,12 +73,14 @@ export default function Desktop({
         setAppEntries(merged);
       })
       .catch(() => {
-        setAppEntries(Object.entries(APP_REGISTRY).map(([name, entry]) => ({
-          name,
-          label: name,
-          icon: entry.icon,
-          component: entry.component ?? WIP_COMPONENT,
-        })));
+        setAppEntries(
+          Object.entries(APP_REGISTRY).map(([name, entry]) => ({
+            name,
+            label: name,
+            icon: entry.icon,
+            component: entry.component ?? WIP_COMPONENT,
+          })),
+        );
       });
   }, []);
 
@@ -103,7 +105,9 @@ export default function Desktop({
           ))}
         </div>
 
-        {!Array.isArray(user?.status) || !user.status.includes("subscribed") ? <AnnouncementAd /> : null}
+        {!Array.isArray(user?.status) || !user.status.includes("subscribed") ? (
+          <AnnouncementAd />
+        ) : null}
 
         {openCalendar && (
           <CalendarDesktop
@@ -141,10 +145,7 @@ export default function Desktop({
         <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* MESSAGES */}
-            <MessagesDesktop
-              app={LIBRARY_APP}
-              setActiveApps={setActiveApps}
-            />
+            <MessagesDesktop app={LIBRARY_APP} setActiveApps={setActiveApps} />
 
             {/* NETWORK */}
             <HoverCard>

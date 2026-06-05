@@ -6,7 +6,7 @@ import ChatApi from "@/api/chat.api";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowProps } from "@/types/window";
 import { createWindow } from "@/lib/window.utils";
-import { getWindowMeta } from "@/lib/window-meta";
+import { getWindowMeta } from "@/lib/window.utils";
 import { AppProps } from "@/types/desktop";
 import { useDataStore } from "@/store/data.store";
 import { SmallLoader } from "@/components/shared/loader.component";

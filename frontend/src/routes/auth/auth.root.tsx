@@ -2,7 +2,7 @@ import Window from "@/components/shared/window.component";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { checkConnection } from "@/api/client.api";
-import { FALLBACK_WINDOWS } from "@/lib/window-meta";
+import { FALLBACK_WINDOWS } from "@/lib/window.utils";
 
 const Signup = lazy(() => import("./components/signup.auth"));
 const Signin = lazy(() => import("./components/signin.auth"));
@@ -27,10 +27,7 @@ export default function Auth() {
 
   return (
     <main onContextMenu={(e) => e.preventDefault()}>
-      <Window
-        {...(FALLBACK_WINDOWS.auth as WindowProps)}
-        isActive
-      >
+      <Window {...(FALLBACK_WINDOWS.auth as WindowProps)} isActive>
         <Suspense fallback={<WindowLoader />}>
           {register ? (
             <Signup setRegister={setRegister} />
