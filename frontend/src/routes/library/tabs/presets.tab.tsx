@@ -12,7 +12,6 @@ import { memo, useCallback, useRef, useState } from "react";
 import { useDebounce } from "@/hooks/debounce.hook";
 import { useUserStore } from "@/store/user.store";
 
-import { SmallLoader } from "@/components/shared/loader.component";
 import PresetsList from "../components/presets/presets.presets";
 
 import GameApi from "@/api/games.api";
@@ -130,10 +129,11 @@ function PresetsTab() {
           <Button
             variant="link"
             className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
+            loading={loading}
+            disabled={!searchTerm}
             onClick={handleAddPreset}
-            disabled={!searchTerm || loading}
           >
-            {loading ? <SmallLoader /> : <Plus />}
+            <Plus />
           </Button>
         )}
         <Button

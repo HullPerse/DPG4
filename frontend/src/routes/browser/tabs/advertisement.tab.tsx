@@ -5,7 +5,6 @@ import { useUserStore } from "@/store/user.store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -271,6 +270,7 @@ function AdTab() {
                   variant="info"
                   size="icon"
                   className="ml-auto mr-2 size-13"
+                  loading={audioLoad}
                   onClick={() => {
                     setAudioLoad(true);
                     const audio = new Audio(
@@ -280,9 +280,8 @@ function AdTab() {
                     audio.onerror = () => setAudioLoad(false);
                     audio.play().catch(() => setAudioLoad(false));
                   }}
-                  disabled={audioLoad}
                 >
-                  {audioLoad ? <SmallLoader /> : <Play />}
+                  <Play />
                 </Button>
               )}
 
@@ -290,9 +289,10 @@ function AdTab() {
                 variant="error"
                 size="icon"
                 className="ml-auto mr-2 size-13"
+                loading={loading}
                 onClick={() => handleRemove(String(item.id))}
               >
-                {loading ? <SmallLoader /> : <Trash />}
+                <Trash />
               </Button>
             </div>
           ))
@@ -338,17 +338,18 @@ function AdTab() {
           <DialogFooter className="bg-card">
             <Button
               variant="error"
+              loading={loading}
               onClick={() => setIsOpen(false)}
-              disabled={loading}
             >
-              {loading ? <SmallLoader /> : "ОТМЕНИТЬ"}
+              ОТМЕНИТЬ
             </Button>
             <Button
               variant="success"
-              onClick={handleSubmit}
+              loading={loading}
               disabled={!text || !imageFile}
+              onClick={handleSubmit}
             >
-              {loading ? <SmallLoader /> : "СОЗДАТЬ"}
+              СОЗДАТЬ
             </Button>
           </DialogFooter>
         </DialogContent>

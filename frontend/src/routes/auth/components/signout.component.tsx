@@ -1,4 +1,3 @@
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
@@ -101,10 +100,10 @@ export default function Signpout() {
             variant="success"
             size="icon"
             className="h-11 w-11 border-2 border-highlight-high bg-card hover:border-green-500"
-            disabled={loading}
+            loading={loading}
             onClick={handleAuth}
           >
-            {loading ? <SmallLoader /> : <ChevronRight />}
+            <ChevronRight />
           </Button>
         </div>
         <Button

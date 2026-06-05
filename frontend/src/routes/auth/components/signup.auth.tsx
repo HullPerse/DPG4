@@ -336,8 +336,8 @@ export default function Signup({
       <Button
         variant="success"
         className="w-full py-5"
+        loading={loading || isLoading}
         disabled={
-          loading ||
           !username ||
           !password ||
           !avatar ||
@@ -348,7 +348,7 @@ export default function Signup({
         }
         onClick={handleAuth}
       >
-        {loading || isLoading ? <SmallLoader /> : "Создать аккаунт"}
+        Создать аккаунт
       </Button>
       <Button
         variant="link"

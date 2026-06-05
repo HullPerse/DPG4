@@ -3,7 +3,6 @@ import { memo, useCallback, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -291,6 +290,7 @@ function ListBrowser({
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
+                loading={loading}
                 onClick={async () => {
                   if (!user) return;
                   setLoading(true);
@@ -300,7 +300,7 @@ function ListBrowser({
                   setLoading(false);
                 }}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>

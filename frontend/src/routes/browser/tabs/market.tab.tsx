@@ -6,7 +6,6 @@ import { useUserStore } from "@/store/user.store";
 import { Market } from "@/types/items";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -155,63 +154,57 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                     loading === index || Number(inputDiscount) === item.price
                   }
                 />
-                <Button
-                  variant="success"
-                  size="icon"
-                  className="w-9 h-9"
-                  onClick={() =>
-                    handleDiscount(
-                      index,
-                      String(item.id),
-                      item.owner.id,
-                      item.price,
-                      Number(inputDiscount),
-                    )
-                  }
-                  disabled={
-                    loading === index ||
-                    !inputDiscount ||
-                    Number(inputDiscount) > item.price
-                  }
-                >
-                  <Check />
-                </Button>
+              <Button
+                variant="success"
+                size="icon"
+                className="w-9 h-9"
+                loading={loading === index}
+                disabled={!inputDiscount || Number(inputDiscount) > item.price}
+                onClick={() =>
+                  handleDiscount(
+                    index,
+                    String(item.id),
+                    item.owner.id,
+                    item.price,
+                    Number(inputDiscount),
+                  )
+                }
+              >
+                <Check />
+              </Button>
               </div>
             )}
             <div className="flex flex-row w-full gap-1">
               <Button
                 variant="success"
                 className="flex-1"
+                loading={loading === index}
+                disabled={Number(user?.money) < item.price}
                 onClick={() =>
                   handleBuy(index, String(item.id), String(item.owner.id))
                 }
-                disabled={Number(user?.money) < item.price}
               >
-                {loading === index ? (
-                  <SmallLoader />
-                ) : (
-                  <div className="flex flex-row items-center justify-center gap-1">
-                    <span>КУПИТЬ ЗА</span>
-                    <div className="flex flex-row gap-1 items-end justify-center">
-                      <span className="font-bold">
-                        {item.discount ? item.discount : item.price}
-                      </span>
-                      <span className="line-through text-xs font-light">
-                        {item.discount! > 0 ? item.price : null}
-                      </span>
-                    </div>
+                <div className="flex flex-row items-center justify-center gap-1">
+                  <span>КУПИТЬ ЗА</span>
+                  <div className="flex flex-row gap-1 items-end justify-center">
+                    <span className="font-bold">
+                      {item.discount ? item.discount : item.price}
+                    </span>
+                    <span className="line-through text-xs font-light">
+                      {item.discount! > 0 ? item.price : null}
+                    </span>
                   </div>
-                )}
+                </div>
               </Button>
               <Button
                 rendered={item.owner.id === user?.id && active === index}
                 variant="error"
                 size="icon"
                 className="w-9 h-9"
+                loading={loading === index}
                 onClick={() => handleRemove(index, String(item.id))}
-                disabled={loading === index}
               >
-                {loading === index ? <SmallLoader /> : <Trash />}
+                <Trash />
               </Button>
             </div>
           </section>

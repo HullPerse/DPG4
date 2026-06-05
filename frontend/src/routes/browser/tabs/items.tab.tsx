@@ -2,7 +2,6 @@ import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
@@ -241,13 +240,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
+                loading={loading}
                 onClick={() => {
                   setLoading(true);
                   setItemData(result);
                   setLoading(false);
                 }}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>
@@ -313,6 +313,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
+                loading={loading}
                 onClick={() => {
                   setLoading(true);
 
@@ -320,9 +321,8 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
 
                   setLoading(false);
                 }}
-                disabled={loading}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>

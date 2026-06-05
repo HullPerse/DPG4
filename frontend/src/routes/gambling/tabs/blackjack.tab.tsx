@@ -9,7 +9,6 @@ import {
   abandonBlackjack,
 } from "@/api/gambling.api";
 import BlackjackScene from "../components/scene.blackjack";
-import { SmallLoader } from "@/components/shared/loader.component";
 import { animDelayMs, rules } from "@/lib/gambling/blackjack.utils";
 import type {
   BlackjackState,
@@ -272,20 +271,17 @@ function BlackjackTab() {
 
       <section className="flex flex-col mt-auto gap-1 w-xl">
         {syncing ? (
-          <Button variant="info" className="w-full" disabled>
-            <SmallLoader />
-          </Button>
+          <Button variant="info" className="w-full" loading />
         ) : !inRound ? (
           <Button
             variant="info"
             className="w-full"
+            loading={loading}
+            disabled={balance < bid || gamblingBanned}
             onClick={handleDeal}
-            disabled={loading || balance < bid || gamblingBanned}
           >
             {gamblingBanned ? (
               "Вы забанены"
-            ) : loading ? (
-              <SmallLoader />
             ) : (
               `Раздать (${bid})`
             )}
@@ -296,25 +292,25 @@ function BlackjackTab() {
               <Button
                 variant="success"
                 className="flex-1"
+                loading={loading}
                 onClick={handleHit}
-                disabled={loading}
               >
-                {loading ? <SmallLoader /> : "Взять"}
+                Взять
               </Button>
               <Button
                 variant="info"
                 className="flex-1"
+                loading={loading}
                 onClick={handleStand}
-                disabled={loading}
               >
-                {loading ? <SmallLoader /> : "Хватит"}
+                Хватит
               </Button>
             </div>
             <Button
               variant="error"
               className="w-full"
+              loading={loading}
               onClick={newHand}
-              disabled={loading}
             >
               Сбросить руку
             </Button>
@@ -323,8 +319,8 @@ function BlackjackTab() {
           <Button
             variant="info"
             className="w-full"
+            loading={loading}
             onClick={newHand}
-            disabled={loading}
           >
             Новая рука
           </Button>

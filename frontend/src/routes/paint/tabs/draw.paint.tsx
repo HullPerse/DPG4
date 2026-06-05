@@ -25,7 +25,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import PaintApi from "@/api/paint.api";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -387,10 +386,10 @@ function DrawPaint({
             <Button
               variant="success"
               className="flex-1"
+              loading={loading}
               onClick={handleSave}
-              disabled={loading}
             >
-              {loading ? <SmallLoader /> : "Сохранить"}
+              Сохранить
             </Button>
           </div>
         </div>

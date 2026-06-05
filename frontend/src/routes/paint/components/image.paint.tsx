@@ -1,7 +1,6 @@
 import { getFileUrl } from "@/api/client.api";
 import PaintApi from "@/api/paint.api";
 import ImageComponent from "@/components/shared/image.component";
-import { SmallLoader } from "@/components/shared/loader.component";
 import ImageViewer from "@/components/shared/viewer.component";
 import { Button } from "@/components/ui/button.component";
 import { cn } from "@/lib/utils";
@@ -71,7 +70,7 @@ function ImagePaint({
           <Button
             size="icon"
             variant="error"
-            className="absolute right-2 bottom-1"
+            loading={loading}
             rendered={item.author.id === user?.id}
             onClick={async () => {
               if (item.author.id !== user?.id) return;
@@ -83,7 +82,7 @@ function ImagePaint({
               setLoading(false);
             }}
           >
-            {loading ? <SmallLoader /> : <Trash />}
+            <Trash />
           </Button>
         )}
       </section>

@@ -14,7 +14,6 @@ import { useSubscription } from "@/hooks/subscription.hook";
 import { Chat } from "@/types/chat";
 import ChatApi from "@/api/chat.api";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -261,8 +260,9 @@ export default function ChatProfile({ id }: { id: string }) {
             size="icon"
             variant="link"
             className="border border-highlight-high"
+            loading={loading}
+            disabled={!!editId}
             onClick={() => imageInputRef.current?.click()}
-            disabled={loading || !!editId}
           >
             <Paperclip />
           </Button>
@@ -282,10 +282,11 @@ export default function ChatProfile({ id }: { id: string }) {
           <Button
             size="icon"
             variant="success"
+            loading={loading}
+            disabled={(!newMessage.trim() && !image) || !!editId}
             onClick={handleSend}
-            disabled={(!newMessage.trim() && !image) || loading || !!editId}
           >
-            {loading ? <SmallLoader /> : <Send />}
+            <Send />
           </Button>
         </div>
       </section>

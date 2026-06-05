@@ -9,7 +9,6 @@ import {
   abortDice,
 } from "@/api/gambling.api";
 import DiceScene from "../components/scene.dice";
-import { SmallLoader } from "@/components/shared/loader.component";
 import {
   DICE_SETTLE_HOLD_MS,
   DICE_REROLL_PAUSE_MS,
@@ -251,13 +250,12 @@ function DiceTab() {
         <Button
           variant="info"
           className="w-xl"
+          loading={loading}
+          disabled={balance < bid || gamblingBanned}
           onClick={startGame}
-          disabled={loading || balance < bid || gamblingBanned}
         >
           {gamblingBanned ? (
             "Вы забанены"
-          ) : loading ? (
-            <SmallLoader />
           ) : (
             `Кинуть (${bid})`
           )}

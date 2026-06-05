@@ -2,7 +2,6 @@ import ItemsApi from "@/api/items.api";
 import UsersApi from "@/api/user.api";
 import { WindowError } from "@/components/shared/error.component";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
@@ -244,10 +243,11 @@ function TradeTab({ id }: { id: string }) {
       <Button
         variant="success"
         className="w-full"
+        loading={loading}
+        disabled={!selectedItems}
         onClick={handleTrade}
-        disabled={loading || !selectedItems}
       >
-        {loading ? <SmallLoader /> : "Отправить"}
+        Отправить
       </Button>
 
       {/* ITEMS */}

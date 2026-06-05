@@ -11,10 +11,7 @@ import {
   useState,
 } from "react";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import {
   Calendar,
   NetworkIcon,
@@ -288,18 +285,14 @@ function GameLibrary({
                 size="icon"
                 variant={buttonStyle(item.value)}
                 className="border-2 shadow-sharp-sm font-bold"
-                onClick={() => changeStatus(item.value)}
+                loading={loading.find((l) => l.button === item.value)?.loading ?? false}
                 disabled={
                   (data?.game && data?.game.status === item.value) ||
-                  loading.some((l) => l.loading) ||
                   (item.value === "COMPLETED" && input && !time)
                 }
+                onClick={() => changeStatus(item.value)}
               >
-                {loading.find((l) => l.button === item.value)?.loading ? (
-                  <SmallLoader />
-                ) : (
-                  item.icon
-                )}
+                {item.icon}
               </Button>
             ))}
         </div>

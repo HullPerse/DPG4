@@ -13,7 +13,6 @@ import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
-import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -179,10 +178,11 @@ export default function CustomLibrary({
         <Button
           variant="success"
           className="mt-auto mb-2"
-          disabled={!name || !headerImage || !time || !status || loading}
+          loading={loading}
+          disabled={!name || !headerImage || !time || !status}
           onClick={handleGame}
         >
-          {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
+          ПОДТВЕРДИТЬ
         </Button>
       </section>
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">

@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select.component";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -329,6 +328,7 @@ export const itemEffect: effectInterface[] = [
               <Button
                 className="flex flex-1"
                 variant="success"
+                loading={loading}
                 onClick={async () => {
                   const audio = new Audio("/audio/zawa.wav");
                   audio.volume = 0.1;
@@ -343,7 +343,7 @@ export const itemEffect: effectInterface[] = [
                   }, 5000);
                 }}
               >
-                {loading ? <SmallLoader /> : "Дед ты че?"}
+                Дед ты че?
               </Button>
             </section>
           </main>

@@ -5,7 +5,6 @@ import type { Activity } from "@/types/activity";
 import { cn } from "@/lib/utils.tsx";
 import { Button } from "./button.component";
 import ImageComponent from "../shared/image.component";
-import { SmallLoader } from "../shared/loader.component";
 
 export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
@@ -79,6 +78,7 @@ function Toast({
         <Button
           variant="success"
           size="icon"
+          loading={loading}
           onClick={() => {
             setLoading(true);
             onClick?.fn();
@@ -88,7 +88,7 @@ function Toast({
             }, 2000);
           }}
         >
-          {loading ? <SmallLoader /> : onClick?.icon}
+          {onClick?.icon}
         </Button>
       )}
       {showClose && (

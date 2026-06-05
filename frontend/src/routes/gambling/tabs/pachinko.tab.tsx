@@ -17,7 +17,6 @@ import {
   abandonPachinko,
 } from "@/api/gambling.api";
 const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
-import { SmallLoader } from "@/components/shared/loader.component";
 import type { PachinkoState } from "@/types/gamble";
 import {
   BOARD_WIDTH,
@@ -253,13 +252,12 @@ function PachinkoTab() {
         <Button
           variant="info"
           className="w-full h-11"
-          onClick={handleDrop}
+          loading={loading}
           disabled={!canAct}
+          onClick={handleDrop}
         >
           {gamblingBanned ? (
             "Вы забанены"
-          ) : loading ? (
-            <SmallLoader />
           ) : inDrop ? (
             "Крыса летит..."
           ) : balance < bid ? (

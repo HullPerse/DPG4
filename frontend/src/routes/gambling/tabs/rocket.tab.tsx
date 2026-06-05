@@ -12,7 +12,6 @@ import {
 } from "@/api/gambling.api";
 import FlightChart from "../components/flight.rocket";
 import CrashChart, { CrashHistoryPills } from "../components/chart.rocket";
-import { SmallLoader } from "@/components/shared/loader.component";
 import type { RocketState, RocketHistoryEntry } from "@/types/gamble";
 import {
   isActivePhase,
@@ -350,13 +349,12 @@ function RocketTab() {
           <Button
             variant="info"
             className="w-full h-11"
-            onClick={handleLaunch}
+            loading={loading}
             disabled={!canLaunch}
+            onClick={handleLaunch}
           >
             {gamblingBanned ? (
               "Вы забанены"
-            ) : loading ? (
-              <SmallLoader />
             ) : !canAffordBid ? (
               "Недостаточно чубриков"
             ) : (

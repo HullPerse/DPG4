@@ -3,7 +3,6 @@ import { apiFetch, getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
@@ -97,9 +96,10 @@ function StoreTab() {
         variant="info"
         className="w-full h-10"
         onClick={handleReroll}
-        disabled={loading || (user?.money ?? 0) < rerollPrice}
+        loading={loading}
+        disabled={(user?.money ?? 0) < rerollPrice}
       >
-        {loading ? <SmallLoader /> : `РЕРОЛЛ за ${rerollPrice}`}
+        {`РЕРОЛЛ за ${rerollPrice}`}
       </Button>
 
       {storeItems.length === 0 && (

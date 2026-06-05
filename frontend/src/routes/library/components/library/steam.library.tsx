@@ -14,7 +14,6 @@ import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
-import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
@@ -190,10 +189,11 @@ export default function SteamLibrary({
         <Button
           variant="success"
           className="mt-auto mb-2"
-          disabled={!appId || !time || !status || loading}
+          loading={loading}
+          disabled={!appId || !time || !status}
           onClick={handleGame}
         >
-          {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
+          ПОДТВЕРДИТЬ
         </Button>
       </section>
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">

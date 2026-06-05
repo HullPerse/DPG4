@@ -1,4 +1,3 @@
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
@@ -93,9 +92,10 @@ export default function Signin({
         variant="success"
         className="w-full py-5"
         onClick={handleAuth}
-        disabled={loading || !username || !password}
+        loading={loading}
+        disabled={!username || !password}
       >
-        {loading ? <SmallLoader /> : "Войти"}
+        Войти
       </Button>
       {serverAvailable && (
         <Button

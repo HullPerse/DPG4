@@ -1,5 +1,4 @@
 import CellApi from "@/api/cell.api";
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import {
@@ -248,10 +247,10 @@ export default function Settings({
       <Button
         variant="success"
         className="w-full"
-        disabled={loading}
+        loading={loading}
         onClick={handleSave}
       >
-        {loading ? <SmallLoader /> : "Сохранить"}
+        Сохранить
       </Button>
     </main>
   );
