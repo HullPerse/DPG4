@@ -13,7 +13,6 @@ function DiceScene({
   onDealerSettled,
   onPlayerSettled,
   showDealerLabel,
-  showPlayerLabel,
   playerDiceActive,
 }: {
   dealerThrowKey: number;
@@ -24,7 +23,6 @@ function DiceScene({
   onDealerSettled: (index: number, throwKey: number) => void;
   onPlayerSettled: (index: number, throwKey: number) => void;
   showDealerLabel?: boolean;
-  showPlayerLabel?: boolean;
   /** Player row only simulates throws after the first player roll */
   playerDiceActive: boolean;
 }) {
@@ -52,18 +50,6 @@ function DiceScene({
 
       <group position={[0, -0.2, 0]}>
         {/* Dealer row (back) */}
-        {showDealerLabel && (
-          <Billboard>
-            <Text
-              position={[-5.0, 2.5, DEALER_Z + 2]}
-              fontSize={0.45}
-              color="#908caa"
-              anchorX="left"
-            >
-              Дилер
-            </Text>
-          </Billboard>
-        )}
         {dealerTarget != null && showDealerLabel && (
           <Billboard>
             <Text
@@ -87,18 +73,6 @@ function DiceScene({
           />
         ))}
 
-        {showPlayerLabel && (
-          <Billboard>
-            <Text
-              position={[-5.0, 2.5, PLAYER_Z + 2]}
-              fontSize={0.45}
-              color="#908caa"
-              anchorX="left"
-            >
-              Ты
-            </Text>
-          </Billboard>
-        )}
         {playerDiceActive &&
           ([0, 1, 2] as const).map((i) => (
             <DiceMesh

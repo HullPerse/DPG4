@@ -72,7 +72,7 @@ describe("RocketService", () => {
     fakeNow += 100;
     const state = await services.rocketService.poll(userId);
     expect(state.phase).toBe("flying");
-    expect(state.multiplier).toBeGreaterThanOrEqual(1);
+    expect(state.multiplier).toBeGreaterThan(0);
   });
 
   test("poll triggers crash when multiplier reaches crash point", async () => {
@@ -92,13 +92,13 @@ describe("RocketService", () => {
     fakeNow += 100;
     const state = await services.rocketService.cashout(userId);
     expect(state.phase).toBe("cashed");
-    expect(state.multiplier).toBeGreaterThanOrEqual(1);
+    expect(state.multiplier).toBeGreaterThan(0);
   });
 
   test("cashout gives positive net with enough time", async () => {
     seedRandom([0.5]);
     await services.rocketService.launch(userId, 3);
-    fakeNow += 3000;
+    fakeNow += 5000;
     const state = await services.rocketService.cashout(userId);
     expect(state.phase).toBe("cashed");
     expect(state.net).toBeGreaterThan(0);
@@ -109,7 +109,7 @@ describe("RocketService", () => {
   test("cashout deducts bid then credits payout", async () => {
     seedRandom([0.5]);
     await services.rocketService.launch(userId, 3);
-    fakeNow += 3000;
+    fakeNow += 5000;
     const state = await services.rocketService.cashout(userId);
     const net = state.net;
     const user = await getUser(db, userId);

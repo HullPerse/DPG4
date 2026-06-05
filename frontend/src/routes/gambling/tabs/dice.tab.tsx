@@ -227,8 +227,6 @@ function DiceTab() {
   };
 
   const showDealerLabel = gamePhase !== "idle";
-  const showPlayerLabel =
-    gamePhase === "player" || gamePhase === "result" || playerDiceActive;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
@@ -266,7 +264,6 @@ function DiceTab() {
           onDealerSettled={handleDealerSettled}
           onPlayerSettled={handlePlayerSettled}
           showDealerLabel={showDealerLabel}
-          showPlayerLabel={showPlayerLabel}
           playerDiceActive={playerDiceActive}
         />
 

@@ -5,7 +5,7 @@ import { nowIso } from "../../lib/dates";
 import type { ActiveRocketGame, RocketState } from "@/types/gambling";
 import type { Db } from "@/types";
 import { UserService } from "../user.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
+import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET, ROCKET_START_MULT } from "../../lib/gambling.constants";
 
 export class RocketService {
   constructor(
@@ -27,7 +27,7 @@ export class RocketService {
 
   private computeMultiplier(elapsedMs: number): number {
     const t = elapsedMs / 1000;
-    return Math.max(1, Math.floor((1 + 0.08 * t + 0.02 * t * t) * 100) / 100);
+    return Math.max(0, Math.floor((ROCKET_START_MULT + 0.08 * t + 0.02 * t * t) * 100) / 100);
   }
 
   private idleState(): RocketState {

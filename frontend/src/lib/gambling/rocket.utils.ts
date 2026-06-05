@@ -1,9 +1,11 @@
 import type { RocketPhase } from "@/types/gamble";
 
+const ROCKET_START_MULT = 0.5;
+
 /** Mirrors backend rocket.service.ts computeMultiplier */
 export function computeMultiplier(elapsedMs: number): number {
   const t = elapsedMs / 1000;
-  return Math.max(1, Math.floor((1 + 0.08 * t + 0.02 * t * t) * 100) / 100);
+  return Math.max(0, Math.floor((ROCKET_START_MULT + 0.08 * t + 0.02 * t * t) * 100) / 100);
 }
 
 export function multiplierColor(mult: number): string {
@@ -93,7 +95,7 @@ export function buildFlightPath(
     const t = (elapsedSec * i) / steps;
     const mult = computeMultiplier(t * 1000);
     const x = pad + (t / maxT) * (width - pad * 2);
-    const y = height - pad - ((mult - 1) / (maxM - 1)) * (height - pad * 2);
+    const y = height - pad - ((mult - ROCKET_START_MULT) / (maxM - ROCKET_START_MULT)) * (height - pad * 2);
     points.push({ t, mult, x, y });
   }
 
