@@ -7,6 +7,7 @@ import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TimeDisplay } from "../../desktop/components/timer.desktop";
+import { useMutation } from "@tanstack/react-query";
 
 export default function Signpout() {
   const user = useUserStore((state) => state.user);
@@ -20,7 +21,6 @@ export default function Signpout() {
 
   const [wallpaper, setWallpaper] = useState<string | null>(null);
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -43,25 +43,21 @@ export default function Signpout() {
     getWallpaper();
   }, []);
 
-  const handleAuth = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      await login(user.username.toUpperCase(), password).then(() => {
-        setLoggedIn(true);
-      });
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
+  const loginMutation = useMutation({
+    mutationFn: () => {
+      if (!user) throw new Error("No user");
+      return login(user.username.toUpperCase(), password);
+    },
+    onSuccess: () => setLoggedIn(true),
+    onError: (error) => console.error(error),
+  });
 
   return (
     <main
       className="relative h-screen w-screen"
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          return handleAuth();
+          if (e.key === "Enter") {
+          return loginMutation.mutate();
         }
       }}
     >
@@ -100,8 +96,8 @@ export default function Signpout() {
             variant="success"
             size="icon"
             className="h-11 w-11 border-2 border-highlight-high bg-card hover:border-green-500"
-            loading={loading}
-            onClick={handleAuth}
+            loading={loginMutation.isPending}
+            onClick={() => loginMutation.mutate()}
           >
             <ChevronRight />
           </Button>

@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user.store";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/user";
 import {
   startTransition,
@@ -31,7 +31,6 @@ export default function ChatProfile({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [editId, setEditId] = useState<Chat["id"] | null>(null);
@@ -83,7 +82,7 @@ export default function ChatProfile({ id }: { id: string }) {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-    handleReadAll();
+    readAllMutation.mutate();
     queryClient.invalidateQueries({
       queryKey: ["friendsTab"],
       refetchType: "active",
@@ -91,14 +90,48 @@ export default function ChatProfile({ id }: { id: string }) {
     invalidateQuery();
   }, [data?.chat, isInitialLoad]);
 
-  const handleReadAll = useCallback(async () => {
-    const allIds = data?.chat
-      .filter((item) => !item.isRead && item.data.sender.id !== user?.id)
-      .map((item) => item.id);
-    if (!allIds || allIds?.length === 0) return;
+  const readAllMutation = useMutation({
+    mutationFn: () => {
+      const allIds = data?.chat
+        .filter((item) => !item.isRead && item.data.sender.id !== user?.id)
+        .map((item) => item.id);
+      if (!allIds || allIds?.length === 0) return Promise.resolve();
+      return chatApi.marAllAsRead(allIds);
+    },
+  });
 
-    await chatApi.marAllAsRead(allIds);
-  }, [data?.chat]);
+  const editMutation = useMutation({
+    mutationFn: () => {
+      if (!editMessage?.trim() || !editId) throw new Error("No edit data");
+      return chatApi.updateMessage(editId, editMessage);
+    },
+    onSuccess: () => {
+      setEditMessage(null);
+      setEditId(null);
+      invalidateQuery();
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (e: string) => chatApi.removeMessage(e),
+    onSuccess: () => {
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      invalidateQuery();
+    },
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      chatApi.sendMessage(String(user?.id), id, newMessage, image),
+    onSuccess: () => {
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      setNewMessage("");
+      setImage(null);
+      invalidateQuery();
+    },
+  });
+
+  const isMutating = removeMutation.isPending || sendMutation.isPending;
 
   const handleAttachement = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -109,49 +142,6 @@ export default function ChatProfile({ id }: { id: string }) {
     },
     [setImage],
   );
-
-  const handleEdit = useCallback(async () => {
-    if (!editMessage?.trim() || !editId) return;
-
-    await chatApi.updateMessage(editId, editMessage);
-    setEditMessage(null);
-    setEditId(null);
-    invalidateQuery();
-  }, [editMessage, editId, invalidateQuery]);
-
-  const handleRemove = useCallback(async (e: string) => {
-    setLoading(true);
-
-    try {
-      await chatApi.removeMessage(e);
-
-      if (imageInputRef.current) {
-        imageInputRef.current.value = "";
-      }
-    } finally {
-      setLoading(false);
-      invalidateQuery();
-    }
-  }, []);
-
-  const handleSend = useCallback(async () => {
-    if ((!newMessage.trim() && !image) || loading) return;
-
-    setLoading(true);
-
-    try {
-      await chatApi.sendMessage(String(user?.id), id, newMessage, image);
-
-      if (imageInputRef.current) {
-        imageInputRef.current.value = "";
-      }
-    } finally {
-      setLoading(false);
-      setNewMessage("");
-      setImage(null);
-      invalidateQuery();
-    }
-  }, [newMessage, image, id, loading, invalidateQuery]);
 
   if (isInitialLoad) return <WindowLoader />;
   if (isError)
@@ -177,7 +167,7 @@ export default function ChatProfile({ id }: { id: string }) {
               item={item}
               currentUser={user}
               onRemove={(e) => {
-                handleRemove(e.id);
+                removeMutation.mutate(e.id);
               }}
               onEdit={(e) => {
                 setEditId(e.id);
@@ -197,7 +187,7 @@ export default function ChatProfile({ id }: { id: string }) {
           value={String(editMessage)}
           onChange={(e) => setEditMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") handleEdit();
+            if (e.key === "Enter") editMutation.mutate();
             if (e.key === "Escape") {
               setEditMessage(null);
               setNewMessage("");
@@ -205,7 +195,7 @@ export default function ChatProfile({ id }: { id: string }) {
           }}
           autoFocus
         />
-        <Button variant="success" size="icon" onClick={handleEdit}>
+        <Button variant="success" size="icon" onClick={() => editMutation.mutate()}>
           <Check className="size-4" />
         </Button>
         <Button
@@ -260,7 +250,7 @@ export default function ChatProfile({ id }: { id: string }) {
             size="icon"
             variant="link"
             className="border border-highlight-high"
-            loading={loading}
+            loading={isMutating}
             disabled={!!editId}
             onClick={() => imageInputRef.current?.click()}
           >
@@ -271,20 +261,20 @@ export default function ChatProfile({ id }: { id: string }) {
             className="w-full h-9"
             placeholder="Напишите сообщение"
             value={newMessage}
-            disabled={loading || !!editId}
+            disabled={isMutating || !!editId}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (newMessage.trim() || image)) {
-                handleSend();
+                sendMutation.mutate();
               }
             }}
           />
           <Button
             size="icon"
             variant="success"
-            loading={loading}
+            loading={isMutating}
             disabled={(!newMessage.trim() && !image) || !!editId}
-            onClick={handleSend}
+            onClick={() => sendMutation.mutate()}
           >
             <Send />
           </Button>

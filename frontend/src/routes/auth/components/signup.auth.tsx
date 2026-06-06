@@ -10,7 +10,7 @@ import { useUserStore } from "@/store/user.store";
 import { Box, CircleX, Square, SquareCheckBig } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { WindowError } from "@/components/shared/error.component";
 import { userSchema } from "@/lib/zod.utils";
 import { useDataStore } from "@/store/data.store";
@@ -37,7 +37,6 @@ export default function Signup({
   const [steam, setSteam] = useState<string>("");
 
 
-  const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [robotStep, setRobotStep] = useState<number>(0);
@@ -58,8 +57,32 @@ export default function Signup({
     return { colors, avatars };
   }, [data]);
 
-  const handleAuth = useCallback(async () => {
-    setLoading(true);
+  const handleMutation = useMutation({
+    mutationFn: async (data: {
+      username: string;
+      password: string;
+      avatar: string;
+      color: string;
+      steam: string;
+    }) => {
+      await userApi.create(data as any);
+      return data;
+    },
+    onSuccess: async (data) => {
+      setLoggedIn(true);
+      setConnected(true);
+      await login(data.username, data.password);
+      setRegister(false);
+      navigate({ to: "/", replace: true });
+    },
+    onError: () => {
+      setErrors({
+        general: "Ошибка при создании пользователя. Попробуйте еще раз.",
+      });
+    },
+  });
+
+  const handleAuth = useCallback(() => {
     setErrors({});
 
     const validationResult = userSchema.safeParse({
@@ -70,7 +93,6 @@ export default function Signup({
       steam,
     });
 
-    //error handling
     if (!validationResult.success) {
       const fieldErrors: Record<string, string> = {};
       validationResult.error.issues.forEach((issue) => {
@@ -80,30 +102,10 @@ export default function Signup({
         }
       });
       setErrors(fieldErrors);
-      setLoading(false);
       return;
     }
 
-    //create user
-    await userApi
-      .create(validationResult.data as any)
-      .catch((error) => {
-        console.error(error);
-        setErrors({
-          general: "Ошибка при создании пользователя. Попробуйте еще раз.",
-        });
-      })
-      .finally(() => {
-        setLoggedIn(true);
-        setConnected(true);
-        login(validationResult.data.username, validationResult.data.password);
-        setRegister(false);
-        setLoading(false);
-        navigate({
-          to: "/",
-          replace: true,
-        });
-      });
+    handleMutation.mutate(validationResult.data as any);
   }, [
     username,
     password,
@@ -115,7 +117,7 @@ export default function Signup({
     setLoggedIn,
     setConnected,
     login,
-
+    handleMutation,
   ]);
 
   const clearError = (field: string) => {
@@ -336,7 +338,7 @@ export default function Signup({
       <Button
         variant="success"
         className="w-full py-5"
-        loading={loading || isLoading}
+        loading={handleMutation.isPending || isLoading}
         disabled={
           !username ||
           !password ||

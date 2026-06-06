@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { ItemLabel } from "@/types/items";
 import type { ModalType } from "@/types/effect";
 import ItemFramework from "@/lib/items/item.framework";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import {
   SmallLoader,
@@ -194,100 +194,99 @@ function InventoryTab({ id }: { id?: string }) {
 
   initialLoadRef.current = true;
 
-  const handleUse = async (_index: number, item: Inventory) => {
-    const itemId = String(item.id);
-    setLoading({ itemId, type: "use" });
-
-    try {
+  const useItemMutation = useMutation({
+    mutationFn: async ({ itemId }: { itemId: string }) => {
       const result = await itemsApi.useInventory(itemId);
-
+      return result;
+    },
+    onMutate: ({ itemId }) => setLoading({ itemId, type: "use" }),
+    onSuccess: (result) => {
       if (!result.ok) {
         setActive(null);
         window.alert(result.error ?? "Не удалось использовать предмет");
         return;
       }
-
       if (result.mode === "modal") {
         setModal(result.label);
-        setActive(null);
-        return;
       }
-
       setActive(null);
-      await refreshInventoryCoalesced();
-    } finally {
-      setLoading({ itemId: null, type: null });
-    }
-  };
+      if (result.ok && result.mode !== "modal") {
+        refreshInventoryCoalesced();
+      }
+    },
+    onSettled: () => setLoading({ itemId: null, type: null }),
+  });
 
-  const handleDelete = async (_index: number, inventoryId: string) => {
-    setLoading({ itemId: inventoryId, type: "delete" });
-
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async ({ inventoryId }: { inventoryId: string }) => {
       await itemsApi.removeInventory(inventoryId);
+    },
+    onMutate: ({ inventoryId }) => setLoading({ itemId: inventoryId, type: "delete" }),
+    onSuccess: () => {
       setActive(null);
-      await refreshInventoryCoalesced();
-    } finally {
-      setLoading({ itemId: null, type: null });
-    }
-  };
+      refreshInventoryCoalesced();
+    },
+    onSettled: () => setLoading({ itemId: null, type: null }),
+  });
 
-  const handleSend = async (
-    _index: number,
-    inventoryId: string,
-    userId: string,
-  ) => {
-    setLoading({ itemId: inventoryId, type: "send" });
-
-    try {
+  const sendMutation = useMutation({
+    mutationFn: async ({
+      inventoryId,
+      userId,
+    }: {
+      inventoryId: string;
+      userId: string;
+    }) => {
       await itemsApi.sendInventory(inventoryId, userId);
+    },
+    onMutate: ({ inventoryId }) => setLoading({ itemId: inventoryId, type: "send" }),
+    onSuccess: (_data, { userId }) => {
       setActive(null);
-      await Promise.all([
-        refreshInventoryCoalesced(),
-        patchInventoryFor(userId),
-      ]);
-    } finally {
-      setLoading({ itemId: null, type: null });
-    }
-  };
+      Promise.all([refreshInventoryCoalesced(), patchInventoryFor(userId)]);
+    },
+    onSettled: () => setLoading({ itemId: null, type: null }),
+  });
 
-  const handleSell = async (
-    _index: number,
-    inventoryId: string,
-    owner: string,
-  ) => {
-    if (!price) return;
-
-    setLoading({ itemId: inventoryId, type: "sell" });
-
-    try {
-      await itemsApi.sellInventory(inventoryId, owner, Number(price));
+  const sellMutation = useMutation({
+    mutationFn: async ({
+      inventoryId,
+      owner,
+      price: sellPrice,
+    }: {
+      inventoryId: string;
+      owner: string;
+      price: number;
+    }) => {
+      await itemsApi.sellInventory(inventoryId, owner, sellPrice);
+    },
+    onMutate: ({ inventoryId }) => setLoading({ itemId: inventoryId, type: "sell" }),
+    onSuccess: () => {
       setActive(null);
-      await refreshInventoryCoalesced();
+      refreshInventoryCoalesced();
       queryClient.invalidateQueries({
         queryKey: ["marketTab"],
         refetchType: "active",
       });
-    } finally {
-      setLoading({ itemId: null, type: null });
-    }
-  };
+    },
+    onSettled: () => setLoading({ itemId: null, type: null }),
+  });
 
-  const handleCharge = async (
-    _index: number,
-    inventoryId: string,
-    oldCharge: number,
-    newCharge: number,
-  ) => {
-    setLoading({ itemId: inventoryId, type: "send" });
-
-    try {
+  const chargeMutation = useMutation({
+    mutationFn: async ({
+      inventoryId,
+      oldCharge,
+      newCharge,
+    }: {
+      inventoryId: string;
+      oldCharge: number;
+      newCharge: number;
+    }) => {
       await itemsApi.chargeInventory(inventoryId, oldCharge, newCharge);
-      await refreshInventoryCoalesced();
-    } finally {
-      setLoading({ itemId: null, type: null });
-    }
-  };
+    },
+    onMutate: ({ inventoryId }) => setLoading({ itemId: inventoryId, type: "send" }),
+    onSuccess: () => refreshInventoryCoalesced(),
+    onSettled: () => setLoading({ itemId: null, type: null }),
+  });
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
@@ -462,7 +461,10 @@ function InventoryTab({ id }: { id?: string }) {
                       onClick={() => {
                         if (!selectedUser) return;
 
-                        handleSend(index, String(item.id), selectedUser);
+                        sendMutation.mutate({
+                          inventoryId: String(item.id),
+                          userId: selectedUser,
+                        });
                       }}
                       className="my-1"
                       size="icon"
@@ -493,7 +495,11 @@ function InventoryTab({ id }: { id?: string }) {
                       size="icon"
                       variant="info"
                       onClick={() =>
-                        handleSell(index, String(item.id), item.owner)
+                        sellMutation.mutate({
+                          inventoryId: String(item.id),
+                          owner: item.owner,
+                          price: Number(price),
+                        })
                       }
                       disabled={
                         isItemLoading(String(item.id), "sell") || !price
@@ -510,7 +516,9 @@ function InventoryTab({ id }: { id?: string }) {
                     <Button
                       variant="success"
                       className="flex-1"
-                      onClick={() => handleUse(index, item)}
+                      onClick={() =>
+                        useItemMutation.mutate({ itemId: String(item.id) })
+                      }
                       hidden={currentId !== user?.id}
                       disabled={isItemLoading(String(item.id), "use")}
                     >
@@ -526,7 +534,11 @@ function InventoryTab({ id }: { id?: string }) {
                       style={{
                         width: currentId !== user?.id ? "100%" : undefined,
                       }}
-                      onClick={() => handleDelete(index, String(item.id))}
+                      onClick={() =>
+                        deleteMutation.mutate({
+                          inventoryId: String(item.id),
+                        })
+                      }
                       disabled={isItemLoading(String(item.id), "delete")}
                     >
                       {isItemLoading(String(item.id), "delete") ? (
@@ -579,7 +591,11 @@ function InventoryTab({ id }: { id?: string }) {
                       onClick={(e) => {
                         e.stopPropagation();
 
-                        handleCharge(index, String(item.id), item.charge, -1);
+                        chargeMutation.mutate({
+                          inventoryId: String(item.id),
+                          oldCharge: item.charge,
+                          newCharge: -1,
+                        });
                       }}
                     >
                       <Minus />
@@ -595,7 +611,11 @@ function InventoryTab({ id }: { id?: string }) {
                       onClick={(e) => {
                         e.stopPropagation();
 
-                        handleCharge(index, String(item.id), item.charge, 1);
+                        chargeMutation.mutate({
+                          inventoryId: String(item.id),
+                          oldCharge: item.charge,
+                          newCharge: 1,
+                        });
                       }}
                     >
                       <Plus />

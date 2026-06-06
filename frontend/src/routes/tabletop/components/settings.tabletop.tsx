@@ -13,6 +13,7 @@ import { cellsConfig } from "@/config/cells.config";
 
 import { Cell } from "@/types/cell";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 const cellApi = new CellApi();
 
@@ -30,11 +31,13 @@ export default function Settings({
   const [ladderTo, setLadderTo] = useState(cell.ladderTo);
   const [snakeTo, setSnakeTo] = useState(cell.snakeTo);
 
-  const [loading, setLoading] = useState(false);
+  const saveMutation = useMutation({
+    mutationFn: (data: Cell) => cellApi.editCell(cell.id, data),
+    onError: (error) => console.log(error),
+    onSettled: () => setOpen(false),
+  });
 
-  const handleSave = async () => {
-    setLoading(true);
-
+  const handleSave = () => {
     const data = {
       id: cell.id,
       type: cell.type,
@@ -45,17 +48,9 @@ export default function Settings({
       difficulty,
       ladderTo,
       snakeTo,
-    };
+    } as Cell;
 
-    try {
-      await cellApi.editCell(cell.id, data as Cell);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    saveMutation.mutate(data);
   };
 
   return (
@@ -247,7 +242,7 @@ export default function Settings({
       <Button
         variant="success"
         className="w-full"
-        loading={loading}
+        loading={saveMutation.isPending}
         onClick={handleSave}
       >
         Сохранить

@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user.store";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   startTransition,
   useCallback,
@@ -30,7 +30,6 @@ export default function GlobalChatApp() {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [editId, setEditId] = useState<Chat["id"] | null>(null);
@@ -85,53 +84,38 @@ export default function GlobalChatApp() {
     [setImage],
   );
 
-  const handleEdit = useCallback(async () => {
-    if (!editMessage?.trim() || !editId) return;
-
-    await chatApi.updateMessage(editId, editMessage);
-    setEditMessage(null);
-    setEditId(null);
-    invalidateQuery();
-  }, [editMessage, editId, invalidateQuery]);
-
-  const handleRemove = useCallback(async (e: string) => {
-    setLoading(true);
-
-    try {
-      await chatApi.removeMessage(e);
-
-      if (imageInputRef.current) {
-        imageInputRef.current.value = "";
-      }
-    } finally {
-      setLoading(false);
+  const editMutation = useMutation({
+    mutationFn: () => {
+      if (!editMessage?.trim() || !editId) throw new Error("No edit data");
+      return chatApi.updateMessage(editId, editMessage);
+    },
+    onSuccess: () => {
+      setEditMessage(null);
+      setEditId(null);
       invalidateQuery();
-    }
-  }, []);
+    },
+  });
 
-  const handleSend = useCallback(async () => {
-    if ((!newMessage.trim() && !image) || loading) return;
+  const removeMutation = useMutation({
+    mutationFn: (e: string) => chatApi.removeMessage(e),
+    onSuccess: () => {
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      invalidateQuery();
+    },
+  });
 
-    setLoading(true);
-
-    try {
-      await chatApi.sendMessage(
-        String(user?.id),
-        GLOBAL_CHAT_ID,
-        newMessage,
-        image,
-      );
-
-      if (imageInputRef.current) {
-        imageInputRef.current.value = "";
-      }
-    } finally {
-      setLoading(false);
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      chatApi.sendMessage(String(user?.id), GLOBAL_CHAT_ID, newMessage, image),
+    onSuccess: () => {
+      if (imageInputRef.current) imageInputRef.current.value = "";
       setNewMessage("");
       setImage(null);
       invalidateQuery();
-    }
-  }, [newMessage, image, loading, invalidateQuery]);
+    },
+  });
+
+  const isMutating = removeMutation.isPending || sendMutation.isPending;
 
   if (isInitialLoad) return <WindowLoader />;
   if (isError)
@@ -154,7 +138,7 @@ export default function GlobalChatApp() {
               item={item}
               currentUser={user}
               onRemove={(e) => {
-                handleRemove(e.id);
+                removeMutation.mutate(e.id);
               }}
               onEdit={(e) => {
                 setEditId(e.id);
@@ -176,7 +160,7 @@ export default function GlobalChatApp() {
             value={String(editMessage)}
             onChange={(e) => setEditMessage(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleEdit();
+              if (e.key === "Enter") editMutation.mutate();
               if (e.key === "Escape") {
                 setEditId(null);
                 setEditMessage(null);
@@ -184,7 +168,7 @@ export default function GlobalChatApp() {
             }}
             autoFocus
           />
-          <Button variant="success" size="icon" onClick={handleEdit}>
+          <Button variant="success" size="icon" onClick={() => editMutation.mutate()}>
             <Send className="size-4" />
           </Button>
           <Button
@@ -239,7 +223,7 @@ export default function GlobalChatApp() {
             size="icon"
             variant="link"
             className="border border-highlight-high"
-            loading={loading}
+            loading={isMutating}
             disabled={!!editId}
             onClick={() => imageInputRef.current?.click()}
           >
@@ -250,20 +234,20 @@ export default function GlobalChatApp() {
             className="w-full h-9"
             placeholder="Напишите сообщение..."
             value={newMessage}
-            disabled={loading || !!editId}
+            disabled={isMutating || !!editId}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (newMessage.trim() || image)) {
-                handleSend();
+                sendMutation.mutate();
               }
             }}
           />
           <Button
             size="icon"
             variant="success"
-            loading={loading}
+            loading={isMutating}
             disabled={(!newMessage.trim() && !image) || !!editId}
-            onClick={handleSend}
+            onClick={() => sendMutation.mutate()}
           >
             <Send />
           </Button>
