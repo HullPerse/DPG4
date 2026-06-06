@@ -26,6 +26,7 @@ import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
+import { wheelRoute } from "./routes/wheel.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services/services.plugin";
 import { runMigrations } from "./db/migrate";
@@ -58,6 +59,7 @@ const app = new Elysia()
           { name: "steam", description: "Steam API (прокси)" },
           { name: "metadata", description: "HLTB и метаданные" },
           { name: "search", description: "Поиск" },
+          { name: "wheel", description: "Колесо фортуны" },
         ],
       },
       path: "/docs",
@@ -132,7 +134,8 @@ const app = new Elysia()
   .use(gameUtilsRoute)
   .use(configRoute)
   .use(steamRoute)
-  .use(searchRoute);
+  .use(searchRoute)
+  .use(wheelRoute);
 
 runMigrations();
 logger.info("SYSTEM", "DB migrations applied");

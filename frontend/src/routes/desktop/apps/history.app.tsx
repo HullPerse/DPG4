@@ -1,28 +1,54 @@
-import { useDataStore } from "@/store/data.store";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.component";
-import { useCallback, useMemo } from "react";
+import { getWheelHistory, clearWheelHistory, type WheelHistoryRecord } from "@/api/wheel.api";
 import { Trash } from "lucide-react";
 
 function WheelHistoryApp() {
-  const wheelHistory = useDataStore((state) => state.wheelHistory);
-  const setWheelHistory = useDataStore((state) => state.setWheelHistory);
-  const clearHistory = useCallback(() => {
-    setWheelHistory([]);
-  }, [setWheelHistory]);
+  const [history, setHistory] = useState<WheelHistoryRecord[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const limit = 50;
 
-  const groupedByDate = useMemo(() => {
-    const groups: Record<string, typeof wheelHistory> = {};
-    wheelHistory.forEach((item) => {
-      const date = new Date(item.timestamp).toLocaleDateString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(item);
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const res = await getWheelHistory(page, limit);
+      setHistory(res.data);
+      setTotal(res.total);
+    } catch {
+      setHistory([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [page]);
+
+  const handleClear = async () => {
+    try {
+      await clearWheelHistory();
+      setHistory([]);
+      setTotal(0);
+      setPage(1);
+    } catch {}
+  };
+
+  const groupedByDate: Record<string, WheelHistoryRecord[]> = {};
+  history.forEach((item) => {
+    const date = new Date(item.created).toLocaleDateString("ru-RU", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
-    return groups;
-  }, [wheelHistory]);
+    if (!groupedByDate[date]) groupedByDate[date] = [];
+    groupedByDate[date].push(item);
+  });
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <main className="flex flex-col h-full w-full bg-background overflow-hidden">
@@ -30,16 +56,20 @@ function WheelHistoryApp() {
         <Button
           variant="error"
           size="icon"
-          onClick={clearHistory}
+          onClick={handleClear}
           className="gap-1 ml-auto"
-          disabled={wheelHistory.length === 0}
+          disabled={history.length === 0}
         >
           <Trash className="size-3" />
         </Button>
       </header>
 
       <section className="flex-1 overflow-y-auto p-2 bg-card">
-        {wheelHistory.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-muted">
+            Загрузка...
+          </div>
+        ) : history.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted">
             История пуста
           </div>
@@ -56,11 +86,11 @@ function WheelHistoryApp() {
                       key={item.id}
                       className="flex flex-col gap-1 p-2 border-2 border-highlight-high bg-card hover:border-primary transition-colors"
                     >
-                      {item.type === "image" && item.image ? (
+                      {item.itemType === "image" && item.itemImage ? (
                         <div className="w-full h-24 overflow-hidden bg-highlight-low">
                           <img
-                            src={item.image}
-                            alt={item.label}
+                            src={item.itemImage}
+                            alt={item.itemLabel}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display =
@@ -70,14 +100,14 @@ function WheelHistoryApp() {
                         </div>
                       ) : (
                         <div className="w-full h-24 flex items-center justify-center text-4xl bg-highlight-low">
-                          {item.image || "🎁"}
+                          {item.itemImage || "🎁"}
                         </div>
                       )}
                       <span className="text-sm text-text truncate">
-                        {item.label}
+                        {item.itemLabel}
                       </span>
                       <span className="text-xs text-muted">
-                        {new Date(item.timestamp).toLocaleTimeString("ru-RU", {
+                        {new Date(item.created).toLocaleTimeString("ru-RU", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -91,8 +121,31 @@ function WheelHistoryApp() {
         )}
       </section>
 
-      <footer className="px-3 py-2 border-t-2 border-highlight-high text-xs text-muted">
-        Всего результатов: {wheelHistory.length}
+      <footer className="flex items-center justify-between px-3 py-2 border-t-2 border-highlight-high text-xs text-muted">
+        <span>Всего результатов: {total}</span>
+        {totalPages > 1 && (
+          <div className="flex gap-2">
+            <Button
+              variant="info"
+              size="icon"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ←
+            </Button>
+            <span className="px-2 self-center">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="info"
+              size="icon"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              →
+            </Button>
+          </div>
+        )}
       </footer>
     </main>
   );

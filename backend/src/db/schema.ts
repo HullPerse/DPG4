@@ -136,6 +136,19 @@ export const drawings = sqliteTable("drawings", {
   ...timestamps,
 });
 
+export const wheelHistory = sqliteTable("wheel_history", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  itemId: text("item_id").notNull(),
+  itemLabel: text("item_label").notNull(),
+  itemImage: text("item_image").notNull(),
+  itemType: text("item_type").notNull(),
+  listType: text("list_type").notNull(),
+  cost: integer("cost").notNull().default(0),
+  free: integer("free", { mode: "boolean" }).notNull().default(false),
+  created: text("created").notNull(),
+});
+
 export const cells = sqliteTable("cells", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),

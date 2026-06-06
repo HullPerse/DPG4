@@ -10,7 +10,9 @@ export type WheelRoll = {
   hasRolled: boolean;
 };
 
-export type AnimationState = {
+export type EasingAnimation = {
   startTime: number;
-  velocity: number;
+  startScroll: number;
+  targetScroll: number;
+  duration: number;
 };

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist, subscribeWithSelector } from "zustand/middleware";
-import type { DataStore, StoreItem, WheelHistoryItem } from "@/types/store";
+import type { DataStore, StoreItem } from "@/types/store";
 import { createDebouncedStorage } from "@/lib/debounced-storage";
 
 export const useDataStore = create<DataStore>()(
@@ -25,7 +25,6 @@ export const useDataStore = create<DataStore>()(
         userProfile: null,
         movingUser: null,
         savedWheel: [],
-        wheelHistory: [],
         notepad: "",
         accessToken: "",
         noAction: false,
@@ -45,16 +44,6 @@ export const useDataStore = create<DataStore>()(
 
         setSavedWheel: (savedWheel: string[]) => {
           set({ savedWheel });
-        },
-
-        setWheelHistory: (wheelHistory: WheelHistoryItem[]) => {
-          set({ wheelHistory });
-        },
-
-        addWheelHistory: (item: WheelHistoryItem) => {
-          set((state) => ({
-            wheelHistory: [item, ...state.wheelHistory],
-          }));
         },
 
         setAdPosition: (adPosition: 1 | 2 | 3 | 4) => {
@@ -114,7 +103,6 @@ export const useDataStore = create<DataStore>()(
             userProfile: null,
             movingUser: null,
             savedWheel: [],
-            wheelHistory: [],
             storeItems: [],
             accessToken: "",
             noAction: false,
@@ -144,7 +132,6 @@ export const useDataStore = create<DataStore>()(
             userProfile: null,
             movingUser: null,
             savedWheel: [],
-            wheelHistory: [],
             notepad: "",
             accessToken: "",
             storeItems: [],

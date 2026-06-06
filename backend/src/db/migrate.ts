@@ -18,6 +18,25 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE users ADD COLUMN gambling_banned INTEGER NOT NULL DEFAULT 0;",
     ],
   },
+  {
+    hash: "0004_add_wheel_history",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS wheel_history (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        item_label TEXT NOT NULL,
+        item_image TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        list_type TEXT NOT NULL DEFAULT 'general',
+        cost INTEGER NOT NULL DEFAULT 0,
+        free INTEGER NOT NULL DEFAULT 0,
+        created TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_wheel_history_user_id ON wheel_history (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_wheel_history_created ON wheel_history (created DESC);",
+    ],
+  },
 ];
 
 export function runMigrations() {
