@@ -9,6 +9,7 @@ export type SpinResponse = {
 export type WheelHistoryRecord = {
   id: string;
   userId: string;
+  owner: { id: string; username: string } | null;
   itemId: string;
   itemLabel: string;
   itemImage: string;

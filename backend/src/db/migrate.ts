@@ -37,6 +37,17 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "CREATE INDEX IF NOT EXISTS idx_wheel_history_created ON wheel_history (created DESC);",
     ],
   },
+  {
+    hash: "0005_add_wheel_owner",
+    sql: [
+      "ALTER TABLE wheel_history ADD COLUMN owner TEXT;",
+      `UPDATE wheel_history SET owner = (
+        SELECT json_object('id', id, 'username', username)
+        FROM users WHERE users.id = wheel_history.user_id
+      ) WHERE owner IS NULL;`,
+      "CREATE INDEX IF NOT EXISTS idx_wheel_history_owner ON wheel_history (owner);",
+    ],
+  },
 ];
 
 export function runMigrations() {

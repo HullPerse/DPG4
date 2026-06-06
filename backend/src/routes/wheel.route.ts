@@ -50,8 +50,9 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
         return { error: "Items array is required" };
       }
 
+      const currentUser = await userService.getById(user.sub);
+
       if (!free) {
-        const currentUser = await userService.getById(user.sub);
         if (!currentUser || currentUser.money < SPIN_COST) {
           set.status = 402;
           return { error: "Недостаточно чубриков" };
@@ -68,9 +69,12 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
       await db.insert(schema.wheelHistory).values({
         id,
         userId: user.sub,
+        owner: currentUser
+          ? { id: currentUser.id, username: currentUser.username }
+          : null,
         itemId: winner.id,
         itemLabel: winner.label,
-        itemImage: winner.image,
+        itemImage: winner.type === "image" ? winner.image : "",
         itemType: winner.type,
         listType: listType ?? "general",
         cost: free ? 0 : SPIN_COST,

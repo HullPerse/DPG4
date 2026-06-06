@@ -139,6 +139,9 @@ export const drawings = sqliteTable("drawings", {
 export const wheelHistory = sqliteTable("wheel_history", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  owner: text("owner", { mode: "json" })
+    .$type<{ id: string; username: string } | null>()
+    .default(null),
   itemId: text("item_id").notNull(),
   itemLabel: text("item_label").notNull(),
   itemImage: text("item_image").notNull(),

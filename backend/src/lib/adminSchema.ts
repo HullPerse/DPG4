@@ -221,6 +221,21 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "updated", type: "date" },
     ],
   },
+  wheel_history: {
+    label: "Wheel History",
+    searchFields: ["id", "itemLabel", "itemType", "listType"],
+    fields: [
+      { source: "id", type: "text" },
+      { source: "owner", type: "json" },
+      { source: "itemLabel", type: "text" },
+      { source: "itemImage", type: "text" },
+      { source: "itemType", type: "text" },
+      { source: "listType", type: "text" },
+      { source: "cost", type: "number" },
+      { source: "free", type: "boolean" },
+      { source: "created", type: "date" },
+    ],
+  },
   cells: {
     label: "Cells",
     searchFields: ["id", "title", "type", "cellType"],
