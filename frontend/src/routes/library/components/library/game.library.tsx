@@ -62,9 +62,6 @@ function GameLibrary({
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [content, setContent] = useState<"general" | "review">("general");
-  const [loading, setLoading] = useState<
-    { button: GameStatus; loading: boolean }[]
-  >(gameButtons.map((item) => ({ button: item.value, loading: false })));
   const [time, setTime] = useState<string | null>(null);
   const [input, setInput] = useState(false);
 
@@ -216,26 +213,12 @@ function GameLibrary({
         setGamblingBanned(false);
       }
     },
-    onMutate: (status) => {
-      setLoading((prev) =>
-        prev.map((l) =>
-          l.button === status ? { ...l, loading: true } : l,
-        ),
-      );
-    },
     onSuccess: () => {
       setInput(false);
       setTime(null);
-    },
-    onError: (e) => console.error(e),
-    onSettled: (_, __, status) => {
-      setLoading((prev) =>
-        prev.map((l) =>
-          l.button === status ? { ...l, loading: false } : l,
-        ),
-      );
       invalidateQuery();
     },
+    onError: (e) => console.error(e),
   });
 
   const changeStatus = useCallback(
@@ -285,7 +268,7 @@ function GameLibrary({
               value={time ?? ""}
               onChange={(e) => setTime(e.target.value)}
               className="h-9 w-36 ml-2 shadow-sharp-sm"
-              disabled={loading.some((l) => l.loading)}
+              disabled={statusMutation.isPending}
             />
           )}
 
@@ -300,7 +283,7 @@ function GameLibrary({
                 size="icon"
                 variant={buttonStyle(item.value)}
                 className="border-2 shadow-sharp-sm font-bold"
-                loading={loading.find((l) => l.button === item.value)?.loading ?? false}
+                loading={statusMutation.isPending && statusMutation.variables === item.value}
                 disabled={
                   (data?.game && data?.game.status === item.value) ||
                   (item.value === "COMPLETED" && input && !time)

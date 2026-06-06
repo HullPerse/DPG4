@@ -1,13 +1,11 @@
 import { memo, startTransition, useCallback, useState } from "react";
 
 import ItemsApi from "@/api/items.api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user.store";
 import { Market } from "@/types/items";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Check, NetworkIcon, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
@@ -22,7 +20,6 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState<number>(-1);
   const [active, setActive] = useState<number>(-1);
   const [inputDiscount, setInputDiscount] = useState<string>("");
 
@@ -57,39 +54,40 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const handleBuy = async (index: number, marketId: string, owner: string) => {
-    setLoading(index);
+  const marketMutation = useMutation({
+    mutationFn: async ({
+      type,
+      marketId,
+      owner,
+      price,
+      discount,
+    }: {
+      type: "buy" | "discount" | "remove";
+      index: number;
+      marketId: string;
+      owner?: string;
+      price?: number;
+      discount?: number;
+    }) => {
+      if (type === "buy") {
+        await itemsApi.buyMarket(marketId, String(user?.id), String(owner));
+      } else if (type === "discount") {
+        await itemsApi.discountMarket(marketId, owner!, price!, discount!);
+      } else if (type === "remove") {
+        await itemsApi.removeMarket(marketId);
+      }
+    },
+    onSuccess: (_, { type }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["inventoryTab", user?.id],
+        refetchType: "active",
+      });
+      if (type === "discount") setInputDiscount("");
+    },
+  });
 
-    await itemsApi.buyMarket(marketId, String(user?.id), String(owner));
-
-    queryClient.invalidateQueries({
-      queryKey: ["inventoryTab", user?.id],
-      refetchType: "active",
-    });
-
-    setLoading(-1);
-  };
-
-  const handleDiscount = async (
-    index: number,
-    marketId: string,
-    owner: string,
-    price: number,
-    discount: number,
-  ) => {
-    setLoading(index);
-
-    await itemsApi.discountMarket(marketId, owner, price, discount);
-
-    setInputDiscount("");
-    setLoading(-1);
-  };
-
-  const handleRemove = async (index: number, marketId: string) => {
-    setLoading(index);
-    await itemsApi.removeMarket(marketId);
-    setLoading(-1);
-  };
+  const isLoadingIndex = (index: number) =>
+    marketMutation.isPending && marketMutation.variables?.index === index;
 
   return (
     <main className="relative flex flex-wrap w-full py-5 justify-start gap-2 overflow-y-auto">
@@ -151,37 +149,46 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                   onChange={(e) => setInputDiscount(e.target.value)}
                   className="h-9"
                   disabled={
-                    loading === index || Number(inputDiscount) === item.price
+                    isLoadingIndex(index) ||
+                    Number(inputDiscount) === item.price
                   }
                 />
-              <Button
-                variant="success"
-                size="icon"
-                className="w-9 h-9"
-                loading={loading === index}
-                disabled={!inputDiscount || Number(inputDiscount) > item.price}
-                onClick={() =>
-                  handleDiscount(
-                    index,
-                    String(item.id),
-                    item.owner.id,
-                    item.price,
-                    Number(inputDiscount),
-                  )
-                }
-              >
-                <Check />
-              </Button>
+                <Button
+                  variant="success"
+                  size="icon"
+                  className="w-9 h-9"
+                  loading={isLoadingIndex(index)}
+                  disabled={
+                    !inputDiscount || Number(inputDiscount) > item.price
+                  }
+                  onClick={() =>
+                    marketMutation.mutate({
+                      index,
+                      type: "discount",
+                      marketId: String(item.id),
+                      owner: item.owner.id,
+                      price: item.price,
+                      discount: Number(inputDiscount),
+                    })
+                  }
+                >
+                  <Check />
+                </Button>
               </div>
             )}
             <div className="flex flex-row w-full gap-1">
               <Button
                 variant="success"
                 className="flex-1"
-                loading={loading === index}
+                loading={isLoadingIndex(index)}
                 disabled={Number(user?.money) < item.price}
                 onClick={() =>
-                  handleBuy(index, String(item.id), String(item.owner.id))
+                  marketMutation.mutate({
+                    index,
+                    type: "buy",
+                    marketId: String(item.id),
+                    owner: item.owner.id,
+                  })
                 }
               >
                 <div className="flex flex-row items-center justify-center gap-1">
@@ -201,8 +208,14 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                 variant="error"
                 size="icon"
                 className="w-9 h-9"
-                loading={loading === index}
-                onClick={() => handleRemove(index, String(item.id))}
+                loading={isLoadingIndex(index)}
+                onClick={() =>
+                  marketMutation.mutate({
+                    index,
+                    type: "remove",
+                    marketId: String(item.id),
+                  })
+                }
               >
                 <Trash />
               </Button>
