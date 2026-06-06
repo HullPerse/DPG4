@@ -2,9 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
 import ItemsApi from "@/api/items.api";
