@@ -29,7 +29,7 @@ import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
 import { sentinelRoute } from "./routes/response.route";
-import { servicesPlugin } from "./services/services.plugin";
+import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()
@@ -60,7 +60,7 @@ const app = new Elysia()
           { name: "steam", description: "Steam API (прокси)" },
           { name: "metadata", description: "HLTB и метаданные" },
           { name: "search", description: "Поиск" },
-          { name: "wheel", description: "Колесо фортуны" },
+          { name: "wheel", description: "Колесо Приколов" },
           { name: "history", description: "История действий" },
         ],
       },

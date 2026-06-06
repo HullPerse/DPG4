@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../../db/schema";
-import { UserService } from "../user.service";
+import { UserService } from "@/services/user.service";
 import { DiceService } from "../gambling/dice.service";
 import { BlackjackService } from "../gambling/blackjack.service";
 import { RocketService } from "../gambling/rocket.service";
@@ -42,11 +42,26 @@ const CREATE_ACTIVITY = `CREATE TABLE activity (
   created TEXT NOT NULL
 )`;
 
+const CREATE_HISTORY = `CREATE TABLE history (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  owner TEXT,
+  type TEXT NOT NULL DEFAULT 'wheel',
+  label TEXT NOT NULL,
+  image TEXT NOT NULL DEFAULT '',
+  bid INTEGER NOT NULL DEFAULT 0,
+  payout INTEGER NOT NULL DEFAULT 0,
+  net INTEGER NOT NULL DEFAULT 0,
+  data TEXT DEFAULT '{}',
+  created TEXT NOT NULL
+)`;
+
 export function createTestDb(): { sqlite: Database; db: Db } {
   const sqlite = new Database(":memory:");
   const db = drizzle(sqlite, { schema });
   sqlite.run(CREATE_USERS);
   sqlite.run(CREATE_ACTIVITY);
+  sqlite.run(CREATE_HISTORY);
   return { sqlite, db };
 }
 

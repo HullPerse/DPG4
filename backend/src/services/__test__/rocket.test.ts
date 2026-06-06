@@ -77,8 +77,9 @@ describe("RocketService", () => {
 
   test("poll triggers crash when multiplier reaches crash point", async () => {
     seedRandom([0.0]);
-    const launchState = await services.rocketService.launch(userId, 3);
+    await services.rocketService.launch(userId, 3);
     fakeNow += 50000;
+
     const state = await services.rocketService.poll(userId);
     expect(state.phase).toBe("crashed");
     expect(state.net).toBe(-3);

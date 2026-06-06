@@ -5,7 +5,7 @@ import { nowIso } from "../lib/dates";
 import { SPIN_COST } from "../lib/gambling.constants";
 import { authPlugin } from "../plugins/auth.plugin";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 const WheelItemSchema = t.Object({
   id: t.String(),
@@ -76,7 +76,7 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
         image: winner.type === "image" ? winner.image : "",
         bid: free ? 0 : SPIN_COST,
         payout: 0,
-        net: free ? 0 : -(SPIN_COST),
+        net: free ? 0 : -SPIN_COST,
         data: {
           itemId: winner.id,
           itemType: winner.type,

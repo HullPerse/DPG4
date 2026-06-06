@@ -5,7 +5,7 @@ import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { Db } from "@/types";
-import { UserService } from "./user.service";
+import { UserService } from "@/services/user.service";
 import { ActivityService } from "./activity.service";
 
 export class EconomyService {
@@ -23,7 +23,10 @@ export class EconomyService {
     return withRecordMeta(row, "market");
   }
 
-  private async copyInventoryFromItem(item: typeof schema.items.$inferSelect, ownerId: string) {
+  private async copyInventoryFromItem(
+    item: typeof schema.items.$inferSelect,
+    ownerId: string,
+  ) {
     const id = newId();
     const ts = nowIso();
     await this.db.insert(schema.inventory).values({
@@ -96,7 +99,9 @@ export class EconomyService {
       updated: ts,
     });
 
-    await this.db.delete(schema.inventory).where(eq(schema.inventory.id, inventoryId));
+    await this.db
+      .delete(schema.inventory)
+      .where(eq(schema.inventory.id, inventoryId));
 
     await this.activityService.create({
       author: ownerId,
@@ -108,7 +113,12 @@ export class EconomyService {
     broadcast("market", "create", id);
     broadcast("inventory", "delete", inventoryId);
     return this.mapMarket(
-      (await this.db.select().from(schema.market).where(eq(schema.market.id, id)))[0]!,
+      (
+        await this.db
+          .select()
+          .from(schema.market)
+          .where(eq(schema.market.id, id))
+      )[0]!,
     );
   }
 
@@ -224,7 +234,12 @@ export class EconomyService {
     return true;
   }
 
-  async discountMarket(marketId: string, ownerId: string, price: number, discountPrice: number) {
+  async discountMarket(
+    marketId: string,
+    ownerId: string,
+    price: number,
+    discountPrice: number,
+  ) {
     await this.db
       .update(schema.market)
       .set({
@@ -239,7 +254,9 @@ export class EconomyService {
   }
 
   async removeInventoryById(inventoryId: string) {
-    await this.db.delete(schema.inventory).where(eq(schema.inventory.id, inventoryId));
+    await this.db
+      .delete(schema.inventory)
+      .where(eq(schema.inventory.id, inventoryId));
     broadcast("inventory", "delete", inventoryId);
   }
 
@@ -251,7 +268,11 @@ export class EconomyService {
     broadcast("inventory", "update", inventoryId);
   }
 
-  async chargeInventory(inventoryId: string, oldCharge: number, newCharge: number) {
+  async chargeInventory(
+    inventoryId: string,
+    oldCharge: number,
+    newCharge: number,
+  ) {
     const total = oldCharge + newCharge;
     if (total === 0) {
       await this.db

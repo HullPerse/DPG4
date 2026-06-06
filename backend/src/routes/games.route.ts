@@ -10,7 +10,7 @@ import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 const STATUSES: Record<string, string> = {
   PLAYING: "В ПРОЦЕССЕ",

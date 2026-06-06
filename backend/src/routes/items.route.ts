@@ -10,7 +10,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { authPlugin } from "../plugins/auth.plugin";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 const itemListColumns = {
   id: schema.items.id,
@@ -34,13 +34,18 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .get(
     "/",
     async ({ db, query, set }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : undefined;
+      const limit = query.limit
+        ? Math.min(Number(query.limit), 500)
+        : undefined;
       const offset = query.offset ? Number(query.offset) : 0;
       let q = db.select(itemListColumns).from(schema.items);
       const conditions: SQL[] = [];
 
       if (query.labels) {
-        const labels = query.labels.split(",").map((l) => l.trim()).filter(Boolean);
+        const labels = query.labels
+          .split(",")
+          .map((l) => l.trim())
+          .filter(Boolean);
         if (labels.length > 0) {
           conditions.push(inArray(schema.items.label, labels));
         }
@@ -63,13 +68,29 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       }
 
       if (query.sort === "label") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.label) : asc(schema.items.label)) as typeof q;
+        q = q.orderBy(
+          query.order === "desc"
+            ? desc(schema.items.label)
+            : asc(schema.items.label),
+        ) as typeof q;
       } else if (query.sort === "created") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.created) : asc(schema.items.created)) as typeof q;
+        q = q.orderBy(
+          query.order === "desc"
+            ? desc(schema.items.created)
+            : asc(schema.items.created),
+        ) as typeof q;
       } else if (query.sort === "charge") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.charge) : asc(schema.items.charge)) as typeof q;
+        q = q.orderBy(
+          query.order === "desc"
+            ? desc(schema.items.charge)
+            : asc(schema.items.charge),
+        ) as typeof q;
       } else if (query.sort === "type") {
-        q = q.orderBy(query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type)) as typeof q;
+        q = q.orderBy(
+          query.order === "desc"
+            ? desc(schema.items.type)
+            : asc(schema.items.type),
+        ) as typeof q;
       }
 
       const searchLower = query.search?.toLowerCase();
@@ -167,49 +188,53 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       }),
     },
   )
-  .patch("/:id", async ({ params, body, db }) => {
-    let imageFile = parseFileInput(body.image);
-    if (imageFile && isImageMime(imageFile.mime)) {
-      imageFile = {
-        data: await compressSquare(imageFile.data),
-        mime: "image/webp",
+  .patch(
+    "/:id",
+    async ({ params, body, db }) => {
+      let imageFile = parseFileInput(body.image);
+      if (imageFile && isImageMime(imageFile.mime)) {
+        imageFile = {
+          data: await compressSquare(imageFile.data),
+          mime: "image/webp",
+        };
+      }
+      const patch: Partial<typeof schema.items.$inferInsert> = {
+        updated: nowIso(),
       };
-    }
-    const patch: Partial<typeof schema.items.$inferInsert> = {
-      updated: nowIso(),
-    };
-    if (body.type !== undefined) patch.type = body.type;
-    if (body.label !== undefined) patch.label = body.label;
-    if (body.description !== undefined) patch.description = body.description;
-    if (body.charge !== undefined) patch.charge = body.charge;
-    if (body.rollable !== undefined) patch.rollable = body.rollable;
-    if (body.status !== undefined) patch.status = body.status;
-    if (imageFile !== undefined) {
-      patch.image = imageFile?.data ?? null;
-      patch.imageMime = imageFile?.mime ?? null;
-    }
-    await db
-      .update(schema.items)
-      .set(patch)
-      .where(eq(schema.items.id, params.id));
-    broadcast("items", "update", params.id);
-    const [row] = await db
-      .select()
-      .from(schema.items)
-      .where(eq(schema.items.id, params.id));
-    logger.info(null, "updated item", row?.label ?? params.id);
-    return mapItem(row!);
-  }, {
-    body: t.Object({
-      type: t.Optional(t.String()),
-      label: t.Optional(t.String()),
-      description: t.Optional(t.String()),
-      charge: t.Optional(t.Number()),
-      rollable: t.Optional(t.Boolean()),
-      status: t.Optional(t.Nullable(t.Array(t.String()))),
-      image: t.Optional(t.Any()),
-    }),
-  })
+      if (body.type !== undefined) patch.type = body.type;
+      if (body.label !== undefined) patch.label = body.label;
+      if (body.description !== undefined) patch.description = body.description;
+      if (body.charge !== undefined) patch.charge = body.charge;
+      if (body.rollable !== undefined) patch.rollable = body.rollable;
+      if (body.status !== undefined) patch.status = body.status;
+      if (imageFile !== undefined) {
+        patch.image = imageFile?.data ?? null;
+        patch.imageMime = imageFile?.mime ?? null;
+      }
+      await db
+        .update(schema.items)
+        .set(patch)
+        .where(eq(schema.items.id, params.id));
+      broadcast("items", "update", params.id);
+      const [row] = await db
+        .select()
+        .from(schema.items)
+        .where(eq(schema.items.id, params.id));
+      logger.info(null, "updated item", row?.label ?? params.id);
+      return mapItem(row!);
+    },
+    {
+      body: t.Object({
+        type: t.Optional(t.String()),
+        label: t.Optional(t.String()),
+        description: t.Optional(t.String()),
+        charge: t.Optional(t.Number()),
+        rollable: t.Optional(t.Boolean()),
+        status: t.Optional(t.Nullable(t.Array(t.String()))),
+        image: t.Optional(t.Any()),
+      }),
+    },
+  )
   .delete("/:id", async ({ params, db }) => {
     await db.delete(schema.items).where(eq(schema.items.id, params.id));
     broadcast("items", "delete", params.id);
@@ -284,8 +309,16 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .post(
     "/add",
     async ({ body, user, economyService }) => {
-      const result = await economyService.addInventory(body.userId, body.itemId);
-      logger.info(user?.username, "added item to inventory", `user:${body.userId}`, `item:${body.itemId}`);
+      const result = await economyService.addInventory(
+        body.userId,
+        body.itemId,
+      );
+      logger.info(
+        user?.username,
+        "added item to inventory",
+        `user:${body.userId}`,
+        `item:${body.itemId}`,
+      );
       return result;
     },
     {
@@ -303,7 +336,12 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         .set({ owner: body.newOwner, updated: nowIso() })
         .where(eq(schema.inventory.id, params.id));
       broadcast("inventory", "update", params.id);
-      logger.info(user?.username, "transferred inventory item", params.id, `to:${body.newOwner}`);
+      logger.info(
+        user?.username,
+        "transferred inventory item",
+        params.id,
+        `to:${body.newOwner}`,
+      );
       return { ok: true };
     },
     {
@@ -333,8 +371,17 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .post(
     "/:id/charge",
     async ({ params, body, user, economyService }) => {
-      const result = await economyService.chargeInventory(params.id, body.oldCharge, body.newCharge);
-      logger.info(user?.username, "charged inventory item", params.id, `${body.oldCharge}→${body.newCharge}`);
+      const result = await economyService.chargeInventory(
+        params.id,
+        body.oldCharge,
+        body.newCharge,
+      );
+      logger.info(
+        user?.username,
+        "charged inventory item",
+        params.id,
+        `${body.oldCharge}→${body.newCharge}`,
+      );
       return result;
     },
     {
@@ -346,7 +393,16 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/consume",
-    async ({ params, body, db, user, set, economyService, userService, activityService }) => {
+    async ({
+      params,
+      body,
+      db,
+      user,
+      set,
+      economyService,
+      userService,
+      activityService,
+    }) => {
       if (!user) {
         set.status = 401;
         return { error: "Unauthorized" };
@@ -379,7 +435,8 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }),
       detail: {
         tags: ["items"],
-        summary: "Consume inventory item - charge and create activity in one call",
+        summary:
+          "Consume inventory item - charge and create activity in one call",
       },
     },
   )
@@ -436,8 +493,17 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .post(
     "/sell",
     async ({ body, economyService }) => {
-      const result = await economyService.sellInventory(body.inventoryId, body.ownerId, body.price);
-      logger.info(null, "listed item on market", `item:${body.inventoryId}`, `price:${body.price}`);
+      const result = await economyService.sellInventory(
+        body.inventoryId,
+        body.ownerId,
+        body.price,
+      );
+      logger.info(
+        null,
+        "listed item on market",
+        `item:${body.inventoryId}`,
+        `price:${body.price}`,
+      );
       return result;
     },
     {
@@ -451,8 +517,17 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .post(
     "/:id/buy",
     async ({ params, body, economyService }) => {
-      const result = await economyService.buyMarket(params.id, body.newOwnerId, body.oldOwnerId);
-      logger.info(null, "bought market item", params.id, `buyer:${body.newOwnerId}`);
+      const result = await economyService.buyMarket(
+        params.id,
+        body.newOwnerId,
+        body.oldOwnerId,
+      );
+      logger.info(
+        null,
+        "bought market item",
+        params.id,
+        `buyer:${body.newOwnerId}`,
+      );
       return result;
     },
     {
@@ -470,8 +545,18 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .post(
     "/:id/discount",
     async ({ params, body, economyService }) => {
-      const result = await economyService.discountMarket(params.id, body.ownerId, body.price, body.discountPrice);
-      logger.info(null, "discounted market item", params.id, `${body.price}→${body.discountPrice}`);
+      const result = await economyService.discountMarket(
+        params.id,
+        body.ownerId,
+        body.price,
+        body.discountPrice,
+      );
+      logger.info(
+        null,
+        "discounted market item",
+        params.id,
+        `${body.price}→${body.discountPrice}`,
+      );
       return result;
     },
     {
@@ -494,8 +579,15 @@ export const tradeRoute = new Elysia({ prefix: "/trade" })
   .post(
     "/",
     async ({ body, economyService }) => {
-      const result = await economyService.tradeInventory(body.currentUser, body.otherUser);
-      logger.info(null, "trade completed", `${body.currentUser.id} ↔ ${body.otherUser.id}`);
+      const result = await economyService.tradeInventory(
+        body.currentUser,
+        body.otherUser,
+      );
+      logger.info(
+        null,
+        "trade completed",
+        `${body.currentUser.id} ↔ ${body.otherUser.id}`,
+      );
       return result;
     },
     {

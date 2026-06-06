@@ -9,7 +9,7 @@ import {
   DiceRollPhaseResult,
 } from "@/types/gambling";
 import { Db } from "@/types";
-import { UserService } from "../user.service";
+import { UserService } from "@/services/user.service";
 import {
   GAMBLING_BAN_THRESHOLD,
   GAMBLING_MIN_BET,

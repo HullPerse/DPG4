@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Users,
   type LucideIcon,
+  History,
 } from "lucide-react";
 
 export const resourceIcons: Record<string, LucideIcon> = {
@@ -26,4 +27,5 @@ export const resourceIcons: Record<string, LucideIcon> = {
   ads: Megaphone,
   drawings: Brush,
   cells: Grid3x3,
+  history: History,
 };

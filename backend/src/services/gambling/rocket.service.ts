@@ -5,8 +5,13 @@ import { nowIso } from "../../lib/dates";
 import { newId } from "../../lib/ids";
 import type { ActiveRocketGame, RocketState } from "@/types/gambling";
 import type { Db } from "@/types";
-import { UserService } from "../user.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET, ROCKET_START_MULT } from "../../lib/gambling.constants";
+import { UserService } from "@/services/user.service";
+import {
+  GAMBLING_BAN_THRESHOLD,
+  GAMBLING_MIN_BET,
+  GAMBLING_MAX_BET,
+  ROCKET_START_MULT,
+} from "../../lib/gambling.constants";
 
 export class RocketService {
   constructor(
@@ -18,7 +23,7 @@ export class RocketService {
   private lastEndedGames = new Map<string, RocketState>();
   private crashHistory: { crashPoint: number; timestamp: number }[] = [];
   private MAX_HISTORY = 50;
-  private HOUSE_EDGE = 0.90;
+  private HOUSE_EDGE = 0.9;
 
   private generateCrashPoint(bid: number): number {
     const e = Math.random();
@@ -28,7 +33,10 @@ export class RocketService {
 
   private computeMultiplier(elapsedMs: number): number {
     const t = elapsedMs / 1000;
-    return Math.max(0, Math.floor((ROCKET_START_MULT + 0.08 * t + 0.02 * t * t) * 100) / 100);
+    return Math.max(
+      0,
+      Math.floor((ROCKET_START_MULT + 0.08 * t + 0.02 * t * t) * 100) / 100,
+    );
   }
 
   private idleState(): RocketState {
@@ -45,8 +53,14 @@ export class RocketService {
     };
   }
 
-  private async processCrash(userId: string, game: ActiveRocketGame): Promise<RocketState> {
-    this.crashHistory.push({ crashPoint: game.crashPoint, timestamp: Date.now() });
+  private async processCrash(
+    userId: string,
+    game: ActiveRocketGame,
+  ): Promise<RocketState> {
+    this.crashHistory.push({
+      crashPoint: game.crashPoint,
+      timestamp: Date.now(),
+    });
     if (this.crashHistory.length > this.MAX_HISTORY) this.crashHistory.shift();
 
     await this.userService.score(userId, -game.bid);
@@ -93,10 +107,15 @@ export class RocketService {
   }
 
   async launch(userId: string, bid: number): Promise<RocketState> {
-    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid))
+    if (
+      bid < GAMBLING_MIN_BET ||
+      bid > GAMBLING_MAX_BET ||
+      !Number.isInteger(bid)
+    )
       throw new Error("Invalid bid");
 
-    if (this.activeGames.has(userId)) throw new Error("Game already in progress");
+    if (this.activeGames.has(userId))
+      throw new Error("Game already in progress");
 
     this.lastEndedGames.delete(userId);
 
@@ -117,7 +136,12 @@ export class RocketService {
       cashoutMultiplier: null,
     });
 
-    logger.info(user.username, "launched rocket", `bid:${bid}`, `crash:${crashPoint}x`);
+    logger.info(
+      user.username,
+      "launched rocket",
+      `bid:${bid}`,
+      `crash:${crashPoint}x`,
+    );
 
     return {
       phase: "launching",
@@ -182,7 +206,11 @@ export class RocketService {
         bid: game.bid,
         payout,
         net,
-        data: { crashPoint: game.crashPoint, cashoutMultiplier: currentMultiplier, phase: "cashed" },
+        data: {
+          crashPoint: game.crashPoint,
+          cashoutMultiplier: currentMultiplier,
+          phase: "cashed",
+        },
         created: nowIso(),
       });
     }

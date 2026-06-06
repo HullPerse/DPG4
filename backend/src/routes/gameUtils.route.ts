@@ -6,10 +6,17 @@ import {
   calculateScore,
   weightedRandom,
 } from "../lib/game.utils";
-import { GAMBLING_MIN_BET, GAMBLING_MAX_BET, GAMBLING_BID_OPTIONS, REROLL_PRICE, SPIN_COST, GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
+import {
+  GAMBLING_MIN_BET,
+  GAMBLING_MAX_BET,
+  GAMBLING_BID_OPTIONS,
+  REROLL_PRICE,
+  SPIN_COST,
+  GAMBLING_BAN_THRESHOLD,
+} from "../lib/gambling.constants";
 import { calculateMovePath } from "../lib/cell.utils";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 import { nowIso } from "../lib/dates";
 
 import { authPlugin } from "../plugins/auth.plugin";
@@ -37,16 +44,20 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .get("/calculate-cost", () => ({ cost: calculateCost() }), {
     detail: { tags: ["utils"], summary: "Wheel spin cost" },
   })
-  .get("/gambling-config", () => ({
-    banThreshold: GAMBLING_BAN_THRESHOLD,
-    minBet: GAMBLING_MIN_BET,
-    maxBet: GAMBLING_MAX_BET,
-    bidOptions: GAMBLING_BID_OPTIONS,
-    rerollPrice: REROLL_PRICE,
-    spinCost: SPIN_COST,
-  }), {
-    detail: { tags: ["utils"], summary: "Server gambling config" },
-  })
+  .get(
+    "/gambling-config",
+    () => ({
+      banThreshold: GAMBLING_BAN_THRESHOLD,
+      minBet: GAMBLING_MIN_BET,
+      maxBet: GAMBLING_MAX_BET,
+      bidOptions: GAMBLING_BID_OPTIONS,
+      rerollPrice: REROLL_PRICE,
+      spinCost: SPIN_COST,
+    }),
+    {
+      detail: { tags: ["utils"], summary: "Server gambling config" },
+    },
+  )
   .post(
     "/dice-roll",
     async ({ body, set, diceService, user }) => {
@@ -67,7 +78,9 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({
-        bid: t.Optional(t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET })),
+        bid: t.Optional(
+          t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+        ),
       }),
       detail: {
         tags: ["utils"],
@@ -100,7 +113,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({
-        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+        bid: t.Integer({
+          minimum: GAMBLING_MIN_BET,
+          maximum: GAMBLING_MAX_BET,
+        }),
       }),
       detail: {
         tags: ["utils"],
@@ -205,7 +221,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({
-        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+        bid: t.Integer({
+          minimum: GAMBLING_MIN_BET,
+          maximum: GAMBLING_MAX_BET,
+        }),
       }),
       detail: {
         tags: ["utils"],
@@ -302,7 +321,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({
-        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+        bid: t.Integer({
+          minimum: GAMBLING_MIN_BET,
+          maximum: GAMBLING_MAX_BET,
+        }),
       }),
       detail: {
         tags: ["utils"],

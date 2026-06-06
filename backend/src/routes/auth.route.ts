@@ -8,7 +8,7 @@ import { omitPassword, withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
   .use(dbPlugin)

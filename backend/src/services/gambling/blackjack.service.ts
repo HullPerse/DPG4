@@ -15,8 +15,12 @@ import {
   resolveLabels,
   dealerPlay,
 } from "../../lib/blackjack.utils";
-import { UserService } from "../user.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
+import { UserService } from "@/services/user.service";
+import {
+  GAMBLING_BAN_THRESHOLD,
+  GAMBLING_MIN_BET,
+  GAMBLING_MAX_BET,
+} from "../../lib/gambling.constants";
 
 interface ActiveGame {
   userId: string;
@@ -70,7 +74,11 @@ export class BlackjackService {
   private async finishGame(game: ActiveGame): Promise<BlackjackState> {
     game.phase = "ended";
 
-    const { payout, outcome } = computeOutcome(game.playerHand, game.dealerHand, game.bid);
+    const { payout, outcome } = computeOutcome(
+      game.playerHand,
+      game.dealerHand,
+      game.bid,
+    );
     const pv = handValue(game.playerHand);
     const dv = handValue(game.dealerHand);
     const { label, tone } = resolveLabels(outcome, pv, dv);
@@ -158,7 +166,11 @@ export class BlackjackService {
   }
 
   async deal(userId: string, bid: number): Promise<BlackjackState> {
-    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid)) {
+    if (
+      bid < GAMBLING_MIN_BET ||
+      bid > GAMBLING_MAX_BET ||
+      !Number.isInteger(bid)
+    ) {
       throw new Error("Invalid bid");
     }
 

@@ -6,7 +6,7 @@ import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 const cellPatchBody = t.Object({
   type: t.Optional(t.String()),

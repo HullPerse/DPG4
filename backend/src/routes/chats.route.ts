@@ -8,7 +8,7 @@ import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 function mapChat(row: typeof schema.chats.$inferSelect) {
   return {
@@ -47,16 +47,17 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       );
     }
 
-    const orderCol = query.sort === "created"
-      ? schema.chats.created
-      : schema.chats.created;
+    const orderCol =
+      query.sort === "created" ? schema.chats.created : schema.chats.created;
     const orderDir = query.sort === "created" ? "ASC" : "DESC";
 
     const rows = await db
       .select()
       .from(schema.chats)
       .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(orderDir === "ASC" ? sql`${orderCol} ASC` : sql`${orderCol} DESC`);
+      .orderBy(
+        orderDir === "ASC" ? sql`${orderCol} ASC` : sql`${orderCol} DESC`,
+      );
 
     return rows.map(mapChat);
   })
@@ -83,7 +84,12 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
             color: sender?.color ?? "",
           },
           receiver: isGlobal
-            ? { id: "global", username: "Глобальный чат", avatar: "🌐", color: "#f6c177" }
+            ? {
+                id: "global",
+                username: "Глобальный чат",
+                avatar: "🌐",
+                color: "#f6c177",
+              }
             : {
                 id: body.receiverId,
                 username: receiver?.username ?? "",
@@ -104,10 +110,21 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       });
 
       broadcast("chats", "create", id);
-      const senderUsername = (data as { sender?: { username?: string } } | undefined)?.sender?.username;
-      const receiverLabel = (data as { receiver?: { username?: string } } | undefined)?.receiver?.username ?? "global";
-      logger.info(senderUsername ?? null, "sent message", `to:${receiverLabel}`);
-      const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, id));
+      const senderUsername = (
+        data as { sender?: { username?: string } } | undefined
+      )?.sender?.username;
+      const receiverLabel =
+        (data as { receiver?: { username?: string } } | undefined)?.receiver
+          ?.username ?? "global";
+      logger.info(
+        senderUsername ?? null,
+        "sent message",
+        `to:${receiverLabel}`,
+      );
+      const [row] = await db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.id, id));
       return mapChat(row!);
     },
     {
@@ -131,7 +148,10 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
         .set(patch)
         .where(eq(schema.chats.id, params.id));
       broadcast("chats", "update", params.id);
-      const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, params.id));
+      const [row] = await db
+        .select()
+        .from(schema.chats)
+        .where(eq(schema.chats.id, params.id));
       logger.info(null, "updated message", params.id);
       return mapChat(row!);
     },
@@ -183,7 +203,13 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
     return { chat: chats.map(mapChat), user };
   })
   .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db.select().from(schema.chats).where(eq(schema.chats.id, params.id));
-    if (!row) { set.status = 404; return { error: "Not found" }; }
+    const [row] = await db
+      .select()
+      .from(schema.chats)
+      .where(eq(schema.chats.id, params.id));
+    if (!row) {
+      set.status = 404;
+      return { error: "Not found" };
+    }
     return mapChat(row);
   });
