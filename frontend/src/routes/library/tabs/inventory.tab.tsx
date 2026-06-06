@@ -65,7 +65,6 @@ function InventoryTab({ id }: { id?: string }) {
   const [price, setPrice] = useState<string>("");
   const [removeStatus, setRemoveStatus] = useState<boolean>(false);
   const [activeStatus, setActiveStatus] = useState<string>("");
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<string | undefined>(
     undefined,
   );
@@ -288,6 +287,17 @@ function InventoryTab({ id }: { id?: string }) {
     onSettled: () => setLoading({ itemId: null, type: null }),
   });
 
+  const statusMutation = useMutation({
+    mutationFn: async (status: string) => {
+      if (currentId !== user?.id) throw new Error("Not authorized");
+      await userApi.changeUserStatus(user?.id ?? "", status, "remove");
+    },
+    onSuccess: () => {
+      setActiveStatus("");
+      setRemoveStatus(false);
+    },
+  });
+
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
       {user && modalItem?.Modal && modalConsume ? (
@@ -349,22 +359,11 @@ function InventoryTab({ id }: { id?: string }) {
                 <section className="flex w-full min-h-0 h-full flex-col p-1">
                   <Button
                     variant="error"
-                    onClick={async () => {
-                      if (currentId !== user?.id) return;
-                      setIsDeleting(true);
-
-                      await userApi.changeUserStatus(
-                        user?.id,
-                        activeStatus,
-                        "remove",
-                      );
-
-                      setActiveStatus("");
-                      setRemoveStatus(false);
-                      setIsDeleting(false);
-                    }}
+                    loading={statusMutation.isPending}
+                    disabled={currentId !== user?.id}
+                    onClick={() => statusMutation.mutate(activeStatus)}
                   >
-                    {isDeleting ? <SmallLoader /> : "УДАЛИТЬ"}
+                    УДАЛИТЬ
                   </Button>
                 </section>
               </main>

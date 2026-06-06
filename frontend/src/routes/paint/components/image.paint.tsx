@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/user.store";
 import { PaintType } from "@/types/paint";
 import { Trash, ZoomIn } from "lucide-react";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 const paintApi = new PaintApi();
 
@@ -20,7 +20,9 @@ function ImagePaint({
 }) {
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const removeMutation = useMutation({
+    mutationFn: () => paintApi.removeDraw(String(item.id)),
+  });
 
   return (
     <main
@@ -70,17 +72,9 @@ function ImagePaint({
           <Button
             size="icon"
             variant="error"
-            loading={loading}
+            loading={removeMutation.isPending}
             rendered={item.author.id === user?.id}
-            onClick={async () => {
-              if (item.author.id !== user?.id) return;
-
-              setLoading(true);
-
-              await paintApi.removeDraw(String(item.id));
-
-              setLoading(false);
-            }}
+            onClick={() => removeMutation.mutate()}
           >
             <Trash />
           </Button>

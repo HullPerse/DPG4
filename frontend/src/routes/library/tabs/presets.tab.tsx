@@ -7,20 +7,21 @@ import {
   ExternalLink,
   Plus,
 } from "lucide-react";
-import { memo, useCallback, useRef, useState } from "react";
-
-import { useDebounce } from "@/hooks/debounce.hook";
-import { useUserStore } from "@/store/user.store";
-
-import PresetsList from "../components/presets/presets.presets";
-
-import GameApi from "@/api/games.api";
-import PresetSettings from "../components/presets/list.presets";
-import NewGameLibrary from "../components/library/newGame.library";
-import PresetsWheel from "../components/presets/wheel.presets";
-import { useDataStore } from "@/store/data.store";
-import { openUrl } from "@tauri-apps/plugin-opener";
-const gameApi = new GameApi();
+import { memo, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+ 
+ import { useDebounce } from "@/hooks/debounce.hook";
+ import { useUserStore } from "@/store/user.store";
+ 
+ import PresetsList from "../components/presets/presets.presets";
+ 
+ import GameApi from "@/api/games.api";
+ import PresetSettings from "../components/presets/list.presets";
+ import NewGameLibrary from "../components/library/newGame.library";
+ import PresetsWheel from "../components/presets/wheel.presets";
+ import { useDataStore } from "@/store/data.store";
+ import { openUrl } from "@tauri-apps/plugin-opener";
+ const gameApi = new GameApi();
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
@@ -34,7 +35,6 @@ function PresetsTab() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const [loading, setLoadinng] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<{
     id: string;
     label: string;
@@ -43,12 +43,10 @@ function PresetsTab() {
     "presetAll" | "presetWheel" | "presetList" | "addPresetGame"
   >("presetAll");
 
-  const handleAddPreset = useCallback(async () => {
-    setLoadinng(true);
-    await gameApi.addPreset(searchTerm);
-    setSearchTerm("");
-    setLoadinng(false);
-  }, []);
+  const addPresetMutation = useMutation({
+    mutationFn: () => gameApi.addPreset(searchTerm),
+    onSuccess: () => setSearchTerm(""),
+  });
 
   const getComponent = () => {
     if (!currentPreset)
@@ -122,16 +120,16 @@ function PresetsTab() {
           className="h-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={loading || currentTab === "presetWheel"}
+          disabled={addPresetMutation.isPending || currentTab === "presetWheel"}
         />
 
         {isAdmin && currentTab === "presetAll" && (
           <Button
             variant="link"
             className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
-            loading={loading}
+            loading={addPresetMutation.isPending}
             disabled={!searchTerm}
-            onClick={handleAddPreset}
+            onClick={() => addPresetMutation.mutate()}
           >
             <Plus />
           </Button>

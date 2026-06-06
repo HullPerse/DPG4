@@ -2,6 +2,7 @@ import { useUserStore } from "@/store/user.store";
 import { Button } from "@/components/ui/button.component";
 import { useRef, useCallback, useState, memo, useEffect } from "react";
 import { flushSync } from "react-dom";
+import { useMutation } from "@tanstack/react-query";
 import {
   rollDiceDealer,
   rerollDiceDealer,
@@ -33,7 +34,6 @@ function DiceTab() {
     useGamblingStore();
   const bidOptions = useBidOptions();
 
-  const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState(3);
 
   const [gamePhase, setGamePhase] = useState<
@@ -159,7 +159,6 @@ function DiceTab() {
       tone: finalResult.tone,
     });
     setGamePhase("result");
-    setLoading(false);
   };
 
   const failRound = (label: string) => {
@@ -169,7 +168,6 @@ function DiceTab() {
     setDisplayBalance(useUserStore.getState().user?.money ?? 0);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
-    setLoading(false);
   };
 
   const resetDiceVisuals = () => {
@@ -179,18 +177,17 @@ function DiceTab() {
     setPlayerDiceActive(false);
   };
 
-  const startGame = async () => {
-    if (!user || balance < bid || gamblingBanned || loading) return;
+  const gameMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || balance < bid || gamblingBanned) return;
 
-    const round = ++roundIdRef.current;
-    resetDiceVisuals();
-    setResult(null);
-    setDealerTarget(null);
-    setDisplayBalance(balance);
-    setLoading(true);
-    setGamePhase("dealer");
+      const round = ++roundIdRef.current;
+      resetDiceVisuals();
+      setResult(null);
+      setDealerTarget(null);
+      setDisplayBalance(balance);
+      setGamePhase("dealer");
 
-    try {
       await abortDice();
       if (!isRoundActive(round)) return;
 
@@ -211,11 +208,9 @@ function DiceTab() {
       if (!isRoundActive(round)) return;
 
       finishRound(finalResult);
-    } catch {
-      if (!isRoundActive(round)) return;
-      failRound("Ошибка сервера. Попробуй ещё раз.");
-    }
-  };
+    },
+    onError: () => failRound("Ошибка сервера. Попробуй ещё раз."),
+  });
 
   const showDealerLabel = gamePhase !== "idle";
 
@@ -227,7 +222,7 @@ function DiceTab() {
         bidOptions={bidOptions}
         bid={bid}
         onBidChange={setBid}
-        disabled={loading}
+        disabled={gameMutation.isPending}
       />
 
       <section className="relative w-full h-110 min-h-110 overflow-hidden border-2 border-highlight-high bg-background">
@@ -250,9 +245,9 @@ function DiceTab() {
         <Button
           variant="info"
           className="w-xl"
-          loading={loading}
+          loading={gameMutation.isPending}
           disabled={balance < bid || gamblingBanned}
-          onClick={startGame}
+          onClick={() => gameMutation.mutate()}
         >
           {gamblingBanned ? (
             "Вы забанены"

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity } from "@/types/activity";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,11 @@ function Toast({
 }) {
   const removeToast = useToastStore((s) => s.removeToast);
 
-  const [loading, setLoading] = useState(false);
+  const actionMutation = useMutation({
+    mutationFn: async () => {
+      await onClick?.fn();
+    },
+  });
 
   useEffect(() => {
     if (timeout === Infinity) return;
@@ -78,15 +83,8 @@ function Toast({
         <Button
           variant="success"
           size="icon"
-          loading={loading}
-          onClick={() => {
-            setLoading(true);
-            onClick?.fn();
-
-            setTimeout(() => {
-              setLoading(false);
-            }, 2000);
-          }}
+          loading={actionMutation.isPending}
+          onClick={() => actionMutation.mutate()}
         >
           {onClick?.icon}
         </Button>

@@ -1,6 +1,7 @@
 import { useUserStore } from "@/store/user.store";
 import { Button } from "@/components/ui/button.component";
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
   blackjackDeal,
   blackjackHit,
@@ -37,7 +38,6 @@ function BlackjackTab() {
 
   const [game, setGame] = useState<BlackjackState | null>(null);
   const [bid, setBid] = useState(3);
-  const [loading, setLoading] = useState(false);
 
   const [flyingCards, setFlyingCards] = useState<Set<string>>(() => new Set());
   const [uiResult, setUiResult] = useState<BlackjackUiResult>(null);
@@ -136,58 +136,42 @@ function BlackjackTab() {
     };
   }, [user?.id, restoreGame]);
 
-  const handleDeal = async () => {
-    if (loading || !user || balance < bid || gamblingBanned) return;
+  const dealMutation = useMutation({
+    mutationFn: () => blackjackDeal(bid),
+    onSuccess: (state) => {
+      setUiResult(null);
+      setRevealHole(false);
+      setHoleCard(null);
 
-    setLoading(true);
-    setUiResult(null);
-    setRevealHole(false);
-    setHoleCard(null);
-    setFlyingCards(new Set());
-
-    try {
-      const state = await blackjackDeal(bid);
       const fly = buildDealFlyingCards(state);
       setFlyingCards(fly);
       applyState(state);
       scheduleFlyClear(fly.size);
-    } catch {
+    },
+    onError: async () => {
       try {
         const existing = await syncBlackjack();
         if (existing) restoreGame(existing);
-      } catch {
-        /* ignore */
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      } catch { /* ignore */ }
+    },
+  });
 
-  const handleHit = async () => {
-    if (loading || !user || !game || game.phase !== "player") return;
-
-    setLoading(true);
-    try {
-      const state = await blackjackHit();
+  const hitMutation = useMutation({
+    mutationFn: () => blackjackHit(),
+    onSuccess: (state) => {
       const newIndex = state.playerHand.length - 1;
       const fly = new Set<string>([`p-${newIndex}`]);
       setFlyingCards(fly);
       applyState(state);
       scheduleFlyClear(1);
-    } catch {
-      /* keep current game */
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    onError: () => { /* keep current game */ },
+  });
 
-  const handleStand = async () => {
-    if (loading || !user || !game || game.phase !== "player") return;
-
-    setLoading(true);
-    try {
-      const hadHole = game.dealerHoleHidden;
-      const state = await blackjackStand();
+  const standMutation = useMutation({
+    mutationFn: () => blackjackStand(),
+    onSuccess: async (state) => {
+      const hadHole = game?.dealerHoleHidden;
       const fly = new Set<string>();
 
       if (hadHole && state.dealerHand.length > 1) {
@@ -205,12 +189,11 @@ function BlackjackTab() {
       setFlyingCards(fly);
       applyState(state);
       if (fly.size > 0) scheduleFlyClear(fly.size);
-    } catch {
-      /* keep current game */
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    onError: () => { /* keep current game */ },
+  });
+
+  const loading = dealMutation.isPending || hitMutation.isPending || standMutation.isPending;
 
   const newHand = async () => {
     if (user && game?.phase === "player") {
@@ -278,7 +261,7 @@ function BlackjackTab() {
             className="w-full"
             loading={loading}
             disabled={balance < bid || gamblingBanned}
-            onClick={handleDeal}
+            onClick={() => dealMutation.mutate()}
           >
             {gamblingBanned ? (
               "Вы забанены"
@@ -293,7 +276,7 @@ function BlackjackTab() {
                 variant="success"
                 className="flex-1"
                 loading={loading}
-                onClick={handleHit}
+                  onClick={() => hitMutation.mutate()}
               >
                 Взять
               </Button>
@@ -301,7 +284,7 @@ function BlackjackTab() {
                 variant="info"
                 className="flex-1"
                 loading={loading}
-                onClick={handleStand}
+                  onClick={() => standMutation.mutate()}
               >
                 Хватит
               </Button>

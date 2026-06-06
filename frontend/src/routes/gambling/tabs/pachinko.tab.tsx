@@ -10,6 +10,7 @@ import {
   lazy,
   Suspense,
 } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
   dropPachinko,
   settlePachinko,
@@ -55,7 +56,6 @@ function PachinkoTab() {
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
-  const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState<number>(3);
 
   const [dropKey, setDropKey] = useState(0);
@@ -65,10 +65,24 @@ function PachinkoTab() {
   const [kickTrigger, setKickTrigger] = useState(0);
   const [showKickButton, setShowKickButton] = useState(false);
   const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const dropMutation = useMutation({
+    mutationFn: () => dropPachinko(bid),
+    onSuccess: (state) => {
+      setResult(null);
+      settlingRef.current = false;
+      setStartX(randomDropOffsetX());
+      setGameState(state);
+      setDropKey((k) => k + 1);
+      useUserStore.setState({ user: { ...user!, money: state.balance } });
+    },
+    onError: () => setGameState(IDLE_STATE),
+  });
+
   const inDrop = gameState.phase === "dropping";
   const roundDone = gameState.phase === "done";
   const showRat = inDrop || roundDone;
-  const canAct = !loading && !inDrop && !gamblingBanned && balance >= bid;
+  const canAct = !dropMutation.isPending && !inDrop && !gamblingBanned && balance >= bid;
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
@@ -91,27 +105,6 @@ function PachinkoTab() {
       }
     };
   }, []);
-
-  const handleDrop = async () => {
-    if (!user || loading || inDrop || gamblingBanned || balance < bid) return;
-    setLoading(true);
-    setResult(null);
-    settlingRef.current = false;
-
-    const offset = randomDropOffsetX();
-    setStartX(offset);
-
-    try {
-      const state = await dropPachinko(bid);
-      setGameState(state);
-      setDropKey((k) => k + 1);
-      useUserStore.setState({ user: { ...user, money: state.balance } });
-      setLoading(false);
-    } catch {
-      setLoading(false);
-      setGameState(IDLE_STATE);
-    }
-  };
 
   const handleSettled = useCallback(
     async (slotIndex: number) => {
@@ -245,16 +238,16 @@ function PachinkoTab() {
         bidOptions={bidOptions}
         bid={bid}
         onBidChange={setBid}
-        disabled={inDrop || loading}
+        disabled={inDrop || dropMutation.isPending}
       />
 
       <section className="flex flex-col gap-1 w-xl mt-auto">
         <Button
           variant="info"
           className="w-full h-11"
-          loading={loading}
+          loading={dropMutation.isPending}
           disabled={!canAct}
-          onClick={handleDrop}
+          onClick={() => dropMutation.mutate()}
         >
           {gamblingBanned ? (
             "Вы забанены"

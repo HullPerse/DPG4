@@ -11,6 +11,7 @@ import { User } from "@/types/user";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import {
   Select,
@@ -32,7 +33,6 @@ function TradeTab({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<string>(
     String(user?.username),
   );
@@ -79,35 +79,34 @@ function TradeTab({ id }: { id: string }) {
       />
     );
 
-  const handleTrade = async () => {
-    if (!data) return;
-    setLoading(true);
+  const tradeMutation = useMutation({
+    mutationFn: () => {
+      if (!data) throw new Error("No data");
 
-    const currentUser = {
-      id: user?.id,
-      money:
-        selectedItems?.money?.find((m) => m.owner === user?.username)?.amount ??
-        0,
-      items:
-        selectedItems?.items?.find((i) => i.owner === user?.username)?.items ??
-        [],
-    } as Trade;
+      const currentUser = {
+        id: user?.id,
+        money:
+          selectedItems?.money?.find((m) => m.owner === user?.username)?.amount ??
+          0,
+        items:
+          selectedItems?.items?.find((i) => i.owner === user?.username)?.items ??
+          [],
+      } as Trade;
 
-    const otherUser = {
-      id: data.user.id,
-      money:
-        selectedItems?.money?.find((m) => m.owner === data.user.username)
-          ?.amount ?? 0,
-      items:
-        selectedItems?.items?.find((i) => i.owner === data.user.username)
-          ?.items ?? [],
-    } as Trade;
+      const otherUser = {
+        id: data.user.id,
+        money:
+          selectedItems?.money?.find((m) => m.owner === data.user.username)
+            ?.amount ?? 0,
+        items:
+          selectedItems?.items?.find((i) => i.owner === data.user.username)
+            ?.items ?? [],
+      } as Trade;
 
-    await itemsApi.tradeInventory(currentUser, otherUser);
-
-    setSelectedItems(null);
-    setLoading(false);
-  };
+      return itemsApi.tradeInventory(currentUser, otherUser);
+    },
+    onSuccess: () => setSelectedItems(null),
+  });
 
   const itemComponent = (item: Inventory) => {
     return (
@@ -243,9 +242,9 @@ function TradeTab({ id }: { id: string }) {
       <Button
         variant="success"
         className="w-full"
-        loading={loading}
+        loading={tradeMutation.isPending}
         disabled={!selectedItems}
-        onClick={handleTrade}
+        onClick={() => tradeMutation.mutate()}
       >
         Отправить
       </Button>

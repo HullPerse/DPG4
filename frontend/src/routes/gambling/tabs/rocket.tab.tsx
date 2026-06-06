@@ -2,6 +2,7 @@ import { useUserStore } from "@/store/user.store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
   launchRocket,
   cashoutRocket,
@@ -58,7 +59,6 @@ function RocketTab() {
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
-  const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState<number>(3);
   const [history, setHistory] = useState<RocketHistoryEntry[]>([]);
   const [flightStart, setFlightStart] = useState<number | null>(null);
@@ -227,23 +227,17 @@ function RocketTab() {
       .catch(() => {});
   }, [user?.id, startPolling, applyRoundEnd, resetToIdle]);
 
-  const handleLaunch = async () => {
-    if (loading || !user || balance < bid || gamblingBanned) return;
-    setLoading(true);
-    roundEndedRef.current = false;
-    setResult(null);
-
-    try {
-      const state = await launchRocket(bid);
+  const launchMutation = useMutation({
+    mutationFn: () => launchRocket(bid),
+    onSuccess: (state) => {
+      roundEndedRef.current = false;
+      setResult(null);
       setGameState(state);
       setFlightStart(Date.now());
-      setLoading(false);
       startPolling();
-    } catch {
-      setLoading(false);
-      resetToIdle();
-    }
-  };
+    },
+    onError: () => resetToIdle(),
+  });
 
   const handleCashout = async () => {
     if (!user || !isActivePhase(gameState.phase)) return;
@@ -280,7 +274,7 @@ function RocketTab() {
     gameState.phase === "crashed" || gameState.phase === "cashed";
   const roundActive = isActivePhase(gameState.phase);
   const canLaunch =
-    !loading &&
+    !launchMutation.isPending &&
     !gamblingBanned &&
     balance >= bid &&
     !roundActive &&
@@ -349,9 +343,9 @@ function RocketTab() {
           <Button
             variant="info"
             className="w-full h-11"
-            loading={loading}
+            loading={launchMutation.isPending}
             disabled={!canLaunch}
-            onClick={handleLaunch}
+            onClick={() => launchMutation.mutate()}
           >
             {gamblingBanned ? (
               "Вы забанены"
