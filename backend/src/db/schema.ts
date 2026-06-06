@@ -136,19 +136,21 @@ export const drawings = sqliteTable("drawings", {
   ...timestamps,
 });
 
-export const wheelHistory = sqliteTable("wheel_history", {
+export const history = sqliteTable("history", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   owner: text("owner", { mode: "json" })
     .$type<{ id: string; username: string } | null>()
     .default(null),
-  itemId: text("item_id").notNull(),
-  itemLabel: text("item_label").notNull(),
-  itemImage: text("item_image").notNull(),
-  itemType: text("item_type").notNull(),
-  listType: text("list_type").notNull(),
-  cost: integer("cost").notNull().default(0),
-  free: integer("free", { mode: "boolean" }).notNull().default(false),
+  type: text("type").notNull(),
+  label: text("label").notNull(),
+  image: text("image").notNull().default(""),
+  bid: integer("bid").notNull().default(0),
+  payout: integer("payout").notNull().default(0),
+  net: integer("net").notNull().default(0),
+  data: text("data", { mode: "json" })
+    .$type<Record<string, unknown> | null>()
+    .default(null),
   created: text("created").notNull(),
 });
 

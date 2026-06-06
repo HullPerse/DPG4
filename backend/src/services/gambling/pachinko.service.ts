@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import type { Db } from "@/types";
 import type { PachinkoState } from "@/types/gambling";
 import { UserService } from "../user.service";
@@ -119,6 +120,25 @@ export class PachinkoService {
       .where(eq(schema.users.id, userId));
 
     this.activeGames.delete(userId);
+
+    if (user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId,
+        owner: { id: user.id, username: user.username },
+        type: "pachinko",
+        label:
+          net >= 0
+            ? `Слот ${multiplier}x +${net}`
+            : `Слот ${multiplier}x ${net}`,
+        image: "",
+        bid: game.bid,
+        payout,
+        net,
+        data: { slotIndex: slot, multiplier },
+        created: nowIso(),
+      });
+    }
 
     const label =
       net >= 0

@@ -6,7 +6,7 @@ export const APP_META = [
   { name: "notepad", label: "Заметки", priority: 5 },
   { name: "paint", label: "Рисовач", priority: 6 },
   { name: "gambling", label: "Азарт", priority: 7 },
-  { name: "wheelHistory", label: "История колес", priority: 8 },
+  { name: "history", label: "История", priority: 8 },
   { name: "globalChat", label: "Общий чат", priority: 9 },
   { name: "theme", label: "Тема", priority: 10 },
   {
@@ -91,8 +91,8 @@ export const WINDOW_META = [
     size: { width: 500, height: 600 },
   },
   {
-    id: "wheelHistory",
-    title: "История колес",
+    id: "history",
+    title: "История",
     size: { width: 600, height: 700 },
   },
   {

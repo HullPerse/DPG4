@@ -1,19 +1,116 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.component";
-import { getWheelHistory, clearWheelHistory, type WheelHistoryRecord } from "@/api/wheel.api";
-import { Trash } from "lucide-react";
+import { getHistory, type HistoryRecord } from "@/api/history.api";
+
+const TYPE_FILTERS = [
+  { value: "", label: "All" },
+  { value: "wheel", label: "Wheel" },
+  { value: "dice", label: "Dice" },
+  { value: "blackjack", label: "Blackjack" },
+  { value: "rocket", label: "Rocket" },
+  { value: "pachinko", label: "Pachinko" },
+];
+
+const TYPE_COLORS: Record<string, string> = {
+  wheel: "bg-amber-600/20 text-amber-400 border-amber-600",
+  dice: "bg-blue-600/20 text-blue-400 border-blue-600",
+  blackjack: "bg-green-600/20 text-green-400 border-green-600",
+  rocket: "bg-red-600/20 text-red-400 border-red-600",
+  pachinko: "bg-purple-600/20 text-purple-400 border-purple-600",
+};
+
+function HistoryTypeBadge({ type }: { type: string }) {
+  const color = TYPE_COLORS[type] ?? "bg-gray-600/20 text-gray-400 border-gray-600";
+  return (
+    <span
+      className={`text-xs font-bold uppercase px-1.5 py-0.5 border ${color}`}
+    >
+      {type}
+    </span>
+  );
+}
+
+function NetBadge({ net }: { net: number }) {
+  if (net > 0) {
+    return (
+      <span className="text-xs font-bold text-green-400 bg-green-600/20 border border-green-600 px-1.5 py-0.5">
+        +{net}
+      </span>
+    );
+  }
+  if (net < 0) {
+    return (
+      <span className="text-xs font-bold text-red-400 bg-red-600/20 border border-red-600 px-1.5 py-0.5">
+        {net}
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs font-bold text-muted bg-highlight-low border border-highlight-high px-1.5 py-0.5">
+      {net}
+    </span>
+  );
+}
+
+function HistoryCard({ record }: { record: HistoryRecord }) {
+  return (
+    <div className="flex flex-row gap-2 p-2 border-2 border-highlight-high bg-card hover:border-primary transition-colors">
+      {record.type === "wheel" && record.image ? (
+        <div className="w-16 h-16 shrink-0 overflow-hidden bg-highlight-low">
+          <img
+            src={record.image}
+            alt={record.label}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      ) : record.type === "wheel" ? (
+        <div className="w-16 h-16 shrink-0 flex items-center justify-center text-3xl bg-highlight-low">
+          🎁
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <HistoryTypeBadge type={record.type} />
+          <NetBadge net={record.net} />
+        </div>
+        <span className="text-sm text-text truncate">{record.label}</span>
+        <div className="flex items-center gap-2 text-xs text-muted">
+          {record.owner && (
+            <span>{record.owner.username}</span>
+          )}
+          <span>
+            {new Date(record.created).toLocaleTimeString("ru-RU", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          {record.bid > 0 && (
+            <span>bid: {record.bid}</span>
+          )}
+          {record.payout > 0 && (
+            <span>payout: {record.payout}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function WheelHistoryApp() {
-  const [history, setHistory] = useState<WheelHistoryRecord[]>([]);
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState("");
   const limit = 50;
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await getWheelHistory(page, limit);
+      const res = await getHistory(page, limit, typeFilter || undefined);
       setHistory(res.data);
       setTotal(res.total);
     } catch {
@@ -26,18 +123,9 @@ function WheelHistoryApp() {
 
   useEffect(() => {
     fetchHistory();
-  }, [page]);
+  }, [page, typeFilter]);
 
-  const handleClear = async () => {
-    try {
-      await clearWheelHistory();
-      setHistory([]);
-      setTotal(0);
-      setPage(1);
-    } catch {}
-  };
-
-  const groupedByDate: Record<string, WheelHistoryRecord[]> = {};
+  const groupedByDate: Record<string, HistoryRecord[]> = {};
   history.forEach((item) => {
     const date = new Date(item.created).toLocaleDateString("ru-RU", {
       day: "2-digit",
@@ -52,26 +140,30 @@ function WheelHistoryApp() {
 
   return (
     <main className="flex flex-col h-full w-full bg-background overflow-hidden">
-      <header className="flex items-center justify-between px-3 py-2 border-b border-highlight-high bg-highlight-low">
-        <Button
-          variant="error"
-          size="icon"
-          onClick={handleClear}
-          className="gap-1 ml-auto"
-          disabled={history.length === 0}
-        >
-          <Trash className="size-3" />
-        </Button>
+      <header className="flex items-center gap-1 px-3 py-2 border-b border-highlight-high bg-highlight-low overflow-x-auto">
+        {TYPE_FILTERS.map((f) => (
+          <Button
+            key={f.value || "all"}
+            variant={typeFilter === f.value ? "default" : "info"}
+            size="sm"
+            onClick={() => {
+              setTypeFilter(f.value);
+              setPage(1);
+            }}
+          >
+            {f.label}
+          </Button>
+        ))}
       </header>
 
       <section className="flex-1 overflow-y-auto p-2 bg-card">
         {loading ? (
           <div className="flex items-center justify-center h-full text-muted">
-            Загрузка...
+            Loading...
           </div>
         ) : history.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted">
-            История пуста
+            History is empty
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -82,37 +174,7 @@ function WheelHistoryApp() {
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
                   {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col gap-1 p-2 border-2 border-highlight-high bg-card hover:border-primary transition-colors"
-                    >
-                      {item.itemType === "image" && item.itemImage ? (
-                        <div className="w-full h-24 overflow-hidden bg-highlight-low">
-                          <img
-                            src={item.itemImage}
-                            alt={item.itemLabel}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-24 flex items-center justify-center text-4xl bg-highlight-low">
-                          {item.itemImage || "🎁"}
-                        </div>
-                      )}
-                      <span className="text-sm text-text truncate">
-                        {item.itemLabel}
-                      </span>
-                      <span className="text-xs text-muted">
-                        {new Date(item.created).toLocaleTimeString("ru-RU", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
+                    <HistoryCard key={item.id} record={item} />
                   ))}
                 </div>
               </div>
@@ -122,7 +184,7 @@ function WheelHistoryApp() {
       </section>
 
       <footer className="flex items-center justify-between px-3 py-2 border-t-2 border-highlight-high text-xs text-muted">
-        <span>Всего результатов: {total}</span>
+        <span>Total: {total}</span>
         {totalPages > 1 && (
           <div className="flex gap-2">
             <Button

@@ -1,5 +1,4 @@
 import { Elysia, t } from "elysia";
-import { desc, eq, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -66,19 +65,24 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
 
       const id = newId();
       const ts = nowIso();
-      await db.insert(schema.wheelHistory).values({
+      await db.insert(schema.history).values({
         id,
         userId: user.sub,
         owner: currentUser
           ? { id: currentUser.id, username: currentUser.username }
           : null,
-        itemId: winner.id,
-        itemLabel: winner.label,
-        itemImage: winner.type === "image" ? winner.image : "",
-        itemType: winner.type,
-        listType: listType ?? "general",
-        cost: free ? 0 : SPIN_COST,
-        free,
+        type: "wheel",
+        label: winner.label,
+        image: winner.type === "image" ? winner.image : "",
+        bid: free ? 0 : SPIN_COST,
+        payout: 0,
+        net: free ? 0 : -(SPIN_COST),
+        data: {
+          itemId: winner.id,
+          itemType: winner.type,
+          listType: listType ?? "general",
+          free,
+        },
         created: ts,
       });
 
@@ -93,72 +97,6 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
       detail: {
         tags: ["wheel"],
         summary: "Spin the wheel — shuffles items, picks winner, deducts cost",
-      },
-    },
-  )
-  .get(
-    "/history",
-    async ({ query, user, set, db }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
-      const page = Math.max(1, query.page ?? 1);
-      const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
-      const offset = (page - 1) * limit;
-
-      const rows = await db
-        .select()
-        .from(schema.wheelHistory)
-        .where(eq(schema.wheelHistory.userId, user.sub))
-        .orderBy(desc(schema.wheelHistory.created))
-        .limit(limit)
-        .offset(offset);
-
-      const [countResult] = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(schema.wheelHistory)
-        .where(eq(schema.wheelHistory.userId, user.sub));
-
-      return {
-        data: rows,
-        total: Number(countResult?.count ?? 0),
-        page,
-        limit,
-      };
-    },
-    {
-      query: t.Optional(
-        t.Object({
-          page: t.Optional(t.Numeric()),
-          limit: t.Optional(t.Numeric()),
-        }),
-      ),
-      detail: {
-        tags: ["wheel"],
-        summary: "Get paginated wheel spin history for current user",
-      },
-    },
-  )
-  .delete(
-    "/history",
-    async ({ user, set, db }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
-      await db
-        .delete(schema.wheelHistory)
-        .where(eq(schema.wheelHistory.userId, user.sub));
-
-      return { ok: true };
-    },
-    {
-      detail: {
-        tags: ["wheel"],
-        summary: "Clear wheel spin history for current user",
       },
     },
   );

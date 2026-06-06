@@ -38,14 +38,39 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
-    hash: "0005_add_wheel_owner",
+    hash: "0005_create_history_table",
     sql: [
-      "ALTER TABLE wheel_history ADD COLUMN owner TEXT;",
-      `UPDATE wheel_history SET owner = (
-        SELECT json_object('id', id, 'username', username)
-        FROM users WHERE users.id = wheel_history.user_id
-      ) WHERE owner IS NULL;`,
-      "CREATE INDEX IF NOT EXISTS idx_wheel_history_owner ON wheel_history (owner);",
+      `CREATE TABLE IF NOT EXISTS history (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        owner TEXT,
+        type TEXT NOT NULL DEFAULT 'wheel',
+        label TEXT NOT NULL,
+        image TEXT NOT NULL DEFAULT '',
+        bid INTEGER NOT NULL DEFAULT 0,
+        payout INTEGER NOT NULL DEFAULT 0,
+        net INTEGER NOT NULL DEFAULT 0,
+        data TEXT DEFAULT '{}',
+        created TEXT NOT NULL
+      );`,
+      `INSERT INTO history (id, user_id, owner, type, label, image, bid, payout, net, data, created)
+        SELECT
+          id,
+          user_id,
+          owner,
+          'wheel' AS type,
+          item_label AS label,
+          CASE WHEN item_type = 'image' THEN item_image ELSE '' END AS image,
+          cost AS bid,
+          0 AS payout,
+          -cost AS net,
+          json_object('itemId', item_id, 'itemType', item_type, 'listType', list_type, 'free', free) AS data,
+          created
+        FROM wheel_history;`,
+      "DROP TABLE IF EXISTS wheel_history;",
+      "CREATE INDEX IF NOT EXISTS idx_history_user_id ON history (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_history_type ON history (type);",
+      "CREATE INDEX IF NOT EXISTS idx_history_created ON history (created DESC);",
     ],
   },
 ];

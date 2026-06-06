@@ -52,7 +52,7 @@ export const APP_REGISTRY: Record<string, { icon: ReactNode; component?: ReactNo
   notepad: { icon: <NotebookIcon className="size-7" />, component: <Notebook /> },
   paint: { icon: <PaintRoller className="size-7" />, component: <Paint /> },
   gambling: { icon: <Trophy className="size-7" />, component: <Gambling /> },
-  wheelHistory: { icon: <History className="size-7" />, component: <WheelHistoryApp /> },
+  history: { icon: <History className="size-7" />, component: <WheelHistoryApp /> },
   globalChat: { icon: <MessageSquare className="size-7" />, component: <GlobalChatApp /> },
   theme: { icon: <Palette className="size-7" />, component: <ThemeApp /> },
   howlongtobeat: { icon: <Timer className="size-7" /> },
@@ -72,7 +72,7 @@ export const WINDOW_ICONS: Record<string, ReactNode> = {
   paint: <PaintRoller className="size-7" />,
   gambling: <Trophy className="size-7" />,
   theme: <Palette className="size-7" />,
-  wheelHistory: <History className="size-7" />,
+  history: <History className="size-7" />,
   globalChat: <MessageSquare className="size-7" />,
   admin: <Shield className="size-7" />,
 };

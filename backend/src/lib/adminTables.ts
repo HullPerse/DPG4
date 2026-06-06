@@ -12,7 +12,7 @@ export const ADMIN_TABLES = {
   rules: schema.rules,
   ads: schema.ads,
   drawings: schema.drawings,
-  wheel_history: schema.wheelHistory,
+  history: schema.history,
   cells: schema.cells,
 } as const;
 

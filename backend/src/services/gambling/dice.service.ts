@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import {
   ActiveDiceGame,
   DiceGameResult,
@@ -341,6 +342,27 @@ export class DiceService {
     }
 
     this.games.delete(userId);
+
+    await this.db.insert(schema.history).values({
+      id: newId(),
+      userId,
+      owner: { id: user.id, username: user.username },
+      type: "dice",
+      label: result.label,
+      image: "",
+      bid: game.bid,
+      payout: result.payout,
+      net: result.net,
+      data: {
+        dealerValues: game.dealerValues,
+        dealerTarget: game.dealerTarget,
+        playerValues: values,
+        autoResult: game.autoResult,
+        dealerRerolls: game.dealerRerolls,
+        playerRerolls: game.playerRerolls,
+      },
+      created: nowIso(),
+    });
 
     const net = result.net;
 

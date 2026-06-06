@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import { Db } from "@/types";
 import { BlackjackResult, BlackjackState, Card } from "@/types/gambling";
 import {
@@ -83,6 +84,28 @@ export class BlackjackService {
     this.games.delete(game.userId);
 
     const user = await this.userService.getById(game.userId);
+
+    if (user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId: game.userId,
+        owner: { id: user.id, username: user.username },
+        type: "blackjack",
+        label,
+        image: "",
+        bid: game.bid,
+        payout,
+        net: -game.bid + payout,
+        data: {
+          outcome,
+          playerHand: game.playerHand,
+          dealerHand: game.dealerHand,
+          playerValue: handValue(game.playerHand),
+          dealerValue: handValue(game.dealerHand),
+        },
+        created: nowIso(),
+      });
+    }
     logger.info(
       user?.username,
       "blackjack",

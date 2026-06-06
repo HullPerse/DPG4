@@ -27,6 +27,7 @@ import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
+import { historyRoute } from "./routes/history.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services/services.plugin";
 import { runMigrations } from "./db/migrate";
@@ -60,6 +61,7 @@ const app = new Elysia()
           { name: "metadata", description: "HLTB и метаданные" },
           { name: "search", description: "Поиск" },
           { name: "wheel", description: "Колесо фортуны" },
+          { name: "history", description: "История действий" },
         ],
       },
       path: "/docs",
@@ -135,7 +137,8 @@ const app = new Elysia()
   .use(configRoute)
   .use(steamRoute)
   .use(searchRoute)
-  .use(wheelRoute);
+  .use(wheelRoute)
+  .use(historyRoute);
 
 runMigrations();
 logger.info("SYSTEM", "DB migrations applied");

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import type { ActiveRocketGame, RocketState } from "@/types/gambling";
 import type { Db } from "@/types";
 import { UserService } from "../user.service";
@@ -52,6 +53,22 @@ export class RocketService {
 
     const user = await this.userService.getById(userId);
     this.activeGames.delete(userId);
+
+    if (user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId,
+        owner: { id: user.id, username: user.username },
+        type: "rocket",
+        label: `Крах на ${game.crashPoint.toFixed(2)}x`,
+        image: "",
+        bid: game.bid,
+        payout: 0,
+        net: -game.bid,
+        data: { crashPoint: game.crashPoint, phase: "crashed" },
+        created: nowIso(),
+      });
+    }
 
     const label = `Крах на ${game.crashPoint.toFixed(2)}x - проигрыш -${game.bid}`;
 
@@ -153,6 +170,22 @@ export class RocketService {
       net >= game.bid * 5 ? "jackpot" : net >= game.bid * 2 ? "win" : "chance";
 
     this.activeGames.delete(userId);
+
+    if (user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId,
+        owner: { id: user.id, username: user.username },
+        type: "rocket",
+        label: `Выигрыш ${currentMultiplier.toFixed(2)}x`,
+        image: "",
+        bid: game.bid,
+        payout,
+        net,
+        data: { crashPoint: game.crashPoint, cashoutMultiplier: currentMultiplier, phase: "cashed" },
+        created: nowIso(),
+      });
+    }
 
     logger.info(
       "system",
