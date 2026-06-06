@@ -4,9 +4,7 @@ import { Ads } from "@/types/ads.d";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import {
   NetworkIcon,
@@ -77,6 +75,36 @@ function AdTab() {
 
   useSubscription("ads", "*", invalidateQuery);
 
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => adsApi.removeAd(id),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const compressedAudio = audioFile
+        ? await compressAudio(audioFile)
+        : undefined;
+
+      const adData = {
+        owner: {
+          username: user?.username,
+          id: user?.id,
+        },
+        image: imageFile,
+        audio: compressedAudio,
+        text: text,
+      } as Ads;
+
+      return adsApi.createAd(adData);
+    },
+    onSettled: () => {
+      setIsOpen(false);
+      setAudioFile(null);
+      setCompressedAudioSize(null);
+      setAudioVolume(1);
+    },
+  });
+
   if (isLoading) return <WindowLoader />;
   if (isError)
     return (
@@ -87,10 +115,6 @@ function AdTab() {
         button
       />
     );
-
-  const removeMutation = useMutation({
-    mutationFn: (id: string) => adsApi.removeAd(id),
-  });
 
   const compressAudio = async (file: File): Promise<File> => {
     const audioContext = new AudioContext();
@@ -195,32 +219,6 @@ function AdTab() {
     }
   };
 
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      const compressedAudio = audioFile
-        ? await compressAudio(audioFile)
-        : undefined;
-
-      const adData = {
-        owner: {
-          username: user?.username,
-          id: user?.id,
-        },
-        image: imageFile,
-        audio: compressedAudio,
-        text: text,
-      } as Ads;
-
-      return adsApi.createAd(adData);
-    },
-    onSettled: () => {
-      setIsOpen(false);
-      setAudioFile(null);
-      setCompressedAudioSize(null);
-      setAudioVolume(1);
-    },
-  });
-
   return (
     <main className="flex flex-col gap-2 w-full h-full pt-2">
       <Button
@@ -268,9 +266,7 @@ function AdTab() {
                   loading={audioLoad}
                   onClick={() => {
                     setAudioLoad(true);
-                    const audio = new Audio(
-                      `${getFileUrl(item, "audio")}`,
-                    );
+                    const audio = new Audio(`${getFileUrl(item, "audio")}`);
                     audio.onended = () => setAudioLoad(false);
                     audio.onerror = () => setAudioLoad(false);
                     audio.play().catch(() => setAudioLoad(false));
@@ -331,10 +327,7 @@ function AdTab() {
           </div>
 
           <DialogFooter className="bg-card">
-            <Button
-              variant="error"
-              onClick={() => setIsOpen(false)}
-            >
+            <Button variant="error" onClick={() => setIsOpen(false)}>
               ОТМЕНИТЬ
             </Button>
             <Button

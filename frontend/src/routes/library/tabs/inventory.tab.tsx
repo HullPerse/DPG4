@@ -234,19 +234,6 @@ function InventoryTab({ id }: { id?: string }) {
     return new ItemFramework(modal as ItemLabel).consume;
   }, [modal]);
 
-  if (!initialLoadRef.current && isLoading) return <WindowLoader />;
-  if (isError)
-    return (
-      <WindowError
-        error={new Error("Произошла ошибка")}
-        icon={<NetworkIcon />}
-        refresh={refetch}
-        button
-      />
-    );
-
-  initialLoadRef.current = true;
-
   const itemLoading = (itemId: string, type?: ItemLoadingType | "charge") =>
     itemMutation.isPending &&
     itemMutation.variables?.itemId === itemId &&
@@ -262,6 +249,18 @@ function InventoryTab({ id }: { id?: string }) {
       setRemoveStatus(false);
     },
   });
+  if (!initialLoadRef.current && isLoading) return <WindowLoader />;
+  if (isError)
+    return (
+      <WindowError
+        error={new Error("Произошла ошибка")}
+        icon={<NetworkIcon />}
+        refresh={refetch}
+        button
+      />
+    );
+
+  initialLoadRef.current = true;
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
@@ -467,9 +466,7 @@ function InventoryTab({ id }: { id?: string }) {
                           price: Number(price),
                         })
                       }
-                      disabled={
-                        itemLoading(String(item.id), "sell") || !price
-                      }
+                      disabled={itemLoading(String(item.id), "sell") || !price}
                     >
                       {itemLoading(String(item.id), "sell") ? (
                         <SmallLoader />
@@ -483,7 +480,10 @@ function InventoryTab({ id }: { id?: string }) {
                       variant="success"
                       className="flex-1"
                       onClick={() =>
-                        itemMutation.mutate({ type: "use", itemId: String(item.id) })
+                        itemMutation.mutate({
+                          type: "use",
+                          itemId: String(item.id),
+                        })
                       }
                       hidden={currentId !== user?.id}
                       disabled={itemLoading(String(item.id), "use")}
@@ -501,7 +501,10 @@ function InventoryTab({ id }: { id?: string }) {
                         width: currentId !== user?.id ? "100%" : undefined,
                       }}
                       onClick={() =>
-                        itemMutation.mutate({ type: "delete", itemId: String(item.id) })
+                        itemMutation.mutate({
+                          type: "delete",
+                          itemId: String(item.id),
+                        })
                       }
                       disabled={itemLoading(String(item.id), "delete")}
                     >

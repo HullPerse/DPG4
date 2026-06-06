@@ -41,19 +41,6 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   useSubscription("market", "*", invalidateQuery);
 
-  const filteredItems = data ?? [];
-
-  if (isLoading) return <WindowLoader />;
-  if (isError)
-    return (
-      <WindowError
-        error={new Error("Произошла ошибка")}
-        icon={<NetworkIcon />}
-        refresh={refetch}
-        button
-      />
-    );
-
   const marketMutation = useMutation({
     mutationFn: async ({
       type,
@@ -85,6 +72,19 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       if (type === "discount") setInputDiscount("");
     },
   });
+
+  if (isLoading) return <WindowLoader />;
+  if (isError)
+    return (
+      <WindowError
+        error={new Error("Произошла ошибка")}
+        icon={<NetworkIcon />}
+        refresh={refetch}
+        button
+      />
+    );
+
+  const filteredItems = data ?? [];
 
   const isLoadingIndex = (index: number) =>
     marketMutation.isPending && marketMutation.variables?.index === index;
