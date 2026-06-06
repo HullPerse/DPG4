@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { getHistory, type HistoryRecord } from "@/api/history.api";
 
 const TYPE_FILTERS = [
-  { value: "", label: "All" },
-  { value: "wheel", label: "Wheel" },
-  { value: "dice", label: "Dice" },
-  { value: "blackjack", label: "Blackjack" },
-  { value: "rocket", label: "Rocket" },
-  { value: "pachinko", label: "Pachinko" },
+  { value: "", label: "Все" },
+  { value: "wheel", label: "Колесо" },
+  { value: "dice", label: "Кости" },
+  { value: "blackjack", label: "Блэкджек" },
+  { value: "rocket", label: "Ракета" },
+  { value: "pachinko", label: "Пачинко" },
 ];
+
+const TYPE_LABELS: Record<string, string> = {
+  wheel: "Колесо",
+  dice: "Кости",
+  blackjack: "Блэкджек",
+  rocket: "Ракета",
+  pachinko: "Пачинко",
+};
 
 const TYPE_COLORS: Record<string, string> = {
   wheel: "bg-amber-600/20 text-amber-400 border-amber-600",
@@ -20,12 +29,12 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 function HistoryTypeBadge({ type }: { type: string }) {
-  const color = TYPE_COLORS[type] ?? "bg-gray-600/20 text-gray-400 border-gray-600";
+  const color =
+    TYPE_COLORS[type] ?? "bg-gray-600/20 text-gray-400 border-gray-600";
+  const label = TYPE_LABELS[type] ?? type;
   return (
-    <span
-      className={`text-xs font-bold uppercase px-1.5 py-0.5 border ${color}`}
-    >
-      {type}
+    <span className={`text-xs font-bold px-1.5 py-0.5 border ${color}`}>
+      {label}
     </span>
   );
 }
@@ -78,21 +87,15 @@ function HistoryCard({ record }: { record: HistoryRecord }) {
         </div>
         <span className="text-sm text-text truncate">{record.label}</span>
         <div className="flex items-center gap-2 text-xs text-muted">
-          {record.owner && (
-            <span>{record.owner.username}</span>
-          )}
+          {record.owner && <span>{record.owner.username}</span>}
           <span>
             {new Date(record.created).toLocaleTimeString("ru-RU", {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
-          {record.bid > 0 && (
-            <span>bid: {record.bid}</span>
-          )}
-          {record.payout > 0 && (
-            <span>payout: {record.payout}</span>
-          )}
+          {record.bid > 0 && <span>Ставка: {record.bid}</span>}
+          {record.payout > 0 && <span>Результат: {record.payout}</span>}
         </div>
       </div>
     </div>
@@ -158,12 +161,10 @@ function WheelHistoryApp() {
 
       <section className="flex-1 overflow-y-auto p-2 bg-card">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-muted">
-            Loading...
-          </div>
+          <WindowLoader />
         ) : history.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted">
-            History is empty
+            История пуста
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -184,7 +185,7 @@ function WheelHistoryApp() {
       </section>
 
       <footer className="flex items-center justify-between px-3 py-2 border-t-2 border-highlight-high text-xs text-muted">
-        <span>Total: {total}</span>
+        <span>Всего: {total}</span>
         {totalPages > 1 && (
           <div className="flex gap-2">
             <Button

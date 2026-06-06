@@ -1,29 +1,31 @@
+import { memo } from "react";
 import { WheelItem } from "@/types/wheel";
 import Image from "./image.component";
 
-export default function renderWheelItems(
-  items: WheelItem[],
-  isRolling: boolean,
-  hasRolled: boolean,
-  highlightedIndex: number | null,
-  onResult: (item: WheelItem | null) => void,
-) {
-  const handleClick = (item: WheelItem) => {
-    if (isRolling) return;
-
-    return onResult(item);
-  };
-
+function WheelItemButton({
+  item,
+  isRolling,
+  hasRolled,
+  isHighlighted,
+  onResult,
+}: {
+  item: WheelItem;
+  isRolling: boolean;
+  hasRolled: boolean;
+  isHighlighted: boolean;
+  onResult: (item: WheelItem | null) => void;
+}) {
+  const isWinner = isHighlighted && hasRolled && !isRolling;
   const isInteractive = !isRolling;
 
-  return items.map((item, index) => {
-    const isHighlighted = highlightedIndex === index;
-    const isWinner = isHighlighted && hasRolled && !isRolling;
+  const handleClick = () => {
+    if (isRolling) return;
+    onResult(item);
+  };
 
-    return (
+  return (
     <button
       role="button"
-      key={`${item.id}-${index}`}
       type="button"
       className={`relative shrink-0 w-32 h-32 mx-2 flex flex-col items-center justify-center font-bold border-2 rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
         isWinner
@@ -38,7 +40,7 @@ export default function renderWheelItems(
             ? "cursor-not-allowed"
             : "cursor-not-allowed opacity-60"
       }`}
-      onClick={() => handleClick(item)}
+      onClick={handleClick}
       disabled={isRolling}
       aria-disabled={isRolling}
       aria-current={isWinner ? "true" : undefined}
@@ -60,6 +62,45 @@ export default function renderWheelItems(
         {item.label}
       </div>
     </button>
-    );
-  });
+  );
 }
+
+const MemoizedItem = memo(WheelItemButton, (prev, next) => {
+  return (
+    prev.item.id === next.item.id &&
+    prev.isRolling === next.isRolling &&
+    prev.hasRolled === next.hasRolled &&
+    prev.isHighlighted === next.isHighlighted
+  );
+});
+
+function WheelItems({
+  items,
+  isRolling,
+  hasRolled,
+  highlightedIndex,
+  onResult,
+}: {
+  items: WheelItem[];
+  isRolling: boolean;
+  hasRolled: boolean;
+  highlightedIndex: number | null;
+  onResult: (item: WheelItem | null) => void;
+}) {
+  return (
+    <>
+      {items.map((item, index) => (
+        <MemoizedItem
+          key={`${item.id}-${index}`}
+          item={item}
+          isRolling={isRolling}
+          hasRolled={hasRolled}
+          isHighlighted={highlightedIndex === index}
+          onResult={onResult}
+        />
+      ))}
+    </>
+  );
+}
+
+export default memo(WheelItems);

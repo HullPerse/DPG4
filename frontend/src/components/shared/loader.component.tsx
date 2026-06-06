@@ -17,7 +17,7 @@ export function WindowLoader({ className }: { className?: string }) {
         className,
       )}
     >
-      <Spinner className="size-28" />
+      <Spinner className="size-28" size={112} />
     </main>
   );
 }

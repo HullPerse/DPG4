@@ -23,7 +23,7 @@ import {
   ANIMATION_DURATION_MIN,
   ANIMATION_DURATION_MAX,
 } from "@/config/wheel.config";
-import renderWheelItems from "./renderer.component";
+import WheelItems from "./renderer.component";
 import { spinWheel } from "@/api/wheel.api";
 import { shuffleArray } from "@/lib/utils";
 import { calculateCostSync } from "@/lib/utils";
@@ -73,6 +73,7 @@ function Wheel({
   });
   const winnerRef = useRef<number>(-1);
   const spinStartedRef = useRef(false);
+  const highlightFrameThrottleRef = useRef(0);
   const [pendingSpin, setPendingSpin] = useState<SpinPlan | null>(null);
   const onResultRef = useRef(onResult);
   const shuffledRef = useRef(shuffled);
@@ -124,7 +125,10 @@ function Wheel({
 
       if (containerRef.current) {
         containerRef.current.style.transform = `translateX(-${scrollPositionRef.current}px)`;
-        updateCenterHighlight();
+        highlightFrameThrottleRef.current++;
+        if (highlightFrameThrottleRef.current % 8 === 0) {
+          updateCenterHighlight();
+        }
       }
 
       if (result.isCompleted) {
@@ -157,6 +161,7 @@ function Wheel({
       );
 
       scrollPositionRef.current = 0;
+      highlightFrameThrottleRef.current = 0;
       if (containerRef.current) {
         containerRef.current.style.transform = "translateX(0px)";
       }
@@ -267,13 +272,13 @@ function Wheel({
           ref={containerRef}
           className="flex flex-row gap-2 items-center h-full will-change-transform"
         >
-          {renderWheelItems(
-            shuffled,
-            rolling.isRolling,
-            rolling.hasRolled,
-            highlightedIndex,
-            onResult,
-          )}
+          <WheelItems
+            items={shuffled}
+            isRolling={rolling.isRolling}
+            hasRolled={rolling.hasRolled}
+            highlightedIndex={highlightedIndex}
+            onResult={onResult}
+          />
         </div>
       </section>
       {error && (

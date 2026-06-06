@@ -1,9 +1,7 @@
 import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { useUserStore } from "@/store/user.store";
 import { Item } from "@/types/items";
