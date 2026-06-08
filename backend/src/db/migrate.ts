@@ -76,8 +76,6 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
 ];
 
 export function runMigrations() {
-  migrate(db, { migrationsFolder: "./drizzle" });
-
   for (const migration of pendingMigrations) {
     const applied = rawDb
       .query("SELECT hash FROM __drizzle_migrations WHERE hash = ?")

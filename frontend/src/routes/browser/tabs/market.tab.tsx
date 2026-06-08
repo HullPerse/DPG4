@@ -91,9 +91,15 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
 
   return (
     <main className="relative flex flex-wrap w-full py-5 justify-start gap-2 overflow-y-auto">
-      <span className="absolute top-1 right-1 font-bold border border-highlight-high w-fit min-w-18 bg-background text-center px-1">
+      <span className="absolute top-1 right-1 z-10 font-bold border border-highlight-high w-fit min-w-18 bg-background text-center px-1">
         {user?.money} чубриков
       </span>
+
+      {filteredItems.length === 0 && (
+        <div className="flex w-full h-64 items-center justify-center text-text/40 text-lg font-bold">
+          На рынке пока ничего нет
+        </div>
+      )}
 
       {filteredItems.map((item, index) => (
         <div
@@ -102,9 +108,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
           onMouseOver={() => setActive(index)}
           onMouseLeave={() => setActive(-1)}
         >
-          <section className="flex flex-col items-center justify-center">
+          <section className="flex flex-col items-center w-full flex-1">
             {active === index ? (
-              <span className="flex flex-col w-full h-full text-ellipsis text-sm mt-8">
+              <span className="text-xs leading-tight max-h-50 overflow-y-auto mt-2">
                 {highlightText(item.description, searchTerms)}
               </span>
             ) : (
@@ -159,7 +165,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                   className="w-9 h-9"
                   loading={isLoadingIndex(index)}
                   disabled={
-                    !inputDiscount || Number(inputDiscount) > item.price
+                    !inputDiscount || Number(inputDiscount) > item.price || Number(inputDiscount) <= 0
                   }
                   onClick={() =>
                     marketMutation.mutate({
@@ -198,7 +204,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                       {item.discount ? item.discount : item.price}
                     </span>
                     <span className="line-through text-xs font-light">
-                      {item.discount! > 0 ? item.price : null}
+                      {item.discount != null && item.discount > 0 ? item.price : null}
                     </span>
                   </div>
                 </div>

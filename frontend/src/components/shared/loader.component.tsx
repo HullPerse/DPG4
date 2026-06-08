@@ -4,7 +4,7 @@ import { Spinner } from "@/components/ui/spinner.component";
 export function BigLoader() {
   return (
     <main className="absolute flex h-screen w-screen flex-col items-center justify-center bg-background font-extrabold text-text">
-      <Spinner className="size-28" />
+      <Spinner className="size-28" size={112} />
     </main>
   );
 }
