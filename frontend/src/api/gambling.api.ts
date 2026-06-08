@@ -118,19 +118,20 @@ export async function getRocketHistory(): Promise<RocketHistoryEntry[]> {
 
 export async function dropPachinko(
   bid: number,
+  ratAmount = 1,
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-drop", {
     method: "POST",
-    body: { bid },
+    body: { bid, ratAmount },
   });
 }
 
 export async function settlePachinko(
-  slotIndex: number,
+  slotIndexes: number[],
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-settle", {
     method: "POST",
-    body: { slotIndex },
+    body: { slotIndexes },
   });
 }
 

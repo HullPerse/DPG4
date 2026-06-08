@@ -9,6 +9,7 @@ import {
 import { Html, useGLTF } from "@react-three/drei";
 import {
   Suspense,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -383,6 +384,8 @@ function RatBall({
   );
 }
 
+const RAT_SPREAD = 0.35;
+
 function PachinkoWorld({
   dropKey,
   startX,
@@ -391,29 +394,58 @@ function PachinkoWorld({
   onSettled,
   bid,
   kickTrigger,
+  ratAmount,
 }: {
   dropKey: number;
   startX: number;
   showRat: boolean;
   simulating: boolean;
-  onSettled: (slotIndex: number) => void;
+  onSettled: (slotIndexes: number[]) => void;
   bid: number;
   kickTrigger: number;
+  ratAmount: number;
 }) {
+  const settledRef = useRef<number[]>([]);
+  const settledCountRef = useRef(0);
+  const onSettledRef = useRef(onSettled);
+  onSettledRef.current = onSettled;
+
+  useEffect(() => {
+    settledRef.current = [];
+    settledCountRef.current = 0;
+  }, [dropKey]);
+
+  const handleSingleSettled = useCallback((slotIndex: number) => {
+    settledRef.current.push(slotIndex);
+    settledCountRef.current += 1;
+    if (settledCountRef.current === ratAmount) {
+      onSettledRef.current(settledRef.current);
+    }
+  }, [ratAmount]);
+
+  const startPositions = useMemo(() => {
+    if (ratAmount === 1) return [startX];
+    const offsets = Array.from({ length: ratAmount }, (_, i) => {
+      const center = (ratAmount - 1) / 2;
+      return (i - center) * RAT_SPREAD;
+    });
+    return offsets.map((o) => startX + o);
+  }, [startX, ratAmount]);
+
   return (
     <>
       <BoardWalls bid={bid} />
       <PegField />
-      {showRat && (
+      {showRat && startPositions.map((x, i) => (
         <RatBall
-          key={dropKey}
-          startX={startX}
+          key={`${dropKey}-${i}`}
+          startX={x}
           simulating={simulating}
-          onSettled={onSettled}
+          onSettled={handleSingleSettled}
           bid={bid}
           kickTrigger={kickTrigger}
         />
-      )}
+      ))}
     </>
   );
 }
@@ -427,15 +459,17 @@ function SceneContent({
   onSettled,
   bid,
   kickTrigger,
+  ratAmount,
 }: {
   dropKey: number;
   startX: number;
   showRat: boolean;
   simulating: boolean;
   highlightIndex: number | null;
-  onSettled: (slotIndex: number) => void;
+  onSettled: (slotIndexes: number[]) => void;
   bid: number;
   kickTrigger: number;
+  ratAmount: number;
 }) {
   return (
     <>
@@ -458,6 +492,7 @@ function SceneContent({
             onSettled={onSettled}
             bid={bid}
             kickTrigger={kickTrigger}
+            ratAmount={ratAmount}
           />
         </Physics>
       </Suspense>
@@ -474,15 +509,17 @@ function PachinkoScene({
   onSettled,
   bid,
   kickTrigger,
+  ratAmount,
 }: {
   dropKey: number;
   startX: number;
   showRat: boolean;
   simulating: boolean;
   highlightIndex: number | null;
-  onSettled: (slotIndex: number) => void;
+  onSettled: (slotIndexes: number[]) => void;
   bid: number;
   kickTrigger: number;
+  ratAmount: number;
 }) {
   return (
     <Canvas
@@ -506,6 +543,7 @@ function PachinkoScene({
         onSettled={onSettled}
         bid={bid}
         kickTrigger={kickTrigger}
+        ratAmount={ratAmount}
       />
     </Canvas>
   );

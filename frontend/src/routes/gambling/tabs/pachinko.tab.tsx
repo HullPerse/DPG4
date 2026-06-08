@@ -57,6 +57,7 @@ function PachinkoTab() {
   gameStateRef.current = gameState;
 
   const [bid, setBid] = useState<number>(3);
+  const [ratAmount, setRatAmount] = useState<number>(1);
 
   const [dropKey, setDropKey] = useState(0);
   const [startX, setStartX] = useState(0);
@@ -67,7 +68,7 @@ function PachinkoTab() {
   const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const dropMutation = useMutation({
-    mutationFn: () => dropPachinko(bid),
+    mutationFn: () => dropPachinko(bid, ratAmount),
     onSuccess: (state) => {
       setResult(null);
       settlingRef.current = false;
@@ -82,7 +83,8 @@ function PachinkoTab() {
   const inDrop = gameState.phase === "dropping";
   const roundDone = gameState.phase === "done";
   const showRat = inDrop || roundDone;
-  const canAct = !dropMutation.isPending && !inDrop && !gamblingBanned && balance >= bid;
+  const totalBid = bid * ratAmount;
+  const canAct = !dropMutation.isPending && !inDrop && !gamblingBanned && balance >= totalBid;
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
@@ -107,7 +109,7 @@ function PachinkoTab() {
   }, []);
 
   const handleSettled = useCallback(
-    async (slotIndex: number) => {
+    async (slotIndexes: number[]) => {
       if (
         !user ||
         settlingRef.current ||
@@ -116,13 +118,15 @@ function PachinkoTab() {
         return;
       settlingRef.current = true;
 
-      const slot = Math.max(
-        0,
-        Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(slotIndex)),
+      const clamped = slotIndexes.map((raw) =>
+        Math.max(
+          0,
+          Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(raw)),
+        ),
       );
 
       try {
-        const state = await settlePachinko(slot);
+        const state = await settlePachinko(clamped);
         setGameState(state);
         useUserStore.setState({ user: { ...user, money: state.balance } });
         if (state.banned) setGamblingBanned(true);
@@ -214,6 +218,7 @@ function PachinkoTab() {
             onSettled={handleSettled}
             bid={bid}
             kickTrigger={kickTrigger}
+            ratAmount={ratAmount}
           />
         </Suspense>
         <GameResult result={result} />
@@ -241,6 +246,26 @@ function PachinkoTab() {
         disabled={inDrop || dropMutation.isPending}
       />
 
+      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
+        <span className="text-sm text-muted mr-1">Крыс</span>
+        {[1, 2, 3, 4, 5].map((v) => (
+          <button
+            key={v}
+            onClick={() => setRatAmount(v)}
+            disabled={inDrop || dropMutation.isPending}
+            className={
+              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer " +
+              (ratAmount === v
+                ? "bg-highlight-high text-background"
+                : "bg-foreground/10 text-muted hover:bg-foreground/20") +
+              ((inDrop || dropMutation.isPending) ? " opacity-40 pointer-events-none" : "")
+            }
+          >
+            {v}
+          </button>
+        ))}
+      </section>
+
       <section className="flex flex-col gap-1 w-xl mt-auto">
         <Button
           variant="info"
@@ -253,10 +278,10 @@ function PachinkoTab() {
             "Вы забанены"
           ) : inDrop ? (
             "Крыса летит..."
-          ) : balance < bid ? (
+          ) : balance < totalBid ? (
             "Недостаточно чубриков"
           ) : (
-            `Бросить крысу (${bid})`
+            `Бросить крысу (${totalBid})`
           )}
         </Button>
       </section>

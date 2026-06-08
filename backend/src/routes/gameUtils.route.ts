@@ -312,7 +312,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     "/pachinko-drop",
     async ({ body, set, pachinkoService, user }) => {
       try {
-        return await pachinkoService.drop(user!.sub, body.bid);
+        return await pachinkoService.drop(user!.sub, body.bid, body.ratAmount);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -325,10 +325,11 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
           minimum: GAMBLING_MIN_BET,
           maximum: GAMBLING_MAX_BET,
         }),
+        ratAmount: t.Integer({ minimum: 1, maximum: 5 }),
       }),
       detail: {
         tags: ["utils"],
-        summary: "Drop pachinko ball - deducts bid",
+        summary: "Drop pachinko ball(s) - deducts bid * ratAmount",
       },
     },
   )
@@ -336,7 +337,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     "/pachinko-settle",
     async ({ body, set, pachinkoService, user }) => {
       try {
-        return await pachinkoService.settle(user!.sub, body.slotIndex);
+        return await pachinkoService.settle(user!.sub, body.slotIndexes);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -345,11 +346,14 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({
-        slotIndex: t.Integer({ minimum: 0, maximum: 12 }),
+        slotIndexes: t.Array(t.Integer({ minimum: 0, maximum: 12 }), {
+          minItems: 1,
+          maxItems: 5,
+        }),
       }),
       detail: {
         tags: ["utils"],
-        summary: "Settle pachinko drop - payout from slot index",
+        summary: "Settle pachinko drop - payout from slot indexes (one per rat)",
       },
     },
   )
