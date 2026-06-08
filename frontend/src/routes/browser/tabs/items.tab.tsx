@@ -82,6 +82,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     estimateSize: () => 128,
     overscan: 8,
     gap: 8,
+    getItemKey: (index) => data?.items[index]?.id ?? index,
   });
 
   const virtualItems = virtualizer.getVirtualItems();

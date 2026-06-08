@@ -104,6 +104,7 @@ function ListBrowser({
     estimateSize: () => 96,
     overscan: 8,
     gap: 8,
+    getItemKey: (index) => filteredItems[index]?.id ?? index,
   });
   const virtualItems = virtualizer.getVirtualItems();
 
