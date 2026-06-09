@@ -21,14 +21,19 @@ export default class ItemsApi {
     const searchParams = new URLSearchParams();
     if (params?.search) searchParams.set("search", params.search);
     if (params?.type) searchParams.set("type", params.type);
-    if (params?.rollable !== undefined) searchParams.set("rollable", String(params.rollable));
-    if (params?.excludeLabel) searchParams.set("excludeLabel", params.excludeLabel);
+    if (params?.rollable !== undefined)
+      searchParams.set("rollable", String(params.rollable));
+    if (params?.excludeLabel)
+      searchParams.set("excludeLabel", params.excludeLabel);
     if (params?.sort) searchParams.set("sort", params.sort);
     if (params?.order) searchParams.set("order", params.order);
     if (params?.random) searchParams.set("random", String(params.random));
-    if (params?.labels?.length) searchParams.set("labels", params.labels.join(","));
+    if (params?.labels?.length)
+      searchParams.set("labels", params.labels.join(","));
     const qs = searchParams.toString();
-    return apiFetch<Item[]>(`/items${qs ? `?${qs}` : ""}`, { signal: params?.signal });
+    return apiFetch<Item[]>(`/items${qs ? `?${qs}` : ""}`, {
+      signal: params?.signal,
+    });
   };
 
   getAllInventories = async (): Promise<Inventory[]> => {
@@ -43,7 +48,8 @@ export default class ItemsApi {
   }): Promise<Inventory[]> => {
     const searchParams = new URLSearchParams();
     if (params?.owner) searchParams.set("owner", params.owner);
-    if (params?.excludeOwner) searchParams.set("excludeOwner", params.excludeOwner);
+    if (params?.excludeOwner)
+      searchParams.set("excludeOwner", params.excludeOwner);
     if (params?.type) searchParams.set("type", params.type);
     if (params?.search) searchParams.set("search", params.search);
     const qs = searchParams.toString();
@@ -65,7 +71,14 @@ export default class ItemsApi {
 
   getItemsByLabels = async (labels: string[]): Promise<Item[]> => {
     if (labels.length === 0) return [];
-    return apiFetch<Item[]>(`/items?labels=${encodeURIComponent(labels.join(","))}`);
+    return apiFetch<Item[]>(
+      `/items?labels=${encodeURIComponent(labels.join(","))}`,
+    );
+  };
+
+  getRandomItem = async (): Promise<Item> => {
+    const items = await this.getItems({ random: 1 });
+    return items[0];
   };
 
   getInventory = async (userId: string): Promise<Inventory[]> => {

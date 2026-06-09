@@ -7,10 +7,20 @@ import {
   Megaphone,
   Shuffle,
   Rat,
+  WholeWord,
 } from "lucide-react";
 import { memo } from "react";
 
-const TABS = ["items", "store", "randomStore", "rules", "list", "ads", "rat"];
+const TABS = [
+  "items",
+  "store",
+  "randomStore",
+  "wordle",
+  "rules",
+  "list",
+  "ads",
+  "rat",
+];
 
 function HomeBrowser({
   setTab,
@@ -25,12 +35,21 @@ function HomeBrowser({
       | "list"
       | "ads"
       | "randomStore"
+      | "wordle"
       | "rat",
   ) => void;
   searchTerms: string;
 }) {
   const getTab = (
-    value: "rules" | "items" | "store" | "list" | "ads" | "randomStore" | "rat",
+    value:
+      | "rules"
+      | "items"
+      | "store"
+      | "list"
+      | "ads"
+      | "randomStore"
+      | "wordle"
+      | "rat",
   ) => {
     const tabMap = {
       rules: {
@@ -50,6 +69,12 @@ function HomeBrowser({
         label: "Лавка",
         description: "Магазин случайных предметов",
         icon: <Shuffle className="size-10" />,
+      },
+      wordle: {
+        value: "wordle",
+        label: "Предметли",
+        description: "wordle но с ПРИКОЛОМ",
+        icon: <WholeWord className="size-10" />,
       },
       store: {
         value: "store",

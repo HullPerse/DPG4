@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { createJSONStorage, persist, subscribeWithSelector } from "zustand/middleware";
+import {
+  createJSONStorage,
+  persist,
+  subscribeWithSelector,
+} from "zustand/middleware";
 import type { DataStore, StoreItem } from "@/types/store";
 import { createDebouncedStorage } from "@/lib/debounced-storage";
 
@@ -33,6 +37,7 @@ export const useDataStore = create<DataStore>()(
         rerollPrice: 2,
         negativeScoreModal: false,
         gamblingBanned: false,
+        cursorSize: 0,
 
         setNegativeScoreModal: (negativeScoreModal: boolean) => {
           set({ negativeScoreModal });
@@ -40,6 +45,10 @@ export const useDataStore = create<DataStore>()(
 
         setGamblingBanned: (gamblingBanned: boolean) => {
           set({ gamblingBanned });
+        },
+
+        setCursorSize: (cursorSize: number) => {
+          set({ cursorSize });
         },
 
         setSavedWheel: (savedWheel: string[]) => {

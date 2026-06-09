@@ -64,6 +64,7 @@ export interface DataStore {
   rerollPrice: number;
   negativeScoreModal: boolean;
   gamblingBanned: boolean;
+  cursorSize: number;
 
   // Actions
   setWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
@@ -74,6 +75,7 @@ export interface DataStore {
   setEditing: (isEditing: boolean) => void;
   setNegativeScoreModal: (negativeScoreModal: boolean) => void;
   setGamblingBanned: (gamblingBanned: boolean) => void;
+  setCursorSize: (cursor: number) => void;
   setArrowType: (
     arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
   ) => void;
