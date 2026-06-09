@@ -12,6 +12,7 @@ import {
   Users,
   type LucideIcon,
   History,
+  WholeWord,
 } from "lucide-react";
 
 export const resourceIcons: Record<string, LucideIcon> = {
@@ -28,4 +29,5 @@ export const resourceIcons: Record<string, LucideIcon> = {
   drawings: Brush,
   cells: Grid3x3,
   history: History,
+  hangman: WholeWord,
 };

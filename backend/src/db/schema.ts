@@ -27,6 +27,7 @@ export const users = sqliteTable("users", {
   place: text("place").notNull().default("0"),
   gamblingWinnings: integer("gambling_winnings").notNull().default(0),
   gamblingBanned: integer("gambling_banned", { mode: "boolean" }).notNull().default(false),
+  hangman: integer("hangman", { mode: "boolean" }).notNull().default(false),
   ...timestamps,
 });
 
@@ -152,6 +153,24 @@ export const history = sqliteTable("history", {
     .$type<Record<string, unknown> | null>()
     .default(null),
   created: text("created").notNull(),
+});
+
+export const hangman = sqliteTable("hangman", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  word: text("word").notNull(),
+  state: text("state", { enum: ["current", "won", "lost"] })
+    .notNull()
+    .default("current"),
+  guessedLetters: text("guessed_letters", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  wrongLetters: text("wrong_letters", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  ...timestamps,
 });
 
 export const cells = sqliteTable("cells", {

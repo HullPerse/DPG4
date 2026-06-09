@@ -14,6 +14,7 @@ export const ADMIN_TABLES = {
   drawings: schema.drawings,
   history: schema.history,
   cells: schema.cells,
+  hangman: schema.hangman,
 } as const;
 
 export type AdminTableName = keyof typeof ADMIN_TABLES;

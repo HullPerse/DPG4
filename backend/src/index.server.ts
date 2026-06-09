@@ -28,6 +28,7 @@ import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
+import { hangmanRoute } from "./routes/hangman.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
@@ -62,6 +63,7 @@ const app = new Elysia()
           { name: "search", description: "Поиск" },
           { name: "wheel", description: "Колесо Приколов" },
           { name: "history", description: "История действий" },
+          { name: "hangman", description: "Виселица" },
         ],
       },
       path: "/docs",
@@ -138,7 +140,8 @@ const app = new Elysia()
   .use(steamRoute)
   .use(searchRoute)
   .use(wheelRoute)
-  .use(historyRoute);
+  .use(historyRoute)
+  .use(hangmanRoute);
 
 runMigrations();
 logger.info("SYSTEM", "DB migrations applied");

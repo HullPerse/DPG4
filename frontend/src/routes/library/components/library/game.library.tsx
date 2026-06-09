@@ -2,7 +2,6 @@ import Image from "@/components/shared/image.component";
 import { Game, GameReview, GameStatus } from "@/types/games";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-
 import {
   memo,
   RefObject,
@@ -206,6 +205,8 @@ function GameLibrary({
           await userApi.updatePlace(String(data.game.user.id));
         }
 
+        await userApi.changeHangman(String(data.game.user.id), false);
+
         setStoreItems([]);
         setRerollPrice(2);
 
@@ -283,7 +284,10 @@ function GameLibrary({
                 size="icon"
                 variant={buttonStyle(item.value)}
                 className="border-2 shadow-sharp-sm font-bold"
-                loading={statusMutation.isPending && statusMutation.variables === item.value}
+                loading={
+                  statusMutation.isPending &&
+                  statusMutation.variables === item.value
+                }
                 disabled={
                   (data?.game && data?.game.status === item.value) ||
                   (item.value === "COMPLETED" && input && !time)

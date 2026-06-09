@@ -73,6 +73,59 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "CREATE INDEX IF NOT EXISTS idx_history_created ON history (created DESC);",
     ],
   },
+  {
+    hash: "0006_add_hangman_table",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS hangman (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        word TEXT NOT NULL,
+        wins INTEGER NOT NULL DEFAULT 0,
+        played INTEGER NOT NULL DEFAULT 0,
+        guessed_letters TEXT NOT NULL DEFAULT '[]',
+        wrong_letters TEXT NOT NULL DEFAULT '[]',
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_hangman_user_id ON hangman (user_id);",
+    ],
+  },
+  {
+    hash: "0007_add_hangman_state_columns",
+    sql: [
+      "ALTER TABLE hangman ADD COLUMN guessed_letters TEXT NOT NULL DEFAULT '[]';",
+      "ALTER TABLE hangman ADD COLUMN wrong_letters TEXT NOT NULL DEFAULT '[]';",
+    ],
+  },
+  {
+    hash: "0008_add_state_column",
+    sql: [
+      `CREATE TABLE hangman_new (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        word TEXT NOT NULL,
+        guessed_letters TEXT NOT NULL DEFAULT '[]',
+        wrong_letters TEXT NOT NULL DEFAULT '[]',
+        state TEXT NOT NULL DEFAULT 'current',
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      )`,
+      `INSERT INTO hangman_new (id, user_id, word, guessed_letters, wrong_letters, state, created, updated)
+       SELECT id, user_id, word, guessed_letters, wrong_letters,
+              CASE WHEN played = 1 THEN 'won' ELSE 'current' END,
+              created, updated
+       FROM hangman`,
+      `DROP TABLE hangman`,
+      `ALTER TABLE hangman_new RENAME TO hangman`,
+      `CREATE INDEX IF NOT EXISTS idx_hangman_user_id ON hangman (user_id)`,
+    ],
+  },
+  {
+    hash: "0009_add_hangman_to_users",
+    sql: [
+      "ALTER TABLE users ADD COLUMN hangman INTEGER NOT NULL DEFAULT 0;",
+    ],
+  },
 ];
 
 export function runMigrations() {
