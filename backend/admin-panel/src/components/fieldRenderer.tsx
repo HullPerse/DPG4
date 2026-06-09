@@ -91,7 +91,7 @@ export function renderListCell(
   if (val !== null && val !== undefined && typeof val === "object") {
     return <JsonField value={val} maxChars={120} />;
   }
-  return <span className="max-w-[200px] truncate">{formatCell(val)}</span>;
+  return <span className="max-w-50 truncate">{formatCell(val)}</span>;
 }
 
 export function renderShowField(

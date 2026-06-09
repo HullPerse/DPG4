@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { getHistory, type HistoryRecord } from "@/api/history.api";
+import { ChevronRight } from "lucide-react";
 
 const TYPE_FILTERS = [
   { value: "", label: "Все" },
@@ -77,7 +78,7 @@ function HistoryCard({ record }: { record: HistoryRecord }) {
         </div>
       ) : record.type === "wheel" ? (
         <div className="w-16 h-16 shrink-0 flex items-center justify-center text-3xl bg-highlight-low">
-          🎁
+          🐀
         </div>
       ) : null}
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
@@ -147,8 +148,9 @@ function WheelHistoryApp() {
         {TYPE_FILTERS.map((f) => (
           <Button
             key={f.value || "all"}
-            variant={typeFilter === f.value ? "default" : "info"}
-            size="sm"
+            variant="link"
+            className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 border-iris border-2 shadow-sharp-sm"
+            disabled={f.value === typeFilter}
             onClick={() => {
               setTypeFilter(f.value);
               setPage(1);
@@ -205,7 +207,7 @@ function WheelHistoryApp() {
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
-              →
+              <ChevronRight />
             </Button>
           </div>
         )}

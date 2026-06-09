@@ -1,96 +1,108 @@
-import UserApi from "@/api/user.api";
 import {
-  saveHangmanState,
+  getHangman,
+  getStreak,
   joinHangman,
   playHangman,
-  getStreak,
-  getHangman,
+  saveHangmanState,
 } from "@/api/hangman.api";
+import UserApi from "@/api/user.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { Button } from "@/components/ui/button.component";
 import HangMan from "@/components/svg/handgman.component";
+import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
+import { HangmanRecord } from "@/types/hangman";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleX } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const userApi = new UserApi();
 
 const RUSSIAN_LETTERS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 const ENGLISH_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const DIGITS = "0123456789";
 
-const userApi = new UserApi();
+type WordleType = {
+  streak: number;
+  word: HangmanRecord | null;
+};
 
 function WordleTab() {
-  const user = useUserStore((s) => s.user);
-  const [guessedLetters, setGuessedLetters] = useState<Set<string>>(
-    new Set([" ", "-"]),
-  );
-  const [wrongLetters, setWrongLetters] = useState<string[]>([]);
-  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">(
-    "playing",
-  );
-
-  const guessedRef = useRef(guessedLetters);
-  const wrongRef = useRef(wrongLetters);
-  guessedRef.current = guessedLetters;
-  wrongRef.current = wrongLetters;
-
+  const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
-  const {
-    data: record,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["hangman", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      if (user.hangman) return getHangman(user.id);
-      return joinHangman(user.id);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["wordleTab", user?.id],
+    queryFn: async (): Promise<WordleType> => {
+      if (!user) return { streak: 0, word: null };
+
+      return {
+        streak: await getStreak(user?.id),
+        word: user?.hangman
+          ? await getHangman(user.id)
+          : await joinHangman(user.id),
+      };
     },
-    enabled: !!user?.id,
     refetchOnMount: "always",
-  });
-
-  const { data: streakData } = useQuery({
-    queryKey: ["hangmanStreak", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return { streak: 0 };
-      return getStreak(user.id);
-    },
     enabled: !!user?.id,
   });
 
-  const streak = streakData?.streak ?? 0;
+  const [errors, setErrors] = useState<string[]>([]);
+  const [letters, setLetters] = useState<Set<string>>(new Set([" ", "-"]));
+  const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
+
+  const streak = data?.streak ?? 0;
+  const isFinished = status === "won" || status === "lost";
+
+  const word = data?.word?.word ?? "";
+  const wordUpper = word.toUpperCase();
+
+  const maxErrors = 6 + Math.max(0, Math.ceil((word.length - 6) / 2));
+
+  const guessedRef = useRef(letters);
+  const wrongRef = useRef(errors);
+  guessedRef.current = letters;
+  wrongRef.current = errors;
 
   useEffect(() => {
-    if (!record) return;
-    if (record.state === "won") setGameStatus("won");
-    else if (record.state === "lost") setGameStatus("lost");
-  }, [record]);
+    if (!data?.word) return;
+    if (data?.word.state === "won") setStatus("won");
+    else if (data?.word.state === "lost") setStatus("lost");
+  }, [data?.word]);
 
   useEffect(() => {
-    if (!record) return;
-    if (record.guessedLetters?.length || record.wrongLetters?.length) {
-      setGuessedLetters(new Set([" ", "-", ...record.guessedLetters]));
-      setWrongLetters(record.wrongLetters);
+    if (!data?.word) return;
+    if (data?.word.guessedLetters?.length || data?.word.wrongLetters?.length) {
+      setLetters(new Set([" ", "-", ...data?.word.guessedLetters]));
+      setErrors(data?.word.wrongLetters);
     }
-  }, [record]);
+  }, [data?.word]);
 
   useEffect(() => {
     return () => {
-      if (gameStatus === "playing" && user?.id) {
+      if (status === "playing" && user?.id) {
         saveHangmanState(user.id, [...guessedRef.current], wrongRef.current);
       }
     };
   }, []);
 
+  const lettersWithDigits = (): { letters: string[]; digits: string[] } => {
+    const hasRus = /[А-ЯЁ]/.test(wordUpper);
+    const letters = hasRus ? RUSSIAN_LETTERS : ENGLISH_LETTERS;
+    return { letters: letters.split(""), digits: DIGITS.split("") };
+  };
+
+  const displayWord = wordUpper
+    .split("")
+    .map((i) => (letters.has(i) ? i : "_"))
+    .join(" ");
+
   const playMutation = useMutation({
     mutationFn: async ({ won }: { won: boolean }) => {
       const uid = useUserStore.getState().user?.id;
+
       if (!uid) return;
+
       await playHangman(uid, won, [...guessedRef.current], wrongRef.current);
       if (won) await userApi.scoreUser(uid, 5);
       await userApi.changeHangman(uid, true);
@@ -101,84 +113,85 @@ function WordleTab() {
     },
   });
 
-  const word = record?.word ?? "";
-  const wordUpper = word.toUpperCase();
-  const maxErrors = useMemo(
-    () => 6 + Math.max(0, Math.ceil((word.length - 6) / 2)),
-    [word],
-  );
-
-  const isFinished = gameStatus === "won" || gameStatus === "lost";
-
-  const handleLetter = useCallback(
+  const handleGuess = useCallback(
     async (letter: string) => {
-      if (gameStatus !== "playing") return;
+      if (status !== "playing") return;
 
-      const upperLetter = letter.toUpperCase();
+      const upperCase = letter.toUpperCase();
+
       if (
-        guessedRef.current.has(upperLetter) ||
-        wrongRef.current.includes(upperLetter)
+        guessedRef.current.has(upperCase) ||
+        wrongRef.current.includes(upperCase)
       )
         return;
 
-      const isWin = wordUpper.includes(upperLetter);
+      const isWin = wordUpper.includes(upperCase);
 
       if (isWin) {
         const next = new Set(guessedRef.current);
-        next.add(upperLetter);
+        next.add(upperCase);
         guessedRef.current = next;
-        setGuessedLetters(next);
+        setLetters(next);
 
-        try {
-          const updated = await saveHangmanState(
-            user!.id,
-            [...next],
-            wrongRef.current,
-          );
-          queryClient.setQueryData(["hangman", user!.id], updated);
-        } catch {
-          /* ignore */
-        }
+        const updated = await saveHangmanState(
+          user!.id,
+          [...next],
+          wrongRef.current,
+        );
+
+        queryClient.setQueryData(["hangman", user!.id], updated);
 
         if (wordUpper.split("").every((ch) => next.has(ch))) {
-          setGameStatus("won");
+          setStatus("won");
           playMutation.mutate({ won: true });
         }
       } else {
-        const next = [...wrongRef.current, upperLetter];
-        wrongRef.current = next;
-        setWrongLetters(next);
+        const next = [...wrongRef.current, upperCase];
 
-        try {
-          const updated = await saveHangmanState(
-            user!.id,
-            [...guessedRef.current],
-            next,
-          );
-          queryClient.setQueryData(["hangman", user!.id], updated);
-        } catch {
-          /* ignore */
-        }
+        wrongRef.current = next;
+        setErrors(next);
+
+        const updated = await saveHangmanState(
+          user!.id,
+          [...guessedRef.current],
+          next,
+        );
+        queryClient.setQueryData(["hangman", user!.id], updated);
 
         if (next.length >= maxErrors) {
-          setGameStatus("lost");
+          setStatus("lost");
           playMutation.mutate({ won: false });
         }
       }
     },
-    [gameStatus, wordUpper, maxErrors, playMutation, user, queryClient],
+    [status, wordUpper, maxErrors, playMutation, user, queryClient],
   );
 
-  const displayWord = wordUpper
-    .split("")
-    .map((ch) => (guessedLetters.has(ch) ? ch : "_"))
-    .join(" ");
+  useEffect(() => {
+    const wordHasCyr = /[А-ЯЁ]/.test(wordUpper);
 
-  const lettersWithDigits = useMemo(() => {
-    const hasCyr = /[А-ЯЁ]/.test(wordUpper);
-    const letters = hasCyr ? RUSSIAN_LETTERS : ENGLISH_LETTERS;
-    return { letters: letters.split(""), digits: DIGITS.split("") };
-  }, [wordUpper]);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (status !== "playing") return;
+      if (e.repeat) return;
+
+      const key = e.key.toUpperCase();
+
+      const isRussian = /^[А-ЯЁ]$/.test(key);
+      const isEnglish = /^[A-Z]$/.test(key);
+      const isDigit = /^[0-9]$/.test(key);
+
+      if (wordHasCyr && isEnglish) return;
+      if (!wordHasCyr && isRussian) return;
+
+      if (!isRussian && !isEnglish && !isDigit) return;
+
+      e.preventDefault();
+      handleGuess(key);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [status, wordUpper, handleGuess]);
 
   if (isLoading) return <WindowLoader />;
   if (isError) {
@@ -190,56 +203,47 @@ function WordleTab() {
     );
   }
 
-  if (!record) {
-    return (
-      <main className="flex flex-col w-full h-full gap-2 p-2 items-center justify-center">
-        <span className="text-lg font-bold">Не удалось загрузить игру</span>
-        <Button variant="default" onClick={() => refetch()}>
-          Повторить
-        </Button>
-      </main>
-    );
-  }
+  const finishedComponent = () => {
+    if (status === "won")
+      return (
+        <span className="text-green-400 text-lg font-bold">ПОБЕДА! +5</span>
+      );
+    else if (status === "lost")
+      return (
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-red-400 text-lg font-bold">ПОРАЖЕНИЕ</span>
+          <span className="text-muted text-sm">Слово: {word}</span>
+        </div>
+      );
+  };
 
   return (
     <main className="flex flex-col w-full h-full gap-2 p-2">
-      <div className="flex items-center justify-between px-2 text-sm text-muted">
-        <span>Побед: {streak}</span>
+      {/* ERRORS */}
+      <section className="flex flex-row items-center justify-between p-1 text-sm text-muted">
+        <span>Побед: {isNaN(streak) ? 0 : streak}</span>
         <span>
-          Ошибок: {wrongLetters.length}/{maxErrors}
+          Ошибок: {errors.length}/{maxErrors}
         </span>
-      </div>
-
-      <section className="flex flex-1 items-center justify-center bg-background border-2 border-highlight-high">
-        <HangMan wrongLetters={wrongLetters} />
       </section>
-
+      {/* HANGMAN */}
+      <section className="flex flex-1 items-center justify-center bg-background border-2 border-highlight-high">
+        <HangMan wrongLetters={errors} />
+      </section>
+      {/* WORD */}
       <section className="text-center text-2xl font-bold tracking-widest">
         {displayWord}
       </section>
-
+      {/* KEYBOARD */}
       <section className="relative">
         {isFinished ? (
-          <div className="flex flex-col items-center gap-2 py-4 px-2 bg-black/80 border-2 border-highlight-high">
-            {gameStatus === "won" ? (
-              <span className="text-green-400 text-lg font-bold">
-                ПОБЕДА! +5
-              </span>
-            ) : (
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-red-400 text-lg font-bold">
-                  ПОРАЖЕНИЕ
-                </span>
-                <span className="text-muted text-sm">Слово: {word}</span>
-              </div>
-            )}
-          </div>
+          finishedComponent()
         ) : (
           <div className="flex flex-col gap-1.5 p-3 bg-background border-2 border-highlight-high rounded-lg shadow-sm">
-            <div className="grid grid-cols-10 gap-1">
-              {lettersWithDigits.digits.map((digit) => {
-                const isCorrect = guessedLetters.has(digit);
-                const isWrong = wrongLetters.includes(digit);
+            <div className="flex flex-row gap-2">
+              {lettersWithDigits().digits.map((digit) => {
+                const isCorrect = letters.has(digit);
+                const isWrong = errors.includes(digit);
                 const isUsed = isCorrect || isWrong;
                 return (
                   <Button
@@ -247,9 +251,8 @@ function WordleTab() {
                     variant={
                       isCorrect ? "success" : isWrong ? "error" : "default"
                     }
-                    size="sm"
                     disabled={isUsed}
-                    onClick={() => handleLetter(digit)}
+                    onClick={() => handleGuess(digit)}
                     className="font-bold border-2 text-xl border-highlight-high h-14 w-14"
                   >
                     {digit}
@@ -258,10 +261,10 @@ function WordleTab() {
               })}
             </div>
             <div className="flex flex-wrap gap-2">
-              {lettersWithDigits.letters.map((letter) => {
+              {lettersWithDigits().letters.map((letter) => {
                 const upper = letter.toUpperCase();
-                const isCorrect = guessedLetters.has(upper);
-                const isWrong = wrongLetters.includes(upper);
+                const isCorrect = letters.has(upper);
+                const isWrong = errors.includes(upper);
                 const isUsed = isCorrect || isWrong;
                 return (
                   <Button
@@ -270,7 +273,7 @@ function WordleTab() {
                       isCorrect ? "success" : isWrong ? "error" : "default"
                     }
                     disabled={isUsed}
-                    onClick={() => handleLetter(letter)}
+                    onClick={() => handleGuess(letter)}
                     className="font-bold border-2 text-xl border-highlight-high h-14 w-14"
                   >
                     {letter}

@@ -32,6 +32,8 @@ export function playHangman(
   });
 }
 
-export function getStreak(userId: string): Promise<{ streak: number }> {
-  return apiFetch<{ streak: number }>(`/hangman/${userId}/streak`);
+export function getStreak(userId: string): Promise<number> {
+  return apiFetch<{ streak: number }>(`/hangman/${userId}/streak`).then((res) =>
+    Number(res),
+  );
 }

@@ -1,10 +1,9 @@
-const VITE_API_URL = "http://26.15.36.191:3000";
-const URL = VITE_API_URL ?? "http://127.0.0.1:3000";
+import { VITE_API_URL } from "@/api/client.api";
 
 export default function AdminApp() {
   return (
     <iframe
-      src={`${URL}/admin`}
+      src={`${VITE_API_URL}/admin`}
       className="h-full w-full border-none"
       title="Admin Panel"
     />
