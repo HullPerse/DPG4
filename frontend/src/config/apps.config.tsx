@@ -17,7 +17,6 @@ import {
   Timer,
   Palette,
   History,
-  MessageSquare,
   PaintRoller,
   Trophy,
   Shield,
@@ -32,7 +31,6 @@ const Notebook = lazy(() => import("@/routes/notebook/notebook.route"));
 const Paint = lazy(() => import("@/routes/paint/paint.root"));
 const ThemeApp = lazy(() => import("@/routes/desktop/apps/theme.app"));
 const WheelHistoryApp = lazy(() => import("@/routes/desktop/apps/history.app"));
-const GlobalChatApp = lazy(() => import("@/routes/desktop/apps/chat.app"));
 const Gambling = lazy(() => import("@/routes/gambling/gambling.root"));
 const AdminApp = lazy(() => import("@/routes/desktop/apps/admin.app"));
 
@@ -44,16 +42,24 @@ export const WIP_COMPONENT = (
   </div>
 );
 
-export const APP_REGISTRY: Record<string, { icon: ReactNode; component?: ReactNode }> = {
+export const APP_REGISTRY: Record<
+  string,
+  { icon: ReactNode; component?: ReactNode }
+> = {
   tabletop: { icon: <Dices className="size-7" />, component: <Tabletop /> },
   library: { icon: <LibraryBig className="size-7" />, component: <Library /> },
   browser: { icon: <Globe className="size-7" />, component: <Browser /> },
   allWheels: { icon: <Volleyball className="size-7" />, component: <Wheels /> },
-  notepad: { icon: <NotebookIcon className="size-7" />, component: <Notebook /> },
+  notepad: {
+    icon: <NotebookIcon className="size-7" />,
+    component: <Notebook />,
+  },
   paint: { icon: <PaintRoller className="size-7" />, component: <Paint /> },
   gambling: { icon: <Trophy className="size-7" />, component: <Gambling /> },
-  history: { icon: <History className="size-7" />, component: <WheelHistoryApp /> },
-  globalChat: { icon: <MessageSquare className="size-7" />, component: <GlobalChatApp /> },
+  history: {
+    icon: <History className="size-7" />,
+    component: <WheelHistoryApp />,
+  },
   theme: { icon: <Palette className="size-7" />, component: <ThemeApp /> },
   howlongtobeat: { icon: <Timer className="size-7" /> },
   gamewheel: { icon: <Star className="size-7" /> },
@@ -73,7 +79,6 @@ export const WINDOW_ICONS: Record<string, ReactNode> = {
   gambling: <Trophy className="size-7" />,
   theme: <Palette className="size-7" />,
   history: <History className="size-7" />,
-  globalChat: <MessageSquare className="size-7" />,
   admin: <Shield className="size-7" />,
 };
 

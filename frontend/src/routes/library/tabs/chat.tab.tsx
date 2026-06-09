@@ -12,9 +12,7 @@ import {
 import { useSubscription } from "@/hooks/subscription.hook";
 import { Chat } from "@/types/chat";
 import ChatApi from "@/api/chat.api";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Send, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
@@ -168,7 +166,11 @@ export default function GlobalChatApp() {
             }}
             autoFocus
           />
-          <Button variant="success" size="icon" onClick={() => editMutation.mutate()}>
+          <Button
+            variant="success"
+            size="icon"
+            onClick={() => editMutation.mutate()}
+          >
             <Send className="size-4" />
           </Button>
           <Button

@@ -7,7 +7,6 @@ export const APP_META = [
   { name: "paint", label: "Рисовач", priority: 6 },
   { name: "gambling", label: "Азарт", priority: 7 },
   { name: "history", label: "История", priority: 8 },
-  { name: "globalChat", label: "Общий чат", priority: 9 },
   { name: "theme", label: "Тема", priority: 10 },
   {
     name: "admin",
@@ -95,11 +94,7 @@ export const WINDOW_META = [
     title: "История",
     size: { width: 600, height: 700 },
   },
-  {
-    id: "globalChat",
-    title: "Общий чат",
-    size: { minWidth: 400, minHeight: 500, width: 500, height: 600 },
-  },
+
   {
     id: "admin",
     title: "Админ панель",

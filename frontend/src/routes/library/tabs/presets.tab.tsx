@@ -9,19 +9,19 @@ import {
 } from "lucide-react";
 import { memo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
- 
- import { useDebounce } from "@/hooks/debounce.hook";
- import { useUserStore } from "@/store/user.store";
- 
- import PresetsList from "../components/presets/presets.presets";
- 
- import GameApi from "@/api/games.api";
- import PresetSettings from "../components/presets/list.presets";
- import NewGameLibrary from "../components/library/newGame.library";
- import PresetsWheel from "../components/presets/wheel.presets";
- import { useDataStore } from "@/store/data.store";
- import { openUrl } from "@tauri-apps/plugin-opener";
- const gameApi = new GameApi();
+
+import { useDebounce } from "@/hooks/debounce.hook";
+import { useUserStore } from "@/store/user.store";
+
+import PresetsList from "../components/presets/presets.presets";
+
+import GameApi from "@/api/games.api";
+import PresetSettings from "../components/presets/list.presets";
+import NewGameLibrary from "../components/library/newGame.library";
+import PresetsWheel from "../components/presets/wheel.presets";
+import { useDataStore } from "@/store/data.store";
+import { openUrl } from "@tauri-apps/plugin-opener";
+const gameApi = new GameApi();
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);
@@ -157,9 +157,10 @@ function PresetsTab() {
           hidden={currentTab === "presetAll"}
           onClick={() => {
             if (currentPreset && currentTab === "addPresetGame") {
+              setSearchTerm("");
               return setCurrentTab("presetList");
             }
-
+            setSearchTerm("");
             setCurrentTab("presetAll");
             setCurrentPreset(null);
           }}

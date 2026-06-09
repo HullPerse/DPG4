@@ -9,13 +9,22 @@ import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { type LibraryTabs } from "@/types/library";
 import { ChevronDown, ChevronLeft, MailWarning, User } from "lucide-react";
-import { startTransition, Suspense, useCallback, useEffect, useState } from "react";
+import {
+  startTransition,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import ProfileTab from "./tabs/profile.tab";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ChatApi from "@/api/chat.api";
 import { Chat } from "@/types/chat";
-import { SmallLoader, WindowLoader } from "@/components/shared/loader.component";
+import {
+  SmallLoader,
+  WindowLoader,
+} from "@/components/shared/loader.component";
 const chatApi = new ChatApi();
 
 export default function Library() {
@@ -153,6 +162,18 @@ export default function Library() {
                     {unreadAmmount()}
                   </span>
                 </div>
+              </Button>
+
+              <Button
+                variant="link"
+                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
+                disabled={tab === "allChat"}
+                onClick={() => {
+                  setUserProfile(null);
+                  setTab("allChat");
+                }}
+              >
+                Общий чат
               </Button>
             </HoverCardContent>
           </HoverCard>

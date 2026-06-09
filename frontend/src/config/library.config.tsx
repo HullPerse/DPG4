@@ -9,6 +9,7 @@ const ProfileTab = lazy(() => import("@/routes/library/tabs/profile.tab"));
 const InventoryTab = lazy(() => import("@/routes/library/tabs/inventory.tab"));
 const FriendsTab = lazy(() => import("@/routes/library/tabs/friends.tab"));
 const CommunityTab = lazy(() => import("@/routes/library/tabs/community.tab"));
+const AllChat = lazy(() => import("@/routes/library/tabs/chat.tab"));
 
 export const libraryTabs: {
   value: LibraryTabs;
@@ -33,6 +34,12 @@ export const libraryTabs: {
     value: "friends",
     label: "Друзья",
     Component: FriendsTab,
+    show: false,
+  },
+  {
+    value: "allChat",
+    label: "Общий чат",
+    Component: AllChat,
     show: false,
   },
   {

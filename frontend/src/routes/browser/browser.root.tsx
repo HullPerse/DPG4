@@ -167,7 +167,10 @@ export default function Browser() {
             variant="error"
             size="icon"
             className="h-10 w-10 p-5 ml-auto"
-            onClick={() => setTab("home")}
+            onClick={() => {
+              setTab("home");
+              setSearchTerms("");
+            }}
           >
             <ChevronLeft />
           </Button>
