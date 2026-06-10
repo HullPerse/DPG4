@@ -130,7 +130,7 @@ export class PachinkoService {
     }
 
     const user = await this.userService.getById(userId);
-    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, totalPayout);
+    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
 
     if (

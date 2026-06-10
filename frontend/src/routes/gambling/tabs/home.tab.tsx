@@ -1,33 +1,35 @@
 import { Button } from "@/components/ui/button.component";
-import { Dices, Club, Rocket, CircleDot } from "lucide-react";
+import { Dices, Club, Rocket, CircleDot, Trophy, BarChart3 } from "lucide-react";
 import { memo } from "react";
+
+type Tab = "home" | "dice" | "blackjack" | "rocket" | "pachinko" | "leaderboard" | "stats";
 
 function HomeTab({
   setTab,
 }: {
-  setTab: (tab: "home" | "dice" | "blackjack" | "rocket" | "pachinko") => void;
+  setTab: (tab: Tab) => void;
 }) {
   const tabs = [
     {
-      value: "dice" as const,
+      value: "dice" as Tab,
       label: "Чинчирорин",
       description: "Кидай кубики и получи МНОГО чубриков",
       icon: <Dices className="size-10" />,
     },
     {
-      value: "blackjack" as const,
+      value: "blackjack" as Tab,
       label: "Блэкджек",
       description: "fallout new vegas опять",
       icon: <Club className="size-10" />,
     },
     {
-      value: "pachinko" as const,
+      value: "pachinko" as Tab,
       label: "Пачинко",
       description: "Крыса паничко. ЖЕСТЬ КАК В КАЙДЖИ",
       icon: <CircleDot className="size-10" />,
     },
     {
-      value: "rocket" as const,
+      value: "rocket" as Tab,
       label: "Ракетник",
       description: "Крыса летит вверх - забери чубрики до краха",
       icon: <Rocket className="size-10" />,
@@ -53,6 +55,24 @@ function HomeTab({
             </div>
           </Button>
         ))}
+        <section className="flex flex-row gap-2 w-full">
+          <Button
+            variant="ghost"
+            className="flex-1 h-16 border-2 border-highlight-high flex flex-row items-center justify-center gap-2"
+            onClick={() => setTab("leaderboard")}
+          >
+            <Trophy className="size-8" />
+            <span className="font-bold text-lg">Лидеры</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex-1 h-16 border-2 border-highlight-high flex flex-row items-center justify-center gap-2"
+            onClick={() => setTab("stats")}
+          >
+            <BarChart3 className="size-8" />
+            <span className="font-bold text-lg">Статистика</span>
+          </Button>
+        </section>
       </section>
     </main>
   );

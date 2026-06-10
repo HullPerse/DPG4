@@ -20,14 +20,18 @@ export const activityRoute = new Elysia({ prefix: "/activity" })
     },
   )
   .get("/latest", async ({ activityService }) => activityService.getLatest())
-  .get("/:id", async ({ params, activityService, set }) => {
-    const row = await activityService.getById(params.id);
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return row;
-  })
+  .get(
+    "/:id",
+    async ({ params, activityService, set }) => {
+      const row = await activityService.getById(params.id);
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return row;
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/",
     async ({ body, activityService }) => activityService.create(body),

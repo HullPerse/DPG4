@@ -37,7 +37,6 @@ export const useDataStore = create<DataStore>()(
         rerollPrice: 2,
         negativeScoreModal: false,
         gamblingBanned: false,
-        cursorSize: 0,
 
         setNegativeScoreModal: (negativeScoreModal: boolean) => {
           set({ negativeScoreModal });
@@ -45,10 +44,6 @@ export const useDataStore = create<DataStore>()(
 
         setGamblingBanned: (gamblingBanned: boolean) => {
           set({ gamblingBanned });
-        },
-
-        setCursorSize: (cursorSize: number) => {
-          set({ cursorSize });
         },
 
         setSavedWheel: (savedWheel: string[]) => {

@@ -1,22 +1,28 @@
 import { Button } from "@/components/ui/button.component";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Trophy, BarChart3 } from "lucide-react";
 import { useCallback, useState, lazy, Suspense } from "react";
 import HomeTab from "./tabs/home.tab";
 const DiceTab = lazy(() => import("./tabs/dice.tab"));
 const BlackjackTab = lazy(() => import("./tabs/blackjack.tab"));
 const RocketTab = lazy(() => import("./tabs/rocket.tab"));
 const PachinkoTab = lazy(() => import("./tabs/pachinko.tab"));
+const LeaderboardTab = lazy(() => import("./tabs/leaderboard.tab"));
+const StatsTab = lazy(() => import("./tabs/stats.tab"));
+
+type Tab = "home" | "dice" | "blackjack" | "rocket" | "pachinko" | "leaderboard" | "stats";
 
 export default function Gambling() {
-  const [tab, setTab] = useState<"home" | "dice" | "blackjack" | "rocket" | "pachinko">("home");
+  const [tab, setTab] = useState<Tab>("home");
 
   const getComponent = useCallback(() => {
-    const tabMap = {
+    const tabMap: Record<Tab, React.ReactNode> = {
       home: <HomeTab setTab={setTab} />,
       dice: <DiceTab />,
       blackjack: <BlackjackTab />,
       rocket: <RocketTab />,
       pachinko: <PachinkoTab />,
+      leaderboard: <LeaderboardTab />,
+      stats: <StatsTab />,
     };
     return tabMap[tab];
   }, [tab]);
@@ -32,6 +38,22 @@ export default function Gambling() {
             onClick={() => setTab("home")}
           >
             <ChevronLeft />
+          </Button>
+          <Button
+            variant={tab === "leaderboard" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setTab("leaderboard")}
+          >
+            <Trophy className="size-4 mr-1" />
+            Лидеры
+          </Button>
+          <Button
+            variant={tab === "stats" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setTab("stats")}
+          >
+            <BarChart3 className="size-4 mr-1" />
+            Статистика
           </Button>
         </section>
       )}

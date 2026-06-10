@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { config } from "../server.config";
 import { dbPlugin } from "../plugins/db.plugin";
@@ -524,6 +524,57 @@ export const adminRoute = new Elysia()
             `${params.table}:${params.id}`,
           );
           return { data: row };
+        },
+      )
+      .post(
+        "/data/:table/batch-delete",
+        async ({ params, body, db, headers, adminJwt, set }) => {
+          const admin = await verifyAdmin(headers, adminJwt, db);
+          if (!admin) {
+            set.status = 401;
+            return { error: "Unauthorized" };
+          }
+          const table = getAdminTable(params.table);
+          if (!table) {
+            set.status = 404;
+            return { error: "Table not found" };
+          }
+          const { ids } = body as { ids: string[] };
+          if (!Array.isArray(ids) || ids.length === 0) {
+            set.status = 400;
+            return { error: "ids array is required" };
+          }
+          const idCol = adminTableColumn(table, "id");
+          await db.delete(table).where(inArray(idCol as never, ids));
+          invalidateAdminStatsCache();
+          for (const id of ids) {
+            maybeBroadcast(params.table, "delete", id);
+          }
+          logger.info(
+            admin.username,
+            "admin batch deleted",
+            `${params.table}:${ids.length} records`,
+          );
+          return { ok: true, deleted: ids.length };
+        },
+      )
+      .get(
+        "/data/:table/export",
+        async ({ params, query, db, headers, adminJwt, set }) => {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
+            set.status = 401;
+            return { error: "Unauthorized" };
+          }
+          const table = getAdminTable(params.table);
+          if (!table) {
+            set.status = 404;
+            return { error: "Table not found" };
+          }
+          const rows = await db.select().from(table);
+          rows.forEach((row) =>
+            replaceBuffers(row as Record<string, unknown>),
+          );
+          return rows;
         },
       ),
   )

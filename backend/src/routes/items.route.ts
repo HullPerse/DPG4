@@ -132,17 +132,21 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       ),
     },
   )
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.items)
-      .where(eq(schema.items.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return mapItem(row);
-  })
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.items)
+        .where(eq(schema.items.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return mapItem(row);
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/",
     async ({ body, db }) => {
@@ -235,12 +239,16 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.items).where(eq(schema.items.id, params.id));
-    broadcast("items", "delete", params.id);
-    logger.info(null, "deleted item", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.items).where(eq(schema.items.id, params.id));
+      broadcast("items", "delete", params.id);
+      logger.info(null, "deleted item", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );
 
 export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .use(dbPlugin)
@@ -295,17 +303,21 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       ),
     },
   )
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.inventory)
-      .where(eq(schema.inventory.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return withRecordMeta(row, "inventory");
-  })
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return withRecordMeta(row, "inventory");
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/add",
     async ({ body, user, economyService }) => {
@@ -440,12 +452,16 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       },
     },
   )
-  .delete("/:id", async ({ params, db, user }) => {
-    await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
-    broadcast("inventory", "delete", params.id);
-    logger.info(user?.username, "deleted inventory item", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db, user }) => {
+      await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
+      broadcast("inventory", "delete", params.id);
+      logger.info(user?.username, "deleted inventory item", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );
 
 export const marketRoute = new Elysia({ prefix: "/market" })
   .use(dbPlugin)
@@ -460,11 +476,16 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       const all = await q.orderBy(desc(schema.market.created));
       const searchLower = query.search?.toLowerCase();
       const matched = searchLower
-        ? all.filter(
-            (r) =>
+        ? all.filter((r) => {
+            const ownerText =
+              r.owner && typeof r.owner === "object"
+                ? JSON.stringify(r.owner).toLowerCase()
+                : "";
+            return (
               r.label?.toLowerCase().includes(searchLower) ||
-              r.owner?.toLowerCase().includes(searchLower),
-          )
+              ownerText.includes(searchLower)
+            );
+          })
         : all;
       const rows = matched.slice(offset, offset + limit);
       return rows.map((r) => withRecordMeta(r, "market"));
@@ -479,17 +500,21 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       ),
     },
   )
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.market)
-      .where(eq(schema.market.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return withRecordMeta(row, "market");
-  })
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.market)
+        .where(eq(schema.market.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return withRecordMeta(row, "market");
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/sell",
     async ({ body, economyService }) => {
@@ -567,12 +592,16 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.market).where(eq(schema.market.id, params.id));
-    broadcast("market", "delete", params.id);
-    logger.info(null, "deleted market listing", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.market).where(eq(schema.market.id, params.id));
+      broadcast("market", "delete", params.id);
+      logger.info(null, "deleted market listing", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );
 
 export const tradeRoute = new Elysia({ prefix: "/trade" })
   .use(servicesPlugin)

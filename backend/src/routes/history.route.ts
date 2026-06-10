@@ -1,8 +1,39 @@
 import { Elysia, t } from "elysia";
 import { desc, eq, sql, and } from "drizzle-orm";
 import * as schema from "../db/schema";
+import { rawDb } from "../db";
 import { authPlugin } from "../plugins/auth.plugin";
 import { dbPlugin } from "../plugins/db.plugin";
+
+interface StatsRow {
+  date: string;
+  net: number;
+  gamesPlayed: number;
+}
+
+interface GameDistRow {
+  type: string;
+  count: number;
+  totalNet: number;
+}
+
+interface BetDistRow {
+  range: string;
+  count: number;
+}
+
+interface LeaderboardRow {
+  userId: string;
+  username: string;
+  avatar: string;
+  color: string;
+  currentMoney: number;
+  totalNet: number;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  biggestWin: number;
+}
 
 export const historyRoute = new Elysia({ prefix: "/history" })
   .use(dbPlugin)
@@ -58,6 +89,150 @@ export const historyRoute = new Elysia({ prefix: "/history" })
       detail: {
         tags: ["history"],
         summary: "Get paginated history for current user, optionally filtered by type",
+      },
+    },
+  )
+  .get(
+    "/stats",
+    async ({ user, set }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+
+      const dailyNet = rawDb
+        .query<StatsRow, [string]>(
+          `SELECT DATE(created) AS date, SUM(net) AS net, COUNT(*) AS gamesPlayed
+           FROM history WHERE user_id = ?
+           GROUP BY DATE(created) ORDER BY date DESC LIMIT 30`,
+        )
+        .all(user.sub);
+
+      const gameDistribution = rawDb
+        .query<GameDistRow, [string]>(
+          `SELECT type, COUNT(*) AS count, SUM(net) AS totalNet
+           FROM history WHERE user_id = ?
+           GROUP BY type ORDER BY count DESC`,
+        )
+        .all(user.sub);
+
+      const allBets = rawDb
+        .query<{ bid: number }, [string]>(
+          `SELECT bid FROM history WHERE user_id = ? AND bid > 0`,
+        )
+        .all(user.sub);
+
+      const betRanges = [
+        { label: "1-5", min: 1, max: 5 },
+        { label: "6-10", min: 6, max: 10 },
+        { label: "11-20", min: 11, max: 20 },
+        { label: "21-50", min: 21, max: 50 },
+        { label: "50+", min: 51, max: Infinity },
+      ];
+      const betDistribution: BetDistRow[] = betRanges.map((r) => ({
+        range: r.label,
+        count: allBets.filter((b) => b.bid >= r.min && b.bid <= r.max).length,
+      }));
+
+      const [summary] = rawDb
+        .query<{
+          totalPlayed: number;
+          totalWagered: number;
+          totalNet: number;
+          winRate: number;
+          biggestWin: number;
+          avgBet: number;
+        }, [string]>(
+          `SELECT
+            COUNT(*) AS totalPlayed,
+            COALESCE(SUM(bid), 0) AS totalWagered,
+            COALESCE(SUM(net), 0) AS totalNet,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(CAST(COUNT(CASE WHEN net > 0 THEN 1 END) AS REAL) / COUNT(*) * 100, 1) ELSE 0 END AS winRate,
+            COALESCE(MAX(CASE WHEN net > 0 THEN net END), 0) AS biggestWin,
+            ROUND(COALESCE(AVG(bid), 0), 1) AS avgBet
+           FROM history WHERE user_id = ?`,
+        )
+        .all(user.sub);
+
+      return {
+        dailyNet: dailyNet.reverse(),
+        gameDistribution,
+        betDistribution,
+        summary: summary ?? {
+          totalPlayed: 0,
+          totalWagered: 0,
+          totalNet: 0,
+          winRate: 0,
+          biggestWin: 0,
+          avgBet: 0,
+        },
+      };
+    },
+    {
+      detail: {
+        tags: ["history"],
+        summary: "Get gambling stats and charts data for current user",
+      },
+    },
+  )
+  .get(
+    "/leaderboard",
+    async ({ query }) => {
+      const typeFilter = query.gameType
+        ? `AND h.type = '${query.gameType.replace(/'/g, "''")}'`
+        : "";
+      const periodFilter =
+        query.period === "weekly"
+          ? `AND h.created >= datetime('now', '-7 days')`
+          : "";
+      const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
+
+      const sql_query = `
+        SELECT
+          u.id AS userId,
+          u.username,
+          u.avatar,
+          u.color,
+          u.money AS currentMoney,
+          COALESCE(SUM(h.net), 0) AS totalNet,
+          COUNT(*) AS gamesPlayed,
+          COUNT(CASE WHEN h.net > 0 THEN 1 END) AS wins,
+          COUNT(CASE WHEN h.net < 0 THEN 1 END) AS losses,
+          COALESCE(MAX(CASE WHEN h.net > 0 THEN h.net END), 0) AS biggestWin
+        FROM history h
+        JOIN users u ON u.id = h.user_id
+        WHERE 1=1 ${typeFilter} ${periodFilter}
+        GROUP BY h.user_id
+        ORDER BY totalNet DESC
+        LIMIT ?
+      `;
+
+      const rows = rawDb
+        .query<LeaderboardRow, [number]>(sql_query)
+        .all(limit);
+
+      return { data: rows };
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          gameType: t.Optional(
+            t.Union([
+              t.Literal("dice"),
+              t.Literal("blackjack"),
+              t.Literal("rocket"),
+              t.Literal("pachinko"),
+            ]),
+          ),
+          period: t.Optional(
+            t.Union([t.Literal("alltime"), t.Literal("weekly")]),
+          ),
+          limit: t.Optional(t.Numeric()),
+        }),
+      ),
+      detail: {
+        tags: ["history"],
+        summary: "Get gambling leaderboard - ranked by total net profit",
       },
     },
   );

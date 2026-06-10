@@ -20,7 +20,9 @@ function mapChat(row: typeof schema.chats.$inferSelect) {
 export const chatsRoute = new Elysia({ prefix: "/chats" })
   .use(dbPlugin)
   .use(servicesPlugin)
-  .get("/", async ({ db, query }) => {
+  .get(
+    "/",
+    async ({ db, query }) => {
     const conditions: SQL[] = [];
 
     if (query.receiverId && query.senderId) {
@@ -60,7 +62,18 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       );
 
     return rows.map(mapChat);
-  })
+  },
+  {
+    query: t.Optional(
+      t.Object({
+        senderId: t.Optional(t.String()),
+        receiverId: t.Optional(t.String()),
+        unreadFor: t.Optional(t.String()),
+        sort: t.Optional(t.String()),
+      }),
+    ),
+  },
+)
   .post(
     "/",
     async ({ body, db, userService }) => {
@@ -177,13 +190,19 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       body: t.Object({ ids: t.Array(t.String()) }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.chats).where(eq(schema.chats.id, params.id));
-    broadcast("chats", "delete", params.id);
-    logger.info(null, "deleted message", params.id);
-    return { ok: true };
-  })
-  .get("/thread/:sender/:receiver", async ({ params, db, userService }) => {
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.chats).where(eq(schema.chats.id, params.id));
+      broadcast("chats", "delete", params.id);
+      logger.info(null, "deleted message", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
+  .get(
+    "/thread/:sender/:receiver",
+    async ({ params, db, userService }) => {
     const chats = await db
       .select()
       .from(schema.chats)
@@ -201,8 +220,14 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       );
     const user = await userService.getById(params.receiver);
     return { chat: chats.map(mapChat), user };
-  })
-  .get("/:id", async ({ params, db, set }) => {
+  },
+  {
+    params: t.Object({ sender: t.String(), receiver: t.String() }),
+  },
+)
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
     const [row] = await db
       .select()
       .from(schema.chats)
@@ -212,4 +237,6 @@ export const chatsRoute = new Elysia({ prefix: "/chats" })
       return { error: "Not found" };
     }
     return mapChat(row);
-  });
+  },
+  { params: t.Object({ id: t.String() }) },
+);

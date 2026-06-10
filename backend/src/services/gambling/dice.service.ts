@@ -368,9 +368,8 @@ export class DiceService {
 
     let gamblingWinnings: number = user.gamblingWinnings ?? 0;
     let gamblingBanned: boolean = user.gamblingBanned ?? false;
-
-    if (result.payout > game.bid) {
-      const profit = result.payout - game.bid;
+    const profit = result.net;
+    if (profit > 0) {
       gamblingWinnings += profit;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;

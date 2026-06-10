@@ -81,7 +81,10 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       }
       return user;
     },
-    { detail: { tags: ["users"], summary: "Get user by id" } },
+    {
+      params: t.Object({ id: t.String() }),
+      detail: { tags: ["users"], summary: "Get user by id" },
+    },
   )
   .patch(
     "/:id",

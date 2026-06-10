@@ -178,7 +178,7 @@ export class RocketService {
     await this.userService.score(userId, payout);
 
     const user = await this.userService.getById(userId);
-    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + payout;
+    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
     if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
       gamblingBanned = true;

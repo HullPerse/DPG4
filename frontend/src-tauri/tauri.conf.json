@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DPG 4",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "identifier": "dpg4",
   "build": {
     "beforeDevCommand": "bun dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun build",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },
 

@@ -13,6 +13,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { WindowError } from "@/components/shared/error.component";
 import { userSchema } from "@/lib/zod.utils";
+import { type ZodIssue } from "zod";
 import { useDataStore } from "@/store/data.store";
 import Image from "@/components/shared/image.component";
 
@@ -95,7 +96,7 @@ export default function Signup({
 
     if (!validationResult.success) {
       const fieldErrors: Record<string, string> = {};
-      validationResult.error.issues.forEach((issue) => {
+      validationResult.error.issues.forEach((issue: ZodIssue) => {
         const field = issue.path[0];
         if (typeof field === "string") {
           fieldErrors[field] = issue.message;

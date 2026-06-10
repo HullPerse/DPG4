@@ -71,29 +71,37 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
       ),
     },
   )
-  .get("/by-number/:number", async ({ params, db, set }) => {
-    const num = Number(params.number);
-    const [row] = await db
-      .select()
-      .from(schema.cells)
-      .where(eq(schema.cells.number, num));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return withRecordMeta(row, "cells");
-  })
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.cells)
-      .where(eq(schema.cells.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return withRecordMeta(row, "cells");
-  })
+  .get(
+    "/by-number/:number",
+    async ({ params, db, set }) => {
+      const num = Number(params.number);
+      const [row] = await db
+        .select()
+        .from(schema.cells)
+        .where(eq(schema.cells.number, num));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return withRecordMeta(row, "cells");
+    },
+    { params: t.Object({ number: t.String() }) },
+  )
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.cells)
+        .where(eq(schema.cells.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return withRecordMeta(row, "cells");
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .patch(
     "/:id",
     async ({ params, body, db }) => {

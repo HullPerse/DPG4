@@ -97,6 +97,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: { tags: ["utils"], summary: "Abort active dice game" },
     },
   )
@@ -136,6 +137,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: { tags: ["utils"], summary: "Hit in blackjack" },
     },
   )
@@ -151,6 +153,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: { tags: ["utils"], summary: "Stand in blackjack" },
     },
   )
@@ -162,6 +165,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Get in-progress blackjack hand for client restore",
@@ -176,6 +180,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Clear stuck blackjack session (forfeit hand)",
@@ -202,6 +207,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Reset gambling ban for the authenticated user",
@@ -244,6 +250,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Cash out rocket - collect winnings at current multiplier",
@@ -262,6 +269,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Poll current rocket state (multiplier, crash detection)",
@@ -276,6 +284,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Abandon active rocket game",
@@ -290,6 +299,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Dismiss rocket result screen after crash or cashout",
@@ -369,6 +379,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Sync active pachinko drop state",
@@ -383,6 +394,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
+      body: t.Object({}),
       detail: {
         tags: ["utils"],
         summary: "Abandon active pachinko drop",

@@ -2,15 +2,18 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Download,
   Eye,
   Loader2,
   Pencil,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DataTable,
   DataTableElement,
@@ -18,9 +21,26 @@ import {
 } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { renderListCell } from "@/components/fieldRenderer";
-import { deleteRecord, listRecords } from "@/lib/data";
+import {
+  batchDeleteRecords,
+  deleteRecord,
+  exportTableJson,
+  listRecords,
+} from "@/lib/data";
 import { useSchema } from "@/context/SchemaContext";
 import type { AdminFieldMeta } from "@/types";
+
+function downloadJson(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function ResourceListPage() {
   const { resource = "" } = useParams<{ resource: string }>();
@@ -39,6 +59,8 @@ export function ResourceListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState(q);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
 
   const listFields =
     meta?.fields.filter(
@@ -71,6 +93,10 @@ export function ResourceListPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [resource, page, q, sortField, sortOrder]);
 
   if (!meta) {
     return <p className="text-love p-6">Неизвестная таблица: {resource}</p>;
@@ -108,6 +134,60 @@ export function ResourceListPage() {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allSelected =
+    rows.length > 0 && rows.every((r) => selectedIds.has(String(r.id)));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => String(r.id))));
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    const ids = [...selectedIds];
+    if (!ids.length) return;
+    if (!confirm(`Удалить ${ids.length} записей?`)) return;
+    setBusy(true);
+    try {
+      await batchDeleteRecords(resource, ids);
+      setSelectedIds(new Set());
+      void load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Ошибка удаления");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDownloadSelected = () => {
+    const ids = [...selectedIds];
+    const selected = rows.filter((r) => ids.includes(String(r.id)));
+    downloadJson(selected, `${resource}-selected.json`);
+  };
+
+  const handleDownloadAll = async () => {
+    setBusy(true);
+    try {
+      const all = await exportTableJson(resource);
+      downloadJson(all, `${resource}.json`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Ошибка выгрузки");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-6">
       <div className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
@@ -134,6 +214,52 @@ export function ResourceListPage() {
         </Button>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="bg-iris/10 border-iris mb-3 flex shrink-0 flex-wrap items-center gap-2 border-2 px-3 py-2 text-sm">
+          <span className="font-medium">
+            Выбрано: {selectedIds.size}
+          </span>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            onClick={() => void handleBatchDelete()}
+            disabled={busy}
+          >
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+            Удалить
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadSelected}
+            disabled={busy}
+          >
+            <Download className="size-3" />
+            Скачать JSON
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void handleDownloadAll()}
+            disabled={busy}
+          >
+            <Download className="size-3" />
+            Скачать всё
+          </Button>
+          <button
+            type="button"
+            className="text-muted hover:text-text ml-auto p-1"
+            onClick={() => setSelectedIds(new Set())}
+            title="Снять выделение"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
       {error && <p className="text-love mb-2 shrink-0 text-sm">{error}</p>}
 
       {loading ? (
@@ -145,6 +271,13 @@ export function ResourceListPage() {
           <DataTableElement>
             <DataTableHead>
               <tr>
+                <th className="border-highlight-high w-10 border px-0 py-0 text-center">
+                  <Checkbox
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    title="Выбрать все"
+                  />
+                </th>
                 {listFields.map((f: AdminFieldMeta) => {
                   const active = sortField === f.source;
                   const SortIcon = active
@@ -184,7 +317,16 @@ export function ResourceListPage() {
             </DataTableHead>
             <tbody>
               {rows.map((row) => (
-                <tr key={String(row.id)} className="hover:bg-highlight-low/50">
+                <tr
+                  key={String(row.id)}
+                  className={`hover:bg-highlight-low/50 ${selectedIds.has(String(row.id)) ? "bg-iris/5" : ""}`}
+                >
+                  <td className="border-highlight-high border px-2 py-1.5 text-center align-top">
+                    <Checkbox
+                      checked={selectedIds.has(String(row.id))}
+                      onChange={() => toggleSelect(String(row.id))}
+                    />
+                  </td>
                   {listFields.map((f) => (
                     <td
                       key={f.source}

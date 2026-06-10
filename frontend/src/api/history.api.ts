@@ -30,3 +30,31 @@ export function getHistory(
   if (type) url += `&type=${type}`;
   return apiFetch<HistoryResponse>(url);
 }
+
+export type LeaderboardEntry = {
+  userId: string;
+  username: string;
+  avatar: string;
+  color: string;
+  currentMoney: number;
+  totalNet: number;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  biggestWin: number;
+};
+
+export function getLeaderboard(opts?: {
+  gameType?: "dice" | "blackjack" | "rocket" | "pachinko";
+  period?: "alltime" | "weekly";
+  limit?: number;
+}) {
+  const params = new URLSearchParams();
+  if (opts?.gameType) params.set("gameType", opts.gameType);
+  if (opts?.period) params.set("period", opts.period);
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  const qs = params.toString();
+  return apiFetch<{ data: LeaderboardEntry[] }>(
+    `/history/leaderboard${qs ? `?${qs}` : ""}`,
+  );
+}

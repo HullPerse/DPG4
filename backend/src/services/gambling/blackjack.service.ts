@@ -51,7 +51,8 @@ export class BlackjackService {
     let gamblingBanned = user.gamblingBanned ?? false;
 
     if (payout > 0) {
-      gamblingWinnings += payout;
+      const profit = Math.max(0, payout - bid);
+      gamblingWinnings += profit;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }

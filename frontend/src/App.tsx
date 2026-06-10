@@ -69,6 +69,10 @@ const DesktopAppWindow = memo(function DesktopAppWindow({
     [app.id, setActiveApps],
   );
 
+
+
+
+
   return (
     <Window
       onMinimize={onMinimize}
@@ -95,7 +99,6 @@ function App() {
   const wallpaperData = useDataStore((state) => state.wallpaper);
   const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
   const negativeScoreModal = useDataStore((state) => state.negativeScoreModal);
-  const setCursorSize = useDataStore((state) => state.setCursorSize);
   const setNegativeScoreModal = useDataStore(
     (state) => state.setNegativeScoreModal,
   );
