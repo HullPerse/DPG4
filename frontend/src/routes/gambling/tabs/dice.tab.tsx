@@ -161,11 +161,12 @@ function DiceTab() {
     setGamePhase("result");
   };
 
-  const failRound = (label: string) => {
+  const failRound = (label: string, balance?: number) => {
+    const money = balance ?? useUserStore.getState().user?.money ?? 0;
     useUserStore.setState({
-      user: { ...useUserStore.getState().user! },
+      user: { ...useUserStore.getState().user!, money },
     });
-    setDisplayBalance(useUserStore.getState().user?.money ?? 0);
+    setDisplayBalance(money);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
   };
@@ -209,7 +210,14 @@ function DiceTab() {
 
       finishRound(finalResult);
     },
-    onError: () => failRound("Ошибка сервера. Попробуй ещё раз."),
+    onError: async () => {
+      try {
+        const { balance } = await abortDice();
+        failRound("Ошибка сервера. Ставка возвращена.", balance);
+      } catch {
+        failRound("Ошибка сервера. Попробуй ещё раз.");
+      }
+    },
   });
 
   const showDealerLabel = gamePhase !== "idle";
@@ -277,12 +285,8 @@ function DiceTab() {
                   <span className="text-red-400">Дилер побеждает</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Три одинаковых</span>
+                  <span>Три одинаковых (вкл. 1·1·1)</span>
                   <span className="text-red-400">Дилер побеждает</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>1·1·1</span>
-                  <span className="text-muted">Ничья</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Пара + число</span>

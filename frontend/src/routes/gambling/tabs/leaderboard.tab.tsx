@@ -1,23 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { getLeaderboard, type LeaderboardEntry } from "@/api/history.api";
-import { Button } from "@/components/ui/button.component";
-import { Trophy, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import {
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
-
-const GAME_TYPES = [
-  { value: undefined, label: "Все" },
-  { value: "dice" as const, label: "Чинчирорин" },
-  { value: "blackjack" as const, label: "Блэкджек" },
-  { value: "rocket" as const, label: "Ракетник" },
-  { value: "pachinko" as const, label: "Пачинко" },
-];
-
-const PERIODS = [
-  { value: "alltime" as const, label: "За всё время" },
-  { value: "weekly" as const, label: "За неделю" },
-];
-
-const TOP_COLORS = ["#ffd700", "#c0c0c0", "#cd7f32"];
+import {
+  GAMBLING_GAME_FILTERS,
+  LEADERBOARD_PERIODS,
+  PODIUM_COLORS,
+} from "@/lib/gambling/stats.constants";
+import { useUserStore } from "@/store/user.store";
+import { cn, BORDER_WINDOW } from "@/lib/utils";
+import { WindowLoader } from "@/components/shared/loader.component";
+import {
+  FilterChipGroup,
+  EmptyState,
+  NetValue,
+  WinRateBar,
+} from "../components/stats.shared";
+import { LeaderboardNetChart } from "../components/charts.stats";
 
 export default function LeaderboardTab() {
   const [gameType, setGameType] = useState<string | undefined>(undefined);
@@ -25,89 +30,169 @@ export default function LeaderboardTab() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["leaderboard", gameType, period],
-    queryFn: () => getLeaderboard({ gameType: gameType as any, period, limit: 50 }),
+    queryFn: () =>
+      getLeaderboard({ gameType: gameType as any, period, limit: 50 }),
   });
 
+  const entries = data?.data ?? [];
+  const podium = entries.slice(0, 3);
+  const rest = entries.slice(3);
+
+  if (isLoading) return <WindowLoader className="bg-transparent" />;
+
   return (
-    <main className="flex flex-col w-full h-full gap-3 p-2">
-      <section className="flex flex-row gap-2 flex-wrap">
-        {GAME_TYPES.map((g) => (
-          <Button
-            key={g.label}
-            variant={gameType === g.value ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setGameType(g.value)}
-          >
-            {g.label}
-          </Button>
-        ))}
-      </section>
-      <section className="flex flex-row gap-2">
-        {PERIODS.map((p) => (
-          <Button
-            key={p.label}
-            variant={period === p.value ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setPeriod(p.value)}
-          >
-            {p.label}
-          </Button>
-        ))}
-      </section>
-      <section className="flex flex-col gap-2 overflow-y-auto w-full flex-1">
-        {isLoading && <p className="text-center text-muted">Загрузка...</p>}
-        {data?.data.map((entry, i) => (
-          <LeaderboardRow key={entry.userId} entry={entry} rank={i + 1} />
-        ))}
-        {data?.data.length === 0 && (
-          <p className="text-center text-muted mt-10">Нет данных</p>
-        )}
-      </section>
+    <main className="flex flex-col w-full h-full gap-3 p-1 overflow-y-auto">
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          {entries.length > 0 && (
+            <span className="flex items-center gap-1 text-xs text-muted">
+              <Users className="size-3.5" />
+              {entries.length}
+            </span>
+          )}
+        </div>
+        <FilterChipGroup
+          options={GAMBLING_GAME_FILTERS}
+          value={gameType}
+          onChange={setGameType}
+        />
+        <FilterChipGroup
+          options={LEADERBOARD_PERIODS}
+          value={period}
+          onChange={setPeriod}
+        />
+      </header>
+
+      {entries.length === 0 ? (
+        <EmptyState icon={null} message="Пока никто не играл" />
+      ) : (
+        <>
+          {podium.length > 0 && <Podium entries={podium} />}
+          {entries.length >= 3 && <LeaderboardNetChart entries={entries} />}
+          <section className="flex flex-col gap-2">
+            {rest.map((entry, i) => (
+              <LeaderboardRow key={entry.userId} entry={entry} rank={i + 4} />
+            ))}
+          </section>
+        </>
+      )}
     </main>
   );
 }
 
-function LeaderboardRow({ entry, rank }: { entry: LeaderboardEntry; rank: number }) {
-  const medalEmoji = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
-  const rankColor = rank <= 3 ? TOP_COLORS[rank - 1] : undefined;
+const PODIUM_ORDER = [1, 0, 2] as const;
+const PODIUM_HEIGHTS = ["h-24", "h-32", "h-20"] as const;
+
+function Podium({ entries }: { entries: LeaderboardEntry[] }) {
+  return (
+    <section className="grid grid-cols-3 gap-2 items-end pt-2 pb-1">
+      {PODIUM_ORDER.map((idx) => {
+        const entry = entries[idx];
+        if (!entry) {
+          return <div key={idx} />;
+        }
+
+        const rank = idx + 1;
+        const height = PODIUM_HEIGHTS[idx];
+        const borderColor = PODIUM_COLORS[idx];
+
+        return (
+          <div
+            key={entry.userId}
+            className={cn(
+              "flex flex-col items-center gap-1.5",
+              idx === 0 && "order-2",
+              idx === 1 && "order-1",
+              idx === 2 && "order-3",
+            )}
+          >
+            <span className="text-2xl">{entry.avatar}</span>
+            <span
+              className="text-xs font-bold truncate max-w-full px-1"
+              style={{ color: entry.color }}
+            >
+              {entry.username}
+            </span>
+            <NetValue value={entry.totalNet} className="text-sm" />
+            <div
+              className={cn(
+                "w-full flex flex-col items-center justify-end border-2 pt-2 pb-1",
+                height,
+              )}
+              style={{ borderColor, backgroundColor: `${borderColor}15` }}
+            >
+              <span
+                className="text-lg font-bold"
+                style={{ color: borderColor }}
+              >
+                {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+function LeaderboardRow({
+  entry,
+  rank,
+}: {
+  entry: LeaderboardEntry;
+  rank: number;
+}) {
+  const currentUserId = useUserStore((s) => s.user?.id);
+  const isMe = currentUserId === entry.userId;
 
   return (
     <section
-      className="flex flex-row items-center gap-3 p-3 border-2 border-highlight-high rounded-lg min-h-16"
-      style={rankColor ? { borderColor: rankColor } : undefined}
+      className={cn(
+        BORDER_WINDOW,
+        "flex flex-col gap-2 p-3 bg-card/30 transition-colors",
+        isMe && "border-iris bg-iris/10",
+      )}
     >
-      <span className="text-xl font-bold w-10 text-center">{medalEmoji}</span>
-      <span className="text-2xl">{entry.avatar}</span>
-      <div className="flex flex-col flex-1 min-w-0">
-        <span className="font-bold truncate" style={{ color: entry.color }}>
-          {entry.username}
+      <div className="flex flex-row items-center gap-3">
+        <span className="w-8 text-center text-sm font-bold text-muted tabular-nums">
+          #{rank}
         </span>
-        <div className="flex flex-row gap-3 text-xs text-muted">
-          <span className="flex items-center gap-1">
-            <Trophy className="size-3" />
-            {entry.gamesPlayed}
-          </span>
-          <span className="flex items-center gap-1">
-            <TrendingUp className="size-3 text-green-400" />
-            {entry.wins}
-          </span>
-          <span className="flex items-center gap-1">
-            <TrendingDown className="size-3 text-red-400" />
-            {entry.losses}
+        <span className="text-xl shrink-0">{entry.avatar}</span>
+        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="font-bold truncate" style={{ color: entry.color }}>
+              {entry.username}
+            </span>
+            {isMe && (
+              <span className="text-[10px] font-bold text-iris uppercase">
+                ты
+              </span>
+            )}
+          </div>
+          <div className="flex flex-row gap-3 text-[10px] text-muted">
+            <span className="flex items-center gap-0.5">
+              <Trophy className="size-3" />
+              {entry.gamesPlayed}
+            </span>
+            <span className="flex items-center gap-0.5 text-emerald-400">
+              <TrendingUp className="size-3" />
+              {entry.wins}
+            </span>
+            <span className="flex items-center gap-0.5 text-red-400">
+              <TrendingDown className="size-3" />
+              {entry.losses}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end shrink-0">
+          <NetValue value={entry.totalNet} className="text-lg" />
+          <span className="text-[10px] text-muted flex items-center gap-0.5 tabular-nums">
+            <DollarSign className="size-3" />
+            {entry.currentMoney}
           </span>
         </div>
       </div>
-      <div className="flex flex-col items-end">
-        <span
-          className={`font-bold text-lg ${entry.totalNet >= 0 ? "text-green-400" : "text-red-400"}`}
-        >
-          {entry.totalNet >= 0 ? "+" : ""}{entry.totalNet}
-        </span>
-        <span className="text-xs text-muted flex items-center gap-1">
-          <DollarSign className="size-3" />
-          {entry.currentMoney}
-        </span>
-      </div>
+      <WinRateBar wins={entry.wins} total={entry.gamesPlayed} />
     </section>
   );
 }

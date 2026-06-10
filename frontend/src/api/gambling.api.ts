@@ -30,8 +30,8 @@ export async function rollDicePlayer(): Promise<DiceGameResult> {
   });
 }
 
-export async function abortDice(): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>("/utils/dice-abort", {
+export async function abortDice(): Promise<{ refunded: number; balance: number }> {
+  return apiFetch<{ refunded: number; balance: number }>("/utils/dice-abort", {
     method: "POST",
   });
 }

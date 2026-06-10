@@ -415,13 +415,16 @@ function PachinkoWorld({
     settledCountRef.current = 0;
   }, [dropKey]);
 
-  const handleSingleSettled = useCallback((slotIndex: number) => {
-    settledRef.current.push(slotIndex);
-    settledCountRef.current += 1;
-    if (settledCountRef.current === ratAmount) {
-      onSettledRef.current(settledRef.current);
-    }
-  }, [ratAmount]);
+  const handleSingleSettled = useCallback(
+    (slotIndex: number) => {
+      settledRef.current.push(slotIndex);
+      settledCountRef.current += 1;
+      if (settledCountRef.current === ratAmount) {
+        onSettledRef.current(settledRef.current);
+      }
+    },
+    [ratAmount],
+  );
 
   const startPositions = useMemo(() => {
     if (ratAmount === 1) return [startX];
@@ -436,16 +439,17 @@ function PachinkoWorld({
     <>
       <BoardWalls bid={bid} />
       <PegField />
-      {showRat && startPositions.map((x, i) => (
-        <RatBall
-          key={`${dropKey}-${i}`}
-          startX={x}
-          simulating={simulating}
-          onSettled={handleSingleSettled}
-          bid={bid}
-          kickTrigger={kickTrigger}
-        />
-      ))}
+      {showRat &&
+        startPositions.map((x, i) => (
+          <RatBall
+            key={`${dropKey}-${i}`}
+            startX={x}
+            simulating={simulating}
+            onSettled={handleSingleSettled}
+            bid={bid}
+            kickTrigger={kickTrigger}
+          />
+        ))}
     </>
   );
 }

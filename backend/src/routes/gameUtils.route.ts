@@ -92,8 +92,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   .post(
     "/dice-abort",
     async ({ diceService, user }) => {
-      await diceService.abort(user!.sub);
-      return { success: true };
+      return await diceService.abort(user!.sub);
     },
     {
       requireAuth: true,

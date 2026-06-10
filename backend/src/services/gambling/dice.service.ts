@@ -50,9 +50,6 @@ function resolveDealerRoll(values: [number, number, number]): {
   if (a === 4 && b === 5 && c === 6) {
     return { target: null, autoResult: "dealer_win" };
   }
-  if (a === 1 && b === 1 && c === 1) {
-    return { target: null, autoResult: "push" };
-  }
   if (unique.size === 1) {
     return { target: null, autoResult: "dealer_win" };
   }
@@ -407,15 +404,17 @@ export class DiceService {
     };
   }
 
-  async abort(userId: string): Promise<void> {
+  async abort(userId: string): Promise<{ refunded: number; balance: number }> {
     const game = this.games.get(userId);
-    if (!game) return;
-
-    const user = await this.userService.getById(userId);
-    if (user && game.phase === "dealer") {
-      await this.userService.score(userId, game.bid);
+    if (!game) {
+      const user = await this.userService.getById(userId);
+      return { refunded: 0, balance: user?.money ?? 0 };
     }
 
+    await this.userService.score(userId, game.bid);
     this.games.delete(userId);
+
+    const updatedUser = await this.userService.getById(userId);
+    return { refunded: game.bid, balance: updatedUser?.money ?? 0 };
   }
 }

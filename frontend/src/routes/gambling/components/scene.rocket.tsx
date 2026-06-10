@@ -23,7 +23,10 @@ function RatModel({
 
   const targetY = useMemo(() => {
     if (!flying) return compact ? -0.3 : 0;
-    return Math.min((multiplier - 1) * (compact ? 0.35 : 0.55), compact ? 2.5 : 4);
+    return Math.min(
+      (multiplier - 1) * (compact ? 0.35 : 0.55),
+      compact ? 2.5 : 4,
+    );
   }, [multiplier, flying, compact]);
 
   useFrame((state, delta) => {
@@ -50,7 +53,13 @@ function RatModel({
   );
 }
 
-function CheeseTrail({ multiplier, active }: { multiplier: number; active: boolean }) {
+function CheeseTrail({
+  multiplier,
+  active,
+}: {
+  multiplier: number;
+  active: boolean;
+}) {
   const count = 24;
   const particlesRef = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
@@ -65,7 +74,8 @@ function CheeseTrail({ multiplier, active }: { multiplier: number; active: boole
 
   useFrame((_, delta) => {
     if (!particlesRef.current || !active) return;
-    const arr = particlesRef.current.geometry.attributes.position.array as Float32Array;
+    const arr = particlesRef.current.geometry.attributes.position
+      .array as Float32Array;
     const speed = 1.5 + multiplier * 0.35;
     for (let i = 0; i < count; i++) {
       arr[i * 3 + 1] -= speed * delta;
@@ -141,8 +151,17 @@ function SceneContent({
       {!compact && <color attach="background" args={["#191724"]} />}
       {!compact && <StarField />}
       <ambientLight intensity={0.45} />
-      <directionalLight castShadow position={[5, 8, 4]} intensity={1.2} shadow-mapSize={[256, 256]} />
-      <directionalLight position={[-3, 2, -2]} intensity={0.4} color="#c4a7e7" />
+      <directionalLight
+        castShadow
+        position={[5, 8, 4]}
+        intensity={1.2}
+        shadow-mapSize={[256, 256]}
+      />
+      <directionalLight
+        position={[-3, 2, -2]}
+        intensity={0.4}
+        color="#c4a7e7"
+      />
       <pointLight position={[0, 1, 4]} intensity={0.5} color="#f6c177" />
       <group position={[0, compact ? -0.5 : -0.8, 0]}>
         <RatModel multiplier={multiplier} phase={phase} compact={compact} />
@@ -150,8 +169,18 @@ function SceneContent({
       </group>
       {!compact && (
         <>
-          <ContactShadows position={[0, -1.2, 0]} opacity={0.35} scale={8} blur={2} far={3} />
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, 0]} receiveShadow>
+          <ContactShadows
+            position={[0, -1.2, 0]}
+            opacity={0.35}
+            scale={8}
+            blur={2}
+            far={3}
+          />
+          <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, -1.2, 0]}
+            receiveShadow
+          >
             <planeGeometry args={[12, 12]} />
             <meshStandardMaterial color="#232136" roughness={0.9} />
           </mesh>
@@ -185,14 +214,26 @@ export function RatMarker({
   size?: number;
 }) {
   return (
-    <div style={{ width: size, height: size, pointerEvents: "none", background: "transparent" }}>
+    <div
+      style={{
+        width: size,
+        height: size,
+        pointerEvents: "none",
+        background: "transparent",
+      }}
+    >
       <CanvasErrorBoundary fallback={null}>
         <Canvas
           shadows={false}
           camera={{ position: [2.2, 1.5, 3.9], fov: 32, near: 0.1, far: 50 }}
           className="h-full w-full"
           style={{ background: "transparent" }}
-          gl={{ antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: "low-power" }}
+          gl={{
+            antialias: true,
+            alpha: true,
+            premultipliedAlpha: false,
+            powerPreference: "low-power",
+          }}
           onCreated={({ gl }) => {
             gl.setClearColor(0x000000, 0);
           }}

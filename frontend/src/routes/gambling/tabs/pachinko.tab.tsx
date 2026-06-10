@@ -84,7 +84,11 @@ function PachinkoTab() {
   const roundDone = gameState.phase === "done";
   const showRat = inDrop || roundDone;
   const totalBid = bid * ratAmount;
-  const canAct = !dropMutation.isPending && !inDrop && !gamblingBanned && balance >= totalBid;
+  const canAct =
+    !dropMutation.isPending &&
+    !inDrop &&
+    !gamblingBanned &&
+    balance >= totalBid;
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
@@ -258,7 +262,9 @@ function PachinkoTab() {
               (ratAmount === v
                 ? "bg-highlight-high text-background"
                 : "bg-foreground/10 text-muted hover:bg-foreground/20") +
-              ((inDrop || dropMutation.isPending) ? " opacity-40 pointer-events-none" : "")
+              (inDrop || dropMutation.isPending
+                ? " opacity-40 pointer-events-none"
+                : "")
             }
           >
             {v}
@@ -274,15 +280,13 @@ function PachinkoTab() {
           disabled={!canAct}
           onClick={() => dropMutation.mutate()}
         >
-          {gamblingBanned ? (
-            "Вы забанены"
-          ) : inDrop ? (
-            "Крыса летит..."
-          ) : balance < totalBid ? (
-            "Недостаточно чубриков"
-          ) : (
-            `Бросить крысу (${totalBid})`
-          )}
+          {gamblingBanned
+            ? "Вы забанены"
+            : inDrop
+              ? "Крыса летит..."
+              : balance < totalBid
+                ? "Недостаточно чубриков"
+                : `Бросить крысу (${totalBid})`}
         </Button>
       </section>
     </main>
