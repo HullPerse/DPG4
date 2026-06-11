@@ -29,6 +29,7 @@ const CREATE_USERS = `CREATE TABLE users (
   place TEXT NOT NULL DEFAULT '0',
   gambling_winnings INTEGER NOT NULL DEFAULT 0,
   gambling_banned INTEGER NOT NULL DEFAULT 0,
+  hangman INTEGER NOT NULL DEFAULT 0,
   created TEXT NOT NULL,
   updated TEXT NOT NULL
 )`;

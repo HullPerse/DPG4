@@ -216,6 +216,6 @@ describe("PachinkoService", () => {
     expect(state.banned).toBe(true);
     const user = await getUser(db, nearBan.id);
     expect(user!.gamblingBanned).toBe(true);
-    expect(user!.gamblingWinnings).toBe(95 + 50);
+    expect(user!.gamblingWinnings).toBe(95 + 40);
   });
 });

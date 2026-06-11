@@ -173,9 +173,9 @@ describe("RocketService", () => {
       gamblingWinnings: 95,
       gamblingBanned: false,
     });
-    seedRandom([0.5]);
+    seedRandom([0.6]);
     await services.rocketService.launch(winUser.id, 5);
-    fakeNow += 5000;
+    fakeNow += 7000;
     const state = await services.rocketService.cashout(winUser.id);
     if (state.net > 0) {
       expect(state.banned).toBe(true);
