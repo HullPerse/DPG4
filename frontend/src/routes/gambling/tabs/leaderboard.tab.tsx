@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getLeaderboard, type LeaderboardEntry } from "@/api/history.api";
-import {
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Users,
-} from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { useState } from "react";
 import {
   GAMBLING_GAME_FILTERS,
@@ -20,7 +14,6 @@ import {
   FilterChipGroup,
   EmptyState,
   NetValue,
-  WinRateBar,
 } from "../components/stats.shared";
 import { LeaderboardNetChart } from "../components/charts.stats";
 
@@ -42,15 +35,12 @@ export default function LeaderboardTab() {
 
   return (
     <main className="flex flex-col w-full h-full gap-3 p-1 overflow-y-auto">
+      <header className="flex items-center gap-2">
+        <Trophy className="size-5 text-primary" />
+        <h2 className="text-lg font-bold">Лидерборд</h2>
+      </header>
+
       <header className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          {entries.length > 0 && (
-            <span className="flex items-center gap-1 text-xs text-muted">
-              <Users className="size-3.5" />
-              {entries.length}
-            </span>
-          )}
-        </div>
         <FilterChipGroup
           options={GAMBLING_GAME_FILTERS}
           value={gameType}
@@ -81,7 +71,7 @@ export default function LeaderboardTab() {
 }
 
 const PODIUM_ORDER = [1, 0, 2] as const;
-const PODIUM_HEIGHTS = ["h-24", "h-32", "h-20"] as const;
+const PODIUM_MEDAL_LABELS = ["1 место", "2 место", "3 место"] as const;
 
 function Podium({ entries }: { entries: LeaderboardEntry[] }) {
   return (
@@ -92,9 +82,7 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
           return <div key={idx} />;
         }
 
-        const rank = idx + 1;
-        const height = PODIUM_HEIGHTS[idx];
-        const borderColor = PODIUM_COLORS[idx];
+        const color = PODIUM_COLORS[idx];
 
         return (
           <div
@@ -106,7 +94,18 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
               idx === 2 && "order-3",
             )}
           >
-            <span className="text-2xl">{entry.avatar}</span>
+            <span
+              className={cn(
+                "flex items-center justify-center size-12 rounded-full border-2 text-lg font-bold",
+              )}
+              style={{
+                borderColor: color,
+                backgroundColor: `${color}18`,
+                color,
+              }}
+            >
+              {entry.avatar}
+            </span>
             <span
               className="text-xs font-bold truncate max-w-full px-1"
               style={{ color: entry.color }}
@@ -117,15 +116,20 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
             <div
               className={cn(
                 "w-full flex flex-col items-center justify-end border-2 pt-2 pb-1",
-                height,
+                idx === 0 && "h-24",
+                idx === 1 && "h-20",
+                idx === 2 && "h-16",
               )}
-              style={{ borderColor, backgroundColor: `${borderColor}15` }}
+              style={{
+                borderColor: `${color}50`,
+                backgroundColor: `${color}08`,
+              }}
             >
               <span
-                className="text-lg font-bold"
-                style={{ color: borderColor }}
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ color }}
               >
-                {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
+                {PODIUM_MEDAL_LABELS[idx]}
               </span>
             </div>
           </div>
@@ -149,13 +153,13 @@ function LeaderboardRow({
     <section
       className={cn(
         BORDER_WINDOW,
-        "flex flex-col gap-2 p-3 bg-card/30 transition-colors",
+        "flex flex-col gap-2 bg-card/40 p-3 transition-colors",
         isMe && "border-iris bg-iris/10",
       )}
     >
       <div className="flex flex-row items-center gap-3">
-        <span className="w-8 text-center text-sm font-bold text-muted tabular-nums">
-          #{rank}
+        <span className="flex items-center justify-center size-8 shrink-0 border-2 border-highlight-high bg-background/40 text-sm font-bold text-muted tabular-nums">
+          {rank}
         </span>
         <span className="text-xl shrink-0">{entry.avatar}</span>
         <div className="flex flex-col flex-1 min-w-0 gap-0.5">
@@ -194,5 +198,23 @@ function LeaderboardRow({
       </div>
       <WinRateBar wins={entry.wins} total={entry.gamesPlayed} />
     </section>
+  );
+}
+
+function WinRateBar({ wins, total }: { wins: number; total: number }) {
+  const rate = total > 0 ? (wins / total) * 100 : 0;
+
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="h-1.5 flex-1 bg-highlight-low border border-highlight-high overflow-hidden">
+        <div
+          className="h-full bg-emerald-400/80 transition-all"
+          style={{ width: `${rate}%` }}
+        />
+      </div>
+      <span className="text-[10px] text-muted tabular-nums w-7 text-right">
+        {Math.round(rate)}%
+      </span>
+    </div>
   );
 }
