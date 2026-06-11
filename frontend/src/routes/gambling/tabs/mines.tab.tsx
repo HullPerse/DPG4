@@ -16,7 +16,7 @@ import {
   cashoutMines,
   abortMines,
 } from "@/api/gambling.api";
-const MinesScene = lazy(() => import("../components/scene.mines"));
+const MinesScene = lazy(() => import("../components/scenes/scene.mines"));
 import type { MinesState } from "@/types/gamble";
 import { MINES_GRID } from "@/lib/gambling/gamble.constants";
 import {

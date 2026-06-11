@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import type { PlayingCard } from "@/types/gamble";
 import { getCardSlot } from "@/lib/gambling/blackjack.utils";
-import CardMesh from "./mesh.card";
+import CardMesh from "../mesh/mesh.card";
 
 function DeckStack() {
   return (

@@ -1,7 +1,7 @@
 import { PCFShadowMap } from "three";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Text, Billboard } from "@react-three/drei";
-import DiceMesh from "../components/mesh.dice";
+import DiceMesh from "../mesh/mesh.dice";
 import { DEALER_Z, PLAYER_Z } from "@/lib/gambling/dice.utils";
 
 function DiceScene({

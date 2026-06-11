@@ -9,7 +9,7 @@ import {
   syncBlackjack,
   abandonBlackjack,
 } from "@/api/gambling.api";
-import BlackjackScene from "../components/scene.blackjack";
+import BlackjackScene from "../components/scenes/scene.blackjack";
 import { animDelayMs, rules } from "@/lib/gambling/blackjack.utils";
 import type {
   BlackjackState,
@@ -152,7 +152,9 @@ function BlackjackTab() {
       try {
         const existing = await syncBlackjack();
         if (existing) restoreGame(existing);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     },
   });
 
@@ -165,7 +167,9 @@ function BlackjackTab() {
       applyState(state);
       scheduleFlyClear(1);
     },
-    onError: () => { /* keep current game */ },
+    onError: () => {
+      /* keep current game */
+    },
   });
 
   const standMutation = useMutation({
@@ -190,10 +194,13 @@ function BlackjackTab() {
       applyState(state);
       if (fly.size > 0) scheduleFlyClear(fly.size);
     },
-    onError: () => { /* keep current game */ },
+    onError: () => {
+      /* keep current game */
+    },
   });
 
-  const loading = dealMutation.isPending || hitMutation.isPending || standMutation.isPending;
+  const loading =
+    dealMutation.isPending || hitMutation.isPending || standMutation.isPending;
 
   const newHand = async () => {
     if (user && game?.phase === "player") {
@@ -263,11 +270,7 @@ function BlackjackTab() {
             disabled={balance < bid || gamblingBanned}
             onClick={() => dealMutation.mutate()}
           >
-            {gamblingBanned ? (
-              "Вы забанены"
-            ) : (
-              `Раздать (${bid})`
-            )}
+            {gamblingBanned ? "Вы забанены" : `Раздать (${bid})`}
           </Button>
         ) : canPlay ? (
           <div className="flex flex-col gap-2">
@@ -276,7 +279,7 @@ function BlackjackTab() {
                 variant="success"
                 className="flex-1"
                 loading={loading}
-                  onClick={() => hitMutation.mutate()}
+                onClick={() => hitMutation.mutate()}
               >
                 Взять
               </Button>
@@ -284,7 +287,7 @@ function BlackjackTab() {
                 variant="info"
                 className="flex-1"
                 loading={loading}
-                  onClick={() => standMutation.mutate()}
+                onClick={() => standMutation.mutate()}
               >
                 Хватит
               </Button>

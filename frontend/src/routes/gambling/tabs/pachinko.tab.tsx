@@ -17,7 +17,7 @@ import {
   syncPachinko,
   abandonPachinko,
 } from "@/api/gambling.api";
-const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
+const PachinkoScene = lazy(() => import("../components/scenes/scene.pachinko"));
 import type { PachinkoState } from "@/types/gamble";
 import {
   BOARD_WIDTH,

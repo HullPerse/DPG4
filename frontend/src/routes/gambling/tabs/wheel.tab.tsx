@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button.component";
 import { useState, useCallback, memo, lazy, Suspense } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { spinWheel } from "@/api/gambling.api";
-const WheelScene = lazy(() => import("../components/scene.wheel"));
+const WheelScene = lazy(() => import("../components/scenes/scene.wheel"));
 import type { WheelState } from "@/types/gamble";
 import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
@@ -11,13 +11,18 @@ import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
 
 function WheelTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } = useGamblingStore();
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [bid, setBid] = useState<number>(3);
   const [spinning, setSpinning] = useState(false);
   const [targetSegment, setTargetSegment] = useState<number | null>(null);
-  const [result, setResult] = useState<{ net: number; label: string; tone: string } | null>(null);
+  const [result, setResult] = useState<{
+    net: number;
+    label: string;
+    tone: string;
+  } | null>(null);
   const [spinKey, setSpinKey] = useState(0);
 
   const spinMutation = useMutation({
@@ -35,7 +40,8 @@ function WheelTab() {
     setSpinning(false);
   }, []);
 
-  const canSpin = !spinMutation.isPending && !spinning && !gamblingBanned && balance >= bid;
+  const canSpin =
+    !spinMutation.isPending && !spinning && !gamblingBanned && balance >= bid;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
@@ -53,7 +59,9 @@ function WheelTab() {
         <GameResult result={result} />
         {!spinning && !result && (
           <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-            <p className="text-muted text-sm font-mono tracking-widest">КОЛЕСО</p>
+            <p className="text-muted text-sm font-mono tracking-widest">
+              КОЛЕСО
+            </p>
           </div>
         )}
       </section>

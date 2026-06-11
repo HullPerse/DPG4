@@ -9,7 +9,7 @@ import {
   rollDicePlayer,
   abortDice,
 } from "@/api/gambling.api";
-import DiceScene from "../components/scene.dice";
+import DiceScene from "../components/scenes/scene.dice";
 import {
   DICE_SETTLE_HOLD_MS,
   DICE_REROLL_PAUSE_MS,
@@ -257,11 +257,7 @@ function DiceTab() {
           disabled={balance < bid || gamblingBanned}
           onClick={() => gameMutation.mutate()}
         >
-          {gamblingBanned ? (
-            "Вы забанены"
-          ) : (
-            `Кинуть (${bid})`
-          )}
+          {gamblingBanned ? "Вы забанены" : `Кинуть (${bid})`}
         </Button>
 
         <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">

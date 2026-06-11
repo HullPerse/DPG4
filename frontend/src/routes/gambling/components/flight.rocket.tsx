@@ -9,7 +9,7 @@ import {
 } from "@/lib/gambling/rocket.utils";
 
 const ROCKET_START_MULT = 0.5;
-import { RatMarker } from "./scene.rocket";
+import { RatMarker } from "./scenes/scene.rocket";
 
 interface FlightChartProps {
   phase: RocketPhase;
@@ -30,9 +30,14 @@ function drawGrid(
   ctx.strokeStyle = "rgba(144, 140, 170, 0.12)";
   ctx.lineWidth = 1;
 
-  const multLines = [ROCKET_START_MULT, 1, 2, 5, 10, 20].filter((m) => m >= ROCKET_START_MULT && m <= maxM);
+  const multLines = [ROCKET_START_MULT, 1, 2, 5, 10, 20].filter(
+    (m) => m >= ROCKET_START_MULT && m <= maxM,
+  );
   for (const m of multLines) {
-    const y = h - pad - ((m - ROCKET_START_MULT) / (maxM - ROCKET_START_MULT)) * (h - pad * 2);
+    const y =
+      h -
+      pad -
+      ((m - ROCKET_START_MULT) / (maxM - ROCKET_START_MULT)) * (h - pad * 2);
     ctx.beginPath();
     ctx.moveTo(pad, y);
     ctx.lineTo(w - pad / 2, y);
