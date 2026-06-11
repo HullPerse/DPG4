@@ -141,7 +141,30 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
-    hash: "0011_fts5_search",
+    hash: "0011_add_pets_table",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS pets (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        hunger INTEGER NOT NULL DEFAULT 100,
+        happiness INTEGER NOT NULL DEFAULT 100,
+        energy INTEGER NOT NULL DEFAULT 100,
+        is_alive INTEGER NOT NULL DEFAULT 1,
+        last_updated TEXT NOT NULL,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets (user_id);",
+    ],
+  },
+  {
+    hash: "0012_add_reward_date",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN last_reward_date TEXT;",
+    ],
+  },
+  {
+    hash: "0013_fts5_search",
     sql: [
       "ALTER TABLE games ADD COLUMN game_name TEXT;",
       "UPDATE games SET game_name = json_extract(data, '$.name') WHERE game_name IS NULL;",

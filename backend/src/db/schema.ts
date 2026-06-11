@@ -173,6 +173,18 @@ export const hangman = sqliteTable("hangman", {
   ...timestamps,
 });
 
+export const pets = sqliteTable("pets", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  hunger: integer("hunger").notNull().default(100),
+  happiness: integer("happiness").notNull().default(100),
+  energy: integer("energy").notNull().default(100),
+  isAlive: integer("is_alive", { mode: "boolean" }).notNull().default(true),
+  lastUpdated: text("last_updated").notNull(),
+  lastRewardDate: text("last_reward_date"),
+  ...timestamps,
+});
+
 export const cells = sqliteTable("cells", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),

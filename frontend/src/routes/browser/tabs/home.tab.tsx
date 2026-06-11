@@ -8,6 +8,7 @@ import {
   Shuffle,
   Rat,
   WholeWord,
+  Cat,
 } from "lucide-react";
 import { memo } from "react";
 
@@ -16,6 +17,7 @@ const TABS = [
   "store",
   "randomStore",
   "wordle",
+  "tamagochi",
   "rules",
   "list",
   "ads",
@@ -36,7 +38,8 @@ function HomeBrowser({
       | "ads"
       | "randomStore"
       | "wordle"
-      | "rat",
+      | "rat"
+      | "tamagochi",
   ) => void;
   searchTerms: string;
 }) {
@@ -49,7 +52,8 @@ function HomeBrowser({
       | "ads"
       | "randomStore"
       | "wordle"
-      | "rat",
+      | "rat"
+      | "tamagochi",
   ) => {
     const tabMap = {
       rules: {
@@ -99,6 +103,12 @@ function HomeBrowser({
         label: "Крыса",
         description: "Крыса",
         icon: <Rat className="size-10" />,
+      },
+      tamagochi: {
+        value: "tamagochi",
+        label: "ТАМАГОЧИ",
+        description: "Крыса-питомец",
+        icon: <Cat className="size-10" />,
       },
     };
 
