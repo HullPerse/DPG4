@@ -416,6 +416,105 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
   )
   .post(
+    "/mines-start",
+    async ({ body, set, minesService, user }) => {
+      try {
+        return await minesService.start(user!.sub, body.bid, body.mineCount);
+      } catch (err) {
+        set.status = 400;
+        return { error: (err as Error).message };
+      }
+    },
+    {
+      requireAuth: true,
+      body: t.Object({
+        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+        mineCount: t.Integer({ minimum: 1, maximum: 10 }),
+      }),
+      detail: {
+        tags: ["utils"],
+        summary: "Start a mines game - deducts bid, reveals initial state",
+      },
+    },
+  )
+  .post(
+    "/mines-reveal",
+    async ({ body, set, minesService, user }) => {
+      try {
+        return await minesService.reveal(user!.sub, body.x, body.y);
+      } catch (err) {
+        set.status = 400;
+        return { error: (err as Error).message };
+      }
+    },
+    {
+      requireAuth: true,
+      body: t.Object({
+        x: t.Integer({ minimum: 0, maximum: 4 }),
+        y: t.Integer({ minimum: 0, maximum: 4 }),
+      }),
+      detail: {
+        tags: ["utils"],
+        summary: "Reveal a tile in mines game",
+      },
+    },
+  )
+  .post(
+    "/mines-cashout",
+    async ({ set, minesService, user }) => {
+      try {
+        return await minesService.cashout(user!.sub);
+      } catch (err) {
+        set.status = 400;
+        return { error: (err as Error).message };
+      }
+    },
+    {
+      requireAuth: true,
+      body: t.Object({}),
+      detail: {
+        tags: ["utils"],
+        summary: "Cash out current mines winnings",
+      },
+    },
+  )
+  .post(
+    "/mines-abort",
+    async ({ minesService, user }) => {
+      minesService.abort(user!.sub);
+      return { success: true };
+    },
+    {
+      requireAuth: true,
+      body: t.Object({}),
+      detail: {
+        tags: ["utils"],
+        summary: "Abort active mines game",
+      },
+    },
+  )
+  .post(
+    "/wheel-spin",
+    async ({ body, set, wheelService, user }) => {
+      try {
+        return await wheelService.spin(user!.sub, body.bid);
+      } catch (err) {
+        set.status = 400;
+        return { error: (err as Error).message };
+      }
+    },
+    {
+      requireAuth: true,
+      body: t.Object({
+        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
+      }),
+      detail: {
+        tags: ["utils"],
+        summary: "Spin the wheel - instant result",
+      },
+    },
+  )
+  .post(
     "/calculate-move-path",
     async ({ body, db }) => {
       const { startingPosition, diceRoll } = body;

@@ -4,7 +4,7 @@ export type HistoryRecord = {
   id: string;
   userId: string;
   owner: { id: string; username: string } | null;
-  type: "wheel" | "dice" | "blackjack" | "rocket" | "pachinko";
+  type: "wheel" | "dice" | "blackjack" | "rocket" | "pachinko" | "mines";
   label: string;
   image: string;
   bid: number;
@@ -45,7 +45,7 @@ export type LeaderboardEntry = {
 };
 
 export function getLeaderboard(opts?: {
-  gameType?: "dice" | "blackjack" | "rocket" | "pachinko";
+  gameType?: "dice" | "blackjack" | "rocket" | "pachinko" | "mines" | "wheel";
   period?: "alltime" | "weekly";
   limit?: number;
 }) {

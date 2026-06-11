@@ -133,3 +133,30 @@ export interface PachinkoState {
   banned: boolean;
   kickAvailable: boolean;
 }
+
+export interface MinesState {
+  phase: "playing" | "won" | "lost";
+  x: number;
+  y: number;
+  isMine: boolean;
+  currentMultiplier: number;
+  revealed: boolean[][];
+  minePositions?: [number, number][];
+  payout: number;
+  net: number;
+  label: string;
+  tone: "win" | "lose" | "chance" | "";
+  balance: number;
+  banned: boolean;
+}
+
+export interface WheelState {
+  segment: number;
+  multiplier: number;
+  payout: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance";
+  balance: number;
+  banned: boolean;
+}
