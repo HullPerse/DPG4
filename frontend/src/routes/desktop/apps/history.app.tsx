@@ -65,22 +65,6 @@ function NetBadge({ net }: { net: number }) {
 function HistoryCard({ record }: { record: HistoryRecord }) {
   return (
     <div className="flex flex-row gap-2 p-2 border-2 border-highlight-high bg-card hover:border-primary transition-colors">
-      {record.type === "wheel" && record.image ? (
-        <div className="w-16 h-16 shrink-0 overflow-hidden bg-highlight-low">
-          <img
-            src={record.image}
-            alt={record.label}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        </div>
-      ) : record.type === "wheel" ? (
-        <div className="w-16 h-16 shrink-0 flex items-center justify-center text-3xl bg-highlight-low">
-          🐀
-        </div>
-      ) : null}
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <div className="flex items-center gap-1.5 flex-wrap">
           <HistoryTypeBadge type={record.type} />

@@ -7,7 +7,6 @@ import {
   Trophy,
   BarChart3,
   Bomb,
-  Sparkles,
 } from "lucide-react";
 import { memo } from "react";
 
@@ -19,8 +18,7 @@ type Tab =
   | "pachinko"
   | "leaderboard"
   | "stats"
-  | "mines"
-  | "wheel";
+  | "mines";
 
 function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const tabs = [
@@ -53,12 +51,6 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
       label: "Минное поле",
       description: "Азартная игра с минами п̶о̶д̶ ̶К̶и̶е̶в̶о̶м̶ ",
       icon: <Bomb className="size-10" />,
-    },
-    {
-      value: "wheel" as Tab,
-      label: "Колесо",
-      description: "Крути колесо и ВСЁ",
-      icon: <Sparkles className="size-10" />,
     },
   ];
 

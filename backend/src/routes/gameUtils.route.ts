@@ -494,27 +494,6 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
   )
   .post(
-    "/wheel-spin",
-    async ({ body, set, wheelService, user }) => {
-      try {
-        return await wheelService.spin(user!.sub, body.bid);
-      } catch (err) {
-        set.status = 400;
-        return { error: (err as Error).message };
-      }
-    },
-    {
-      requireAuth: true,
-      body: t.Object({
-        bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
-      }),
-      detail: {
-        tags: ["utils"],
-        summary: "Spin the wheel - instant result",
-      },
-    },
-  )
-  .post(
     "/calculate-move-path",
     async ({ body, db }) => {
       const { startingPosition, diceRoll } = body;

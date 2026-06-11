@@ -223,7 +223,6 @@ export const historyRoute = new Elysia({ prefix: "/history" })
               t.Literal("rocket"),
               t.Literal("pachinko"),
               t.Literal("mines"),
-              t.Literal("wheel"),
             ]),
           ),
           period: t.Optional(

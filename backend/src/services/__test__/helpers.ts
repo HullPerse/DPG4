@@ -8,7 +8,6 @@ import { BlackjackService } from "../gambling/blackjack.service";
 import { RocketService } from "../gambling/rocket.service";
 import { PachinkoService } from "../gambling/pachinko.service";
 import { MinesService } from "../gambling/mines.service";
-import { WheelService } from "../gambling/wheel.service";
 import { ActivityService } from "../activity.service";
 import { newId } from "../../lib/ids";
 
@@ -76,7 +75,6 @@ export interface TestServices {
   rocketService: RocketService;
   pachinkoService: PachinkoService;
   minesService: MinesService;
-  wheelService: WheelService;
 }
 
 export function createServices(db: Db): TestServices {
@@ -87,7 +85,6 @@ export function createServices(db: Db): TestServices {
   const rocketService = new RocketService(db, userService);
   const pachinkoService = new PachinkoService(db, userService);
   const minesService = new MinesService(db, userService);
-  const wheelService = new WheelService(db, userService);
   return {
     activityService,
     userService,
@@ -96,7 +93,6 @@ export function createServices(db: Db): TestServices {
     rocketService,
     pachinkoService,
     minesService,
-    wheelService,
   };
 }
 

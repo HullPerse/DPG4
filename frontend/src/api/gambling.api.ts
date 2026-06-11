@@ -1,5 +1,5 @@
 import { apiFetch } from "./client.api";
-import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult, MinesState, WheelState } from "@/types/gamble";
+import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult, MinesState } from "@/types/gamble";
 
 export type {
   BlackjackState,
@@ -185,9 +185,3 @@ export async function abortMines(): Promise<{ success: boolean }> {
   });
 }
 
-export async function spinWheel(bid: number): Promise<WheelState> {
-  return apiFetch<WheelState>("/utils/wheel-spin", {
-    method: "POST",
-    body: { bid },
-  });
-}

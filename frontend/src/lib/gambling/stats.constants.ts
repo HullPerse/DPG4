@@ -5,7 +5,6 @@ export const GAMBLING_GAME_FILTERS = [
   { value: "rocket" as const, label: "Ракетник" },
   { value: "pachinko" as const, label: "Пачинко" },
   { value: "mines" as const, label: "Минное поле" },
-  { value: "wheel" as const, label: "Колесо" },
 ] as const;
 
 export const LEADERBOARD_PERIODS = [
@@ -18,7 +17,6 @@ export const GAME_TYPE_LABELS: Record<string, string> = {
   blackjack: "Блэкджек",
   rocket: "Ракетник",
   pachinko: "Пачинко",
-  wheel: "Колесо",
   mines: "Минное поле",
 };
 
@@ -27,7 +25,6 @@ export const GAME_CHART_COLORS: Record<string, string> = {
   blackjack: "#f6c177",
   rocket: "#eb6f92",
   pachinko: "#9ccfd8",
-  wheel: "#31748f",
   mines: "#7fda72",
 };
 

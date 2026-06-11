@@ -10,7 +10,6 @@ import { BlackjackService } from "./services/gambling/blackjack.service";
 import { RocketService } from "./services/gambling/rocket.service";
 import { PachinkoService } from "./services/gambling/pachinko.service";
 import { MinesService } from "./services/gambling/mines.service";
-import { WheelService } from "./services/gambling/wheel.service";
 
 const activityService = new ActivityService(db);
 const userService = new UserService(db, activityService);
@@ -28,7 +27,6 @@ const blackjackService = new BlackjackService(db, userService);
 const rocketService = new RocketService(db, userService);
 const pachinkoService = new PachinkoService(db, userService);
 const minesService = new MinesService(db, userService);
-const wheelService = new WheelService(db, userService);
 
 export const servicesPlugin = new Elysia({ name: "services" })
   .decorate("activityService", activityService)
@@ -40,5 +38,4 @@ export const servicesPlugin = new Elysia({ name: "services" })
   .decorate("blackjackService", blackjackService)
   .decorate("rocketService", rocketService)
   .decorate("pachinkoService", pachinkoService)
-  .decorate("minesService", minesService)
-  .decorate("wheelService", wheelService);
+  .decorate("minesService", minesService);

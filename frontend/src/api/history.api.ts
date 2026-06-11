@@ -45,7 +45,7 @@ export type LeaderboardEntry = {
 };
 
 export function getLeaderboard(opts?: {
-  gameType?: "dice" | "blackjack" | "rocket" | "pachinko" | "mines" | "wheel";
+  gameType?: "dice" | "blackjack" | "rocket" | "pachinko" | "mines";
   period?: "alltime" | "weekly";
   limit?: number;
 }) {

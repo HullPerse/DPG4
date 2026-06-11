@@ -158,13 +158,3 @@ export interface MinesRevealResult {
   banned: boolean;
 }
 
-export interface WheelResult {
-  segment: number;
-  multiplier: number;
-  payout: number;
-  net: number;
-  label: string;
-  tone: "jackpot" | "win" | "lose" | "chance";
-  balance: number;
-  banned: boolean;
-}
