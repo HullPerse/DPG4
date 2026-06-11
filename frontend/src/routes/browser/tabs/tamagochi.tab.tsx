@@ -1,9 +1,22 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as THREE from "three";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPet, feedPet, petPet, sleepPet, claimDailyReward } from "@/api/pet.api";
+import {
+  getPet,
+  feedPet,
+  petPet,
+  sleepPet,
+  claimDailyReward,
+} from "@/api/pet.api";
 import { useUserStore } from "@/store/user.store";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -16,11 +29,16 @@ const DECAY_INTERVAL_MS = 5000;
 const DECAY_PER_TICK = { hunger: 0.4, happiness: 0.25, energy: 0.33 };
 const REWARD_THRESHOLD = 80;
 
-function getMood(hunger: number, happiness: number, energy: number): { emoji: string; label: string } {
+function getMood(
+  hunger: number,
+  happiness: number,
+  energy: number,
+): { emoji: string; label: string } {
   if (hunger < 30) return { emoji: "🍖", label: "Голоден" };
   if (energy < 30) return { emoji: "😴", label: "Хочет спать" };
   if (happiness < 30) return { emoji: "😢", label: "Грустный" };
-  if (happiness > 70 && hunger > 70 && energy > 70) return { emoji: "😊", label: "Счастлив" };
+  if (happiness > 70 && hunger > 70 && energy > 70)
+    return { emoji: "😊", label: "Счастлив" };
   return { emoji: "😐", label: "Нормально" };
 }
 
@@ -57,10 +75,12 @@ function RatModel({ reaction }: { reaction: string | null }) {
     const progress = Math.min(anim.elapsed / 0.8, 1);
 
     if (anim.type === "feed") {
-      const bounce = 1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
+      const bounce =
+        1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
       groupRef.current.scale.setScalar(1.15 * bounce);
     } else if (anim.type === "pet") {
-      groupRef.current.rotation.z = Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
+      groupRef.current.rotation.z =
+        Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
     } else if (anim.type === "sleep") {
       groupRef.current.position.y = -0.8 - Math.sin(progress * Math.PI) * 0.3;
     }
@@ -85,9 +105,21 @@ function SceneContent({ reaction }: { reaction: string | null }) {
       <color attach="background" args={["#232136"]} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[5, 6, 4]} intensity={1.6} color="#f6c177" />
-      <directionalLight position={[-4, 3, -3]} intensity={0.6} color="#c4a7e7" />
-      <directionalLight position={[-2, -1, 6]} intensity={0.4} color="#eb6f92" />
-      <directionalLight position={[0, -4, -4]} intensity={0.25} color="#31748f" />
+      <directionalLight
+        position={[-4, 3, -3]}
+        intensity={0.6}
+        color="#c4a7e7"
+      />
+      <directionalLight
+        position={[-2, -1, 6]}
+        intensity={0.4}
+        color="#eb6f92"
+      />
+      <directionalLight
+        position={[0, -4, -4]}
+        intensity={0.25}
+        color="#31748f"
+      />
       <group position={[0, -0.8, 0]}>
         <Suspense fallback={null}>
           <RatModel reaction={reaction} />
@@ -97,7 +129,15 @@ function SceneContent({ reaction }: { reaction: string | null }) {
   );
 }
 
-function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
+function StatBar({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div className="flex flex-col gap-0.5 flex-1">
@@ -141,10 +181,7 @@ function FloatingEffect({ reaction }: { reaction: string | null }) {
   return (
     <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none z-20">
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="text-4xl animate-pet-float"
-        >
+        <div key={item.id} className="text-4xl animate-pet-float">
           {item.emoji}
         </div>
       ))}
@@ -199,7 +236,11 @@ function TamagotchiTab() {
 
   useEffect(() => {
     if (!data || !user || rewardCheckedRef.current) return;
-    if (data.hunger > REWARD_THRESHOLD && data.happiness > REWARD_THRESHOLD && data.energy > REWARD_THRESHOLD) {
+    if (
+      data.hunger > REWARD_THRESHOLD &&
+      data.happiness > REWARD_THRESHOLD &&
+      data.energy > REWARD_THRESHOLD
+    ) {
       claimDailyReward(user.id).then((result) => {
         if (result.claimed) {
           if (result.reward === "money") {
@@ -218,18 +259,15 @@ function TamagotchiTab() {
     queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
   }, [queryClient, user?.id]);
 
-  const handleAction = useCallback(
-    (action: "feed" | "pet" | "sleep") => {
-      if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current);
-      setLastAction(action);
-      actionTimeoutRef.current = setTimeout(() => setLastAction(null), 1000);
+  const handleAction = useCallback((action: "feed" | "pet" | "sleep") => {
+    if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current);
+    setLastAction(action);
+    actionTimeoutRef.current = setTimeout(() => setLastAction(null), 1000);
 
-      if (action === "feed") feedMutation.mutate();
-      if (action === "pet") petMutation.mutate();
-      if (action === "sleep") sleepMutation.mutate();
-    },
-    [],
-  );
+    if (action === "feed") feedMutation.mutate();
+    if (action === "pet") petMutation.mutate();
+    if (action === "sleep") sleepMutation.mutate();
+  }, []);
 
   const feedMutation = useMutation({
     mutationFn: () => feedPet(user!.id),

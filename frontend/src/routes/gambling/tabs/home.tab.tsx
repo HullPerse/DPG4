@@ -80,7 +80,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
             onClick={() => setTab("leaderboard")}
           >
             <Trophy className="size-8" />
-            <span className="font-bold text-lg">Лидеры</span>
+            <span className="font-bold text-lg">Лидерборд</span>
           </Button>
           <Button
             variant="ghost"
