@@ -192,6 +192,12 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE pets ADD COLUMN last_search_date TEXT;",
     ],
   },
+  {
+    hash: "0015_add_pet_color",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN color TEXT NOT NULL DEFAULT '#8B7355';",
+    ],
+  },
 ];
 
 export function runMigrations() {

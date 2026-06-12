@@ -180,6 +180,7 @@ export const pets = sqliteTable("pets", {
   happiness: integer("happiness").notNull().default(100),
   energy: integer("energy").notNull().default(100),
   isAlive: integer("is_alive", { mode: "boolean" }).notNull().default(true),
+  color: text("color").notNull().default("#8B7355"),
   lastUpdated: text("last_updated").notNull(),
   lastRewardDate: text("last_reward_date"),
   kvasBuff: integer("kvas_buff", { mode: "boolean" }).notNull().default(false),

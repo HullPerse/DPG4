@@ -18,6 +18,7 @@ import {
   claimDailyReward,
   resurrectPet,
   searchDeadPet,
+  setPetColor,
 } from "@/api/pet.api";
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
@@ -69,10 +70,12 @@ function RatModel({
   reaction,
   spinning,
   isAlive,
+  color,
 }: {
   reaction: string | null;
   spinning: boolean;
   isAlive: boolean;
+  color: string;
 }) {
   const { scene } = useGLTF("/rat.glb");
   const groupRef = useRef<THREE.Group>(null);
@@ -88,6 +91,11 @@ function RatModel({
   const animRef = useRef<{ type: string; elapsed: number } | null>(null);
   const prevReaction = useRef<string | null>(null);
   const deadColor = useRef(new THREE.Color(0x666666));
+  const targetColor = useRef(new THREE.Color(color));
+
+  useEffect(() => {
+    targetColor.current.set(color);
+  }, [color]);
 
   if (reaction && reaction !== prevReaction.current) {
     animRef.current = { type: reaction, elapsed: 0 };
@@ -113,6 +121,15 @@ function RatModel({
       });
       return;
     }
+
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        (child.material as THREE.MeshStandardMaterial).color.lerp(
+          targetColor.current,
+          0.08,
+        );
+      }
+    });
 
     const anim = animRef.current;
     if (!anim) {
@@ -158,10 +175,12 @@ function SceneContent({
   reaction,
   spinning,
   isAlive,
+  color,
 }: {
   reaction: string | null;
   spinning: boolean;
   isAlive: boolean;
+  color: string;
 }) {
   return (
     <>
@@ -187,7 +206,7 @@ function SceneContent({
       />
       <group position={[0, -0.8, 0]}>
         <Suspense fallback={null}>
-          <RatModel reaction={reaction} spinning={spinning} isAlive={isAlive} />
+          <RatModel reaction={reaction} spinning={spinning} isAlive={isAlive} color={color} />
         </Suspense>
       </group>
     </>
@@ -267,6 +286,21 @@ function RewardsBanner({ message }: { message: string | null }) {
     </div>
   );
 }
+
+const PALETTE = [
+  "#8B7355",
+  "#2D2D2D",
+  "#FFFFFF",
+  "#FF69B4",
+  "#4A90D9",
+  "#50C878",
+  "#E74C3C",
+  "#9B59B6",
+  "#FF8C00",
+  "#00BCD4",
+  "#FFD700",
+  "#A9A9A9",
+];
 
 function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
@@ -390,6 +424,13 @@ function TamagotchiTab() {
     },
   });
 
+  const colorMutation = useMutation({
+    mutationFn: (color: string) => setPetColor(user!.id, color),
+    onSuccess: () => refetchPet(),
+  });
+
+  const currentColor = data?.color ?? "#8B7355";
+
   const resurrectMutation = useMutation({
     mutationFn: () => resurrectPet(user!.id),
     onSuccess: () => refetchPet(),
@@ -450,7 +491,7 @@ function TamagotchiTab() {
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <SceneContent reaction={lastAction} spinning={brodeforActive} isAlive={data?.isAlive ?? true} />
+            <SceneContent reaction={lastAction} spinning={brodeforActive} isAlive={data?.isAlive ?? true} color={data?.color ?? "#8B7355"} />
           </Suspense>
         </Canvas>
         {petIsDead && (
@@ -489,6 +530,32 @@ function TamagotchiTab() {
           </Button>
         </section>
       )}
+
+      <section className="flex flex-col gap-2 p-2 bg-background border-2 border-highlight-high rounded-lg">
+        <span className="text-xs text-muted font-semibold uppercase tracking-wider">
+          🎨 Окрас крысы
+        </span>
+        <div className="flex flex-row flex-wrap gap-1.5">
+          {PALETTE.map((swatch) => (
+            <button
+              key={swatch}
+              type="button"
+              disabled={colorMutation.isPending}
+              onClick={() => colorMutation.mutate(swatch)}
+              className="group relative size-7 rounded-full border-2 border-highlight-med transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
+              style={{ backgroundColor: swatch }}
+              title={swatch}
+            >
+              {currentColor === swatch && (
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold drop-shadow-md"
+                  style={{ color: swatch === "#FFFFFF" || swatch === "#FFD700" ? "#333" : "#fff" }}>
+                  ✓
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="flex flex-col gap-1.5 p-2 bg-background border-2 border-highlight-high rounded-lg">
         <span className="text-xs text-muted font-semibold uppercase tracking-wider">

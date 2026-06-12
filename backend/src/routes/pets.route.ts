@@ -9,6 +9,8 @@ import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
 
+const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
+
 const DECAY_PER_HOUR = { hunger: 5, happiness: 3, energy: 4 };
 const MAX_STAT = 100;
 const MIN_STAT = 0;
@@ -367,5 +369,42 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     {
       params: t.Object({ userId: t.String() }),
       detail: { tags: ["pets"], summary: "Search the dead pet for loot" },
+    },
+  )
+
+  .post(
+    "/:userId/color",
+    async ({ params, db, body }) => {
+      if (!HEX_COLOR_REGEX.test(body.color)) {
+        throw new Error("Invalid color format. Must be a hex color like #FF0000");
+      }
+
+      const now = nowIso();
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+
+      await db
+        .update(schema.pets)
+        .set({ color: body.color, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "changed pet color", params.userId, body.color);
+
+      return await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.id, pet.id))
+        .get();
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      body: t.Object({ color: t.String() }),
+      detail: { tags: ["pets"], summary: "Change pet color" },
     },
   );

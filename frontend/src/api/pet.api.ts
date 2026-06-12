@@ -28,3 +28,10 @@ export function resurrectPet(userId: string): Promise<ResurrectResult> {
 export function searchDeadPet(userId: string): Promise<SearchResult> {
   return apiFetch<SearchResult>(`/pets/${userId}/search`, { method: "POST" });
 }
+
+export function setPetColor(userId: string, color: string): Promise<PetState> {
+  return apiFetch<PetState>(`/pets/${userId}/color`, {
+    method: "POST",
+    body: { color },
+  });
+}
