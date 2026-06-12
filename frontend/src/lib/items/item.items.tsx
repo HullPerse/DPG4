@@ -20,9 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import {
   HoverCard,
@@ -79,6 +77,9 @@ const ratIds: string[] = [
   "Благословление Крысиного Короля",
   "Крысиная шкатулка",
   "3д крыса",
+  "Крысиный анус",
+  "Квакающая Крыса",
+  "Крысиный потоп",
 ];
 
 const pigIds = [
@@ -102,6 +103,211 @@ export const itemEffect: effectInterface[] = [
   //EFFECTS
   // Server effects via POST /inventory/:id/use
   //
+  ItemFramework.modal(
+    "Квакающая Крыса",
+    () =>
+      function (ctx: ModalType) {
+        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+          queryKey: ["modalData"],
+          queryFn: async () => {
+            const allUsers = await userApi.getAllUsers();
+
+            return allUsers.filter((u) => u.id !== ctx.user.id);
+          },
+        });
+
+        useEffect(() => {
+          refetch();
+        }, []);
+
+        const [selected, setSelected] = useState<User | null>(null);
+
+        if (isLoading || isRefetching) return <WindowLoader />;
+        if (isError)
+          return (
+            <WindowError
+              error={new Error("Произошла ошибка при соединении с сервером")}
+              icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+            />
+          );
+
+        return (
+          <main className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="font-bold">Игрок</span>
+              <Select
+                value={selected?.id ?? ""}
+                onValueChange={(e) => {
+                  if (!e) return;
+                  const item = data?.find((i) => i.id === e);
+                  if (item) setSelected(item);
+                }}
+              >
+                <SelectTrigger className="w-full py-5">
+                  <SelectValue placeholder="Игрок">
+                    {selected?.username}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {data?.map((item, index) => (
+                      <SelectItem key={item.id} value={item.id!}>
+                        {`${index + 1}: `}
+                        {item.username}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </label>
+
+            <section className="flex flex-row items-center justify-between gap-2 p-1">
+              <Button
+                className="flex flex-1"
+                variant="success"
+                onClick={async () => {
+                  if (!selected) return;
+
+                  const allItems = await itemsApi
+                    .getInventory(ctx.user.id)
+                    .then((res) =>
+                      res.filter((i) => i.label !== "Квакающая крыса"),
+                    );
+                  const finalItem =
+                    allItems[Math.floor(Math.random() * allItems.length)];
+
+                  if (!finalItem) return ctx.close();
+
+                  await itemsApi.sendInventory(finalItem.id, selected.id);
+                  await userApi.moveUser(ctx.user.id, ctx.user.position + 4);
+
+                  await ctx.consume(
+                    `${ctx.user.username} отдал ${finalItem.label} ${selected.username}`,
+                  );
+                  ctx.close();
+                }}
+                disabled={!selected}
+              >
+                Применить
+              </Button>
+            </section>
+          </main>
+        );
+      },
+  ),
+
+  ItemFramework.modal(
+    "Мышь",
+    () =>
+      function (ctx: ModalType) {
+        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+          queryKey: ["modalData"],
+          queryFn: async () => {
+            const [items, users] = await Promise.all([
+              itemsApi.getInventories({ excludeOwner: ctx.user.id }),
+              userApi.getAllUsers(),
+            ]);
+            return { items, users };
+          },
+        });
+
+        useEffect(() => {
+          refetch();
+        }, []);
+
+        const [selected, setSelected] = useState<Inventory | null>(null);
+
+        if (isLoading || isRefetching) return <WindowLoader />;
+        if (isError)
+          return (
+            <WindowError
+              error={new Error("Произошла ошибка при соединении с сервером")}
+              icon={<CircleX className="size-28 animate-pulse text-red-500" />}
+            />
+          );
+
+        return (
+          <main className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="font-bold">Предметы</span>
+              <div className="flex flex-row gap-1">
+                <Select
+                  value={selected?.id ?? ""}
+                  onValueChange={(e) => {
+                    if (!e) return;
+                    const item = data?.items.find((i) => i.id === e);
+                    if (item) setSelected(item);
+                  }}
+                >
+                  <SelectTrigger className="w-full py-5">
+                    <SelectValue placeholder="Предмет">
+                      {selected?.label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {data?.items
+                        .sort((a, b) =>
+                          (a.owner ?? "").localeCompare(b.owner ?? ""),
+                        )
+                        .map((item, index) => (
+                          <SelectItem key={item.id} value={item.id!}>
+                            {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <HoverCard>
+                  <HoverCardTrigger delay={0} className="z-1000">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+                    >
+                      <CircleQuestionMark />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent
+                    className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-42 max-h-42 mi-h-42 w-md"
+                    side="top"
+                  >
+                    <ItemHelper item={selected} />
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+            </label>
+
+            <section className="flex flex-row items-center justify-between gap-2 p-1">
+              <Button
+                className="flex flex-1"
+                variant="success"
+                onClick={async () => {
+                  if (!selected) return;
+
+                  await itemsApi.sellInventory(
+                    String(selected.id),
+                    ctx.user.id,
+                    Math.floor(Math.random() * 8) + 1,
+                  );
+
+                  await ctx.consume(
+                    `${ctx.user.username} заставил ${data?.users.find((u) => u.id === selected.owner)?.username} продать ${selected.label}`,
+                  );
+
+                  ctx.close();
+                }}
+                disabled={!selected}
+              >
+                Применить
+              </Button>
+            </section>
+          </main>
+        );
+      },
+  ),
+
   ItemFramework.modal(
     "Картонная упаковка",
     () =>

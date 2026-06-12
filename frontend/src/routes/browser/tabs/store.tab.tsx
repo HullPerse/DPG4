@@ -63,7 +63,7 @@ function StoreTab() {
       }
 
       setStoreItems(finalArray);
-      setRerollPrice(rerollPrice + 1);
+      setRerollPrice(rerollPrice * 2);
     },
   });
 
@@ -171,7 +171,9 @@ function StoreTab() {
                     index,
                   })
                 }
-                disabled={(user?.money ?? 0) < entry.price || buyMutation.isPending}
+                disabled={
+                  (user?.money ?? 0) < entry.price || buyMutation.isPending
+                }
               >
                 КУПИТЬ за {entry.price}
               </Button>

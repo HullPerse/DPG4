@@ -5,6 +5,7 @@ const ITEM_TYPES: AdminChoice[] = [
   { value: "item", label: "item" },
   { value: "roll", label: "roll" },
   { value: "other", label: "other" },
+  { value: "rat", label: "rat" },
 ];
 
 const GAME_STATUS: AdminChoice[] = [
@@ -257,11 +258,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       {
         source: "state",
         type: "select",
-        choices: [
-          { value: "current" },
-          { value: "won" },
-          { value: "lost" },
-        ],
+        choices: [{ value: "current" }, { value: "won" }, { value: "lost" }],
       },
       { source: "guessedLetters", type: "stringList" },
       { source: "wrongLetters", type: "stringList" },

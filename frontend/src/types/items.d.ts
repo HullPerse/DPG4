@@ -47,7 +47,7 @@ export type Trade = {
  * 3. item   - usable item
  * 4. other  - not usable item
  */
-export type ItemType = "effect" | "item" | "roll" | "other";
+export type ItemType = "effect" | "item" | "roll" | "other" | "rat";
 
 import type { FC } from "react";
 import type { ModalType } from "./effect";
@@ -257,4 +257,16 @@ export type ItemLabel =
   | "Ручка"
   | "Кайджи"
   | "Ебанутый дед"
-  | "3д крыса";
+  | "3д крыса"
+  //rats
+  | "Ретруха"
+  | "Подъебные кости"
+  | "Квас"
+  | "КВАс"
+  | "Кирпич"
+  | "Бродефор"
+  //items
+  | "Крысиный анус"
+  | "Квакающая Крыса"
+  | "Крысиный потоп"
+  | "Мышь";

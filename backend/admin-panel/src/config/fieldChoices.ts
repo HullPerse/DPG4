@@ -4,6 +4,7 @@ export const ITEM_TYPE_CHOICES = [
   { value: "item", label: "item - предмет" },
   { value: "roll", label: "roll - бросок" },
   { value: "other", label: "other - прочее" },
+  { value: "rat", label: "rat - крысиный" },
 ] as const;
 
 export const GAME_STATUS_CHOICES = [

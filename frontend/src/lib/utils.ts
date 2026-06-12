@@ -5,7 +5,12 @@ import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/client.api";
 import type { GamblingConfig } from "@/types/gamble";
@@ -112,7 +117,14 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
         result.push(part);
       } else {
         result.push(
-          createElement("span", { key: index, className: "bg-amber-500/20 text-white rounded font-bold" }, part),
+          createElement(
+            "span",
+            {
+              key: index,
+              className: "bg-amber-500/20 text-white rounded font-bold",
+            },
+            part,
+          ),
         );
       }
     });
@@ -135,7 +147,14 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
           result.push(subPart);
         } else {
           result.push(
-            createElement("span", { key: `${index}-${subIndex}`, className: "bg-amber-500/20 text-white rounded font-bold" }, subPart),
+            createElement(
+              "span",
+              {
+                key: `${index}-${subIndex}`,
+                className: "bg-amber-500/20 text-white rounded font-bold",
+              },
+              subPart,
+            ),
           );
         }
       });
@@ -144,7 +163,15 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
     if (index < urlMatches.length) {
       const url = urlMatches[index];
       result.push(
-        createElement("span", { key: `url-${index}`, className: "text-blue-500 underline hover:cursor-pointer", onClick: () => openWindow(`url-${Date.now()}`, url, "Ссылка") }, url),
+        createElement(
+          "span",
+          {
+            key: `url-${index}`,
+            className: "text-blue-500 underline hover:cursor-pointer",
+            onClick: () => openWindow(`url-${Date.now()}`, url, "Ссылка"),
+          },
+          url,
+        ),
       );
     }
   });
@@ -267,6 +294,7 @@ export function translateItemType(type: ItemType) {
     item: "Предмет",
     roll: "Спецролл",
     other: "Другое",
+    rat: "Крысиный",
   };
 
   return typeMap[type];

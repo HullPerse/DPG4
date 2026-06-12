@@ -1,6 +1,7 @@
 import { Cell as CellType } from "@/types/cell";
 import { User } from "@/types/user";
-import { memo, RefObject, useCallback, useEffect } from "react";
+import { memo, useEffect, useRef } from "react";
+import { useTransformContext } from "react-zoom-pan-pinch";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "./cell.tabletop";
 import ArrowTabletop from "./arrow.tabletop";
@@ -10,10 +11,8 @@ import MovingUserOverlay from "./moving.tabletop";
 function GameArea({
   cells,
   users,
-  initialMount,
   setCell,
   setControl,
-  requestZoomToUser,
 }: {
   cells: {
     start: CellType | undefined;
@@ -21,32 +20,30 @@ function GameArea({
     grid: CellType[][];
   };
   users: User[];
-  initialMount: RefObject<boolean>;
   setCell: (value: number | null) => void;
   setControl: (value: boolean) => void;
-  requestZoomToUser: (userId: string) => void;
 }) {
+  const instance = useTransformContext();
   const user = useUserStore((state) => state.user);
   const isAdmin = useUserStore((state) => state.isAdmin);
   const arrowType = useDataStore((state) => state.arrowType);
   const movingUser = useDataStore((state) => state.movingUser);
-
-  const userId = user?.id;
-
-  const zoomToUser = useCallback(() => {
-    if (!userId) return;
-    requestZoomToUser(userId);
-  }, [userId, requestZoomToUser]);
+  const zoomed = useRef(false);
 
   useEffect(() => {
-    if (initialMount.current) {
-      zoomToUser();
-      initialMount.current = false;
+    if (zoomed.current) return;
+    if (!user?.id || !users.length) return;
+    if (!instance.wrapperComponent || !instance.contentComponent) return;
+
+    const element = document.getElementById(`user-${user.id}`);
+    if (element) {
+      instance.getContext().zoomToElement(element, 1, 600);
+      zoomed.current = true;
     }
-  }, [initialMount, zoomToUser]);
+  }, [user?.id, users, instance]);
 
   return (
-    <main className="flex flex-col items-start gap-2">
+    <main className=" flex flex-col items-start gap-2">
       {cells.start && (
         <Cell
           key={cells.start.id}

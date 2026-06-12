@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import {
   getFirstCellInNextRow,
@@ -308,10 +308,9 @@ export class EffectService {
         const allUsers = await this.db
           .select()
           .from(schema.users)
-          .then((res) => res.filter((u) => u.position !== 0));
+          .where(ne(schema.users.position, 0));
 
         for (const other of allUsers) {
-          if (other.position === 0) continue;
           const [cell] = await this.db
             .select()
             .from(schema.cells)
@@ -329,13 +328,12 @@ export class EffectService {
         const allUsers = await this.db
           .select()
           .from(schema.users)
+          .where(ne(schema.users.id, userId))
           .then((res) =>
-            res
-              .filter((u) => u.id !== userId)
-              .map((u) => ({
-                user: u,
-                distance: Math.abs(u.position - user.position),
-              })),
+            res.map((u) => ({
+              user: u,
+              distance: Math.abs(u.position - user.position),
+            })),
           );
         if (!allUsers.length) return null;
 
@@ -430,8 +428,11 @@ export class EffectService {
         const allItems = await this.db
           .select()
           .from(schema.inventory)
-          .then((res) =>
-            res.filter((i) => i.owner !== userId && i.label !== "Добрая крыса"),
+          .where(
+            and(
+              ne(schema.inventory.owner, userId),
+              ne(schema.inventory.label, "Добрая крыса"),
+            ),
           );
         const targetIds = [...new Set(allItems.map((i) => i.owner))];
         if (!targetIds.length) return null;
@@ -558,7 +559,7 @@ export class EffectService {
         const allUsers = await this.db
           .select()
           .from(schema.users)
-          .then((res) => res.filter((u) => u.id !== userId));
+          .where(ne(schema.users.id, userId));
         const statuses = user.status ?? [];
         if (!statuses.length || !allUsers.length) return null;
 
@@ -576,11 +577,8 @@ export class EffectService {
         const pool = await this.db
           .select()
           .from(schema.users)
-          .then((res) =>
-            res.filter(
-              (u) => u.status && u.status.length > 0 && u.id !== userId,
-            ),
-          );
+          .where(ne(schema.users.id, userId))
+          .then((res) => res.filter((u) => u.status && u.status.length > 0));
         const finalUser = pool[Math.floor(Math.random() * pool.length)];
         if (!finalUser?.status?.length) return null;
 
@@ -723,6 +721,52 @@ export class EffectService {
         await this.economyService.removeInventoryById(finalItem.id);
         await this.economyService.addInventory(userId, ITEM_DB_IDS.borsch);
         return `${user.username} превратил ${finalItem.label} в борщ`;
+      },
+
+      "Крысиный анус": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const cell = await this.getCellByNumber(user.position);
+        if (!cell) return null;
+        await this.patchCellStatus(cell.id, [
+          ...(cell.status ?? []),
+          "sausage",
+        ]);
+
+        await this.patchUser("9f3u9vi4k7tvhgf", { position: cell.number });
+        return `${user.username} положил сосиску на клетку ${cell.number}`;
+      },
+      "Крысиный потоп": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const allItems = await this.db
+          .select()
+          .from(schema.inventory)
+          .where(
+            and(
+              eq(schema.inventory.owner, userId),
+              ne(schema.inventory.label, "Крысиный потоп"),
+            ),
+          );
+
+        const shuffled = [...allItems].sort(() => Math.random() - 0.5);
+        const halfCount = Math.floor(shuffled.length / 2);
+        const ids = shuffled.slice(0, halfCount).map((i) => i.id);
+        if (ids.length === 0) return null;
+
+        const ratLabels = [...RAT_IDS];
+        const ratItems = await this.db
+          .select()
+          .from(schema.items)
+          .where(inArray(schema.items.label, ratLabels));
+        if (ratItems.length === 0) return null;
+
+        for (const id of ids) {
+          await this.economyService.removeInventoryById(id);
+          const ratItem =
+            ratItems[Math.floor(Math.random() * ratItems.length)]!;
+          await this.economyService.addInventory(userId, ratItem.id);
+        }
+
+        return `${user.username} заменил ${ids.length} предметов на случайных крыс`;
       },
     };
 
