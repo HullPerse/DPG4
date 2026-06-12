@@ -20,7 +20,7 @@
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-router": "^1.170.15",
     "@tanstack/react-virtual": "^3.14.2",
-    "@tauri-apps/api": "2.11.0",
+    "@tauri-apps/api": "2.10.1",
     "@tauri-apps/plugin-notification": "2.3.3",
     "@tauri-apps/plugin-opener": "2.5.4",
     "@tauri-apps/plugin-updater": "2.10.1",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@raegen/vite-plugin-vitest-cache": "0.3.7",
     "@tanstack/router-plugin": "1.168.18",
-    "@tauri-apps/cli": "2.11.2",
+    "@tauri-apps/cli": "2.10.1",
     "@types/node": "25.9.2",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
