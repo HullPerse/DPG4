@@ -15,6 +15,7 @@ import { memo } from "react";
 const TABS = [
   "items",
   "store",
+  "ratStore",
   "randomStore",
   "wordle",
   "tamagochi",
@@ -39,7 +40,8 @@ function HomeBrowser({
       | "randomStore"
       | "wordle"
       | "rat"
-      | "tamagochi",
+      | "tamagochi"
+      | "ratStore",
   ) => void;
   searchTerms: string;
 }) {
@@ -53,7 +55,8 @@ function HomeBrowser({
       | "randomStore"
       | "wordle"
       | "rat"
-      | "tamagochi",
+      | "tamagochi"
+      | "ratStore",
   ) => {
     const tabMap = {
       rules: {
@@ -110,6 +113,12 @@ function HomeBrowser({
         description: "Крыса-питомец",
         icon: <Cat className="size-10" />,
       },
+      ratStore: {
+        value: "ratStore",
+        label: "КРЫСИНАЯ ЛАВКА",
+        description: "Обменяй крысиный предмет на случайный",
+        icon: <Shuffle className="size-10" />,
+      },
     };
 
     return tabMap[value as keyof typeof tabMap];
@@ -119,12 +128,20 @@ function HomeBrowser({
     <main className="flex flex-col w-full h-full gap-2 items-center p-2">
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         {TABS.filter((value) =>
-          getTab(value as "rules" | "items" | "randomStore" | "store" | "list")
+          getTab(
+            value as
+              | "rules"
+              | "items"
+              | "randomStore"
+              | "store"
+              | "list"
+              | "ratStore",
+          )
             .label.toUpperCase()
             .includes(searchTerms.toUpperCase()),
         ).map((value) => {
           const tab = getTab(
-            value as "rules" | "items" | "store" | "randomStore",
+            value as "rules" | "items" | "store" | "randomStore" | "ratStore",
           );
 
           return (
@@ -133,7 +150,14 @@ function HomeBrowser({
               key={value}
               className="w-full h-18 border-2 border-highlight-high flex flex-row items-center justify-start"
               onClick={() =>
-                setTab(tab.value as "rules" | "items" | "randomStore" | "store")
+                setTab(
+                  tab.value as
+                    | "rules"
+                    | "items"
+                    | "randomStore"
+                    | "store"
+                    | "ratStore",
+                )
               }
             >
               {tab.icon}

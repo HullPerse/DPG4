@@ -151,6 +151,18 @@ export default class ItemsApi {
     return await apiFetch<Market>(`/market/${marketId}`);
   };
 
+  ratExchange = async (userId: string, inventoryId: string): Promise<Item> => {
+    return apiFetch<Item>("/rat-store/exchange", {
+      method: "POST",
+      body: { userId, inventoryId },
+    });
+  };
+
+  getRatLabels = async (): Promise<string[]> => {
+    const res = await apiFetch<{ labels: string[] }>("/rat-store/rat-labels");
+    return res.labels;
+  };
+
   removeMarket = async (marketId: string) => {
     return apiFetch(`/market/${marketId}/remove`, { method: "POST" });
   };

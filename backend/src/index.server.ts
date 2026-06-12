@@ -30,6 +30,7 @@ import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
 import { hangmanRoute } from "./routes/hangman.route";
 import { petsRoute } from "./routes/pets.route";
+import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
@@ -144,6 +145,7 @@ const app = new Elysia()
   .use(wheelRoute)
   .use(historyRoute)
   .use(hangmanRoute)
+  .use(ratStoreRoute)
   .use(petsRoute);
 
 runMigrations();
