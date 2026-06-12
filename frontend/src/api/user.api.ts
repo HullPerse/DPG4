@@ -160,4 +160,11 @@ export default class UserApi {
   updatePlace = async (userId: string) => {
     return apiFetch(`/users/${userId}/place`, { method: "POST" });
   };
+
+  changeHangman = async (userId: string, state: boolean) => {
+    return apiFetch(`/users/${userId}`, {
+      method: "PATCH",
+      body: { hangman: state },
+    });
+  };
 }

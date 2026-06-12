@@ -25,6 +25,7 @@ export class GameService {
       .where(eq(schema.games.userId, userId))
       .orderBy(desc(schema.games.created))
       .limit(1);
+
     return row ?? null;
   }
 
@@ -38,6 +39,7 @@ export class GameService {
       .select()
       .from(schema.games)
       .where(eq(schema.games.id, gameId));
+
     if (!game) return null;
 
     const newTime =
@@ -66,30 +68,37 @@ export class GameService {
     });
 
     broadcast("games", "update", gameId);
+
     return game;
   }
 
   async rerollUserLastGame(userId: string) {
     const game = await this.getLastForUser(userId);
+
     if (!game) return null;
+
     await this.changeStatus(
       game.id,
       "REROLLED",
       Number((game.data as { time?: number })?.time ?? 0),
       Number(game.score ?? 0),
     );
+
     return game;
   }
 
   async dropUserPlayingGame(userId: string) {
     const game = await this.getLastForUser(userId);
+
     if (!game || game.status !== "PLAYING") return null;
+
     await this.changeStatus(
       game.id,
       "DROPPED",
       Number((game.data as { time?: number })?.time ?? 0),
       Number(game.score ?? 0),
     );
+
     return game;
   }
 }

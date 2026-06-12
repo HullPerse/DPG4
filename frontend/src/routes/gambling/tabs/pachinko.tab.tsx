@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.component";
 import {
   useCallback,
@@ -10,28 +10,28 @@ import {
   lazy,
   Suspense,
 } from "react";
-import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 import {
   dropPachinko,
   settlePachinko,
   syncPachinko,
   abandonPachinko,
 } from "@/api/gambling.api";
-const PachinkoScene = lazy(() => import("../components/scene.pachinko"));
-import { SmallLoader } from "@/components/shared/loader.component";
+const PachinkoScene = lazy(() => import("../components/scenes/scene.pachinko"));
 import type { PachinkoState } from "@/types/gamble";
 import {
   BOARD_WIDTH,
   PACHINKO_SLOT_MULTIPLIERS,
   getSlotWidths,
   formatPachinkoResultLabel,
-  getPachinkoResultColor,
   randomDropOffsetX,
   slotColor,
   type PachinkoUiResult,
 } from "@/lib/gambling/pachinko.utils";
-
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 const IDLE_STATE: PachinkoState = {
   phase: "idle",
@@ -44,37 +44,55 @@ const IDLE_STATE: PachinkoState = {
   label: "",
   tone: "",
   banned: false,
+  kickAvailable: false,
 };
 
 function PachinkoTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
   const [gameState, setGameState] = useState<PachinkoState>(IDLE_STATE);
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
 
-  const [loading, setLoading] = useState(false);
   const [bid, setBid] = useState<number>(3);
+  const [ratAmount, setRatAmount] = useState<number>(1);
+
   const [dropKey, setDropKey] = useState(0);
   const [startX, setStartX] = useState(0);
   const [result, setResult] = useState<PachinkoUiResult | null>(null);
   const settlingRef = useRef(false);
   const [kickTrigger, setKickTrigger] = useState(0);
   const [showKickButton, setShowKickButton] = useState(false);
-  const kickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const balance = user?.money ?? 0;
+  const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const dropMutation = useMutation({
+    mutationFn: () => dropPachinko(bid, ratAmount),
+    onSuccess: (state) => {
+      setResult(null);
+      settlingRef.current = false;
+      setStartX(randomDropOffsetX());
+      setGameState(state);
+      setDropKey((k) => k + 1);
+      useUserStore.setState({ user: { ...user!, money: state.balance } });
+    },
+    onError: () => setGameState(IDLE_STATE),
+  });
 
   const inDrop = gameState.phase === "dropping";
   const roundDone = gameState.phase === "done";
   const showRat = inDrop || roundDone;
-  const canAct = !loading && !inDrop && !gamblingBanned && balance >= bid;
+  const totalBid = bid * ratAmount;
+  const canAct =
+    !dropMutation.isPending &&
+    !inDrop &&
+    !gamblingBanned &&
+    balance >= totalBid;
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
-    if (!user) return;
-    syncPachinko(String(user.id))
+    syncPachinko()
       .then((state) => {
         if (state.phase === "dropping") {
           setGameState(state);
@@ -84,43 +102,18 @@ function PachinkoTab() {
         }
       })
       .catch(() => {});
-  }, [user?.id]);
-
-  const userIdRef = useRef<string | null>(null);
-  userIdRef.current = user ? String(user.id) : null;
+  }, []);
 
   useEffect(() => {
     return () => {
-      const uid = userIdRef.current;
-      if (uid && gameStateRef.current.phase === "dropping") {
-        abandonPachinko(uid).catch(() => {});
+      if (gameStateRef.current.phase === "dropping") {
+        abandonPachinko().catch(() => {});
       }
     };
   }, []);
 
-  const handleDrop = async () => {
-    if (!user || loading || inDrop || gamblingBanned || balance < bid) return;
-    setLoading(true);
-    setResult(null);
-    settlingRef.current = false;
-
-    const offset = randomDropOffsetX();
-    setStartX(offset);
-
-    try {
-      const state = await dropPachinko(String(user.id), bid);
-      setGameState(state);
-      setDropKey((k) => k + 1);
-      useUserStore.setState({ user: { ...user, money: state.balance } });
-      setLoading(false);
-    } catch {
-      setLoading(false);
-      setGameState(IDLE_STATE);
-    }
-  };
-
   const handleSettled = useCallback(
-    async (slotIndex: number) => {
+    async (slotIndexes: number[]) => {
       if (
         !user ||
         settlingRef.current ||
@@ -129,13 +122,15 @@ function PachinkoTab() {
         return;
       settlingRef.current = true;
 
-      const slot = Math.max(
-        0,
-        Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(slotIndex)),
+      const clamped = slotIndexes.map((raw) =>
+        Math.max(
+          0,
+          Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(raw)),
+        ),
       );
 
       try {
-        const state = await settlePachinko(String(user.id), slot);
+        const state = await settlePachinko(clamped);
         setGameState(state);
         useUserStore.setState({ user: { ...user, money: state.balance } });
         if (state.banned) setGamblingBanned(true);
@@ -153,21 +148,32 @@ function PachinkoTab() {
   );
 
   useEffect(() => {
-    if (inDrop) {
-      kickTimerRef.current = setTimeout(() => {
-        setShowKickButton(true);
-      }, 10_000);
-    } else {
+    if (!inDrop) {
       setShowKickButton(false);
-      if (kickTimerRef.current) {
-        clearTimeout(kickTimerRef.current);
-        kickTimerRef.current = null;
+      if (kickPollRef.current) {
+        clearInterval(kickPollRef.current);
+        kickPollRef.current = null;
       }
+      return;
     }
+
+    kickPollRef.current = setInterval(async () => {
+      try {
+        const state = await syncPachinko();
+        if (state.kickAvailable) {
+          setShowKickButton(true);
+          if (kickPollRef.current) {
+            clearInterval(kickPollRef.current);
+            kickPollRef.current = null;
+          }
+        }
+      } catch {}
+    }, 3_000);
+
     return () => {
-      if (kickTimerRef.current) {
-        clearTimeout(kickTimerRef.current);
-        kickTimerRef.current = null;
+      if (kickPollRef.current) {
+        clearInterval(kickPollRef.current);
+        kickPollRef.current = null;
       }
     };
   }, [inDrop]);
@@ -179,12 +185,7 @@ function PachinkoTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-stretch gap-1 border-2 border-highlight-high bg-background px-2 py-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted">Баланс</span>
-          <span className="text-lg font-bold">{balance} чубриков</span>
-        </div>
-      </section>
+      <BalanceDisplay balance={balance} />
 
       <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto items-center justify-center">
         {(() => {
@@ -221,18 +222,10 @@ function PachinkoTab() {
             onSettled={handleSettled}
             bid={bid}
             kickTrigger={kickTrigger}
+            ratAmount={ratAmount}
           />
         </Suspense>
-        {result && (
-          <span
-            className={cn(
-              "absolute top-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/85",
-              getPachinkoResultColor(result),
-            )}
-          >
-            {result.label}
-          </span>
-        )}
+        <GameResult result={result} />
         {showKickButton && inDrop && (
           <Button
             onClick={handleKick}
@@ -250,19 +243,29 @@ function PachinkoTab() {
         )}
       </section>
 
+      <BidSelector
+        bidOptions={bidOptions}
+        bid={bid}
+        onBidChange={setBid}
+        disabled={inDrop || dropMutation.isPending}
+      />
+
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-        <span className="text-sm text-muted mr-1">Ставка</span>
-        {BIDS.map((v) => (
+        <span className="text-sm text-muted mr-1">Крыс</span>
+        {[1, 2, 3, 4, 5].map((v) => (
           <button
             key={v}
-            onClick={() => setBid(v)}
-            disabled={inDrop || loading}
-            className={cn(
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-              bid === v
+            onClick={() => setRatAmount(v)}
+            disabled={inDrop || dropMutation.isPending}
+            className={
+              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer " +
+              (ratAmount === v
                 ? "bg-highlight-high text-background"
-                : "bg-foreground/10 text-muted hover:bg-foreground/20",
-            )}
+                : "bg-foreground/10 text-muted hover:bg-foreground/20") +
+              (inDrop || dropMutation.isPending
+                ? " opacity-40 pointer-events-none"
+                : "")
+            }
           >
             {v}
           </button>
@@ -273,20 +276,17 @@ function PachinkoTab() {
         <Button
           variant="info"
           className="w-full h-11"
-          onClick={handleDrop}
+          loading={dropMutation.isPending}
           disabled={!canAct}
+          onClick={() => dropMutation.mutate()}
         >
-          {gamblingBanned ? (
-            "Вы забанены"
-          ) : loading ? (
-            <SmallLoader />
-          ) : inDrop ? (
-            "Крыса летит..."
-          ) : balance < bid ? (
-            "Недостаточно чубриков"
-          ) : (
-            `Бросить крысу (${bid})`
-          )}
+          {gamblingBanned
+            ? "Вы забанены"
+            : inDrop
+              ? "Крыса летит..."
+              : balance < totalBid
+                ? "Недостаточно чубриков"
+                : `Бросить крысу (${totalBid})`}
         </Button>
       </section>
     </main>

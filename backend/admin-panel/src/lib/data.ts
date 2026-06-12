@@ -98,3 +98,26 @@ export async function deleteRecord(resource: string, id: string) {
   );
   return json.data;
 }
+
+export async function batchDeleteRecords(resource: string, ids: string[]) {
+  const { json } = await adminJson<{ ok: boolean; deleted: number }>(
+    `${apiUrl}/${resource}/batch-delete`,
+    { method: "POST", body: JSON.stringify({ ids }) },
+  );
+  return json;
+}
+
+export async function exportTableJson(resource: string): Promise<Record<string, unknown>[]> {
+  const { json } = await adminJson<Record<string, unknown>[]>(
+    `${apiUrl}/${resource}/export?_sort=created&_order=DESC`,
+  );
+  return json;
+}
+
+export async function fetchUsersByIds(ids: string[]) {
+  if (!ids.length) return [];
+  const { json } = await adminJson<{ data: Record<string, unknown>[] }>(
+    `${apiUrl}/users?_ids=${ids.join(",")}&_perPage=200`,
+  );
+  return json.data;
+}

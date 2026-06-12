@@ -7,12 +7,12 @@ import {
   ExternalLink,
   Plus,
 } from "lucide-react";
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import { useDebounce } from "@/hooks/debounce.hook";
 import { useUserStore } from "@/store/user.store";
 
-import { SmallLoader } from "@/components/shared/loader.component";
 import PresetsList from "../components/presets/presets.presets";
 
 import GameApi from "@/api/games.api";
@@ -35,7 +35,6 @@ function PresetsTab() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const [loading, setLoadinng] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<{
     id: string;
     label: string;
@@ -44,12 +43,10 @@ function PresetsTab() {
     "presetAll" | "presetWheel" | "presetList" | "addPresetGame"
   >("presetAll");
 
-  const handleAddPreset = useCallback(async () => {
-    setLoadinng(true);
-    await gameApi.addPreset(searchTerm);
-    setSearchTerm("");
-    setLoadinng(false);
-  }, []);
+  const addPresetMutation = useMutation({
+    mutationFn: () => gameApi.addPreset(searchTerm),
+    onSuccess: () => setSearchTerm(""),
+  });
 
   const getComponent = () => {
     if (!currentPreset)
@@ -123,17 +120,18 @@ function PresetsTab() {
           className="h-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={loading || currentTab === "presetWheel"}
+          disabled={addPresetMutation.isPending || currentTab === "presetWheel"}
         />
 
         {isAdmin && currentTab === "presetAll" && (
           <Button
             variant="link"
             className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
-            onClick={handleAddPreset}
-            disabled={!searchTerm || loading}
+            loading={addPresetMutation.isPending}
+            disabled={!searchTerm}
+            onClick={() => addPresetMutation.mutate()}
           >
-            {loading ? <SmallLoader /> : <Plus />}
+            <Plus />
           </Button>
         )}
         <Button
@@ -159,9 +157,10 @@ function PresetsTab() {
           hidden={currentTab === "presetAll"}
           onClick={() => {
             if (currentPreset && currentTab === "addPresetGame") {
+              setSearchTerm("");
               return setCurrentTab("presetList");
             }
-
+            setSearchTerm("");
             setCurrentTab("presetAll");
             setCurrentPreset(null);
           }}

@@ -21,11 +21,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
 import PaintApi from "@/api/paint.api";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -65,7 +64,6 @@ function DrawPaint({
   const queryClient = useQueryClient();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
 
   const [tool, setTool] = useState<ToolType>("brush");
   const [color, setColor] = useState("#000000");
@@ -177,44 +175,39 @@ function DrawPaint({
       globalThis.removeEventListener("wheel", onWheel, { capture: true });
   }, [hoveringCanvas]);
 
-  const handleSave = useCallback(async () => {
-    if (!user) return;
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
 
-    setLoading(true);
-    const stageCanvas = canvasRef.current?.toCanvas();
-    if (!stageCanvas) {
-      setLoading(false);
-      return;
-    }
-    const blob = await new Promise<Blob | null>((r) =>
-      stageCanvas.toBlob((b) => r(b), "image/png"),
-    );
-    if (!blob) {
-      setLoading(false);
-      return;
-    }
-    const imageFile = new File([blob], "drawing.png", {
-      type: "image/png",
-    });
+      const stageCanvas = canvasRef.current?.toCanvas();
+      if (!stageCanvas) return;
 
-    const payload = {
-      author: {
-        id: user.id,
-        username: user.username,
-      },
-      image: imageFile,
-    } as PaintType;
+      const blob = await new Promise<Blob | null>((r) =>
+        stageCanvas.toBlob((b) => r(b), "image/png"),
+      );
+      if (!blob) return;
 
-    if (selectedId) {
-      await paintApi.updateDraw(selectedId, payload);
-    } else {
-      const record = await paintApi.createDraw(payload);
-      setSelectedId(record.id ?? null);
-    }
+      const imageFile = new File([blob], "drawing.png", {
+        type: "image/png",
+      });
 
-    invalidateQuery();
-    setLoading(false);
-  }, [user, selectedId, invalidateQuery]);
+      const payload = {
+        author: {
+          id: user.id,
+          username: user.username,
+        },
+        image: imageFile,
+      } as PaintType;
+
+      if (selectedId) {
+        await paintApi.updateDraw(selectedId, payload);
+      } else {
+        const record = await paintApi.createDraw(payload);
+        setSelectedId(record.id ?? null);
+      }
+    },
+    onSuccess: () => invalidateQuery(),
+  });
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -235,13 +228,13 @@ function DrawPaint({
       }
       if (mod && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        void handleSave();
+        saveMutation.mutate();
       }
     };
 
     globalThis.addEventListener("keydown", onKeyDown);
     return () => globalThis.removeEventListener("keydown", onKeyDown);
-  }, [handleSave]);
+  }, [saveMutation]);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -380,17 +373,17 @@ function DrawPaint({
               variant="error"
               size="icon"
               onClick={() => setTab("home")}
-              disabled={loading}
+              disabled={saveMutation.isPending}
             >
               <ChevronLeft />
             </Button>
             <Button
               variant="success"
               className="flex-1"
-              onClick={handleSave}
-              disabled={loading}
+              loading={saveMutation.isPending}
+              onClick={() => saveMutation.mutate()}
             >
-              {loading ? <SmallLoader /> : "Сохранить"}
+              Сохранить
             </Button>
           </div>
         </div>

@@ -10,8 +10,13 @@ import type { AdminSchema } from "@/types";
 
 export function Dashboard({ schema }: { schema: AdminSchema }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  const [responseTimes, setResponseTimes] = useState<Record<string, number> | null>(null);
-  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(null);
+  const [responseTimes, setResponseTimes] = useState<Record<
+    string,
+    number
+  > | null>(null);
+  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(
+    null,
+  );
   const [broadcasting, setBroadcasting] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -55,7 +60,7 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
       <p className="text-muted text-[10px] font-bold tracking-widest uppercase">
         DPG · панель управления
       </p>
-      <h1 className="from-text to-primary mt-1 bg-gradient-to-br bg-clip-text text-3xl font-bold text-transparent">
+      <h1 className="from-text to-primary mt-1 bg-clip-text text-3xl font-bold text-transparent">
         Админка
       </h1>
       <p className="text-muted mt-2 max-w-lg text-sm">
@@ -63,7 +68,11 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <Button variant="primary" onClick={() => void handleBroadcast()} disabled={broadcasting}>
+        <Button
+          variant="primary"
+          onClick={() => void handleBroadcast()}
+          disabled={broadcasting}
+        >
           <RefreshCw className={broadcasting ? "animate-spin" : undefined} />
           {broadcasting ? "Отправка…" : "Обновить всех игроков"}
         </Button>

@@ -80,7 +80,7 @@ function ObjectListCell({
   if (str.length > 48 || column.includes("image") || column.includes("Link")) {
     return (
       <textarea
-        className="border-iris bg-background text-text min-h-[56px] w-full min-w-[140px] border-2 p-1.5 text-xs"
+        className="border-iris bg-background text-text min-h-14 w-full min-w-35 border-2 p-1.5 text-xs"
         value={str}
         rows={2}
         onChange={(e) => onChange(e.target.value)}

@@ -1,5 +1,5 @@
 import { apiFetch } from "./client.api";
-import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult } from "@/types/gamble";
+import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult, MinesState } from "@/types/gamble";
 
 export type {
   BlackjackState,
@@ -11,119 +11,102 @@ export type {
 
 export type { DiceDealerResult, DiceGameResult };
 
-export async function rollDiceDealer(userId: string, bid: number): Promise<DiceDealerResult> {
+export async function rollDiceDealer(bid: number): Promise<DiceDealerResult> {
   return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
-    body: { userId, bid },
+    body: { bid },
   });
 }
 
-export async function rerollDiceDealer(userId: string): Promise<DiceDealerResult> {
+export async function rerollDiceDealer(): Promise<DiceDealerResult> {
   return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function rollDicePlayer(userId: string): Promise<DiceGameResult> {
+export async function rollDicePlayer(): Promise<DiceGameResult> {
   return apiFetch<DiceGameResult>("/utils/dice-roll", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function abortDice(userId: string): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>("/utils/dice-abort", {
+export async function abortDice(): Promise<{ refunded: number; balance: number }> {
+  return apiFetch<{ refunded: number; balance: number }>("/utils/dice-abort", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function unbanDice(userId: string): Promise<{ success: boolean }> {
+export async function unbanDice(): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>("/utils/dice-unban", {
     method: "POST",
-    body: { userId },
   });
 }
 
 export async function blackjackDeal(
-  userId: string,
   bid: number,
 ): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-deal", {
     method: "POST",
-    body: { userId, bid },
+    body: { bid },
   });
 }
 
-export async function blackjackHit(userId: string): Promise<BlackjackState> {
+export async function blackjackHit(): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-hit", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function blackjackStand(userId: string): Promise<BlackjackState> {
+export async function blackjackStand(): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-stand", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function syncBlackjack(
-  userId: string,
-): Promise<BlackjackState | null> {
+export async function syncBlackjack(): Promise<BlackjackState | null> {
   const res = await apiFetch<{ state: BlackjackState | null }>(
     "/utils/blackjack-sync",
-    { method: "POST", body: { userId } },
+    { method: "POST" },
   );
   return res.state;
 }
 
-export async function abandonBlackjack(
-  userId: string,
-): Promise<{ success: boolean }> {
+export async function abandonBlackjack(): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>("/utils/blackjack-abandon", {
     method: "POST",
-    body: { userId },
   });
 }
 
 export async function launchRocket(
-  userId: string,
   bid: number,
 ): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-launch", {
     method: "POST",
-    body: { userId, bid },
+    body: { bid },
   });
 }
 
-export async function cashoutRocket(userId: string): Promise<RocketState> {
+export async function cashoutRocket(): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-cashout", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function pollRocket(userId: string): Promise<RocketState> {
+export async function pollRocket(): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-poll", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function abandonRocket(userId: string): Promise<{ success: boolean }> {
+export async function abandonRocket(): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>("/utils/rocket-abandon", {
     method: "POST",
-    body: { userId },
   });
 }
 
-export async function dismissRocket(userId: string): Promise<{ success: boolean }> {
+export async function dismissRocket(): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>("/utils/rocket-dismiss", {
     method: "POST",
-    body: { userId },
   });
 }
 
@@ -134,29 +117,27 @@ export async function getRocketHistory(): Promise<RocketHistoryEntry[]> {
 }
 
 export async function dropPachinko(
-  userId: string,
   bid: number,
+  ratAmount = 1,
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-drop", {
     method: "POST",
-    body: { userId, bid },
+    body: { bid, ratAmount },
   });
 }
 
 export async function settlePachinko(
-  userId: string,
-  slotIndex: number,
+  slotIndexes: number[],
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-settle", {
     method: "POST",
-    body: { userId, slotIndex },
+    body: { slotIndexes },
   });
 }
 
-export async function syncPachinko(userId: string): Promise<PachinkoState> {
+export async function syncPachinko(): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-sync", {
     method: "POST",
-    body: { userId },
   });
 }
 
@@ -166,11 +147,41 @@ export async function fetchGamblingConfig(): Promise<GamblingConfig> {
   });
 }
 
-export async function abandonPachinko(
-  userId: string,
-): Promise<{ success: boolean }> {
+export async function abandonPachinko(): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>("/utils/pachinko-abandon", {
     method: "POST",
-    body: { userId },
   });
 }
+
+export async function startMines(
+  bid: number,
+  mineCount: number,
+): Promise<MinesState> {
+  return apiFetch<MinesState>("/utils/mines-start", {
+    method: "POST",
+    body: { bid, mineCount },
+  });
+}
+
+export async function revealMines(
+  x: number,
+  y: number,
+): Promise<MinesState> {
+  return apiFetch<MinesState>("/utils/mines-reveal", {
+    method: "POST",
+    body: { x, y },
+  });
+}
+
+export async function cashoutMines(): Promise<MinesState> {
+  return apiFetch<MinesState>("/utils/mines-cashout", {
+    method: "POST",
+  });
+}
+
+export async function abortMines(): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>("/utils/mines-abort", {
+    method: "POST",
+  });
+}
+

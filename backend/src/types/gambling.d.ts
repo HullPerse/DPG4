@@ -129,4 +129,32 @@ export interface PachinkoState {
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance" | "";
   banned: boolean;
+  kickAvailable: boolean;
 }
+
+export interface ActiveMinesGame {
+  userId: string;
+  bid: number;
+  mineCount: number;
+  grid: boolean[][];
+  revealed: boolean[][];
+  revealedCount: number;
+  phase: "playing" | "won" | "lost";
+}
+
+export interface MinesRevealResult {
+  phase: "playing" | "won" | "lost";
+  x: number;
+  y: number;
+  isMine: boolean;
+  currentMultiplier: number;
+  revealed: boolean[][];
+  minePositions?: [number, number][];
+  payout: number;
+  net: number;
+  label: string;
+  tone: "win" | "lose" | "chance" | "";
+  balance: number;
+  banned: boolean;
+}
+

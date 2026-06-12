@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { Bold, Italic, Underline, Strikethrough } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button.component";
@@ -53,7 +53,7 @@ const toolbarButtons: Command[] = [
   },
 ];
 
-export function RichTextEditor({
+const RichTextEditor = memo(function RichTextEditor({
   value,
   onChange,
   className,
@@ -177,4 +177,6 @@ export function RichTextEditor({
       />
     </div>
   );
-}
+});
+
+export { RichTextEditor };

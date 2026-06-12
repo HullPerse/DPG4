@@ -7,7 +7,7 @@ import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { startTransition, useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
@@ -32,10 +32,6 @@ export default function Tabletop() {
   const [control, setControl] = useState<boolean>(false);
   const [showTools, setShowTools] = useState<boolean>(false);
   const [showCell, setShowCell] = useState<boolean>(false);
-
-  const initialMount = useRef<boolean>(true);
-  const zoomToUserRef = useRef<{ userId: string } | null>(null);
-  const zoomCompleted = useRef(false);
 
   const { data, isLoading, isError, refetch } = useQuery<{
     cells: {
@@ -157,25 +153,13 @@ export default function Tabletop() {
         initialScale={0.4}
         minScale={0.1}
         maxScale={5}
-        centerOnInit={!initialMount.current}
         panning={{
           allowLeftClickPan: false,
           allowMiddleClickPan: false,
           allowRightClickPan: true,
         }}
+        smooth={false}
         wheel={{ step: 0.1 }}
-        onTransformed={(ref) => {
-          if (zoomCompleted.current) return;
-          if (zoomToUserRef.current) {
-            const { userId } = zoomToUserRef.current;
-            const element = document.getElementById(`user-${userId}`);
-            if (element) {
-              ref.zoomToElement(element, 1);
-              zoomToUserRef.current = null;
-              zoomCompleted.current = true;
-            }
-          }
-        }}
       >
         <TransformComponent
           contentStyle={{ height: "100%" }}
@@ -186,12 +170,8 @@ export default function Tabletop() {
               data?.cells || { start: undefined, final: undefined, grid: [] }
             }
             users={data?.users || []}
-            initialMount={initialMount}
             setCell={setCell}
             setControl={setControl}
-            requestZoomToUser={(userId) => {
-              zoomToUserRef.current = { userId };
-            }}
           />
         </TransformComponent>
       </TransformWrapper>

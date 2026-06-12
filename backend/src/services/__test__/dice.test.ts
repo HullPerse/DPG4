@@ -46,7 +46,7 @@ describe("DiceService", () => {
     expect(services.diceService.rollDealer(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.diceService.rollDealer(userId, 11)).rejects.toThrow(
+    expect(services.diceService.rollDealer(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });
@@ -88,15 +88,16 @@ describe("DiceService", () => {
     expect(user!.money).toBe(97);
   });
 
-  test("dealer 1-1-1 auto push -> player gets bid back", async () => {
+  test("dealer 1-1-1 auto win -> player loses bid", async () => {
     seedRandom(d(1, 1, 1));
     await services.diceService.rollDealer(userId, 3);
-    seedRandom(d(1, 2, 3));
+    seedRandom(d(5, 5, 2));
     const result = await services.diceService.rollPlayer(userId);
-    expect(result.payout).toBe(3);
-    expect(result.net).toBe(0);
+    expect(result.payout).toBe(0);
+    expect(result.net).toBe(-3);
+    expect(result.label).toContain("автоматически");
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(100);
+    expect(user!.money).toBe(97);
   });
 
   test("player 4-5-6 wins 2x", async () => {
@@ -242,7 +243,19 @@ describe("DiceService", () => {
   test("abort during dealer phase refunds bid", async () => {
     seedRandom(d(2, 4, 6));
     await services.diceService.rollDealer(userId, 5);
-    await services.diceService.abort(userId);
+    const { refunded, balance } = await services.diceService.abort(userId);
+    expect(refunded).toBe(5);
+    expect(balance).toBe(100);
+    const user = await getUser(db, userId);
+    expect(user!.money).toBe(100);
+  });
+
+  test("abort during player phase refunds bid", async () => {
+    seedRandom(d(2, 2, 5));
+    await services.diceService.rollDealer(userId, 5);
+    const { refunded, balance } = await services.diceService.abort(userId);
+    expect(refunded).toBe(5);
+    expect(balance).toBe(100);
     const user = await getUser(db, userId);
     expect(user!.money).toBe(100);
   });

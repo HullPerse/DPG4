@@ -1,4 +1,3 @@
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
@@ -6,6 +5,7 @@ import { Box } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useDataStore } from "@/store/data.store";
+import { useMutation } from "@tanstack/react-query";
 
 function loginErrorMessage(error: unknown): string {
   if (error instanceof DOMException && error.name === "AbortError") {
@@ -34,34 +34,27 @@ export default function Signin({
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  const handleAuth = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      await login(username.toUpperCase(), password).then(() => {
-        setLoggedIn(true);
-        setConnected(true);
-        navigate({
-          to: "/",
-          replace: true,
-        });
-      });
-    } catch (err) {
+  const loginMutation = useMutation({
+    mutationFn: () => login(username.toUpperCase(), password),
+    onSuccess: () => {
+      setLoggedIn(true);
+      setConnected(true);
+      navigate({ to: "/", replace: true });
+    },
+    onError: (err) => {
       console.error(err);
       setError(loginErrorMessage(err));
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <main
       className="flex h-full w-full flex-col items-center gap-2 p-2"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
-          return handleAuth();
+          return loginMutation.mutate();
         }
       }}
     >
@@ -92,10 +85,11 @@ export default function Signin({
       <Button
         variant="success"
         className="w-full py-5"
-        onClick={handleAuth}
-        disabled={loading || !username || !password}
+        onClick={() => loginMutation.mutate()}
+        loading={loginMutation.isPending}
+        disabled={!username || !password}
       >
-        {loading ? <SmallLoader /> : "Войти"}
+        Войти
       </Button>
       {serverAvailable && (
         <Button

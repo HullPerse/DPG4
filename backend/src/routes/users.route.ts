@@ -7,7 +7,7 @@ import { omitPassword, withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 export const usersRoute = new Elysia({ prefix: "/users" })
   .use(dbPlugin)
@@ -26,7 +26,9 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       }
 
       if (query.hasStatus) {
-        conditions.push(sql`${schema.users.status} LIKE ${`%"${query.hasStatus}"%`}`);
+        conditions.push(
+          sql`${schema.users.status} LIKE ${`%"${query.hasStatus}"%`}`,
+        );
       }
 
       if (conditions.length > 0) {
@@ -79,15 +81,26 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       }
       return user;
     },
-    { detail: { tags: ["users"], summary: "Get user by id" } },
+    {
+      params: t.Object({ id: t.String() }),
+      detail: { tags: ["users"], summary: "Get user by id" },
+    },
   )
   .patch(
     "/:id",
     async ({ params, body, db, user, userService }) => {
-      const { password: _pw, passwordHash: _ph, id: _id, created: _cr, ...rest } = body;
+      const {
+        password: _pw,
+        passwordHash: _ph,
+        id: _id,
+        created: _cr,
+        ...rest
+      } = body;
       await db
         .update(schema.users)
-        .set({ ...rest, updated: nowIso() } as Partial<typeof schema.users.$inferInsert>)
+        .set({ ...rest, updated: nowIso() } as Partial<
+          typeof schema.users.$inferInsert
+        >)
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
       logger.info(user?.username, "updated profile", params.id);
@@ -101,8 +114,17 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   .post(
     "/:id/status",
     async ({ params, body, user, userService }) => {
-      const result = await userService.changeStatus(params.id, body.status, body.type);
-      logger.info(user?.username, "changed status", params.id, `${body.type}:${body.status}`);
+      const result = await userService.changeStatus(
+        params.id,
+        body.status,
+        body.type,
+      );
+      logger.info(
+        user?.username,
+        "changed status",
+        params.id,
+        `${body.type}:${body.status}`,
+      );
       return result;
     },
     {
@@ -117,7 +139,12 @@ export const usersRoute = new Elysia({ prefix: "/users" })
     "/:id/score",
     async ({ params, body, user, userService }) => {
       const result = await userService.score(params.id, body.score, body.trade);
-      logger.info(user?.username, "changed score", params.id, body.score > 0 ? `+${body.score}` : String(body.score));
+      logger.info(
+        user?.username,
+        "changed score",
+        params.id,
+        body.score > 0 ? `+${body.score}` : String(body.score),
+      );
       return result;
     },
     {
@@ -131,7 +158,11 @@ export const usersRoute = new Elysia({ prefix: "/users" })
   .post(
     "/:id/dice",
     async ({ params, body, user, userService }) => {
-      const result = await userService.changeDice(params.id, body.realTime, body.action);
+      const result = await userService.changeDice(
+        params.id,
+        body.realTime,
+        body.action,
+      );
       logger.info(user?.username, "changed dice", params.id, body.action);
       return result;
     },

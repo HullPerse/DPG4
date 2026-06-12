@@ -10,7 +10,7 @@ import { serializeRow } from "../lib/serialize";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 const STATUSES: Record<string, string> = {
   PLAYING: "В ПРОЦЕССЕ",
@@ -116,17 +116,21 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       ),
     },
   )
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.games)
-      .where(eq(schema.games.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return mapGame(row);
-  })
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.games)
+        .where(eq(schema.games.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return mapGame(row);
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/",
     async ({ body, db, activityService }) => {
@@ -342,12 +346,16 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
     },
     { body: gameVoteBody },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.games).where(eq(schema.games.id, params.id));
-    broadcast("games", "delete", params.id);
-    logger.info(null, "deleted game", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.games).where(eq(schema.games.id, params.id));
+      broadcast("games", "delete", params.id);
+      logger.info(null, "deleted game", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );
 
 export const presetsRoute = new Elysia({ prefix: "/presets" })
   .use(dbPlugin)
@@ -369,17 +377,21 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
       ),
     },
   )
-  .get("/:id", async ({ params, db, set }) => {
-    const [row] = await db
-      .select()
-      .from(schema.presets)
-      .where(eq(schema.presets.id, params.id));
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return withRecordMeta(row, "presets");
-  })
+  .get(
+    "/:id",
+    async ({ params, db, set }) => {
+      const [row] = await db
+        .select()
+        .from(schema.presets)
+        .where(eq(schema.presets.id, params.id));
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return withRecordMeta(row, "presets");
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/",
     async ({ body, db }) => {
@@ -424,9 +436,13 @@ export const presetsRoute = new Elysia({ prefix: "/presets" })
     },
     { body: presetPatchBody },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.presets).where(eq(schema.presets.id, params.id));
-    broadcast("presets", "delete", params.id);
-    logger.info(null, "deleted preset", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.presets).where(eq(schema.presets.id, params.id));
+      broadcast("presets", "delete", params.id);
+      logger.info(null, "deleted preset", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );

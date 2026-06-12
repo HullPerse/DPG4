@@ -27,6 +27,7 @@ export const users = sqliteTable("users", {
   place: text("place").notNull().default("0"),
   gamblingWinnings: integer("gambling_winnings").notNull().default(0),
   gamblingBanned: integer("gambling_banned", { mode: "boolean" }).notNull().default(false),
+  hangman: integer("hangman", { mode: "boolean" }).notNull().default(false),
   ...timestamps,
 });
 
@@ -133,6 +134,56 @@ export const drawings = sqliteTable("drawings", {
   author: text("author", { mode: "json" }).$type<Record<string, unknown>>(),
   image: blob("image", { mode: "buffer" }),
   imageMime: text("image_mime"),
+  ...timestamps,
+});
+
+export const history = sqliteTable("history", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  owner: text("owner", { mode: "json" })
+    .$type<{ id: string; username: string } | null>()
+    .default(null),
+  type: text("type").notNull(),
+  label: text("label").notNull(),
+  image: text("image").notNull().default(""),
+  bid: integer("bid").notNull().default(0),
+  payout: integer("payout").notNull().default(0),
+  net: integer("net").notNull().default(0),
+  data: text("data", { mode: "json" })
+    .$type<Record<string, unknown> | null>()
+    .default(null),
+  created: text("created").notNull(),
+});
+
+export const hangman = sqliteTable("hangman", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  word: text("word").notNull(),
+  state: text("state", { enum: ["current", "won", "lost"] })
+    .notNull()
+    .default("current"),
+  guessedLetters: text("guessed_letters", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  wrongLetters: text("wrong_letters", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]),
+  ...timestamps,
+});
+
+export const pets = sqliteTable("pets", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  hunger: integer("hunger").notNull().default(100),
+  happiness: integer("happiness").notNull().default(100),
+  energy: integer("energy").notNull().default(100),
+  isAlive: integer("is_alive", { mode: "boolean" }).notNull().default(true),
+  lastUpdated: text("last_updated").notNull(),
+  lastRewardDate: text("last_reward_date"),
+  kvasBuff: integer("kvas_buff", { mode: "boolean" }).notNull().default(false),
+  lastSearchDate: text("last_search_date"),
   ...timestamps,
 });
 

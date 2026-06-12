@@ -2,13 +2,14 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import {
   ActiveDiceGame,
   DiceGameResult,
   DiceRollPhaseResult,
 } from "@/types/gambling";
 import { Db } from "@/types";
-import { UserService } from "../user.service";
+import { UserService } from "@/services/user.service";
 import {
   GAMBLING_BAN_THRESHOLD,
   GAMBLING_MIN_BET,
@@ -48,9 +49,6 @@ function resolveDealerRoll(values: [number, number, number]): {
   }
   if (a === 4 && b === 5 && c === 6) {
     return { target: null, autoResult: "dealer_win" };
-  }
-  if (a === 1 && b === 1 && c === 1) {
-    return { target: null, autoResult: "push" };
   }
   if (unique.size === 1) {
     return { target: null, autoResult: "dealer_win" };
@@ -342,13 +340,33 @@ export class DiceService {
 
     this.games.delete(userId);
 
+    await this.db.insert(schema.history).values({
+      id: newId(),
+      userId,
+      owner: { id: user.id, username: user.username },
+      type: "dice",
+      label: result.label,
+      image: "",
+      bid: game.bid,
+      payout: result.payout,
+      net: result.net,
+      data: {
+        dealerValues: game.dealerValues,
+        dealerTarget: game.dealerTarget,
+        playerValues: values,
+        autoResult: game.autoResult,
+        dealerRerolls: game.dealerRerolls,
+        playerRerolls: game.playerRerolls,
+      },
+      created: nowIso(),
+    });
+
     const net = result.net;
 
     let gamblingWinnings: number = user.gamblingWinnings ?? 0;
     let gamblingBanned: boolean = user.gamblingBanned ?? false;
-
-    if (result.payout > game.bid) {
-      const profit = result.payout - game.bid;
+    const profit = result.net;
+    if (profit > 0) {
       gamblingWinnings += profit;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
@@ -386,15 +404,17 @@ export class DiceService {
     };
   }
 
-  async abort(userId: string): Promise<void> {
+  async abort(userId: string): Promise<{ refunded: number; balance: number }> {
     const game = this.games.get(userId);
-    if (!game) return;
-
-    const user = await this.userService.getById(userId);
-    if (user && game.phase === "dealer") {
-      await this.userService.score(userId, game.bid);
+    if (!game) {
+      const user = await this.userService.getById(userId);
+      return { refunded: 0, balance: user?.money ?? 0 };
     }
 
+    await this.userService.score(userId, game.bid);
     this.games.delete(userId);
+
+    const updatedUser = await this.userService.getById(userId);
+    return { refunded: game.bid, balance: updatedUser?.money ?? 0 };
   }
 }

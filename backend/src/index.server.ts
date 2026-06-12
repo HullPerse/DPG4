@@ -19,14 +19,20 @@ import { drawingsRoute } from "./routes/drawings.route";
 import { cellsRoute, rulesRoute } from "./routes/cells.route";
 import { filesRoute } from "./routes/files.route";
 import { gameUtilsRoute } from "./routes/gameUtils.route";
+import { configRoute } from "./routes/config.route";
 import { steamRoute } from "./routes/steam.route";
 import { searchRoute } from "./routes/search.route";
 import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
 import { initAutoBackup } from "./lib/autoBackup";
+import { wheelRoute } from "./routes/wheel.route";
+import { historyRoute } from "./routes/history.route";
+import { hangmanRoute } from "./routes/hangman.route";
+import { petsRoute } from "./routes/pets.route";
+import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
-import { servicesPlugin } from "./services/services.plugin";
+import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 
 const app = new Elysia()
@@ -57,6 +63,10 @@ const app = new Elysia()
           { name: "steam", description: "Steam API (прокси)" },
           { name: "metadata", description: "HLTB и метаданные" },
           { name: "search", description: "Поиск" },
+          { name: "wheel", description: "Колесо Приколов" },
+          { name: "history", description: "История действий" },
+          { name: "hangman", description: "Виселица" },
+          { name: "pets", description: "Питомец-крыса" },
         ],
       },
       path: "/docs",
@@ -129,8 +139,14 @@ const app = new Elysia()
   .use(rulesRoute)
   .use(filesRoute)
   .use(gameUtilsRoute)
+  .use(configRoute)
   .use(steamRoute)
-  .use(searchRoute);
+  .use(searchRoute)
+  .use(wheelRoute)
+  .use(historyRoute)
+  .use(hangmanRoute)
+  .use(ratStoreRoute)
+  .use(petsRoute);
 
 runMigrations();
 logger.info("SYSTEM", "DB migrations applied");

@@ -12,7 +12,9 @@ import { dbPlugin } from "../plugins/db.plugin";
 
 export const drawingsRoute = new Elysia({ prefix: "/drawings" })
   .use(dbPlugin)
-  .get("/", async ({ db, query }) => {
+  .get(
+    "/",
+    async ({ db, query }) => {
     const rows = await db
       .select()
       .from(schema.drawings)
@@ -25,7 +27,15 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
         .map((r) => withRecordMeta(r, "drawings"));
     }
     return rows.map((r) => withRecordMeta(r, "drawings"));
-  })
+  },
+  {
+    query: t.Optional(
+      t.Object({
+        authorId: t.Optional(t.String()),
+      }),
+    ),
+  },
+)
   .post(
     "/",
     async ({ body, db }) => {
@@ -89,9 +99,13 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id));
-    broadcast("drawings", "delete", params.id);
-    logger.info(null, "deleted drawing", params.id);
-    return { ok: true };
-  });
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id));
+      broadcast("drawings", "delete", params.id);
+      logger.info(null, "deleted drawing", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  );

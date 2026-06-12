@@ -3,7 +3,6 @@ import { apiFetch, getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
-import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
@@ -12,6 +11,7 @@ import type { Item } from "@/types/items";
 import type { StoreItem } from "@/types/store";
 import { useEffect, useState } from "react";
 import { fetchGamblingConfig } from "@/api/gambling.api";
+import { useMutation } from "@tanstack/react-query";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -27,7 +27,6 @@ function StoreTab() {
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [active, setActive] = useState<number>(-1);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchGamblingConfig().then((config) => {
@@ -45,17 +44,14 @@ function StoreTab() {
     );
   };
 
-  const handleReroll = async () => {
-    const userMoney = await userApi.getUserScore(String(user?.id));
+  const rerollMutation = useMutation({
+    mutationFn: async () => {
+      const userMoney = await userApi.getUserScore(String(user?.id));
+      if (userMoney < rerollPrice) return;
 
-    if (userMoney < rerollPrice) return;
-
-    setLoading(true);
-    try {
       await userApi.scoreUser(String(user?.id), -rerollPrice);
 
       const randomSixItems = await itemsApi.getItems({ random: ITEMS_AMOUNT });
-
       const finalArray: StoreItem[] = [];
 
       for (const item of randomSixItems) {
@@ -67,28 +63,35 @@ function StoreTab() {
       }
 
       setStoreItems(finalArray);
-      setRerollPrice(rerollPrice + 1);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setRerollPrice(rerollPrice * 2);
+    },
+  });
 
-  const handleBuy = async (item: Item, price: number) => {
-    const userMoney = await userApi.getUserScore(String(user?.id));
+  const buyMutation = useMutation({
+    mutationFn: async ({
+      item,
+      price,
+    }: {
+      item: Item;
+      price: number;
+      index: number;
+    }) => {
+      const userMoney = await userApi.getUserScore(String(user?.id));
+      if (userMoney < price) return;
 
-    if (userMoney < price) return;
+      await itemsApi.addInventory(String(user?.id), String(item.id));
+      await userApi.scoreUser(String(user?.id), -price);
 
-    await itemsApi.addInventory(String(user?.id), String(item.id));
-    await userApi.scoreUser(String(user?.id), -price);
+      const activityData = {
+        author: user?.id,
+        image: user?.avatar,
+        text: `${user?.username} купил ${item.label} за ${price}`,
+      } as Activity;
 
-    const activityData = {
-      author: user?.id,
-      image: user?.avatar,
-      text: `${user?.username} купил ${item.label} за ${price}`,
-    } as Activity;
-
-    await activityApi.createActivity(activityData);
-  };
+      await activityApi.createActivity(activityData);
+    },
+    onSuccess: (_data, variables) => markBought(variables.index),
+  });
 
   return (
     <main className="flex flex-wrap w-full gap-1 p-2">
@@ -96,10 +99,11 @@ function StoreTab() {
         title={`Чубриков:  ${String(user?.money)}`}
         variant="info"
         className="w-full h-10"
-        onClick={handleReroll}
-        disabled={loading || (user?.money ?? 0) < rerollPrice}
+        onClick={() => rerollMutation.mutate()}
+        loading={rerollMutation.isPending}
+        disabled={(user?.money ?? 0) < rerollPrice}
       >
-        {loading ? <SmallLoader /> : `РЕРОЛЛ за ${rerollPrice}`}
+        {`РЕРОЛЛ за ${rerollPrice}`}
       </Button>
 
       {storeItems.length === 0 && (
@@ -160,11 +164,16 @@ function StoreTab() {
               <Button
                 variant="success"
                 className="mt-auto w-full h-8 mb-1"
-                onClick={async () => {
-                  await handleBuy(entry.item, entry.price);
-                  markBought(index);
-                }}
-                disabled={(user?.money ?? 0) < entry.price}
+                onClick={() =>
+                  buyMutation.mutate({
+                    item: entry.item,
+                    price: entry.price,
+                    index,
+                  })
+                }
+                disabled={
+                  (user?.money ?? 0) < entry.price || buyMutation.isPending
+                }
               >
                 КУПИТЬ за {entry.price}
               </Button>

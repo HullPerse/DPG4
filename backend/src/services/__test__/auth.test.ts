@@ -28,32 +28,20 @@ describe("JWT", () => {
   const secret = "test-jwt-secret-for-testing";
 
   test("sign and verify token", async () => {
-    const app = new Elysia().use(
-      jwt({ name: "jwt", secret, exp: "1h" }),
-    );
+    const app = new Elysia()
+      .use(jwt({ name: "jwt", secret, exp: "1h" }))
+      .get("/test", async ({ jwt }) => {
+        const token = await jwt.sign({ sub: "user456", isAdmin: false });
+        const payload = await jwt.verify(token);
+        return { token, payload };
+      });
 
-    let signedToken = "";
-    let verifiedPayload: Record<string, unknown> | null = null;
-
-    app.derive({ as: "global" }, ({ jwt }) => ({
-      async sign(sub: string, isAdmin: boolean) {
-        signedToken = await jwt.sign({ sub, isAdmin });
-        return signedToken;
-      },
-      async verify(token: string) {
-        verifiedPayload = await jwt.verify(token);
-        return verifiedPayload;
-      },
-    }));
-
-    const derived = await app
-      .derive({ as: "global" }, ({ sign, verify }) => ({
-        testSign: sign,
-        testVerify: verify,
-      }))
-      .handle(new Request("http://localhost/"));
-
-    await derived;
+    const res = await app.handle(new Request("http://localhost/test"));
+    const body = await res.json();
+    expect(body.token).toBeTruthy();
+    expect(body.payload).not.toBeNull();
+    expect(body.payload.sub).toBe("user456");
+    expect(body.payload.isAdmin).toBe(false);
   });
 
   test("sign and verify with known secret", async () => {
@@ -65,9 +53,7 @@ describe("JWT", () => {
         return { token, payload };
       });
 
-    const res = await app.handle(
-      new Request("http://localhost/test"),
-    );
+    const res = await app.handle(new Request("http://localhost/test"));
     const body = await res.json();
     expect(body.payload).not.toBeNull();
     expect(body.payload.sub).toBe("user123");
@@ -82,9 +68,7 @@ describe("JWT", () => {
         return { payload };
       });
 
-    const res = await app.handle(
-      new Request("http://localhost/test"),
-    );
+    const res = await app.handle(new Request("http://localhost/test"));
     const body = await res.json();
     expect(body.payload).toBe(false);
   });
@@ -101,9 +85,7 @@ describe("JWT", () => {
         return { payload };
       });
 
-    const signRes = await app.handle(
-      new Request("http://localhost/sign"),
-    );
+    const signRes = await app.handle(new Request("http://localhost/sign"));
     const { token } = await signRes.json();
 
     const wrongApp = new Elysia()

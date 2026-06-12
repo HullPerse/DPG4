@@ -1,14 +1,15 @@
 import Elysia from "elysia";
-import { db } from "../db";
-import { ActivityService } from "./activity.service";
-import { UserService } from "./user.service";
-import { GameService } from "./game.service";
-import { EconomyService } from "./economy.service";
-import { EffectService } from "./items/effect.items";
-import { DiceService } from "./gambling/dice.service";
-import { BlackjackService } from "./gambling/blackjack.service";
-import { RocketService } from "./gambling/rocket.service";
-import { PachinkoService } from "./gambling/pachinko.service";
+import { db } from "./db";
+import { ActivityService } from "./services/activity.service";
+import { UserService } from "@/services/user.service";
+import { GameService } from "./services/game.service";
+import { EconomyService } from "./services/economy.service";
+import { EffectService } from "./services/items/effect.items";
+import { DiceService } from "./services/gambling/dice.service";
+import { BlackjackService } from "./services/gambling/blackjack.service";
+import { RocketService } from "./services/gambling/rocket.service";
+import { PachinkoService } from "./services/gambling/pachinko.service";
+import { MinesService } from "./services/gambling/mines.service";
 
 const activityService = new ActivityService(db);
 const userService = new UserService(db, activityService);
@@ -25,6 +26,7 @@ const diceService = new DiceService(db, userService);
 const blackjackService = new BlackjackService(db, userService);
 const rocketService = new RocketService(db, userService);
 const pachinkoService = new PachinkoService(db, userService);
+const minesService = new MinesService(db, userService);
 
 export const servicesPlugin = new Elysia({ name: "services" })
   .decorate("activityService", activityService)
@@ -35,4 +37,5 @@ export const servicesPlugin = new Elysia({ name: "services" })
   .decorate("diceService", diceService)
   .decorate("blackjackService", blackjackService)
   .decorate("rocketService", rocketService)
-  .decorate("pachinkoService", pachinkoService);
+  .decorate("pachinkoService", pachinkoService)
+  .decorate("minesService", minesService);

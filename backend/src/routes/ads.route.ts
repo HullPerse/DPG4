@@ -8,17 +8,35 @@ import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 export const SUBSCRIPTION_COST = 2;
 
 export const adsRoute = new Elysia({ prefix: "/ads" })
   .use(dbPlugin)
   .use(servicesPlugin)
-  .get("/", async ({ db }) => {
-    const rows = await db.select().from(schema.ads);
-    return rows.map((r) => withRecordMeta(r, "ads"));
-  })
+  .get(
+    "/",
+    async ({ db, query }) => {
+      let q = db.select().from(schema.ads);
+      if (query.search) {
+        const s = query.search.toLowerCase();
+        const rows = await q;
+        return rows
+          .filter((r) => r.text?.toLowerCase().includes(s))
+          .map((r) => withRecordMeta(r, "ads"));
+      }
+      const rows = await q;
+      return rows.map((r) => withRecordMeta(r, "ads"));
+    },
+    {
+      query: t.Optional(
+        t.Object({
+          search: t.Optional(t.String()),
+        }),
+      ),
+    },
+  )
   .post(
     "/",
     async ({ body, db }) => {
@@ -57,12 +75,16 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
       }),
     },
   )
-  .delete("/:id", async ({ params, db }) => {
-    await db.delete(schema.ads).where(eq(schema.ads.id, params.id));
-    broadcast("ads", "delete", params.id);
-    logger.info(null, "deleted ad", params.id);
-    return { ok: true };
-  })
+  .delete(
+    "/:id",
+    async ({ params, db }) => {
+      await db.delete(schema.ads).where(eq(schema.ads.id, params.id));
+      broadcast("ads", "delete", params.id);
+      logger.info(null, "deleted ad", params.id);
+      return { ok: true };
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
   .post(
     "/subscribe",
     async ({ body, userService, activityService }) => {

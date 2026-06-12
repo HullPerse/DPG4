@@ -1,6 +1,6 @@
-import { WINDOWS } from "@/config/apps.config";
 import { openWindow } from "@/lib/utils";
 import { createWindow } from "@/lib/window.utils";
+import { getWindowMeta } from "@/lib/window.utils";
 import { useDataStore } from "@/store/data.store";
 import { AppProps } from "@/types/desktop";
 import { WindowProps } from "@/types/window";
@@ -48,11 +48,7 @@ function AppDesktop({
         if (name === "library") setUserProfile(null);
 
         setActiveApps((prev) =>
-          createWindow(
-            prev,
-            WINDOWS.find((w) => w.id === name) as WindowProps,
-            component,
-          ),
+          createWindow(prev, getWindowMeta(name) as WindowProps, component),
         );
 
         return setTimeout(() => setIsOpening(false), 1000);

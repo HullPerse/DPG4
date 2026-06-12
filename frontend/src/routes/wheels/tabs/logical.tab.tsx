@@ -1,20 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  browserGames,
-  logicalGames,
-  flashGames,
-} from "@/config/links.config.tsx";
 import { openWindow } from "@/lib/utils";
 import { EyeIcon, EyeOffIcon, ExternalLink } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
 import { Button } from "@/components/ui/button.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
-
-const arrays = [
-  { name: "Браузерные игры", data: browserGames },
-  { name: "Логические задания", data: logicalGames },
-  { name: "Флэш игры", data: flashGames },
-] as const;
+import { fetchUiConfig } from "@/api/config.api";
 
 function LogicalWheel({
   selected,
@@ -30,6 +20,26 @@ function LogicalWheel({
     description: string;
     link: string;
   } | null>(null);
+
+  const [browserGames, setBrowserGames] = useState<{ description: string; link: string }[]>([]);
+  const [logicalGames, setLogicalGames] = useState<{ description: string; link: string }[]>([]);
+  const [flashGames, setFlashGames] = useState<{ description: string; link: string }[]>([]);
+
+  const arrays = [
+    { name: "Браузерные игры", data: browserGames },
+    { name: "Логические задания", data: logicalGames },
+    { name: "Флэш игры", data: flashGames },
+  ] as const;
+
+  useEffect(() => {
+    fetchUiConfig()
+      .then((config) => {
+        if (config.links.browserGames.length) setBrowserGames(config.links.browserGames);
+        if (config.links.logicalGames.length) setLogicalGames(config.links.logicalGames);
+        if (config.links.flashGames.length) setFlashGames(config.links.flashGames);
+      })
+      .catch(() => {});
+  }, []);
 
   const currentArray = arrays[selected]?.data ?? browserGames;
   const visibleItems = currentArray.filter(

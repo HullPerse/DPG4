@@ -1,9 +1,8 @@
 import { WindowError } from "@/components/shared/error.component";
 import {
-  SmallLoader,
   WindowLoader,
 } from "@/components/shared/loader.component";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Save, StepBack, X } from "lucide-react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
@@ -45,8 +44,6 @@ function EditReview({
   const [selectedDrawingFile, setSelectedDrawingFile] = useState<string | null>(
     null,
   );
-  const [isSaving, setIsSaving] = useState(false);
-
   const [tab, setTab] = useState<"custom" | "paint">("custom");
 
   const { data, isLoading, isError } = useQuery({
@@ -94,11 +91,10 @@ function EditReview({
       />
     );
 
-  const handleSave = async () => {
-    if (!user) return;
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
 
-    setIsSaving(true);
-    try {
       const review: GameReview = {
         rating,
         comment: reviewText,
@@ -115,16 +111,12 @@ function EditReview({
         image = null;
       }
 
-      await gameApi.saveReview(String(data.game.user.id), id, review, image);
-
-      invalidateQuery();
-    } catch (error) {
-      console.error("Failed to save review:", error);
-    } finally {
-      setIsSaving(false);
-      setContent("general");
-    }
-  };
+      return gameApi.saveReview(String(data.game.user.id), id, review, image);
+    },
+    onSuccess: () => invalidateQuery(),
+    onError: (error) => console.error("Failed to save review:", error),
+    onSettled: () => setContent("general"),
+  });
 
   return (
     <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-5">
@@ -270,33 +262,21 @@ function EditReview({
           variant="error"
           size="lg"
           onClick={() => setContent("general")}
-          disabled={isSaving}
+          disabled={saveMutation.isPending}
           className="min-w-32"
         >
-          {isSaving ? (
-            <SmallLoader className="size-5 animate-spin" />
-          ) : (
-            <>
-              <StepBack className="size-5" />
-              Отменить
-            </>
-          )}
+          <StepBack className="size-5" />
+          Отменить
         </Button>
         <Button
           variant="success"
           size="lg"
-          onClick={handleSave}
-          disabled={isSaving}
+          onClick={() => saveMutation.mutate()}
+          loading={saveMutation.isPending}
           className="min-w-32"
         >
-          {isSaving ? (
-            <SmallLoader className="size-5 animate-spin" />
-          ) : (
-            <>
-              <Save className="size-5" />
-              Сохранить
-            </>
-          )}
+          <Save className="size-5" />
+          Сохранить
         </Button>
       </section>
     </main>

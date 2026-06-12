@@ -1,67 +1,105 @@
 import { Elysia, t } from "elysia";
-import { sql } from "drizzle-orm";
-import { dbPlugin } from "../plugins/db.plugin";
-import * as schema from "../db/schema";
+import { rawDb } from "../db";
 import { omitPassword, withRecordMeta } from "../lib/record";
 
+interface FtsUserRow {
+  id: string;
+  username: string;
+  avatar: string;
+  color: string;
+  status: string;
+  money: number;
+  position: number;
+  isAdmin: number;
+  created: string;
+}
+
+interface FtsGameRow {
+  id: string;
+  data: string;
+  status: string;
+  user: string;
+}
+
+interface FtsItemRow {
+  id: string;
+  type: string;
+  label: string;
+  description: string;
+  charge: number;
+  rollable: number;
+  status: string;
+  imageMime: string | null;
+  hasImage: number;
+  created: string;
+  updated: string;
+}
+
 export const searchRoute = new Elysia({ prefix: "/search" })
-  .use(dbPlugin)
   .get(
     "/",
-    async ({ query, db }) => {
+    async ({ query }) => {
       const q = (query.q ?? "").trim().toLowerCase();
       const limit = Math.min(Number(query.limit) || 20, 50);
-      const pattern = `%${q}%`;
 
       if (!q) {
         return { users: [], games: [], items: [] };
       }
 
-      const matchedUsers = await db
-        .select()
-        .from(schema.users)
-        .where(sql`LOWER(${schema.users.username}) LIKE ${pattern}`)
-        .limit(limit);
+      const ftsQuery = q
+        .split(/\s+/)
+        .map((w) => `"${w.replace(/['"]/g, "")}"*`)
+        .join(" ");
 
-      const matchedGames = await db
-        .select({
-          id: schema.games.id,
-          data: schema.games.data,
-          status: schema.games.status,
-          user: schema.games.user,
-        })
-        .from(schema.games)
-        .where(sql`LOWER(json_extract(${schema.games.data}, '$.name')) LIKE ${pattern}`)
-        .limit(limit);
-
-      const matchedItems = await db
-        .select({
-          id: schema.items.id,
-          type: schema.items.type,
-          label: schema.items.label,
-          description: schema.items.description,
-          charge: schema.items.charge,
-          rollable: schema.items.rollable,
-          status: schema.items.status,
-          hasImage: sql<boolean>`${schema.items.image} IS NOT NULL`,
-          created: schema.items.created,
-          updated: schema.items.updated,
-        })
-        .from(schema.items)
-        .where(
-          sql`LOWER(${schema.items.label}) LIKE ${pattern} OR LOWER(${schema.items.description}) LIKE ${pattern}`,
+      const users = rawDb
+        .query<FtsUserRow>(
+          `SELECT u.id, u.username, u.avatar, u.color, u.status, u.money, u.position, u.is_admin AS isAdmin, u.created
+           FROM users_fts uf JOIN users u ON u.rowid = uf.rowid
+           WHERE users_fts MATCH ? ORDER BY rank LIMIT ?`,
         )
-        .limit(limit);
+        .all(ftsQuery, limit) as FtsUserRow[];
+
+      const games = rawDb
+        .query<FtsGameRow>(
+          `SELECT g.id, g.data, g.status, g.user
+           FROM games_fts gf JOIN games g ON g.rowid = gf.rowid
+           WHERE games_fts MATCH ? ORDER BY rank LIMIT ?`,
+        )
+        .all(ftsQuery, limit) as FtsGameRow[];
+
+      const items = rawDb
+        .query<FtsItemRow>(
+          `SELECT i.id, i.type, i.label, i.description, i.charge, i.rollable, i.status,
+                  i.image_mime AS imageMime, i.image IS NOT NULL AS hasImage, i.created, i.updated
+           FROM items_fts if JOIN items i ON i.rowid = if.rowid
+           WHERE items_fts MATCH ? ORDER BY rank LIMIT ?`,
+        )
+        .all(ftsQuery, limit) as FtsItemRow[];
 
       return {
-        users: matchedUsers.map((u) => withRecordMeta(omitPassword(u), "users")),
-        games: matchedGames.map((g) => ({
-          id: g.id,
-          name: (g.data as { name?: string })?.name,
-          status: g.status,
-          user: g.user,
+        users: users.map((u) => ({
+          ...withRecordMeta(u as any, "users"),
+          passwordHash: undefined,
         })),
-        items: matchedItems.map((i) => withRecordMeta(i, "items")),
+        games: games.map((g) => ({
+          id: g.id,
+          name: (JSON.parse(g.data) as { name?: string })?.name,
+          status: g.status,
+          user: g.user ? JSON.parse(g.user) : null,
+        })),
+        items: items.map((i) => ({
+          id: i.id,
+          type: i.type,
+          label: i.label,
+          description: i.description,
+          charge: i.charge,
+          rollable: !!i.rollable,
+          status: i.status ? JSON.parse(i.status) : null,
+          imageMime: i.imageMime,
+          hasImage: !!i.hasImage,
+          created: i.created,
+          updated: i.updated,
+        })),
       };
     },
     {
@@ -69,6 +107,9 @@ export const searchRoute = new Elysia({ prefix: "/search" })
         q: t.Optional(t.String()),
         limit: t.Optional(t.String()),
       }),
-      detail: { tags: ["search"], summary: "Search users, games, items" },
+      detail: {
+        tags: ["search"],
+        summary: "Search users, games, items via FTS5",
+      },
     },
   );

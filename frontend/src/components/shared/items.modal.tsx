@@ -1,9 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog.component";
-import type { FC, ReactNode } from "react";
+import { memo, type FC, type ReactNode } from "react";
 import type { ModalType } from "@/types/effect";
 import type { User } from "@/types/user";
-import { Button } from "../ui/button.component";
-import { X } from "lucide-react";
+import { WindowHeader } from "../ui/header.window";
 
 type ItemModalProps = {
   label: string;
@@ -21,7 +20,9 @@ type SimpleModalProps = {
   body: (close: () => void) => ReactNode;
 };
 
-export function CreateModal(props: ItemModalProps | SimpleModalProps) {
+const CreateModal = memo(function CreateModal(
+  props: ItemModalProps | SimpleModalProps,
+) {
   const { label, open, setOpen } = props;
   const close = () => setOpen(false);
 
@@ -48,15 +49,7 @@ export function CreateModal(props: ItemModalProps | SimpleModalProps) {
           }}
           className="overflow-hidden bg-card text-text transition-none"
         >
-          <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-            <span className=" flex item-center text-md font-bold line-clamp-1">
-              {label}
-            </span>
-
-            <Button variant="ghost" title="Закрыть" onClick={close}>
-              <X />
-            </Button>
-          </section>
+          <WindowHeader title={label} onClose={close} />
 
           <section className="flex w-full min-h-0 h-full flex-col p-1">
             {open ? content : null}
@@ -65,4 +58,6 @@ export function CreateModal(props: ItemModalProps | SimpleModalProps) {
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+export { CreateModal };

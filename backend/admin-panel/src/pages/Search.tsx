@@ -10,7 +10,9 @@ import { renderListCell } from "@/components/fieldRenderer";
 export function SearchPage() {
   const { schema } = useSchema();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Record<string, Record<string, unknown>[]>>({});
+  const [results, setResults] = useState<
+    Record<string, Record<string, unknown>[]>
+  >({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,9 +22,9 @@ export function SearchPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await adminFetch<{ results: Record<string, Record<string, unknown>[]> }>(
-        `/api/admin/search?q=${encodeURIComponent(q)}`,
-      );
+      const data = await adminFetch<{
+        results: Record<string, Record<string, unknown>[]>;
+      }>(`/api/admin/search?q=${encodeURIComponent(q)}`);
       setResults(data.results);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Search failed");
@@ -43,8 +45,17 @@ export function SearchPage() {
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="max-w-md"
         />
-        <Button type="button" variant="outline" onClick={handleSearch} disabled={loading || query.trim().length < 2}>
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <SearchIcon className="size-4" />}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleSearch}
+          disabled={loading || query.trim().length < 2}
+        >
+          {loading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <SearchIcon className="size-4" />
+          )}
           Найти
         </Button>
       </div>
@@ -60,9 +71,11 @@ export function SearchPage() {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {Object.entries(results).map(([tableName, rows]) => {
           const meta = schema.tables[tableName];
-          const listFields = meta?.fields.filter(
-            (f) => f.type !== "hidden" && f.type !== "password" && !f.hideInList,
-          ) ?? [];
+          const listFields =
+            meta?.fields.filter(
+              (f) =>
+                f.type !== "hidden" && f.type !== "password" && !f.hideInList,
+            ) ?? [];
           return (
             <div key={tableName} className="mb-6">
               <Link
@@ -77,18 +90,29 @@ export function SearchPage() {
                   <thead>
                     <tr className="border-highlight-high border-b">
                       {listFields.map((f) => (
-                        <th key={f.source} className="text-muted px-2 py-1.5 font-bold uppercase">
+                        <th
+                          key={f.source}
+                          className="text-muted px-2 py-1.5 font-bold uppercase"
+                        >
                           {f.source}
                         </th>
                       ))}
-                      <th className="text-muted px-2 py-1.5 font-bold uppercase"> </th>
+                      <th className="text-muted px-2 py-1.5 font-bold uppercase">
+                        {" "}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.slice(0, 10).map((row) => (
-                      <tr key={String(row.id)} className="hover:bg-highlight-low/50 border-highlight-high border-b">
+                      <tr
+                        key={String(row.id)}
+                        className="hover:bg-highlight-low/50 border-highlight-high border-b"
+                      >
                         {listFields.map((f) => (
-                          <td key={f.source} className="max-w-[200px] truncate px-2 py-1">
+                          <td
+                            key={f.source}
+                            className="max-w-50 truncate px-2 py-1"
+                          >
                             {renderListCell(f, row, tableName)}
                           </td>
                         ))}

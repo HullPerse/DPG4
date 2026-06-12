@@ -10,7 +10,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context.component";
-import { DIRECTIONS, WINDOWS } from "@/config/apps.config";
+import { DIRECTIONS, WINDOW_ICONS } from "@/config/apps.config";
 import {
   activeWindow,
   closeWindow,
@@ -47,7 +47,7 @@ export default function ContextDesktop({
             setActiveApps((prev) => unminimizeWindow(prev, app.id))
           }
         >
-          {WINDOWS.find((w) => w.id === app.id)?.icon}
+          {WINDOW_ICONS[app.id]}
 
           {/* pinned */}
           {app.isPinned && (

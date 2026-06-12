@@ -14,11 +14,10 @@ import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
-import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -63,50 +62,54 @@ export default function SteamLibrary({
 
   const [game, setGame] = useState<any>();
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [searchLoading, setSearchLoading] = useState<boolean>(false);
 
-  const handleGame = useCallback(async () => {
-    if (!user) return;
+  const gameMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !game) throw new Error("Missing data");
 
-    setLoading(true);
+      const score = await calculateScore(Number(realTime), Number(time));
+      const gameData = {
+        user: {
+          id: String(user?.id),
+          username: String(user?.username),
+        },
+        playtime: {
+          hltb: Number(time),
+          user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
+        },
+        score,
+        status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
+        data: {
+          id: Number(appId),
+          name: game.game.name,
+          image: game.library_image,
+          capsuleImage: game.game.capsule_image,
+          backgroundImage: game.library_background,
+          verticalImage: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/library_600x900_2x.jpg`,
+          steamLink: `https://store.steampowered.com/app/${appId}`,
+          websiteLink: game.game.website ?? "",
+          time: currentType === "preset" ? Number(time) : undefined,
+        },
+        created: new Date().toISOString(),
+      } as Game;
 
-    const gameData = {
-      user: {
-        id: String(user?.id),
-        username: String(user?.username),
-      },
-      playtime: {
-        hltb: Number(time),
-        user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
-      },
-      score: await calculateScore(Number(realTime), Number(time)),
-      status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
-      data: {
-        id: Number(appId),
-        name: game.game.name,
-        image: game.library_image,
-        capsuleImage: game.game.capsule_image,
-        backgroundImage: game.library_background,
-        verticalImage: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/library_600x900_2x.jpg`,
-        steamLink: `https://store.steampowered.com/app/${appId}`,
-        websiteLink: game.game.website ?? "",
-        time: currentType === "preset" ? Number(time) : undefined,
-      },
-      created: new Date().toISOString(),
-    } as Game;
+      if (currentType === "library") {
+        const res = await gameApi.addGame(gameData);
+        setCurrentGame(String(res.id));
+        await userApi.changeUserAction(String(user.id), "GAMEFINISH");
+        return;
+      }
 
-    if (currentType === "library") {
-      await gameApi
-        .addGame(gameData)
-        .then((res) => setCurrentGame(String(res.id)));
-      return await userApi.changeUserAction(String(user.id), "GAMEFINISH");
-    }
-
-    return await gameApi.addPresetGame(String(presetId), gameData).then(() => {
+      await gameApi.addPresetGame(String(presetId), gameData);
       queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
       setCurrentGame("presetList");
-    });
-  }, [game, time, appId, status]);
+    },
+  });
+
+  const handleGame = useCallback(() => {
+    gameMutation.mutate();
+  }, []);
 
   return (
     <main className="flex h-full w-full flex-row items-center">
@@ -122,17 +125,16 @@ export default function SteamLibrary({
           />
           <Button
             className="h-12 w-12"
+            loading={searchLoading}
             onClick={async () => {
-              setLoading(true);
-
+              setSearchLoading(true);
               try {
-                const game = await gameApi.getSteamGame(appId);
-
-                if (game) setGame(game as any);
+                const result = await gameApi.getSteamGame(appId);
+                if (result) setGame(result as any);
               } catch (e) {
-                return console.log(e);
+                console.log(e);
               } finally {
-                setLoading(false);
+                setSearchLoading(false);
               }
             }}
           >
@@ -190,10 +192,11 @@ export default function SteamLibrary({
         <Button
           variant="success"
           className="mt-auto mb-2"
-          disabled={!appId || !time || !status || loading}
+          loading={gameMutation.isPending || searchLoading}
+          disabled={!appId || !time || !status}
           onClick={handleGame}
         >
-          {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
+          ПОДТВЕРДИТЬ
         </Button>
       </section>
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">

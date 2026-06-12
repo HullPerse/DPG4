@@ -89,6 +89,7 @@ function PresetSettings({
     estimateSize: () => 96,
     overscan: 10,
     gap: 8,
+    getItemKey: (index) => filteredGames[index]?.id ?? index,
   });
 
   const virtualItems = virtualizer.getVirtualItems();

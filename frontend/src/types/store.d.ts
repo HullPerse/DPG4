@@ -2,14 +2,12 @@ import type { User } from "@/types/user";
 import type { Item } from "@/types/items";
 
 export interface UserStore {
-  // State
   isAuth: boolean;
   isAdmin: boolean;
   loggedIn: boolean;
   user: User | null;
   token: string | null;
 
-  // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -17,14 +15,6 @@ export interface UserStore {
   setLoggedIn: (loggedIn: boolean) => void;
   subscribeToUserUpdates: () => void;
   unsubscribeFromUserUpdates: () => void;
-}
-
-export interface WheelHistoryItem {
-  id: string;
-  label: string;
-  image: string;
-  type: "image" | "emoji";
-  timestamp: string;
 }
 
 export interface WallpaperFilters {
@@ -57,7 +47,6 @@ export interface DataStore {
     id: string;
   } | null;
   savedWheel: string[];
-  wheelHistory: WheelHistoryItem[];
   movingUser: {
     userId: string;
     fromPosition: number;
@@ -79,8 +68,6 @@ export interface DataStore {
   // Actions
   setWallpaperFilters: (filters: Partial<WallpaperFilters>) => void;
   setSavedWheel: (savedWheel: string[]) => void;
-  setWheelHistory: (wheelHistory: WheelHistoryItem[]) => void;
-  addWheelHistory: (item: WheelHistoryItem) => void;
   setNotepad: (notepad: string) => void;
   setWallpaper: (wallpaper: string) => void;
   setConnected: (isConnected: boolean) => void;

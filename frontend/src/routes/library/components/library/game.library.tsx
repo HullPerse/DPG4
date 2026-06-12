@@ -1,6 +1,7 @@
 import Image from "@/components/shared/image.component";
 import { Game, GameReview, GameStatus } from "@/types/games";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import {
   memo,
   RefObject,
@@ -11,10 +12,7 @@ import {
   useState,
 } from "react";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import {
   Calendar,
   NetworkIcon,
@@ -42,7 +40,6 @@ import ReviewComponent from "@/components/shared/review.component";
 import EditReview from "./edit.library";
 import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
-import { useUserStore } from "@/store/user.store";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
 import { unbanDice } from "@/api/gambling.api";
@@ -59,15 +56,11 @@ function GameLibrary({
   switchGame: () => void;
 }) {
   const queryClient = useQueryClient();
-  const user = useUserStore((state) => state.user);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
 
   const [content, setContent] = useState<"general" | "review">("general");
-  const [loading, setLoading] = useState<
-    { button: GameStatus; loading: boolean }[]
-  >(gameButtons.map((item) => ({ button: item.value, loading: false })));
   const [time, setTime] = useState<string | null>(null);
   const [input, setInput] = useState(false);
 
@@ -149,90 +142,93 @@ function GameLibrary({
     return styleMap[buttonStatus];
   };
 
-  const changeStatus = useCallback(
-    async (status: GameStatus) => {
-      if (status === "COMPLETED" && !time) return setInput(true);
+  const removeMutation = useMutation({
+    mutationFn: () => gameApi.removeGame(id),
+    onSuccess: () => switchGame(),
+  });
 
+  const statusMutation = useMutation({
+    mutationFn: async (status: GameStatus) => {
       if (!data?.game) return;
 
-      setLoading((prev) =>
-        prev.map((l) => (l.button === status ? { ...l, loading: true } : l)),
+      const score =
+        status === "COMPLETED"
+          ? await calculateScore(Number(time), data.game.playtime.hltb)
+          : data.game.score;
+
+      await gameApi.changeStatus(
+        id,
+        data.game,
+        status,
+        Number(time),
+        Number(score),
       );
 
-      try {
-        const score =
-          status === "COMPLETED"
-            ? await calculateScore(Number(time), data.game.playtime.hltb)
-            : data.game.score;
+      if (status === "DROPPED") {
+        await userApi.changeUserAction(
+          String(data.game.user.id),
+          "MOVE_NEGATIVE",
+        );
+        await userApi.changeUserDice(
+          data.game.user.id,
+          Number(time ?? 0),
+          "MOVE_NEGATIVE",
+        );
+      }
 
-        await gameApi.changeStatus(
-          id,
-          data.game,
-          status,
+      if (status === "COMPLETED") {
+        await userApi.scoreUser(String(data.game.user.id), Number(score));
+        await userApi.changeUserAction(
+          String(data.game.user.id),
+          "MOVE_POSITIVE",
+        );
+        await userApi.changeUserDice(
+          data.game.user.id,
           Number(time),
-          Number(score),
+          "MOVE_POSITIVE",
+        );
+        await cellApi.captureCell(
+          String(data.game.user.id),
+          String(data.game.user.username),
+          data.user.position,
         );
 
-        if (status === "DROPPED") {
-          await userApi.changeUserAction(
-            String(data.game.user.id),
-            "MOVE_NEGATIVE",
-          );
-          await userApi.changeUserDice(
-            data.game.user.id,
-            Number(time ?? 0),
-            "MOVE_NEGATIVE",
+        if (data.user.status?.includes("poop")) {
+          await userApi.changeUserStatus(
+            String(data.user.id),
+            "poop",
+            "remove",
           );
         }
 
-        if (status === "COMPLETED") {
-          await userApi.scoreUser(String(data.game.user.id), Number(score));
-          await userApi.changeUserAction(
-            String(data.game.user.id),
-            "MOVE_POSITIVE",
-          );
-          await userApi.changeUserDice(
-            data.game.user.id,
-            Number(time),
-            "MOVE_POSITIVE",
-          );
-          await cellApi.captureCell(
-            String(data.game.user.id),
-            String(data.game.user.username),
-            data.user.position,
-          );
-
-          if (data.user.status?.includes("poop")) {
-            await userApi.changeUserStatus(
-              String(data.user.id),
-              "poop",
-              "remove",
-            );
-          }
-
-          if (data.user.position === 101) {
-            await userApi.updatePlace(String(data.game.user.id));
-          }
-
-          setStoreItems([]);
-          setRerollPrice(2);
-
-          await unbanDice(String(user?.id));
-          setGamblingBanned(false);
+        if (data.user.position === 101) {
+          await userApi.updatePlace(String(data.game.user.id));
         }
 
-        setInput(false);
-        setTime(null);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading((prev) =>
-          prev.map((l) => (l.button === status ? { ...l, loading: false } : l)),
-        );
-        invalidateQuery();
+        await userApi.changeHangman(String(data.game.user.id), false);
+
+        setStoreItems([]);
+        setRerollPrice(2);
+
+        await unbanDice();
+        setGamblingBanned(false);
       }
     },
-    [data, id, time, invalidateQuery, user],
+    onSuccess: () => {
+      setInput(false);
+      setTime(null);
+      invalidateQuery();
+    },
+    onError: (e) => console.error(e),
+  });
+
+  const changeStatus = useCallback(
+    (status: GameStatus) => {
+      if (status === "COMPLETED" && !time) return setInput(true);
+      if (!data?.game) return;
+      statusMutation.mutate(status);
+    },
+    [data, time, statusMutation],
   );
 
   if (isLoading) return <WindowLoader />;
@@ -273,7 +269,7 @@ function GameLibrary({
               value={time ?? ""}
               onChange={(e) => setTime(e.target.value)}
               className="h-9 w-36 ml-2 shadow-sharp-sm"
-              disabled={loading.some((l) => l.loading)}
+              disabled={statusMutation.isPending}
             />
           )}
 
@@ -288,18 +284,17 @@ function GameLibrary({
                 size="icon"
                 variant={buttonStyle(item.value)}
                 className="border-2 shadow-sharp-sm font-bold"
-                onClick={() => changeStatus(item.value)}
+                loading={
+                  statusMutation.isPending &&
+                  statusMutation.variables === item.value
+                }
                 disabled={
                   (data?.game && data?.game.status === item.value) ||
-                  loading.some((l) => l.loading) ||
                   (item.value === "COMPLETED" && input && !time)
                 }
+                onClick={() => changeStatus(item.value)}
               >
-                {loading.find((l) => l.button === item.value)?.loading ? (
-                  <SmallLoader />
-                ) : (
-                  item.icon
-                )}
+                {item.icon}
               </Button>
             ))}
         </div>
@@ -326,10 +321,7 @@ function GameLibrary({
             style={{
               boxShadow: "0px 4px 4px 2px rgba(0, 0, 0, 0.3)",
             }}
-            onClick={async () => {
-              await gameApi.removeGame(id);
-              switchGame();
-            }}
+            onClick={() => removeMutation.mutate()}
           >
             <Trash />
           </Button>

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db/schema";
 import { logger } from "../../lib/logger";
 import { nowIso } from "../../lib/dates";
+import { newId } from "../../lib/ids";
 import { Db } from "@/types";
 import { BlackjackResult, BlackjackState, Card } from "@/types/gambling";
 import {
@@ -14,8 +15,12 @@ import {
   resolveLabels,
   dealerPlay,
 } from "../../lib/blackjack.utils";
-import { UserService } from "../user.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "../../lib/gambling.constants";
+import { UserService } from "@/services/user.service";
+import {
+  GAMBLING_BAN_THRESHOLD,
+  GAMBLING_MIN_BET,
+  GAMBLING_MAX_BET,
+} from "../../lib/gambling.constants";
 
 interface ActiveGame {
   userId: string;
@@ -46,7 +51,8 @@ export class BlackjackService {
     let gamblingBanned = user.gamblingBanned ?? false;
 
     if (payout > 0) {
-      gamblingWinnings += payout;
+      const profit = Math.max(0, payout - bid);
+      gamblingWinnings += profit;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
@@ -69,7 +75,11 @@ export class BlackjackService {
   private async finishGame(game: ActiveGame): Promise<BlackjackState> {
     game.phase = "ended";
 
-    const { payout, outcome } = computeOutcome(game.playerHand, game.dealerHand, game.bid);
+    const { payout, outcome } = computeOutcome(
+      game.playerHand,
+      game.dealerHand,
+      game.bid,
+    );
     const pv = handValue(game.playerHand);
     const dv = handValue(game.dealerHand);
     const { label, tone } = resolveLabels(outcome, pv, dv);
@@ -83,6 +93,28 @@ export class BlackjackService {
     this.games.delete(game.userId);
 
     const user = await this.userService.getById(game.userId);
+
+    if (user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId: game.userId,
+        owner: { id: user.id, username: user.username },
+        type: "blackjack",
+        label,
+        image: "",
+        bid: game.bid,
+        payout,
+        net: -game.bid + payout,
+        data: {
+          outcome,
+          playerHand: game.playerHand,
+          dealerHand: game.dealerHand,
+          playerValue: handValue(game.playerHand),
+          dealerValue: handValue(game.dealerHand),
+        },
+        created: nowIso(),
+      });
+    }
     logger.info(
       user?.username,
       "blackjack",
@@ -135,7 +167,11 @@ export class BlackjackService {
   }
 
   async deal(userId: string, bid: number): Promise<BlackjackState> {
-    if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid)) {
+    if (
+      bid < GAMBLING_MIN_BET ||
+      bid > GAMBLING_MAX_BET ||
+      !Number.isInteger(bid)
+    ) {
       throw new Error("Invalid bid");
     }
 

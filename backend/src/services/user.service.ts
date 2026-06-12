@@ -22,11 +22,7 @@ export class UserService {
     return withRecordMeta(omitPassword(row), "users");
   }
 
-  async changeStatus(
-    userId: string,
-    status: string,
-    type: "add" | "remove",
-  ) {
+  async changeStatus(userId: string, status: string, type: "add" | "remove") {
     const user = await this.db
       .select()
       .from(schema.users)
@@ -65,7 +61,11 @@ export class UserService {
 
     if (score > 0 && blessings.length > 0) {
       finalScore = user.money + score * Math.pow(2, blessings.length);
-      await this.changeStatus(userId, "Благословление цыганского барона", "remove");
+      await this.changeStatus(
+        userId,
+        "Благословление цыганского барона",
+        "remove",
+      );
     }
 
     if (!trade && score > 0 && ephemerality && Math.random() >= 0.5) {
@@ -101,11 +101,14 @@ export class UserService {
       return null;
     }
 
-    const finalPlace = !existingPlaces.includes("1")
-      ? "1"
-      : !existingPlaces.includes("2")
-        ? "2"
-        : "3";
+    const finalPlace = () => {
+      if (!existingPlaces.includes("1")) return "1";
+
+      if (!existingPlaces.includes("2")) return "2";
+      else return "3";
+    };
+
+    const finalValue = finalPlace();
 
     const user = await this.db
       .select()
@@ -118,12 +121,12 @@ export class UserService {
       author: userId,
       image: user.avatar,
       type: "emoji",
-      text: `${user.username} занял ${finalPlace} позицию`,
+      text: `${user.username} занял ${finalValue} позицию`,
     });
 
     await this.db
       .update(schema.users)
-      .set({ place: finalPlace, updated: nowIso() })
+      .set({ place: finalValue, updated: nowIso() })
       .where(eq(schema.users.id, userId));
 
     broadcast("users", "update", userId);

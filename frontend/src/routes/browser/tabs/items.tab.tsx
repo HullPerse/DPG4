@@ -1,16 +1,13 @@
 import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { useUserStore } from "@/store/user.store";
 import { Item } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
-import { memo, startTransition, useCallback, useState } from "react";
+import { memo, startTransition, useCallback, useRef, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
@@ -30,6 +27,7 @@ import UserApi from "@/api/user.api";
 import { Input } from "@/components/ui/input.component";
 import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -76,7 +74,20 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   useSubscription("inventory", "*", invalidateQuery);
   useSubscription("users", "*", invalidateQuery);
 
-  if (isLoading) return <WindowLoader />;
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: data?.items.length ?? 0,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 128,
+    overscan: 8,
+    gap: 8,
+    getItemKey: (index) => data?.items[index]?.id ?? index,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  if (isLoading || !data) return <WindowLoader />;
   if (isError)
     return (
       <WindowError
@@ -87,8 +98,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const visibleItems =
-    data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+  const visibleItems = data.items.filter(
+    (item) => !hiddenItems.includes(String(item.id)),
+  );
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -175,7 +187,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   }}
                   disabled={!selected}
                 >
-                  Применить
+                  ДОБАВИТЬ В ИНВЕНТАРЬ {selected?.username ?? user?.username}
                 </Button>
               </section>
             </main>
@@ -241,92 +253,112 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
+                loading={loading}
                 onClick={() => {
                   setLoading(true);
                   setItemData(result);
                   setLoading(false);
                 }}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>
         )}
       </section>
       {/* LIST */}
-      <section className="flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center border-t-2 border-highlight-high">
-        {data?.items.map((item) => (
-          <section
-            key={item.id}
-            className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
-            style={{
-              opacity: hiddenItems.find((h) => h === String(item.id)) && "50%",
-            }}
-          >
-            <div className="flex flex-col gap-1">
-              <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
-                {translateItemType(item.type)}
-              </span>
-              <ImageViewer
-                src={[`${getFileUrl(item)}`]}
-                zoomable
-                draggable
-                trigger={
-                  <ImageComponent
-                    src={`${getFileUrl(item)}`}
-                    alt={item.label}
-                    className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+      <section
+        ref={listRef}
+        className="relative flex h-full w-full overflow-y-auto p-2 border-t-2 border-highlight-high"
+        style={{ contain: "strict" }}
+      >
+        <div
+          className="relative w-full"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
+        >
+          {virtualItems.map((virtualItem) => {
+            const item = data.items[virtualItem.index];
+            if (!item) return null;
+
+            return (
+              <section
+                key={virtualItem.key}
+                className="absolute top-0 left-0 flex flex-row w-full h-32 max-h-32 min-h-32 p-2 border-2 border-highlight-high items-center bg-card"
+                style={{
+                  transform: `translateY(${virtualItem.start}px)`,
+                  opacity: hiddenItems.includes(String(item.id))
+                    ? "50%"
+                    : undefined,
+                }}
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="w-20 h-6 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
+                    {translateItemType(item.type)}
+                  </span>
+                  <ImageViewer
+                    src={[`${getFileUrl(item)}`]}
+                    zoomable
+                    draggable
+                    trigger={
+                      <ImageComponent
+                        src={`${getFileUrl(item)}`}
+                        alt={item.label}
+                        className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
+                      />
+                    }
                   />
-                }
-              />
-            </div>
-            <div className="flex flex-col ml-2">
-              <span className="font-bold text-xl">
-                {highlightText(item.label, searchTerms)}
-              </span>
-              <span className="text-text/80">
-                {highlightText(item.description, searchTerms)}
-              </span>
-            </div>
-            <div className="ml-auto flex flex-row gap-1">
-              <Button
-                size="icon"
-                onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(item.id)).length > 0;
+                </div>
+                <div className="flex flex-col ml-2">
+                  <span className="font-bold text-xl">
+                    {highlightText(item.label, searchTerms)}
+                  </span>
+                  <span className="text-text/80 line-clamp-3 hover:line-clamp-none hover:overflow-y-auto  leading-tight max-h-22">
+                    {highlightText(item.description, searchTerms)}
+                  </span>
+                </div>
+                <div className="ml-auto flex flex-row gap-1">
+                  <Button
+                    size="icon"
+                    onClick={() => {
+                      const existingGame =
+                        hiddenItems.filter((h) => h === String(item.id))
+                          .length > 0;
 
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(item.id)]);
+                      if (!existingGame)
+                        return setHiddenItems([
+                          ...hiddenItems,
+                          String(item.id),
+                        ]);
 
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(item.id)),
-                  );
-                }}
-              >
-                {hiddenItems.find((h) => h === String(item.id)) ? (
-                  <EyeIcon size={20} />
-                ) : (
-                  <EyeOffIcon size={20} />
-                )}
-              </Button>
-              <Button
-                variant="success"
-                size="icon"
-                title="Добавить предмет в инвентарь"
-                onClick={() => {
-                  setLoading(true);
-
-                  setItemData(item);
-
-                  setLoading(false);
-                }}
-                disabled={loading}
-              >
-                {loading ? <SmallLoader /> : <Plus />}
-              </Button>
-            </div>
-          </section>
-        ))}
+                      return setHiddenItems(
+                        hiddenItems.filter((h) => h !== String(item.id)),
+                      );
+                    }}
+                  >
+                    {hiddenItems.includes(String(item.id)) ? (
+                      <EyeIcon size={20} />
+                    ) : (
+                      <EyeOffIcon size={20} />
+                    )}
+                  </Button>
+                  <Button
+                    variant="success"
+                    size="icon"
+                    title="Добавить предмет в инвентарь"
+                    loading={loading}
+                    onClick={() => {
+                      setLoading(true);
+                      setItemData(item);
+                      setLoading(false);
+                    }}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              </section>
+            );
+          })}
+        </div>
       </section>
     </main>
   );

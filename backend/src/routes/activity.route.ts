@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { servicesPlugin } from "../services/services.plugin";
+import { servicesPlugin } from "../services.server";
 
 export const activityRoute = new Elysia({ prefix: "/activity" })
   .use(servicesPlugin)
@@ -20,19 +20,27 @@ export const activityRoute = new Elysia({ prefix: "/activity" })
     },
   )
   .get("/latest", async ({ activityService }) => activityService.getLatest())
-  .get("/:id", async ({ params, activityService, set }) => {
-    const row = await activityService.getById(params.id);
-    if (!row) {
-      set.status = 404;
-      return { error: "Not found" };
-    }
-    return row;
-  })
-  .post("/", async ({ body, activityService }) => activityService.create(body), {
-    body: t.Object({
-      text: t.String(),
-      author: t.Optional(t.String()),
-      image: t.Optional(t.String()),
-      type: t.Optional(t.String()),
-    }),
-  });
+  .get(
+    "/:id",
+    async ({ params, activityService, set }) => {
+      const row = await activityService.getById(params.id);
+      if (!row) {
+        set.status = 404;
+        return { error: "Not found" };
+      }
+      return row;
+    },
+    { params: t.Object({ id: t.String() }) },
+  )
+  .post(
+    "/",
+    async ({ body, activityService }) => activityService.create(body),
+    {
+      body: t.Object({
+        text: t.String(),
+        author: t.Optional(t.String()),
+        image: t.Optional(t.String()),
+        type: t.Optional(t.String()),
+      }),
+    },
+  );

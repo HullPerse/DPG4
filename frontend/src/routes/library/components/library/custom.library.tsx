@@ -13,10 +13,9 @@ import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
-import { SmallLoader } from "@/components/shared/loader.component";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -58,54 +57,53 @@ export default function CustomLibrary({
   const [time, setTime] = useState("");
   const [realTime, setRealTime] = useState("");
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const gameMutation = useMutation({
+    mutationFn: async () => {
+      if (!name || !headerImage || !time || !status) throw new Error("Missing fields");
 
-  const handleGame = useCallback(async () => {
-    if (!name || !headerImage || !time || !status) return;
+      const score = await calculateScore(Number(realTime), Number(time));
+      const gameData = {
+        user: {
+          id: user?.id,
+          username: user?.username,
+        },
+        playtime: {
+          hltb: Number(time),
+          user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
+        },
+        status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
+        score,
+        data: {
+          id: Number(`${Date.now()}-${name}`),
+          name: name,
+          image: headerImage,
+          capsuleImage: headerImage,
+          backgroundImage: headerImage,
+          verticalImage: headerImage,
+          steamLink: "",
+          websiteLink: "",
+          time: currentType === "preset" ? Number(time) : undefined,
+        },
+        created: new Date().toISOString(),
+      } as Game;
 
-    setLoading(true);
+      if (currentType === "library") {
+        await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
+        const res = await gameApi.addGame(gameData as any);
+        setCurrentGame?.(String(res.id));
+        await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
+        return;
+      }
 
-    const gameData = {
-      user: {
-        id: user?.id,
-        username: user?.username,
-      },
-      playtime: {
-        hltb: Number(time),
-        user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
-      },
-      status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
-      score: await calculateScore(Number(realTime), Number(time)),
-      data: {
-        id: Number(`${Date.now()}-${name}`),
-        name: name,
-        image: headerImage,
-        capsuleImage: headerImage,
-        backgroundImage: headerImage,
-        verticalImage: headerImage,
-        steamLink: "",
-        websiteLink: "",
-        time: currentType === "preset" ? Number(time) : undefined,
-      },
-      created: new Date().toISOString(),
-    } as Game;
+      await gameApi.addPresetGame(String(presetId), gameData as any);
+      queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
+      setCurrentGame("presetList");
+    },
+  });
 
-    if (currentType === "library") {
-      await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
-
-      await gameApi
-        .addGame(gameData as any)
-        .then((res) => setCurrentGame?.(String(res.id)));
-      return await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
-    }
-
-    return await gameApi
-      .addPresetGame(String(presetId), gameData as any)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["presetGame", presetId] });
-        setCurrentGame("presetList");
-      });
-  }, [name, headerImage, time, status, gameApi, user]);
+  const handleGame = useCallback(() => {
+    gameMutation.mutate();
+  }, []);
 
   return (
     <main className="flex h-full w-full flex-row items-center">
@@ -179,10 +177,11 @@ export default function CustomLibrary({
         <Button
           variant="success"
           className="mt-auto mb-2"
-          disabled={!name || !headerImage || !time || !status || loading}
+          loading={gameMutation.isPending}
+          disabled={!name || !headerImage || !time || !status}
           onClick={handleGame}
         >
-          {loading ? <SmallLoader /> : "ПОДТВЕРДИТЬ"}
+          ПОДТВЕРДИТЬ
         </Button>
       </section>
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">

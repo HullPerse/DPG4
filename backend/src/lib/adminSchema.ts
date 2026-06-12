@@ -5,6 +5,7 @@ const ITEM_TYPES: AdminChoice[] = [
   { value: "item", label: "item" },
   { value: "roll", label: "roll" },
   { value: "other", label: "other" },
+  { value: "rat", label: "rat" },
 ];
 
 const GAME_STATUS: AdminChoice[] = [
@@ -42,6 +43,22 @@ const ACTIVITY_TYPES: AdminChoice[] = [
   { value: "chat" },
 ];
 
+const USER_ACTIONS: AdminChoice[] = [
+  { value: "MOVE_POSITIVE", label: "MOVE_POSITIVE" },
+  { value: "MOVE_NEGATIVE", label: "MOVE_NEGATIVE" },
+  { value: "GAMEADD", label: "GAMEADD" },
+  { value: "GAMEFINISH", label: "GAMEFINISH" },
+];
+
+const RULES_CATEGORIES: AdminChoice[] = [
+  { value: "ОСНОВНАЯ СПРАВКА" },
+  { value: "УСЛОВИЯ РЕРОЛЛА" },
+  { value: "УСЛОВИЯ ПРОХОЖДЕНИЯ" },
+  { value: "ПРАВИЛА ХОДА" },
+  { value: "КАРТА" },
+  { value: "ВЫБОР СЛОЖНОСТИ" },
+];
+
 export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
   users: {
     label: "Users",
@@ -63,8 +80,9 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "money", type: "number" },
       { source: "gamblingWinnings", type: "number" },
       { source: "gamblingBanned", type: "boolean" },
+      { source: "hangman", type: "boolean" },
       { source: "steam", type: "text" },
-      { source: "currentAction", type: "text" },
+      { source: "currentAction", type: "select", choices: USER_ACTIONS },
       { source: "currentDice", type: "number" },
       { source: "status", type: "stringList" },
       { source: "place", type: "text" },
@@ -78,6 +96,11 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     fields: [
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
+      {
+        source: "userId",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
       { source: "status", type: "select", choices: GAME_STATUS },
       { source: "score", type: "number" },
       { source: "user", type: "json" },
@@ -191,7 +214,7 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
     searchFields: ["id", "category", "rule"],
     fields: [
       { source: "id", type: "text" },
-      { source: "category", type: "text" },
+      { source: "category", type: "select", choices: RULES_CATEGORIES },
       { source: "rule", type: "text" },
       { source: "created", type: "date" },
       { source: "updated", type: "date" },
@@ -217,6 +240,66 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "image", type: "blob" },
       { source: "id", type: "text" },
       { source: "author", type: "json" },
+      { source: "created", type: "date" },
+      { source: "updated", type: "date" },
+    ],
+  },
+  hangman: {
+    label: "Hangman",
+    searchFields: ["id", "userId", "word"],
+    fields: [
+      { source: "id", type: "text" },
+      {
+        source: "userId",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
+      { source: "word", type: "text" },
+      {
+        source: "state",
+        type: "select",
+        choices: [{ value: "current" }, { value: "won" }, { value: "lost" }],
+      },
+      { source: "guessedLetters", type: "stringList" },
+      { source: "wrongLetters", type: "stringList" },
+      { source: "created", type: "date" },
+      { source: "updated", type: "date" },
+    ],
+  },
+  history: {
+    label: "History",
+    searchFields: ["id", "type", "label"],
+    fields: [
+      { source: "id", type: "text" },
+      { source: "owner", type: "json" },
+      { source: "type", type: "text" },
+      { source: "label", type: "text" },
+      { source: "image", type: "text" },
+      { source: "bid", type: "number" },
+      { source: "payout", type: "number" },
+      { source: "net", type: "number" },
+      { source: "data", type: "json" },
+      { source: "created", type: "date" },
+    ],
+  },
+  pets: {
+    label: "Pets",
+    searchFields: ["id", "userId"],
+    fields: [
+      { source: "id", type: "text" },
+      {
+        source: "userId",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
+      { source: "hunger", type: "number" },
+      { source: "happiness", type: "number" },
+      { source: "energy", type: "number" },
+      { source: "isAlive", type: "boolean" },
+      { source: "lastUpdated", type: "date" },
+      { source: "lastRewardDate", type: "date" },
+      { source: "kvasBuff", type: "boolean" },
+      { source: "lastSearchDate", type: "date" },
       { source: "created", type: "date" },
       { source: "updated", type: "date" },
     ],

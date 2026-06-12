@@ -2,12 +2,9 @@ import { startTransition, useCallback, useState } from "react";
 import AdsApi from "@/api/ads.api";
 import { Ads } from "@/types/ads.d";
 import { useUserStore } from "@/store/user.store";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import {
   NetworkIcon,
@@ -37,7 +34,6 @@ function AdTab() {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -79,6 +75,36 @@ function AdTab() {
 
   useSubscription("ads", "*", invalidateQuery);
 
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => adsApi.removeAd(id),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const compressedAudio = audioFile
+        ? await compressAudio(audioFile)
+        : undefined;
+
+      const adData = {
+        owner: {
+          username: user?.username,
+          id: user?.id,
+        },
+        image: imageFile,
+        audio: compressedAudio,
+        text: text,
+      } as Ads;
+
+      return adsApi.createAd(adData);
+    },
+    onSettled: () => {
+      setIsOpen(false);
+      setAudioFile(null);
+      setCompressedAudioSize(null);
+      setAudioVolume(1);
+    },
+  });
+
   if (isLoading) return <WindowLoader />;
   if (isError)
     return (
@@ -89,14 +115,6 @@ function AdTab() {
         button
       />
     );
-
-  const handleRemove = async (id: string) => {
-    setLoading(true);
-
-    await adsApi.removeAd(id);
-
-    setLoading(false);
-  };
 
   const compressAudio = async (file: File): Promise<File> => {
     const audioContext = new AudioContext();
@@ -201,32 +219,6 @@ function AdTab() {
     }
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-
-    const compressedAudio = audioFile
-      ? await compressAudio(audioFile)
-      : undefined;
-
-    const adData = {
-      owner: {
-        username: user?.username,
-        id: user?.id,
-      },
-      image: imageFile,
-      audio: compressedAudio,
-      text: text,
-    } as Ads;
-
-    await adsApi.createAd(adData);
-
-    setIsOpen(false);
-    setAudioFile(null);
-    setCompressedAudioSize(null);
-    setAudioVolume(1);
-    setLoading(false);
-  };
-
   return (
     <main className="flex flex-col gap-2 w-full h-full pt-2">
       <Button
@@ -271,18 +263,16 @@ function AdTab() {
                   variant="info"
                   size="icon"
                   className="ml-auto mr-2 size-13"
+                  loading={audioLoad}
                   onClick={() => {
                     setAudioLoad(true);
-                    const audio = new Audio(
-                      `${getFileUrl(item, "audio")}`,
-                    );
+                    const audio = new Audio(`${getFileUrl(item, "audio")}`);
                     audio.onended = () => setAudioLoad(false);
                     audio.onerror = () => setAudioLoad(false);
                     audio.play().catch(() => setAudioLoad(false));
                   }}
-                  disabled={audioLoad}
                 >
-                  {audioLoad ? <SmallLoader /> : <Play />}
+                  <Play />
                 </Button>
               )}
 
@@ -290,9 +280,10 @@ function AdTab() {
                 variant="error"
                 size="icon"
                 className="ml-auto mr-2 size-13"
-                onClick={() => handleRemove(String(item.id))}
+                loading={removeMutation.isPending}
+                onClick={() => removeMutation.mutate(String(item.id))}
               >
-                {loading ? <SmallLoader /> : <Trash />}
+                <Trash />
               </Button>
             </div>
           ))
@@ -336,19 +327,16 @@ function AdTab() {
           </div>
 
           <DialogFooter className="bg-card">
-            <Button
-              variant="error"
-              onClick={() => setIsOpen(false)}
-              disabled={loading}
-            >
-              {loading ? <SmallLoader /> : "ОТМЕНИТЬ"}
+            <Button variant="error" onClick={() => setIsOpen(false)}>
+              ОТМЕНИТЬ
             </Button>
             <Button
               variant="success"
-              onClick={handleSubmit}
+              loading={createMutation.isPending}
               disabled={!text || !imageFile}
+              onClick={() => createMutation.mutate()}
             >
-              {loading ? <SmallLoader /> : "СОЗДАТЬ"}
+              СОЗДАТЬ
             </Button>
           </DialogFooter>
         </DialogContent>

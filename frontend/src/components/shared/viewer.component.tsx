@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, memo } from "react";
 import { Button } from "../ui/button.component";
 import { X } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
@@ -17,7 +17,7 @@ interface ImageViewerProps {
   draggable?: boolean;
 }
 
-function ImageViewer({
+const ImageViewer = memo(function ImageViewer({
   className,
   src,
   trigger,
@@ -183,6 +183,6 @@ function ImageViewer({
       {open && createPortal(content, document.body)}
     </>
   );
-}
+});
 
 export default ImageViewer;

@@ -2,6 +2,7 @@ import PigSvg from "@/components/svg/pig.component";
 import PoopSvg from "@/components/svg/poop.component";
 import CatSvg from "@/components/svg/cat.component";
 import ChairSvg from "@/components/svg/chair.component";
+import SausageSvg from "@/components/svg/sausage.component";
 
 export const cellsConfig = {
   difficulty: [
@@ -74,6 +75,11 @@ export const cellsConfig = {
       name: "chair",
       icon: <ChairSvg />,
       description: "Стул Трампа",
+    },
+    {
+      name: "sausage",
+      icon: <SausageSvg />,
+      description: "Сосиска",
     },
   ],
   arrowType: [

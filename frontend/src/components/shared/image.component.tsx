@@ -97,7 +97,7 @@ const Image = ({
           />
         </picture>
       ) : (
-        <div className="flex h-full w-full items-center justify-center border border-primary/20 bg-background/40">
+        <div className="flex h-full w-full items-center justify-center border border-primary/20 bg-background/40" role="presentation" aria-hidden="true">
           <span className="text-muted-foreground text-xs">Изображение</span>
         </div>
       )}

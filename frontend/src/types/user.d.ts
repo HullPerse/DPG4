@@ -11,6 +11,9 @@ export interface User extends RecordMeta {
   position: number;
   money: number;
   steam: string;
+  gamblingBanned?: boolean;
+  gamblingWinnings?: number;
+  hangman?: boolean;
 
   //MOVE_POSITIVE - waiting for user to move around the map after COMPLETIG GAME
   //MOVE_NEGATIVE - waiting for user to move aroudn the map after DROPPING GAME

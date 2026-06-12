@@ -4,4 +4,5 @@ export type LibraryTabs =
   | "community"
   | "profile"
   | "inventory"
-  | "friends";
+  | "friends"
+  | "allChat";

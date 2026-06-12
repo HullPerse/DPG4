@@ -8,15 +8,16 @@ export const PACHINKO_SLOT_COUNT = PACHINKO_SLOT_MULTIPLIERS.length;
 export const BOARD_WIDTH = 13;
 
 /** Bid-dependent slot widths: higher bid → wider bad slots, narrower good slots.
- *  sqrt(1/m) base weighted by (1 + (bid-1)*0.005*(2-m)) so m=2 is pivot. */
+ *  sqrt(1/m) base weighted by (1 + (bid-1)*0.001*(2-m)) so m=2 is pivot.
+ *  Factor is floored at 0.5 to keep all slots physically passable (ball radius 0.2). */
 const AVG_M = 2;
-const BID_SLOPE = 0.005;
+const BID_SLOPE = 0.0007;
 
 export function getSlotWidths(bid: number): number[] {
   const raw = PACHINKO_SLOT_MULTIPLIERS.map((m) => {
     const base = Math.sqrt(1 / m);
     const factor = 1 + (bid - 1) * BID_SLOPE * (AVG_M - m);
-    return base * Math.max(0.2, factor);
+    return base * Math.max(0.5, factor);
   });
   const sum = raw.reduce((a, b) => a + b, 0);
   return raw.map((w) => (w / sum) * BOARD_WIDTH);

@@ -17,6 +17,7 @@ export class ActivityService {
   }) {
     const id = newId();
     const created = nowIso();
+
     await this.db.insert(schema.activity).values({
       id,
       author: data.author ?? null,
@@ -25,7 +26,9 @@ export class ActivityService {
       text: data.text,
       created,
     });
+
     broadcast("activity", "create", id);
+
     return withRecordMeta(
       {
         id,
@@ -47,6 +50,7 @@ export class ActivityService {
       .orderBy(desc(schema.activity.created))
       .limit(limit)
       .offset(offset);
+
     return rows.map((r) =>
       withRecordMeta({ ...r, updated: r.created }, "activity"),
     );
@@ -58,6 +62,7 @@ export class ActivityService {
       .from(schema.activity)
       .orderBy(desc(schema.activity.created))
       .limit(1);
+
     return row
       ? withRecordMeta({ ...row, updated: row.created }, "activity")
       : null;
@@ -68,6 +73,7 @@ export class ActivityService {
       .select()
       .from(schema.activity)
       .where(eq(schema.activity.id, id));
+
     return row
       ? withRecordMeta({ ...row, updated: row.created }, "activity")
       : null;

@@ -7,10 +7,23 @@ import {
   Megaphone,
   Shuffle,
   Rat,
+  WholeWord,
+  Cat,
 } from "lucide-react";
 import { memo } from "react";
 
-const TABS = ["items", "store", "randomStore", "rules", "list", "ads", "rat"];
+const TABS = [
+  "items",
+  "store",
+  "ratStore",
+  "randomStore",
+  "wordle",
+  "tamagochi",
+  "rules",
+  "list",
+  "ads",
+  "rat",
+];
 
 function HomeBrowser({
   setTab,
@@ -25,12 +38,25 @@ function HomeBrowser({
       | "list"
       | "ads"
       | "randomStore"
-      | "rat",
+      | "wordle"
+      | "rat"
+      | "tamagochi"
+      | "ratStore",
   ) => void;
   searchTerms: string;
 }) {
   const getTab = (
-    value: "rules" | "items" | "store" | "list" | "ads" | "randomStore" | "rat",
+    value:
+      | "rules"
+      | "items"
+      | "store"
+      | "list"
+      | "ads"
+      | "randomStore"
+      | "wordle"
+      | "rat"
+      | "tamagochi"
+      | "ratStore",
   ) => {
     const tabMap = {
       rules: {
@@ -47,9 +73,15 @@ function HomeBrowser({
       },
       randomStore: {
         value: "randomStore",
-        label: "Лавка",
+        label: "ЛАВКА",
         description: "Магазин случайных предметов",
         icon: <Shuffle className="size-10" />,
+      },
+      wordle: {
+        value: "wordle",
+        label: "ПРЕДМЕТЛИ",
+        description: "Виселица, но с ПРИКОЛОМ",
+        icon: <WholeWord className="size-10" />,
       },
       store: {
         value: "store",
@@ -71,9 +103,21 @@ function HomeBrowser({
       },
       rat: {
         value: "rat",
-        label: "Крыса",
+        label: "КРЫСА",
         description: "Крыса",
         icon: <Rat className="size-10" />,
+      },
+      tamagochi: {
+        value: "tamagochi",
+        label: "ТАМАГОЧИ",
+        description: "Крыса-питомец",
+        icon: <Cat className="size-10" />,
+      },
+      ratStore: {
+        value: "ratStore",
+        label: "КРЫСИНАЯ ЛАВКА",
+        description: "Обменяй крысиный предмет на случайный",
+        icon: <Shuffle className="size-10" />,
       },
     };
 
@@ -84,12 +128,20 @@ function HomeBrowser({
     <main className="flex flex-col w-full h-full gap-2 items-center p-2">
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         {TABS.filter((value) =>
-          getTab(value as "rules" | "items" | "randomStore" | "store" | "list")
+          getTab(
+            value as
+              | "rules"
+              | "items"
+              | "randomStore"
+              | "store"
+              | "list"
+              | "ratStore",
+          )
             .label.toUpperCase()
             .includes(searchTerms.toUpperCase()),
         ).map((value) => {
           const tab = getTab(
-            value as "rules" | "items" | "store" | "randomStore",
+            value as "rules" | "items" | "store" | "randomStore" | "ratStore",
           );
 
           return (
@@ -98,7 +150,14 @@ function HomeBrowser({
               key={value}
               className="w-full h-18 border-2 border-highlight-high flex flex-row items-center justify-start"
               onClick={() =>
-                setTab(tab.value as "rules" | "items" | "randomStore" | "store")
+                setTab(
+                  tab.value as
+                    | "rules"
+                    | "items"
+                    | "randomStore"
+                    | "store"
+                    | "ratStore",
+                )
               }
             >
               {tab.icon}

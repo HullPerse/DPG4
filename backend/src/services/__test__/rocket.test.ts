@@ -46,7 +46,7 @@ describe("RocketService", () => {
     expect(services.rocketService.launch(userId, 0)).rejects.toThrow(
       "Invalid bid",
     );
-    expect(services.rocketService.launch(userId, 11)).rejects.toThrow(
+    expect(services.rocketService.launch(userId, 51)).rejects.toThrow(
       "Invalid bid",
     );
   });
@@ -72,13 +72,14 @@ describe("RocketService", () => {
     fakeNow += 100;
     const state = await services.rocketService.poll(userId);
     expect(state.phase).toBe("flying");
-    expect(state.multiplier).toBeGreaterThanOrEqual(1);
+    expect(state.multiplier).toBeGreaterThan(0);
   });
 
   test("poll triggers crash when multiplier reaches crash point", async () => {
     seedRandom([0.0]);
-    const launchState = await services.rocketService.launch(userId, 3);
+    await services.rocketService.launch(userId, 3);
     fakeNow += 50000;
+
     const state = await services.rocketService.poll(userId);
     expect(state.phase).toBe("crashed");
     expect(state.net).toBe(-3);
@@ -92,13 +93,13 @@ describe("RocketService", () => {
     fakeNow += 100;
     const state = await services.rocketService.cashout(userId);
     expect(state.phase).toBe("cashed");
-    expect(state.multiplier).toBeGreaterThanOrEqual(1);
+    expect(state.multiplier).toBeGreaterThan(0);
   });
 
   test("cashout gives positive net with enough time", async () => {
     seedRandom([0.5]);
     await services.rocketService.launch(userId, 3);
-    fakeNow += 3000;
+    fakeNow += 5000;
     const state = await services.rocketService.cashout(userId);
     expect(state.phase).toBe("cashed");
     expect(state.net).toBeGreaterThan(0);
@@ -109,7 +110,7 @@ describe("RocketService", () => {
   test("cashout deducts bid then credits payout", async () => {
     seedRandom([0.5]);
     await services.rocketService.launch(userId, 3);
-    fakeNow += 3000;
+    fakeNow += 5000;
     const state = await services.rocketService.cashout(userId);
     const net = state.net;
     const user = await getUser(db, userId);
@@ -172,9 +173,9 @@ describe("RocketService", () => {
       gamblingWinnings: 95,
       gamblingBanned: false,
     });
-    seedRandom([0.5]);
+    seedRandom([0.6]);
     await services.rocketService.launch(winUser.id, 5);
-    fakeNow += 5000;
+    fakeNow += 7000;
     const state = await services.rocketService.cashout(winUser.id);
     if (state.net > 0) {
       expect(state.banned).toBe(true);

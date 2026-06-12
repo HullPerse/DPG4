@@ -25,6 +25,9 @@ const MarketBrowser = lazy(() => import("./tabs/market.tab"));
 const AdvertisementTab = lazy(() => import("./tabs/advertisement.tab"));
 const StoreTab = lazy(() => import("./tabs/store.tab"));
 const RatTab = lazy(() => import("./tabs/rat.tab"));
+const WordleTab = lazy(() => import("./tabs/wordle.tab"));
+const TamagochiTab = lazy(() => import("./tabs/tamagochi.tab"));
+const RatStoreTab = lazy(() => import("./tabs/ratStore.tab"));
 
 export type SortMethod = "name" | "date" | "charges" | "type";
 export type SortDirection = "asc" | "desc";
@@ -51,7 +54,10 @@ type BrowserTab =
   | "store"
   | "ads"
   | "randomStore"
-  | "rat";
+  | "wordle"
+  | "rat"
+  | "tamagochi"
+  | "ratStore";
 
 function BrowserTabContent({
   tab,
@@ -93,8 +99,14 @@ function BrowserTabContent({
       return <AdvertisementTab />;
     case "randomStore":
       return <StoreTab />;
+    case "wordle":
+      return <WordleTab />;
     case "rat":
       return <RatTab />;
+    case "tamagochi":
+      return <TamagochiTab />;
+    case "ratStore":
+      return <RatStoreTab />;
     default:
       return <HomeTab setTab={setTab} searchTerms={searchTerms} />;
   }
@@ -163,7 +175,10 @@ export default function Browser() {
             variant="error"
             size="icon"
             className="h-10 w-10 p-5 ml-auto"
-            onClick={() => setTab("home")}
+            onClick={() => {
+              setTab("home");
+              setSearchTerms("");
+            }}
           >
             <ChevronLeft />
           </Button>

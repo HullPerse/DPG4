@@ -2,11 +2,12 @@ import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../../db/schema";
-import { UserService } from "../user.service";
+import { UserService } from "@/services/user.service";
 import { DiceService } from "../gambling/dice.service";
 import { BlackjackService } from "../gambling/blackjack.service";
 import { RocketService } from "../gambling/rocket.service";
 import { PachinkoService } from "../gambling/pachinko.service";
+import { MinesService } from "../gambling/mines.service";
 import { ActivityService } from "../activity.service";
 import { newId } from "../../lib/ids";
 
@@ -29,6 +30,7 @@ const CREATE_USERS = `CREATE TABLE users (
   place TEXT NOT NULL DEFAULT '0',
   gambling_winnings INTEGER NOT NULL DEFAULT 0,
   gambling_banned INTEGER NOT NULL DEFAULT 0,
+  hangman INTEGER NOT NULL DEFAULT 0,
   created TEXT NOT NULL,
   updated TEXT NOT NULL
 )`;
@@ -42,11 +44,26 @@ const CREATE_ACTIVITY = `CREATE TABLE activity (
   created TEXT NOT NULL
 )`;
 
+const CREATE_HISTORY = `CREATE TABLE history (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  owner TEXT,
+  type TEXT NOT NULL DEFAULT 'wheel',
+  label TEXT NOT NULL,
+  image TEXT NOT NULL DEFAULT '',
+  bid INTEGER NOT NULL DEFAULT 0,
+  payout INTEGER NOT NULL DEFAULT 0,
+  net INTEGER NOT NULL DEFAULT 0,
+  data TEXT DEFAULT '{}',
+  created TEXT NOT NULL
+)`;
+
 export function createTestDb(): { sqlite: Database; db: Db } {
   const sqlite = new Database(":memory:");
   const db = drizzle(sqlite, { schema });
   sqlite.run(CREATE_USERS);
   sqlite.run(CREATE_ACTIVITY);
+  sqlite.run(CREATE_HISTORY);
   return { sqlite, db };
 }
 
@@ -57,6 +74,7 @@ export interface TestServices {
   blackjackService: BlackjackService;
   rocketService: RocketService;
   pachinkoService: PachinkoService;
+  minesService: MinesService;
 }
 
 export function createServices(db: Db): TestServices {
@@ -66,6 +84,7 @@ export function createServices(db: Db): TestServices {
   const blackjackService = new BlackjackService(db, userService);
   const rocketService = new RocketService(db, userService);
   const pachinkoService = new PachinkoService(db, userService);
+  const minesService = new MinesService(db, userService);
   return {
     activityService,
     userService,
@@ -73,6 +92,7 @@ export function createServices(db: Db): TestServices {
     blackjackService,
     rocketService,
     pachinkoService,
+    minesService,
   };
 }
 

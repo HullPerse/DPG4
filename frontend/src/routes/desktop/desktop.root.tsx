@@ -1,4 +1,4 @@
-import { APPS, WINDOWS } from "@/config/apps.config";
+import { APP_REGISTRY, WIP_COMPONENT } from "@/config/apps.config";
 import AppDesktop from "./components/app.desktop";
 import { DoorOpen, Image, NotebookText } from "lucide-react";
 import Timer from "./components/timer.desktop";
@@ -6,8 +6,10 @@ import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
 import { AppProps } from "@/types/desktop";
 import { createWindow } from "@/lib/window.utils";
+import { fetchUiConfig, type AppMeta } from "@/api/config.api";
+import { getWindowMeta, setWindowMetaList } from "@/lib/window.utils";
 
-import { lazy, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import NetworkConnection from "@/components/shared/network.component";
 import {
   HoverCard,
@@ -23,6 +25,13 @@ import MessagesDesktop from "./components/messages.desktop";
 import AnnouncementAd from "./components/advertisement.desktop";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
+
+const LIBRARY_APP: AppProps = {
+  name: "library",
+  label: "Библиотека",
+  icon: APP_REGISTRY.library?.icon,
+  component: APP_REGISTRY.library?.component,
+};
 
 export default function Desktop({
   activeApps,
@@ -43,11 +52,43 @@ export default function Desktop({
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
   const [openNotepad, setOpenNotepad] = useState<boolean>(false);
 
+  const [appEntries, setAppEntries] = useState<AppProps[]>([]);
+
+  useEffect(() => {
+    fetchUiConfig()
+      .then((config) => {
+        setWindowMetaList(config.windows);
+
+        const merged: AppProps[] = config.apps.map((a: AppMeta) => {
+          const entry = APP_REGISTRY[a.name];
+          return {
+            name: a.name,
+            label: a.label,
+            icon: entry?.icon ?? APP_REGISTRY.admin.icon,
+            link: a.link ?? null,
+            type: a.type ?? undefined,
+            component: entry?.component ?? WIP_COMPONENT,
+          };
+        });
+        setAppEntries(merged);
+      })
+      .catch(() => {
+        setAppEntries(
+          Object.entries(APP_REGISTRY).map(([name, entry]) => ({
+            name,
+            label: name,
+            icon: entry.icon,
+            component: entry.component ?? WIP_COMPONENT,
+          })),
+        );
+      });
+  }, []);
+
   return (
     <main className="flex h-full w-full flex-col">
       <section className="relative flex flex-1">
         <div className="absolute top-6 left-6 flex flex-col flex-wrap w-fit h-full gap-2 pb-10">
-          {APPS.sort((a, b) => a.priority - b.priority).map((app: AppProps) => (
+          {appEntries.map((app: AppProps) => (
             <AppDesktop
               key={app.name}
               label={app.label}
@@ -64,7 +105,9 @@ export default function Desktop({
           ))}
         </div>
 
-        {!Array.isArray(user?.status) || !user.status.includes("subscribed") ? <AnnouncementAd /> : null}
+        {!Array.isArray(user?.status) || !user.status.includes("subscribed") ? (
+          <AnnouncementAd />
+        ) : null}
 
         {openCalendar && (
           <CalendarDesktop
@@ -102,10 +145,7 @@ export default function Desktop({
         <div className="flex h-full flex-row items-center gap-2 border-l-2 border-highlight-high pl-2">
           <div className="flex items-center gap-2 text-muted">
             {/* MESSAGES */}
-            <MessagesDesktop
-              app={APPS.find((a) => a.name === "library") as AppProps}
-              setActiveApps={setActiveApps}
-            />
+            <MessagesDesktop app={LIBRARY_APP} setActiveApps={setActiveApps} />
 
             {/* NETWORK */}
             <HoverCard>
@@ -124,7 +164,7 @@ export default function Desktop({
                 setActiveApps((prev) =>
                   createWindow(
                     prev,
-                    WINDOWS.find((w) => w.id === "wallpaper") as WindowProps,
+                    getWindowMeta("wallpaper") as WindowProps,
                     <WallpaperApp setWallpaper={setWallpaper} />,
                   ),
                 )

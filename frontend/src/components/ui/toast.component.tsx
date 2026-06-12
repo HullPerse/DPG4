@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity } from "@/types/activity";
-import { cn } from "@/lib/utils.tsx";
+import { cn } from "@/lib/utils";
 import { Button } from "./button.component";
 import ImageComponent from "../shared/image.component";
-import { SmallLoader } from "../shared/loader.component";
 
 export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
 
   return (
-    <div className="fixed bottom-4 right-4 z-9999 flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-9999 flex flex-col gap-2" role="alert" aria-live="polite">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -41,7 +41,11 @@ function Toast({
 }) {
   const removeToast = useToastStore((s) => s.removeToast);
 
-  const [loading, setLoading] = useState(false);
+  const actionMutation = useMutation({
+    mutationFn: async () => {
+      await onClick?.fn();
+    },
+  });
 
   useEffect(() => {
     if (timeout === Infinity) return;
@@ -79,16 +83,10 @@ function Toast({
         <Button
           variant="success"
           size="icon"
-          onClick={() => {
-            setLoading(true);
-            onClick?.fn();
-
-            setTimeout(() => {
-              setLoading(false);
-            }, 2000);
-          }}
+          loading={actionMutation.isPending}
+          onClick={() => actionMutation.mutate()}
         >
-          {loading ? <SmallLoader /> : onClick?.icon}
+          {onClick?.icon}
         </Button>
       )}
       {showClose && (

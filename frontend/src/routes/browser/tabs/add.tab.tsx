@@ -97,7 +97,7 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {["effect", "item", "roll", "other"].map((item) => (
+                {["effect", "item", "roll", "other", "rat"].map((item) => (
                   <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>

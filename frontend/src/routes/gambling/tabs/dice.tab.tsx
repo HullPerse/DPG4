@@ -1,19 +1,16 @@
 import { useUserStore } from "@/store/user.store";
-import { useDataStore } from "@/store/data.store";
 import { Button } from "@/components/ui/button.component";
 import { useRef, useCallback, useState, memo, useEffect } from "react";
 import { flushSync } from "react-dom";
-import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 import {
   rollDiceDealer,
   rerollDiceDealer,
   rollDicePlayer,
   abortDice,
 } from "@/api/gambling.api";
-import DiceScene from "../components/scene.dice";
-import { SmallLoader } from "@/components/shared/loader.component";
+import DiceScene from "../components/scenes/scene.dice";
 import {
-  getResultColor,
   DICE_SETTLE_HOLD_MS,
   DICE_REROLL_PAUSE_MS,
   DICE_PLAYER_AUTO_MS,
@@ -23,20 +20,22 @@ import {
   DiceRow,
 } from "@/lib/gambling/diceRollCoordinator";
 import { DiceDealerResult, DiceGameResult, DiceResult } from "@/types/gamble";
-
-const BIDS = [1, 2, 3, 5, 8, 10] as const;
+import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { BalanceDisplay } from "../components/balance.component";
+import { BidSelector } from "../components/bid.component";
+import { GameResult } from "../components/result.component";
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
 function DiceTab() {
-  const user = useUserStore((state) => state.user);
-  const gamblingBanned = useDataStore((state) => state.gamblingBanned);
-  const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
+  const { user, balance, gamblingBanned, setGamblingBanned } =
+    useGamblingStore();
+  const bidOptions = useBidOptions();
 
-  const [rolling, setRolling] = useState(false);
   const [bid, setBid] = useState(3);
+
   const [gamePhase, setGamePhase] = useState<
     "idle" | "dealer" | "player" | "result"
   >("idle");
@@ -59,8 +58,6 @@ function DiceTab() {
   const dealerKeyRef = useRef(0);
   const playerKeyRef = useRef(0);
   const roundIdRef = useRef(0);
-
-  const balance = user?.money ?? 0;
 
   useEffect(() => {
     return () => rollCoordinatorRef.current.cancel();
@@ -115,7 +112,7 @@ function DiceTab() {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return dealer;
 
-      dealer = await rerollDiceDealer(String(user!.id));
+      dealer = await rerollDiceDealer();
       if (!isRoundActive(round)) return dealer;
 
       await playDiceRoll(dealer.values, "dealer");
@@ -130,7 +127,7 @@ function DiceTab() {
   const settlePlayer = async (round: number): Promise<DiceGameResult> => {
     setGamePhase("player");
 
-    let playerResult = await rollDicePlayer(String(user!.id));
+    let playerResult = await rollDicePlayer();
     if (!isRoundActive(round)) return playerResult;
 
     await playDiceRoll(playerResult.playerValues, "player");
@@ -140,7 +137,7 @@ function DiceTab() {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return playerResult;
 
-      playerResult = await rollDicePlayer(String(user!.id));
+      playerResult = await rollDicePlayer();
       if (!isRoundActive(round)) return playerResult;
 
       await playDiceRoll(playerResult.playerValues, "player");
@@ -162,17 +159,16 @@ function DiceTab() {
       tone: finalResult.tone,
     });
     setGamePhase("result");
-    setRolling(false);
   };
 
-  const failRound = (label: string) => {
+  const failRound = (label: string, balance?: number) => {
+    const money = balance ?? useUserStore.getState().user?.money ?? 0;
     useUserStore.setState({
-      user: { ...useUserStore.getState().user! },
+      user: { ...useUserStore.getState().user!, money },
     });
-    setDisplayBalance(useUserStore.getState().user?.money ?? 0);
+    setDisplayBalance(money);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
-    setRolling(false);
   };
 
   const resetDiceVisuals = () => {
@@ -182,22 +178,21 @@ function DiceTab() {
     setPlayerDiceActive(false);
   };
 
-  const startGame = async () => {
-    if (!user || balance < bid || gamblingBanned || rolling) return;
+  const gameMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || balance < bid || gamblingBanned) return;
 
-    const round = ++roundIdRef.current;
-    resetDiceVisuals();
-    setResult(null);
-    setDealerTarget(null);
-    setDisplayBalance(balance);
-    setRolling(true);
-    setGamePhase("dealer");
+      const round = ++roundIdRef.current;
+      resetDiceVisuals();
+      setResult(null);
+      setDealerTarget(null);
+      setDisplayBalance(balance);
+      setGamePhase("dealer");
 
-    try {
-      await abortDice(String(user.id));
+      await abortDice();
       if (!isRoundActive(round)) return;
 
-      const dealerInitial = await rollDiceDealer(String(user.id), bid);
+      const dealerInitial = await rollDiceDealer(bid);
       if (!isRoundActive(round)) return;
 
       setDisplayBalance(balance - bid);
@@ -214,41 +209,29 @@ function DiceTab() {
       if (!isRoundActive(round)) return;
 
       finishRound(finalResult);
-    } catch {
-      if (!isRoundActive(round)) return;
-      failRound("Ошибка сервера. Попробуй ещё раз.");
-    }
-  };
+    },
+    onError: async () => {
+      try {
+        const { balance } = await abortDice();
+        failRound("Ошибка сервера. Ставка возвращена.", balance);
+      } catch {
+        failRound("Ошибка сервера. Попробуй ещё раз.");
+      }
+    },
+  });
 
   const showDealerLabel = gamePhase !== "idle";
-  const showPlayerLabel =
-    gamePhase === "player" || gamePhase === "result" || playerDiceActive;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <section className="flex flex-col w-xl items-center gap-1 border-2 border-highlight-high bg-background px-2">
-        <span className="text-lg font-bold">{displayBalance} чубриков</span>
-      </section>
+      <BalanceDisplay balance={displayBalance} />
 
-      <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
-        <span className="text-sm text-muted mr-1">Ставка</span>
-        {BIDS.map((v) => (
-          <button
-            key={v}
-            onClick={() => setBid(v)}
-            disabled={rolling}
-            className={cn(
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer",
-              bid === v
-                ? "bg-highlight-high text-background"
-                : "bg-foreground/10 text-muted hover:bg-foreground/20",
-              rolling && "opacity-40 pointer-events-none",
-            )}
-          >
-            {v}
-          </button>
-        ))}
-      </section>
+      <BidSelector
+        bidOptions={bidOptions}
+        bid={bid}
+        onBidChange={setBid}
+        disabled={gameMutation.isPending}
+      />
 
       <section className="relative w-full h-110 min-h-110 overflow-hidden border-2 border-highlight-high bg-background">
         <DiceScene
@@ -260,38 +243,21 @@ function DiceTab() {
           onDealerSettled={handleDealerSettled}
           onPlayerSettled={handlePlayerSettled}
           showDealerLabel={showDealerLabel}
-          showPlayerLabel={showPlayerLabel}
           playerDiceActive={playerDiceActive}
         />
 
-        {result && (
-          <span
-            className={cn(
-              "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full pb-1",
-              getResultColor(result),
-            )}
-          >
-            {result.label}
-            {result.net > 0 && <span> +{result.net}</span>}
-            {result.net < 0 && <span> {result.net}</span>}
-          </span>
-        )}
+        <GameResult result={result} />
       </section>
 
       <section className="flex flex-col mt-auto gap-1">
         <Button
           variant="info"
           className="w-xl"
-          onClick={startGame}
-          disabled={rolling || balance < bid || gamblingBanned}
+          loading={gameMutation.isPending}
+          disabled={balance < bid || gamblingBanned}
+          onClick={() => gameMutation.mutate()}
         >
-          {gamblingBanned ? (
-            "Вы забанены"
-          ) : rolling ? (
-            <SmallLoader />
-          ) : (
-            `Кинуть (${bid})`
-          )}
+          {gamblingBanned ? "Вы забанены" : `Кинуть (${bid})`}
         </Button>
 
         <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">
@@ -315,12 +281,8 @@ function DiceTab() {
                   <span className="text-red-400">Дилер побеждает</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Три одинаковых</span>
+                  <span>Три одинаковых (вкл. 1·1·1)</span>
                   <span className="text-red-400">Дилер побеждает</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>1·1·1</span>
-                  <span className="text-muted">Ничья</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Пара + число</span>

@@ -1,9 +1,11 @@
-import { AnimationState, WheelItem } from "@/types/wheel";
-import { shuffleArray } from "./utils";
+import { EasingAnimation, WheelItem } from "@/types/wheel";
+import { ITEM_WIDTH, MIN_ITEMS_FOR_ROLL } from "@/config/wheel.config";
+
+const EASE_FN = easeOutCubic;
 
 export function duplicateItemsToMinimum(
   items: WheelItem[],
-  minCount: number,
+  minCount: number = MIN_ITEMS_FOR_ROLL,
 ): WheelItem[] {
   if (items.length === 0 || items.length >= minCount) return items;
 
@@ -17,39 +19,19 @@ export function duplicateItemsToMinimum(
   return duplicated.slice(0, minCount);
 }
 
-export function updateWheelAnimation(
-  timestamp: number,
-  state: AnimationState,
-  rollDuration: number,
-  friction: number,
-): { velocity: number; scrollDelta: number; isCompleted: boolean } {
-  if (state.startTime === 0) {
-    state.startTime = timestamp;
-  }
+export function easeOutQuart(t: number): number {
+  return 1 - Math.pow(1 - t, 4);
+}
 
-  const elapsed = timestamp - state.startTime;
-  const progress = Math.min(elapsed / rollDuration, 1);
-
-  if (progress < 1) {
-    const velocity = 25 * (1 - progress) + 0.5;
-
-    return { velocity: velocity, scrollDelta: velocity, isCompleted: false };
-  }
-
-  const velocity = state.velocity * friction;
-
-  return {
-    velocity: velocity,
-    scrollDelta: velocity,
-    isCompleted: Math.abs(velocity) <= 0.1,
-  };
+export function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 export function getCenteredItem(
   scrollPosition: number,
   containerWidth: number,
   itemCount: number,
-  itemWidth: number,
+  itemWidth: number = ITEM_WIDTH,
 ): number {
   if (itemCount === 0 || itemWidth <= 0) return -1;
   const centerX = containerWidth / 2;
@@ -63,22 +45,73 @@ export function getCenteredItem(
   return clampedIndex;
 }
 
-export function rollPrepare(items: WheelItem[], minItems: number) {
-  if (items.length === 0) return [];
-
-  const rollItems = duplicateItemsToMinimum(shuffleArray(items), minItems);
-
-  return rollItems;
+export function calculateTargetScroll(
+  winnerIndex: number,
+  containerWidth: number,
+  itemWidth: number = ITEM_WIDTH,
+): number {
+  return winnerIndex * itemWidth + itemWidth / 2 - containerWidth / 2;
 }
 
-export function rollAnimation(
+/** Scroll position that centers the winner, clamped to the track bounds. */
+export function buildSpinTargetScroll(
+  winnerIndex: number,
+  itemCount: number,
+  containerWidth: number,
+  itemWidth: number = ITEM_WIDTH,
+): number {
+  const maxScroll = Math.max(0, itemCount * itemWidth - containerWidth);
+  const winnerScroll = calculateTargetScroll(
+    winnerIndex,
+    containerWidth,
+    itemWidth,
+  );
+  return Math.max(0, Math.min(winnerScroll, maxScroll));
+}
+
+export function runAnimation(
   animateCallback: (timestamp: number) => void,
-  animationFrameRef: React.RefObject<number | null>,
+  animationFrameRef: React.MutableRefObject<number | null>,
+  delayMs = 50,
 ): void {
   if (animationFrameRef.current) {
     cancelAnimationFrame(animationFrameRef.current);
   }
-  setTimeout(() => {
+  window.setTimeout(() => {
     animationFrameRef.current = requestAnimationFrame(animateCallback);
-  }, 50);
+  }, delayMs);
+}
+
+export function createEasingAnimation(
+  currentScroll: number,
+  targetScroll: number,
+  duration: number,
+): EasingAnimation {
+  return {
+    startTime: 0,
+    startScroll: currentScroll,
+    targetScroll,
+    duration,
+  };
+}
+
+export function updateEasingAnimation(
+  timestamp: number,
+  state: EasingAnimation,
+): { scrollPosition: number; isCompleted: boolean } {
+  if (state.startTime === 0) {
+    state.startTime = timestamp;
+  }
+
+  const elapsed = timestamp - state.startTime;
+  const progress = Math.min(elapsed / state.duration, 1);
+  const eased = EASE_FN(progress);
+
+  const scrollPosition =
+    state.startScroll + (state.targetScroll - state.startScroll) * eased;
+
+  return {
+    scrollPosition,
+    isCompleted: progress >= 1,
+  };
 }

@@ -12,7 +12,10 @@ export const ADMIN_TABLES = {
   rules: schema.rules,
   ads: schema.ads,
   drawings: schema.drawings,
+  history: schema.history,
   cells: schema.cells,
+  hangman: schema.hangman,
+  pets: schema.pets,
 } as const;
 
 export type AdminTableName = keyof typeof ADMIN_TABLES;

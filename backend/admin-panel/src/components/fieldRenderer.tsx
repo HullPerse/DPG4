@@ -18,11 +18,28 @@ import {
   StringListInput,
   StringListPreview,
 } from "@/components/StringListInput";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { isObjectArray, isStringArray } from "@/lib/arrayFieldUtils";
 import type { AdminFieldMeta } from "@/types";
+
+function isUserObject(val: unknown): val is { id: string; username: string } {
+  if (!val || typeof val !== "object") return false;
+  const obj = val as Record<string, unknown>;
+  return typeof obj.id === "string" && typeof obj.username === "string";
+}
+
+function renderUserValue(val: unknown) {
+  if (isUserObject(val)) {
+    return <UserAvatar userId={val.id} />;
+  }
+  if (typeof val === "string" && val) {
+    return <UserAvatar userId={val} />;
+  }
+  return null;
+}
 
 function formatCell(value: unknown): string {
   if (value === null || value === undefined) return "-";
@@ -45,6 +62,12 @@ export function renderListCell(
   resource: string,
 ) {
   const val = record[field.source];
+
+  if (field.reference?.table === "users") {
+    const userVal = renderUserValue(val);
+    if (userVal) return userVal;
+  }
+
   if (field.type === "blob") {
     return (
       <BlobField source={field.source} record={record} resource={resource} />
@@ -62,6 +85,9 @@ export function renderListCell(
     return <ObjectListPreview value={val} />;
   }
   if (field.type === "json") {
+    if (isUserObject(val)) {
+      return <UserAvatar userId={val.id} />;
+    }
     return <JsonField value={val} maxChars={120} />;
   }
   if (field.type === "select" || field.choices?.length) {
@@ -91,7 +117,7 @@ export function renderListCell(
   if (val !== null && val !== undefined && typeof val === "object") {
     return <JsonField value={val} maxChars={120} />;
   }
-  return <span className="max-w-[200px] truncate">{formatCell(val)}</span>;
+  return <span className="max-w-50 truncate">{formatCell(val)}</span>;
 }
 
 export function renderShowField(
@@ -125,9 +151,16 @@ export function renderShowField(
         {(field.type === "select" || field.choices?.length) && (
           <span className="bg-iris/20 text-iris px-1 text-[10px]">select</span>
         )}
+        {field.reference && (
+          <span className="bg-iris/20 text-iris px-1 text-[10px]">
+            → {field.reference.table}
+          </span>
+        )}
       </div>
       <div>
-        {field.type === "blob" ? (
+        {field.reference?.table === "users" ? (
+          renderUserValue(val)
+        ) : field.type === "blob" ? (
           <BlobField
             source={field.source}
             record={record}
@@ -142,7 +175,11 @@ export function renderShowField(
         ) : field.type === "stringList" || isStringArray(val) ? (
           <StringListPreview value={val} />
         ) : field.type === "json" || field.type === "objectList" ? (
-          <JsonField value={val} />
+          isUserObject(val) ? (
+            <UserAvatar userId={val.id} />
+          ) : (
+            <JsonField value={val} />
+          )
         ) : field.type === "select" || field.choices?.length ? (
           val ? (
             <ValueChip
@@ -160,7 +197,11 @@ export function renderShowField(
             resource={resource}
           />
         ) : val !== null && val !== undefined && typeof val === "object" ? (
-          <JsonField value={val} />
+          isUserObject(val) ? (
+            <UserAvatar userId={val.id} />
+          ) : (
+            <JsonField value={val} />
+          )
         ) : (
           <span>{formatCell(val)}</span>
         )}

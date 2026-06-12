@@ -5,6 +5,7 @@ import type { UserStore } from "@/types/store";
 import type { User } from "@/types/user";
 import { subscribeWsChannel } from "@/lib/ws.client";
 import { cleanupRealtimeServices } from "@/lib/activity.utils";
+import { useDataStore } from "@/store/data.store";
 
 let userWsUnsub: (() => void) | null = null;
 
@@ -58,6 +59,9 @@ export const useUserStore = create<UserStore>()(
             user: res.user,
             token: res.token,
           });
+          if (res.user.gamblingBanned !== undefined) {
+            useDataStore.getState().setGamblingBanned(res.user.gamblingBanned);
+          }
 
           get().subscribeToUserUpdates();
         },
@@ -88,6 +92,9 @@ export const useUserStore = create<UserStore>()(
             user: res.user,
             token: res.token,
           });
+          if (res.user.gamblingBanned !== undefined) {
+            useDataStore.getState().setGamblingBanned(res.user.gamblingBanned);
+          }
 
           get().subscribeToUserUpdates();
         },
@@ -133,6 +140,9 @@ export const initializeAuthStore = async () => {
       user,
       token,
     });
+    if (user.gamblingBanned !== undefined) {
+      useDataStore.getState().setGamblingBanned(user.gamblingBanned);
+    }
     useUserStore.getState().subscribeToUserUpdates();
   } catch {
     setToken(null);

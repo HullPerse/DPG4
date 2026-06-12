@@ -2,10 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
 import ItemsApi from "@/api/items.api";
@@ -107,6 +104,7 @@ function ListBrowser({
     estimateSize: () => 96,
     overscan: 8,
     gap: 8,
+    getItemKey: (index) => filteredItems[index]?.id ?? index,
   });
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -211,7 +209,7 @@ function ListBrowser({
                   }}
                   disabled={!selected}
                 >
-                  Применить
+                  ДОБАВИТЬ В ИНВЕНТАРЬ {selected?.username ?? user?.username}
                 </Button>
               </section>
             </main>
@@ -291,6 +289,7 @@ function ListBrowser({
                 variant="success"
                 size="icon"
                 title="Добавить предмет в инвентарь"
+                loading={loading}
                 onClick={async () => {
                   if (!user) return;
                   setLoading(true);
@@ -300,7 +299,7 @@ function ListBrowser({
                   setLoading(false);
                 }}
               >
-                {loading ? <SmallLoader /> : <Plus />}
+                <Plus />
               </Button>
             </div>
           </section>
