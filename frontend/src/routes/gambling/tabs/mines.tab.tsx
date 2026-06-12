@@ -22,6 +22,7 @@ import { MINES_GRID } from "@/lib/gambling/gamble.constants";
 import {
   MINE_COUNT_OPTIONS,
   formatMultiplier,
+  computeMultiplier,
 } from "@/lib/gambling/mines.utils";
 import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
@@ -165,18 +166,22 @@ function MinesTab() {
         <span className="text-sm text-muted mr-1">Мин</span>
         {MINE_COUNT_OPTIONS.map((v) => (
           <button
+            role="button"
             key={v}
             onClick={() => setMineCount(v)}
             disabled={gameStarted}
             className={
-              "min-w-8 h-8 rounded text-sm font-semibold transition-colors cursor-pointer " +
+              "min-w-10 h-11 text-sm font-semibold transition-colors cursor-pointer flex flex-col items-center leading-tight " +
               (mineCount === v
                 ? "bg-highlight-high text-background"
                 : "bg-foreground/10 text-muted hover:bg-foreground/20") +
               (gameStarted ? " opacity-40 pointer-events-none" : "")
             }
           >
-            {v}
+            <span>{v}</span>
+            <span className="text-[10px] opacity-60">
+              {formatMultiplier(computeMultiplier(v, 1))}
+            </span>
           </button>
         ))}
       </section>

@@ -37,7 +37,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
     {
       value: "pachinko" as Tab,
       label: "Пачинко",
-      description: "Крыса паничко. ЖЕСТЬ КАК В КАЙДЖИ",
+      description: "Крыса пачинко. ЖЕСТЬ КАК В КАЙДЖИ",
       icon: <CircleDot className="size-10" />,
     },
     {

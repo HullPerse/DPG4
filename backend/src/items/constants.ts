@@ -69,6 +69,9 @@ export const RAT_IDS = [
   "Благословление Крысиного Короля",
   "Крысиная шкатулка",
   "3д крыса",
+  "Квас",
+  "КВАс",
+  "Бродефор",
 ];
 
 export const GREMLIN_IDS = ["Гремлин", "Гремлинизатор", "Гремлинская залупа"];
@@ -82,4 +85,9 @@ export const ITEM_DB_IDS = {
   bucket1: "jgew0bwjc69xo0g",
   bucket2: "quyhj9knb8gqizt",
   bucket3: "qqr2upqkuli51ea",
+  kvas: "7c98ec3e486241e",
+  kvaS: "d2ee28e9e1dd40e",
+  kirpich: "295c79600fe448b",
+  brodefor: "48fa95f2c31842d",
+  krysinyAnus: "0bd1a12d32064ab",
 } as const;

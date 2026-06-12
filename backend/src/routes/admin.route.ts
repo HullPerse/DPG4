@@ -35,6 +35,7 @@ const BROADCAST_TABLES = new Set([
   "drawings",
   "cells",
   "hangman",
+  "pets",
 ]);
 
 function isBlobPlaceholder(val: unknown): boolean {
@@ -58,6 +59,7 @@ const hasTimestamps = new Set([
   "drawings",
   "cells",
   "hangman",
+  "pets",
 ]);
 
 function tryParseJson(v: unknown): unknown {

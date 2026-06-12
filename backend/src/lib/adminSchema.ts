@@ -282,6 +282,28 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "created", type: "date" },
     ],
   },
+  pets: {
+    label: "Pets",
+    searchFields: ["id", "userId"],
+    fields: [
+      { source: "id", type: "text" },
+      {
+        source: "userId",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
+      { source: "hunger", type: "number" },
+      { source: "happiness", type: "number" },
+      { source: "energy", type: "number" },
+      { source: "isAlive", type: "boolean" },
+      { source: "lastUpdated", type: "date" },
+      { source: "lastRewardDate", type: "date" },
+      { source: "kvasBuff", type: "boolean" },
+      { source: "lastSearchDate", type: "date" },
+      { source: "created", type: "date" },
+      { source: "updated", type: "date" },
+    ],
+  },
   cells: {
     label: "Cells",
     searchFields: ["id", "title", "type", "cellType"],

@@ -185,6 +185,13 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "CREATE TRIGGER IF NOT EXISTS games_fts_au AFTER UPDATE ON games BEGIN INSERT INTO games_fts(games_fts, rowid, name) VALUES('delete', old.rowid, old.game_name); INSERT INTO games_fts(rowid, name) VALUES (new.rowid, new.game_name); END;",
     ],
   },
+  {
+    hash: "0014_add_pet_kvas_search",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN kvas_buff INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE pets ADD COLUMN last_search_date TEXT;",
+    ],
+  },
 ];
 
 export function runMigrations() {

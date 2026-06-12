@@ -187,7 +187,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   }}
                   disabled={!selected}
                 >
-                  Применить
+                  ДОБАВИТЬ В ИНВЕНТАРЬ {selected?.username ?? user?.username}
                 </Button>
               </section>
             </main>

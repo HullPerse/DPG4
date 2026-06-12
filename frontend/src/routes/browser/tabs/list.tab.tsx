@@ -209,7 +209,7 @@ function ListBrowser({
                   }}
                   disabled={!selected}
                 >
-                  Применить
+                  ДОБАВИТЬ В ИНВЕНТАРЬ {selected?.username ?? user?.username}
                 </Button>
               </section>
             </main>

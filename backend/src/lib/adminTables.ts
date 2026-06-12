@@ -15,6 +15,7 @@ export const ADMIN_TABLES = {
   history: schema.history,
   cells: schema.cells,
   hangman: schema.hangman,
+  pets: schema.pets,
 } as const;
 
 export type AdminTableName = keyof typeof ADMIN_TABLES;

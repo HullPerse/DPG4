@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
@@ -7,7 +7,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
-import { RAT_IDS } from "../items/constants";
+import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
 
 const DECAY_PER_HOUR = { hunger: 5, happiness: 3, energy: 4 };
 const MAX_STAT = 100;
@@ -213,19 +213,14 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       }
 
       const isMoney = Math.random() < 0.5;
+      let moneyAmount = 0;
+      let itemLabel = "";
+      let itemId = "";
 
       if (isMoney) {
-        const amount = Math.floor(Math.random() * 8) + 1;
-        await userService.score(params.userId, amount);
-
-        await db
-          .update(schema.pets)
-          .set({ lastRewardDate: today, updated: now })
-          .where(eq(schema.pets.id, pet.id));
-
-        logger.info("pets", "daily reward money", params.userId, amount);
-
-        return { claimed: true, reward: "money", amount };
+        moneyAmount = Math.floor(Math.random() * 8) + 1;
+        await userService.score(params.userId, moneyAmount);
+        logger.info("pets", "daily reward money", params.userId, moneyAmount);
       } else {
         const randomLabel = RAT_IDS[Math.floor(Math.random() * RAT_IDS.length)];
         const [item] = await db
@@ -239,20 +234,138 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         }
 
         await economyService.addInventory(params.userId, item.id);
-
-        await db
-          .update(schema.pets)
-          .set({ lastRewardDate: today, updated: now })
-          .where(eq(schema.pets.id, pet.id));
-
+        itemLabel = item.label;
+        itemId = item.id;
         broadcast("pets", "update", params.userId);
         logger.info("pets", "daily reward item", params.userId, item.label);
-
-        return { claimed: true, reward: "item", itemLabel: item.label, itemId: item.id };
       }
+
+      const updateData: Record<string, unknown> = { lastRewardDate: today, updated: now };
+
+      if (pet.kvasBuff) {
+        const [kalItem] = await db
+          .select()
+          .from(schema.items)
+          .where(eq(schema.items.id, ITEM_DB_IDS.poop))
+          .limit(1);
+        if (kalItem) {
+          await economyService.addInventory(params.userId, kalItem.id);
+          broadcast("inventory", "add", params.userId);
+        }
+        updateData.kvasBuff = false;
+      }
+
+      await db
+        .update(schema.pets)
+        .set(updateData)
+        .where(eq(schema.pets.id, pet.id));
+
+      if (isMoney) {
+        return { claimed: true, reward: "money" as const, amount: moneyAmount };
+      }
+      return { claimed: true, reward: "item" as const, itemLabel, itemId };
     },
     {
       params: t.Object({ userId: t.String() }),
       detail: { tags: ["pets"], summary: "Claim daily reward if pet is well cared for" },
+    },
+  )
+
+  .post(
+    "/:userId/resurrect",
+    async ({ params, db, economyService }) => {
+      const now = nowIso();
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+      if (pet.isAlive) throw new Error("Pet is already alive");
+
+      const ratItems = await db
+        .select()
+        .from(schema.inventory)
+        .where(
+          and(
+            eq(schema.inventory.owner, params.userId),
+            eq(schema.inventory.label, "Крыса"),
+          ),
+        )
+        .limit(1);
+
+      if (ratItems.length === 0) {
+        return { ok: false, reason: "no_rat_item" };
+      }
+
+      await economyService.removeInventoryById(ratItems[0].id);
+      broadcast("inventory", "delete", ratItems[0].id);
+
+      await db
+        .update(schema.pets)
+        .set({ isAlive: true, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "resurrected pet", params.userId);
+
+      const updated = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.id, pet.id))
+        .get();
+
+      return { ok: true, pet: updated };
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      detail: { tags: ["pets"], summary: "Resurrect pet with a Крыса item" },
+    },
+  )
+
+  .post(
+    "/:userId/search",
+    async ({ params, db, economyService }) => {
+      const now = nowIso();
+      const today = now.slice(0, 10);
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+      if (pet.isAlive) throw new Error("Pet is alive");
+      if (pet.lastSearchDate === today) {
+        return { ok: false, reason: "already_searched" };
+      }
+
+      const [anusItem] = await db
+        .select()
+        .from(schema.items)
+        .where(eq(schema.items.id, ITEM_DB_IDS.krysinyAnus))
+        .limit(1);
+
+      if (!anusItem) {
+        return { ok: false, reason: "item_not_found" };
+      }
+
+      await economyService.addInventory(params.userId, anusItem.id);
+      broadcast("inventory", "add", params.userId);
+
+      await db
+        .update(schema.pets)
+        .set({ lastSearchDate: today, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "searched dead pet", params.userId);
+
+      return { ok: true, itemLabel: anusItem.label, itemId: anusItem.id };
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      detail: { tags: ["pets"], summary: "Search the dead pet for loot" },
     },
   );

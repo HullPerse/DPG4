@@ -768,6 +768,39 @@ export class EffectService {
 
         return `${user.username} заменил ${ids.length} предметов на случайных крыс`;
       },
+
+      Квас: async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const [pet] = await this.db
+          .select()
+          .from(schema.pets)
+          .where(eq(schema.pets.userId, userId));
+        if (!pet) return null;
+        await this.db
+          .update(schema.pets)
+          .set({ kvasBuff: true, updated: nowIso() })
+          .where(eq(schema.pets.id, pet.id));
+        return `${user.username} напоил крысу квасом`;
+      },
+
+      КВАс: async ({ userId }) => {
+        const user = await this.getUser(userId);
+        return `${user.username} использовал КВАс на крысу`;
+      },
+
+      Кирпич: async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const [pet] = await this.db
+          .select()
+          .from(schema.pets)
+          .where(eq(schema.pets.userId, userId));
+        if (!pet) return null;
+        await this.db
+          .update(schema.pets)
+          .set({ isAlive: false, updated: nowIso() })
+          .where(eq(schema.pets.id, pet.id));
+        return `${user.username} убил крысу кирпичом :(`;
+      },
     };
 
   async executeUse(

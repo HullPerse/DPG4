@@ -182,6 +182,8 @@ export const pets = sqliteTable("pets", {
   isAlive: integer("is_alive", { mode: "boolean" }).notNull().default(true),
   lastUpdated: text("last_updated").notNull(),
   lastRewardDate: text("last_reward_date"),
+  kvasBuff: integer("kvas_buff", { mode: "boolean" }).notNull().default(false),
+  lastSearchDate: text("last_search_date"),
   ...timestamps,
 });
 

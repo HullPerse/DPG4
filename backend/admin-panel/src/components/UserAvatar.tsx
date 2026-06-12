@@ -16,8 +16,7 @@ async function batchFetch(ids: string[]) {
         avatar: String(u.avatar ?? ""),
       });
     }
-  } catch {
-  }
+  } catch {}
 }
 
 export function UserAvatar({ userId }: { userId: string }) {
@@ -52,7 +51,9 @@ export function UserAvatar({ userId }: { userId: string }) {
   }
 
   if (!user) {
-    return <span className="text-muted max-w-24 truncate text-xs">{userId}</span>;
+    return (
+      <span className="text-muted max-w-24 truncate text-xs">{userId}</span>
+    );
   }
 
   return (
@@ -67,7 +68,9 @@ export function UserAvatar({ userId }: { userId: string }) {
           {user.username[0]}
         </span>
       )}
-      <span className="max-w-24 truncate text-xs font-medium">{user.username}</span>
+      <span className="max-w-24 truncate text-xs font-medium">
+        {user.username}
+      </span>
     </span>
   );
 }

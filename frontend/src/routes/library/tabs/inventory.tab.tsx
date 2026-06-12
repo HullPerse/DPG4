@@ -476,29 +476,34 @@ function InventoryTab({ id }: { id?: string }) {
                     </Button>
                   </div>
                   <div className="flex flex-row gap-2 w-full items-center">
-                    <Button
-                      variant="success"
-                      className="flex-1"
-                      onClick={() =>
-                        itemMutation.mutate({
-                          type: "use",
-                          itemId: String(item.id),
-                        })
-                      }
-                      hidden={currentId !== user?.id}
-                      disabled={itemLoading(String(item.id), "use")}
-                    >
-                      {itemLoading(String(item.id), "use") ? (
-                        <SmallLoader />
-                      ) : (
-                        "Использовать"
-                      )}
-                    </Button>
+                    {item.type !== "rat" && (
+                      <Button
+                        variant="success"
+                        className="flex-1"
+                        onClick={() =>
+                          itemMutation.mutate({
+                            type: "use",
+                            itemId: String(item.id),
+                          })
+                        }
+                        hidden={currentId !== user?.id}
+                        disabled={itemLoading(String(item.id), "use")}
+                      >
+                        {itemLoading(String(item.id), "use") ? (
+                          <SmallLoader />
+                        ) : (
+                          "Использовать"
+                        )}
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="error"
                       style={{
-                        width: currentId !== user?.id ? "100%" : undefined,
+                        width:
+                          currentId !== user?.id || item.type === "rat"
+                            ? "100%"
+                            : undefined,
                       }}
                       onClick={() =>
                         itemMutation.mutate({

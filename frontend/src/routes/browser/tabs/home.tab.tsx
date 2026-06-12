@@ -70,14 +70,14 @@ function HomeBrowser({
       },
       randomStore: {
         value: "randomStore",
-        label: "Лавка",
+        label: "ЛАВКА",
         description: "Магазин случайных предметов",
         icon: <Shuffle className="size-10" />,
       },
       wordle: {
         value: "wordle",
-        label: "Предметли",
-        description: "wordle но с ПРИКОЛОМ",
+        label: "ПРЕДМЕТЛИ",
+        description: "Виселица, но с ПРИКОЛОМ",
         icon: <WholeWord className="size-10" />,
       },
       store: {
@@ -100,7 +100,7 @@ function HomeBrowser({
       },
       rat: {
         value: "rat",
-        label: "Крыса",
+        label: "КРЫСА",
         description: "Крыса",
         icon: <Rat className="size-10" />,
       },
