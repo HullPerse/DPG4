@@ -24,6 +24,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import ImageComponent from "@/components/shared/image.component";
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -327,6 +328,17 @@ function DiceTab() {
                 </li>
               </ul>
             </div>
+          </div>
+
+          <div className="p-2 flex flex-col w-full items-center justify-center">
+            <span className="text-sm text-muted font-bold p-1">
+              ОНО РАБОТАЕТ НЕ ТАК
+            </span>
+            <ImageComponent
+              src="diceRules.png"
+              alt="dice rules"
+              className="w-120 h-120 border-2 border-highlight-high"
+            />
           </div>
         </details>
       </section>

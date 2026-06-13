@@ -22,6 +22,7 @@ import {
 } from "@/api/pet.api";
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
+import { useSubscription } from "@/hooks/subscription.hook";
 
 const itemsApi = new ItemsApi();
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -41,8 +42,6 @@ import type { Inventory } from "@/types/items";
 
 useGLTF.preload("/rat.glb");
 
-const DECAY_INTERVAL_MS = 5000;
-const DECAY_PER_TICK = { hunger: 0.4, happiness: 0.25, energy: 0.33 };
 const REWARD_THRESHOLD = 80;
 
 function getMood(
@@ -306,9 +305,6 @@ function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
-  const [localHunger, setLocalHunger] = useState(100);
-  const [localHappiness, setLocalHappiness] = useState(100);
-  const [localEnergy, setLocalEnergy] = useState(100);
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
   const [ratItems, setRatItems] = useState<Inventory[]>([]);
@@ -321,6 +317,12 @@ function TamagotchiTab() {
     enabled: !!user?.id,
     refetchOnMount: "always",
   });
+
+  const refetchPet = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
+  }, [queryClient, user?.id]);
+
+  useSubscription("pets", "*", refetchPet);
 
   const petIsDead = data && !data.isAlive;
 
@@ -335,23 +337,6 @@ function TamagotchiTab() {
       setRatItems(inv.filter((i: Inventory) => i.type === "rat"));
     });
   }, [user?.id, rewardMessage]);
-
-  useEffect(() => {
-    if (!data) return;
-    setLocalHunger(data.hunger);
-    setLocalHappiness(data.happiness);
-    setLocalEnergy(data.energy);
-  }, [data]);
-
-  useEffect(() => {
-    if (petIsDead) return;
-    const interval = setInterval(() => {
-      setLocalHunger((h) => Math.max(0, h - DECAY_PER_TICK.hunger));
-      setLocalHappiness((h) => Math.max(0, h - DECAY_PER_TICK.happiness));
-      setLocalEnergy((e) => Math.max(0, e - DECAY_PER_TICK.energy));
-    }, DECAY_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [petIsDead]);
 
   useEffect(() => {
     if (!data || !user || rewardCheckedRef.current || petIsDead) return;
@@ -374,10 +359,6 @@ function TamagotchiTab() {
     rewardCheckedRef.current = true;
   }, [data, user, petIsDead]);
 
-  const refetchPet = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
-  }, [queryClient, user?.id]);
-
   const handleAction = useCallback((action: "feed" | "pet" | "sleep") => {
     if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current);
     setLastAction(action);
@@ -390,26 +371,17 @@ function TamagotchiTab() {
 
   const feedMutation = useMutation({
     mutationFn: () => feedPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalHunger(pet.hunger);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const petMutation = useMutation({
     mutationFn: () => petPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalHappiness(pet.happiness);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const sleepMutation = useMutation({
     mutationFn: () => sleepPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalEnergy(pet.energy);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const useItemMutation = useMutation({
@@ -456,26 +428,26 @@ function TamagotchiTab() {
     );
   }
 
-  const mood = getMood(localHunger, localHappiness, localEnergy, data?.isAlive ?? true);
+  const mood = getMood(data?.hunger ?? 100, data?.happiness ?? 100, data?.energy ?? 100, data?.isAlive ?? true);
 
   return (
     <main className="flex flex-col w-full h-full gap-2 p-2">
       <section className="flex flex-row gap-3 p-2 bg-background border-2 border-highlight-high rounded-lg">
         <StatBar
           label="🍖 Голод"
-          value={localHunger}
+          value={data?.hunger ?? 100}
           color="#f6c177"
           dead={petIsDead}
         />
         <StatBar
           label="😊 Счастье"
-          value={localHappiness}
+          value={data?.happiness ?? 100}
           color="#c4a7e7"
           dead={petIsDead}
         />
         <StatBar
           label="🔋 Энергия"
-          value={localEnergy}
+          value={data?.energy ?? 100}
           color="#9ccfd8"
           dead={petIsDead}
         />

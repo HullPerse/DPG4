@@ -8,6 +8,7 @@ import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
+import { db } from "../db";
 
 const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -16,9 +17,45 @@ const MAX_STAT = 100;
 const MIN_STAT = 0;
 const REWARD_THRESHOLD = 80;
 const GOOD_STAT_MIN = 1;
+const DECAY_INTERVAL_MS = 30_000;
 
 function calcDecayed(stat: number, elapsedHours: number, decay: number): number {
   return Math.max(MIN_STAT, Math.round(stat - elapsedHours * decay));
+}
+
+export function startPetDecayLoop() {
+  setInterval(async () => {
+    try {
+      const now = nowIso();
+      const pets = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.isAlive, true));
+
+      for (const pet of pets) {
+        const elapsedMs = new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
+        if (elapsedMs < DECAY_INTERVAL_MS) continue;
+
+        const elapsedHours = elapsedMs / (1000 * 60 * 60);
+        const hunger = calcDecayed(pet.hunger, elapsedHours, DECAY_PER_HOUR.hunger);
+        const happiness = calcDecayed(pet.happiness, elapsedHours, DECAY_PER_HOUR.happiness);
+        const energy = calcDecayed(pet.energy, elapsedHours, DECAY_PER_HOUR.energy);
+
+        if (hunger === pet.hunger && happiness === pet.happiness && energy === pet.energy) continue;
+
+        await db
+          .update(schema.pets)
+          .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
+          .where(eq(schema.pets.id, pet.id));
+
+        broadcast("pets", "update", pet.userId);
+      }
+    } catch (err) {
+      logger.error("pets", "decay loop error", err);
+    }
+  }, DECAY_INTERVAL_MS);
+
+  logger.info("SYSTEM", "Pet decay loop started (interval 30s)");
 }
 
 export const petsRoute = new Elysia({ prefix: "/pets" })

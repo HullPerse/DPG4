@@ -29,7 +29,7 @@ import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
 import { hangmanRoute } from "./routes/hangman.route";
-import { petsRoute } from "./routes/pets.route";
+import { petsRoute, startPetDecayLoop } from "./routes/pets.route";
 import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services.server";
@@ -160,6 +160,7 @@ logger.info(
 logger.info(null, `Docs -> /docs  |  Admin -> /admin`);
 
 initAutoBackup();
+startPetDecayLoop();
 
 export type App = typeof app;
 export default app;
