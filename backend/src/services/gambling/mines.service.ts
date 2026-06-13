@@ -11,6 +11,7 @@ import {
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
 } from "../../lib/gambling.constants";
+import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 const GRID = 5;
 const HOUSE_EDGE = 0.97;
@@ -86,10 +87,10 @@ export class MinesService {
 
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
-    if (user.money < bid) throw new Error("Insufficient balance");
+    if (user.tickets < bid) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-    await this.userService.score(userId, -bid);
+    await deductTickets(this.db, userId, bid);
 
     const grid = generateGrid(mineCount);
 
@@ -115,7 +116,7 @@ export class MinesService {
       net: 0,
       label: "",
       tone: "",
-      balance: user.money - bid,
+      balance: user.tickets - bid,
       banned: false,
     };
   }
@@ -171,7 +172,7 @@ export class MinesService {
         net: -game.bid,
         label: `Мина! Проигрыш -${game.bid}`,
         tone: "lose",
-        balance: user?.money ?? 0,
+        balance: user?.tickets ?? 0,
         banned: user?.gamblingBanned ?? false,
       };
     }
@@ -190,7 +191,7 @@ export class MinesService {
       net: 0,
       label: "",
       tone: "chance",
-      balance: user?.money ?? 0,
+      balance: user?.tickets ?? 0,
       banned: false,
     };
   }
@@ -203,7 +204,7 @@ export class MinesService {
     const payout = Math.floor(game.bid * mult);
     const net = payout - game.bid;
 
-    await this.userService.score(userId, payout);
+    await addTickets(this.db, userId, payout);
 
     game.phase = "won";
     this.games.delete(userId);
@@ -261,7 +262,7 @@ export class MinesService {
       net,
       label: `Выигрыш ${mult.toFixed(2)}x +${net}`,
       tone,
-      balance: (user?.money ?? 0) + payout,
+      balance: user?.tickets ?? 0,
       banned: gamblingBanned,
     };
   }

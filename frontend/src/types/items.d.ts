@@ -20,7 +20,7 @@ export interface Inventory extends RecordMeta {
 
 export interface Market extends RecordMeta {
   type: ItemType;
-  originalId: string;
+  originalId: string | null;
   owner: {
     id: string;
     username: string;
@@ -29,9 +29,10 @@ export interface Market extends RecordMeta {
   label: string;
   description: string;
   charge: number;
-  image: File;
+  image: File | null;
   price: number;
   discount?: number;
+  perTicketPrice?: number;
 }
 
 export type Trade = {
@@ -47,7 +48,7 @@ export type Trade = {
  * 3. item   - usable item
  * 4. other  - not usable item
  */
-export type ItemType = "effect" | "item" | "roll" | "other" | "rat";
+export type ItemType = "effect" | "item" | "roll" | "other" | "rat" | "ticket";
 
 import type { FC } from "react";
 import type { ModalType } from "./effect";

@@ -198,6 +198,15 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE pets ADD COLUMN color TEXT NOT NULL DEFAULT '#8B7355';",
     ],
   },
+  {
+    hash: "0016_add_tickets",
+    sql: [
+      "ALTER TABLE users ADD COLUMN tickets INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE users ADD COLUMN tickets_bought_today INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE users ADD COLUMN tickets_date TEXT;",
+      "ALTER TABLE market ADD COLUMN per_ticket_price INTEGER;",
+    ],
+  },
 ];
 
 export function runMigrations() {

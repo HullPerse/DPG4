@@ -28,6 +28,7 @@ interface LeaderboardRow {
   avatar: string;
   color: string;
   currentMoney: number;
+  currentTickets: number;
   totalNet: number;
   gamesPlayed: number;
   wins: number;
@@ -194,6 +195,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           u.avatar,
           u.color,
           u.money AS currentMoney,
+          u.tickets AS currentTickets,
           COALESCE(SUM(h.net), 0) AS totalNet,
           COUNT(*) AS gamesPlayed,
           COUNT(CASE WHEN h.net > 0 THEN 1 END) AS wins,

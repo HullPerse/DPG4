@@ -31,7 +31,7 @@ function pause(ms: number) {
 }
 
 function DiceTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -53,7 +53,7 @@ function DiceTab() {
   const [dealerThrowKey, setDealerThrowKey] = useState(0);
   const [playerThrowKey, setPlayerThrowKey] = useState(0);
   const [playerDiceActive, setPlayerDiceActive] = useState(false);
-  const [displayBalance, setDisplayBalance] = useState(user?.money ?? 0);
+  const [displayBalance, setDisplayBalance] = useState(user?.tickets ?? 0);
 
   const rollCoordinatorRef = useRef(new DiceRollCoordinator());
   const dealerKeyRef = useRef(0);
@@ -151,7 +151,7 @@ function DiceTab() {
   const finishRound = (finalResult: DiceGameResult) => {
     setDisplayBalance(finalResult.balance);
     useUserStore.setState({
-      user: { ...user!, money: finalResult.balance },
+      user: { ...user!, tickets: finalResult.balance },
     });
     if (finalResult.banned) setGamblingBanned(true);
     setResult({
@@ -163,11 +163,11 @@ function DiceTab() {
   };
 
   const failRound = (label: string, balance?: number) => {
-    const money = balance ?? useUserStore.getState().user?.money ?? 0;
+    const tickets = balance ?? useUserStore.getState().user?.tickets ?? 0;
     useUserStore.setState({
-      user: { ...useUserStore.getState().user!, money },
+      user: { ...useUserStore.getState().user!, tickets },
     });
-    setDisplayBalance(money);
+    setDisplayBalance(tickets);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
   };
@@ -181,13 +181,13 @@ function DiceTab() {
 
   const gameMutation = useMutation({
     mutationFn: async () => {
-      if (!user || balance < bid || gamblingBanned) return;
+      if (!user || ticketBalance < bid || gamblingBanned) return;
 
       const round = ++roundIdRef.current;
       resetDiceVisuals();
       setResult(null);
       setDealerTarget(null);
-      setDisplayBalance(balance);
+      setDisplayBalance(ticketBalance);
       setGamePhase("dealer");
 
       await abortDice();
@@ -196,7 +196,7 @@ function DiceTab() {
       const dealerInitial = await rollDiceDealer(bid);
       if (!isRoundActive(round)) return;
 
-      setDisplayBalance(balance - bid);
+      setDisplayBalance(ticketBalance - bid);
 
       const dealer = await settleDealer(dealerInitial, round);
       if (!isRoundActive(round)) return;
@@ -225,7 +225,7 @@ function DiceTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={displayBalance} />
+      <BalanceDisplay balance={balance} ticketBalance={displayBalance} />
 
       <BidSelector
         bidOptions={bidOptions}
@@ -255,10 +255,10 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           loading={gameMutation.isPending}
-          disabled={balance < bid || gamblingBanned}
+          disabled={ticketBalance < bid || gamblingBanned}
           onClick={() => gameMutation.mutate()}
         >
-          {gamblingBanned ? "Вы забанены" : `Кинуть (${bid})`}
+          {gamblingBanned ? "Вы забанены" : ticketBalance < bid ? "Недостаточно тикетов" : `Кинуть (${bid})`}
         </Button>
 
         <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">

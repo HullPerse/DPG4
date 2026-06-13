@@ -15,6 +15,7 @@ import {
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
 } from "../../lib/gambling.constants";
+import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 const MAX_VOID_REROLLS = 2;
 
@@ -245,12 +246,12 @@ export class DiceService {
 
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
-    if (user.money < bid) throw new Error("Insufficient balance");
+    if (user.tickets < bid) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
 
     const values = getRandomDice();
 
-    await this.userService.score(userId, -bid);
+    await deductTickets(this.db, userId, bid);
 
     const game: ActiveDiceGame = {
       dealerValues: values,
@@ -332,7 +333,7 @@ export class DiceService {
       logger.info(user.username, "player reroll", values.join(", "));
       return {
         ...result,
-        balance: user.money,
+        balance: user.tickets,
         reroll: true,
         label: "Нет комбинации - переброс",
       };
@@ -374,7 +375,7 @@ export class DiceService {
     }
 
     if (result.payout > 0) {
-      await this.userService.score(userId, result.payout);
+      await addTickets(this.db, userId, result.payout);
     }
 
     await this.db
@@ -398,7 +399,7 @@ export class DiceService {
     return {
       ...result,
       net,
-      balance: updatedUser?.money ?? 0,
+      balance: updatedUser?.tickets ?? 0,
       banned: gamblingBanned,
       tone: result.tone === "reroll" ? "chance" : result.tone,
     };
@@ -408,13 +409,13 @@ export class DiceService {
     const game = this.games.get(userId);
     if (!game) {
       const user = await this.userService.getById(userId);
-      return { refunded: 0, balance: user?.money ?? 0 };
+      return { refunded: 0, balance: user?.tickets ?? 0 };
     }
 
-    await this.userService.score(userId, game.bid);
+    await addTickets(this.db, userId, game.bid);
     this.games.delete(userId);
 
     const updatedUser = await this.userService.getById(userId);
-    return { refunded: game.bid, balance: updatedUser?.money ?? 0 };
+    return { refunded: game.bid, balance: updatedUser?.tickets ?? 0 };
   }
 }

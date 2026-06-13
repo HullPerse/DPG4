@@ -26,7 +26,7 @@ describe("MinesService", () => {
     expect(state.phase).toBe("playing");
     expect(state.currentMultiplier).toBe(1);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(95);
+    expect(user!.tickets).toBe(95);
   });
 
   test("start rejects invalid bid", async () => {
@@ -48,7 +48,7 @@ describe("MinesService", () => {
   });
 
   test("start rejects insufficient balance", async () => {
-    const poor = await createUser(db, { money: 2 });
+    const poor = await createUser(db, { tickets: 2 });
     expect(services.minesService.start(poor.id, 5, 3)).rejects.toThrow(
       "Insufficient balance",
     );

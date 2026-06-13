@@ -7,11 +7,13 @@ import {
   Trophy,
   BarChart3,
   Bomb,
+  Ticket,
 } from "lucide-react";
 import { memo } from "react";
 
 type Tab =
   | "home"
+  | "cassa"
   | "dice"
   | "blackjack"
   | "rocket"
@@ -22,6 +24,12 @@ type Tab =
 
 function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const tabs = [
+    {
+      value: "cassa" as Tab,
+      label: "Касса",
+      description: "Купить и продать тикеты казино",
+      icon: <Ticket className="size-10" />,
+    },
     {
       value: "dice" as Tab,
       label: "Чинчирорин",

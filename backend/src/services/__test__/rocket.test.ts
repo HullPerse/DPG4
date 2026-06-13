@@ -39,7 +39,7 @@ describe("RocketService", () => {
     expect(state.bid).toBe(3);
     expect(state.crashPoint).toBeGreaterThanOrEqual(1);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(100);
+    expect(user!.tickets).toBe(100);
   });
 
   test("launch rejects invalid bid", async () => {
@@ -84,7 +84,7 @@ describe("RocketService", () => {
     expect(state.phase).toBe("crashed");
     expect(state.net).toBe(-3);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(97);
+    expect(user!.tickets).toBe(97);
   });
 
   test("cashout succeeds when multiplier below crash point", async () => {
@@ -114,7 +114,7 @@ describe("RocketService", () => {
     const state = await services.rocketService.cashout(userId);
     const net = state.net;
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(100 + net);
+    expect(user!.tickets).toBe(100 + net);
   });
 
   test("cashout triggers crash when multiplier >= crash point", async () => {

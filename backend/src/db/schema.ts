@@ -28,6 +28,9 @@ export const users = sqliteTable("users", {
   gamblingWinnings: integer("gambling_winnings").notNull().default(0),
   gamblingBanned: integer("gambling_banned", { mode: "boolean" }).notNull().default(false),
   hangman: integer("hangman", { mode: "boolean" }).notNull().default(false),
+  tickets: integer("tickets").notNull().default(0),
+  ticketsBoughtToday: integer("tickets_bought_today").notNull().default(0),
+  ticketsDate: text("tickets_date"),
   ...timestamps,
 });
 
@@ -87,6 +90,7 @@ export const market = sqliteTable("market", {
   charge: integer("charge").notNull().default(0),
   price: integer("price").notNull().default(0),
   discount: integer("discount"),
+  perTicketPrice: integer("per_ticket_price"),
   image: blob("image", { mode: "buffer" }),
   imageMime: text("image_mime"),
   ...timestamps,

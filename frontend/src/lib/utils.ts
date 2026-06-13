@@ -295,6 +295,7 @@ export function translateItemType(type: ItemType) {
     roll: "Спецролл",
     other: "Другое",
     rat: "Крысиный",
+    ticket: "Тикет",
   };
 
   return typeMap[type];

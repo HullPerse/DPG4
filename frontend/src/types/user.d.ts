@@ -10,6 +10,7 @@ export interface User extends RecordMeta {
   isAdmin?: boolean;
   position: number;
   money: number;
+  tickets?: number;
   steam: string;
   gamblingBanned?: boolean;
   gamblingWinnings?: number;

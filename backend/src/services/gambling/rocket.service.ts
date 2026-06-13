@@ -12,6 +12,7 @@ import {
   GAMBLING_MAX_BET,
   ROCKET_START_MULT,
 } from "../../lib/gambling.constants";
+import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 export class RocketService {
   constructor(
@@ -63,7 +64,7 @@ export class RocketService {
     });
     if (this.crashHistory.length > this.MAX_HISTORY) this.crashHistory.shift();
 
-    await this.userService.score(userId, -game.bid);
+    await deductTickets(this.db, userId, game.bid);
 
     const user = await this.userService.getById(userId);
     this.activeGames.delete(userId);
@@ -96,7 +97,7 @@ export class RocketService {
       multiplier: game.crashPoint,
       crashPoint: game.crashPoint,
       bid: game.bid,
-      balance: user?.money ?? 0,
+      balance: user?.tickets ?? 0,
       net: -game.bid,
       label,
       tone: "lose",
@@ -121,7 +122,7 @@ export class RocketService {
 
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
-    if (user.money < bid) throw new Error("Insufficient balance");
+    if (user.tickets < bid) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
 
     const crashPoint = this.generateCrashPoint(bid);
@@ -148,7 +149,7 @@ export class RocketService {
       multiplier: 1,
       crashPoint,
       bid,
-      balance: user.money,
+      balance: user.tickets,
       net: 0,
       label: "",
       tone: "",
@@ -174,8 +175,8 @@ export class RocketService {
     const payout = Math.floor(game.bid * currentMultiplier);
     const net = payout - game.bid;
 
-    await this.userService.score(userId, -game.bid);
-    await this.userService.score(userId, payout);
+    await deductTickets(this.db, userId, game.bid);
+    await addTickets(this.db, userId, payout);
 
     const user = await this.userService.getById(userId);
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
@@ -225,7 +226,7 @@ export class RocketService {
       multiplier: currentMultiplier,
       crashPoint: game.crashPoint,
       bid: game.bid,
-      balance: user?.money ?? 0,
+      balance: user?.tickets ?? 0,
       net,
       label,
       tone,

@@ -34,6 +34,7 @@ import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
+import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
 
 const app = new Elysia()
   .use(
@@ -139,6 +140,8 @@ const app = new Elysia()
   .use(rulesRoute)
   .use(filesRoute)
   .use(gameUtilsRoute)
+  .use(ticketsRoute)
+  .use(ticketMarketRoute)
   .use(configRoute)
   .use(steamRoute)
   .use(searchRoute)

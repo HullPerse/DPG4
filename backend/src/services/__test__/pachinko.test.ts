@@ -24,7 +24,7 @@ describe("PachinkoService", () => {
     expect(state.phase).toBe("dropping");
     expect(state.bid).toBe(5);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(95);
+    expect(user!.tickets).toBe(95);
   });
 
   test("drop with ratAmount deducts total", async () => {
@@ -32,7 +32,7 @@ describe("PachinkoService", () => {
     expect(state.phase).toBe("dropping");
     expect(state.bid).toBe(15);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(85);
+    expect(user!.tickets).toBe(85);
   });
 
   test("drop rejects invalid ratAmount", async () => {
@@ -54,14 +54,14 @@ describe("PachinkoService", () => {
   });
 
   test("drop rejects insufficient balance", async () => {
-    const poor = await createUser(db, { money: 2 });
+    const poor = await createUser(db, { tickets: 2 });
     expect(services.pachinkoService.drop(poor.id, 5)).rejects.toThrow(
       "Insufficient balance",
     );
   });
 
   test("drop with ratAmount rejects insufficient balance", async () => {
-    const poor = await createUser(db, { money: 10 });
+    const poor = await createUser(db, { tickets: 10 });
     expect(services.pachinkoService.drop(poor.id, 5, 3)).rejects.toThrow(
       "Insufficient balance",
     );
@@ -88,7 +88,7 @@ describe("PachinkoService", () => {
     expect(state.payout).toBe(15);
     expect(state.net).toBe(12);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(112);
+    expect(user!.tickets).toBe(112);
   });
 
   test("settle slot 6 (0.5x) loses money", async () => {
@@ -97,7 +97,7 @@ describe("PachinkoService", () => {
     expect(state.payout).toBe(5);
     expect(state.net).toBe(-5);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(95);
+    expect(user!.tickets).toBe(95);
   });
 
   test("settle slot 12 (5x) pays 5x bid", async () => {
@@ -137,7 +137,7 @@ describe("PachinkoService", () => {
     expect(state.net).toBe(22);
     // money: 100 - 9 + 31 = 122
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(122);
+    expect(user!.tickets).toBe(122);
   });
 
   test("multi-rat settle all bad slots loses money", async () => {

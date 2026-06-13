@@ -39,7 +39,7 @@ describe("DiceService", () => {
     expect(result.target).toBe(5);
     expect(result.autoResult).toBeNull();
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(97);
+    expect(user!.tickets).toBe(97);
   });
 
   test("rollDealer rejects invalid bid", async () => {
@@ -52,7 +52,7 @@ describe("DiceService", () => {
   });
 
   test("rollDealer rejects insufficient balance", async () => {
-    const poor = await createUser(db, { money: 2 });
+    const poor = await createUser(db, { money: 2, tickets: 2 });
     expect(services.diceService.rollDealer(poor.id, 5)).rejects.toThrow(
       "Insufficient balance",
     );
@@ -74,7 +74,7 @@ describe("DiceService", () => {
     expect(result.net).toBe(5);
     expect(result.label).toContain("1·2·3");
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(105);
+    expect(user!.tickets).toBe(105);
   });
 
   test("dealer 4-5-6 auto win -> player loses bid", async () => {
@@ -85,7 +85,7 @@ describe("DiceService", () => {
     expect(result.payout).toBe(0);
     expect(result.net).toBe(-3);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(97);
+    expect(user!.tickets).toBe(97);
   });
 
   test("dealer 1-1-1 auto win -> player loses bid", async () => {
@@ -97,7 +97,7 @@ describe("DiceService", () => {
     expect(result.net).toBe(-3);
     expect(result.label).toContain("автоматически");
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(97);
+    expect(user!.tickets).toBe(97);
   });
 
   test("player 4-5-6 wins 2x", async () => {
@@ -247,7 +247,7 @@ describe("DiceService", () => {
     expect(refunded).toBe(5);
     expect(balance).toBe(100);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(100);
+    expect(user!.tickets).toBe(100);
   });
 
   test("abort during player phase refunds bid", async () => {
@@ -257,6 +257,6 @@ describe("DiceService", () => {
     expect(refunded).toBe(5);
     expect(balance).toBe(100);
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(100);
+    expect(user!.tickets).toBe(100);
   });
 });

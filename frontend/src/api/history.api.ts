@@ -37,6 +37,7 @@ export type LeaderboardEntry = {
   avatar: string;
   color: string;
   currentMoney: number;
+  currentTickets: number;
   totalNet: number;
   gamesPlayed: number;
   wins: number;

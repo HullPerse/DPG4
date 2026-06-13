@@ -20,6 +20,7 @@ export function useGamblingStore() {
   const gamblingBanned = useDataStore((state) => state.gamblingBanned);
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const balance = user?.money ?? 0;
+  const ticketBalance = user?.tickets ?? 0;
 
-  return { user, balance, gamblingBanned, setGamblingBanned };
+  return { user, balance, ticketBalance, gamblingBanned, setGamblingBanned };
 }

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getLeaderboard, type LeaderboardEntry } from "@/api/history.api";
-import { Trophy, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, DollarSign, Ticket } from "lucide-react";
 import { useState } from "react";
 import {
   GAMBLING_GAME_FILTERS,
@@ -194,6 +194,12 @@ function LeaderboardRow({
             <DollarSign className="size-3" />
             {entry.currentMoney}
           </span>
+          {entry.currentTickets > 0 && (
+            <span className="text-[10px] text-muted flex items-center gap-0.5 tabular-nums">
+              <Ticket className="size-3" />
+              {entry.currentTickets} т.
+            </span>
+          )}
         </div>
       </div>
       <WinRateBar wins={entry.wins} total={entry.gamesPlayed} />
