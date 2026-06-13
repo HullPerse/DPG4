@@ -27,200 +27,112 @@ function getRandomDice(): [number, number, number] {
   ];
 }
 
-/** Three unique faces that are not 1·2·3 or 4·5·6 - no playable hand */
-export function isVoidHand(values: [number, number, number]): boolean {
-  const sorted = [...values].sort((a, b) => a - b);
-  const [a, b, c] = sorted;
-  if (new Set(values).size !== 3) return false;
-  if (a === 1 && b === 2 && c === 3) return false;
-  if (a === 4 && b === 5 && c === 6) return false;
-  return true;
-}
+export type HandInfo = {
+  rank: 5 | 4 | 3 | 2 | 1 | 0;
+  mult: number;
+  kicker?: number;
+  label: string;
+};
 
-function resolveDealerRoll(values: [number, number, number]): {
-  target: number | null;
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
-} {
+export function evaluateHand(values: [number, number, number]): HandInfo {
   const sorted = [...values].sort((a, b) => a - b);
   const [a, b, c] = sorted;
   const unique = new Set(values);
 
-  if (a === 1 && b === 2 && c === 3) {
-    return { target: null, autoResult: "dealer_lose" };
-  }
-  if (a === 4 && b === 5 && c === 6) {
-    return { target: null, autoResult: "dealer_win" };
-  }
-  if (unique.size === 1) {
-    return { target: null, autoResult: "dealer_win" };
-  }
-  if (unique.size === 2) {
-    const pairValue = unique.has(a) && unique.has(b) && a === b ? a : c;
-    const target = values.filter((v) => v !== pairValue)[0];
-    return { target, autoResult: null };
-  }
-  return { target: null, autoResult: "push" };
-}
-
-function resolvePlayerResult(
-  values: [number, number, number],
-  dealerTarget: number | null,
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null,
-  bid: number,
-): DiceGameResult {
-  if (autoResult === "dealer_lose") {
-    return {
-      playerValues: values,
-      payout: bid * 2,
-      net: bid,
-      label: "Дилер выкинул 1·2·3 - ты победил",
-      tone: "win",
-      balance: 0,
-      banned: false,
-    };
-  }
-  if (autoResult === "dealer_win") {
-    return {
-      playerValues: values,
-      payout: 0,
-      net: -bid,
-      label: "Дилер победил автоматически",
-      tone: "lose",
-      balance: 0,
-      banned: false,
-    };
-  }
-  if (autoResult === "push") {
-    return {
-      playerValues: values,
-      payout: bid,
-      net: 0,
-      label: "Ничья - ставка возвращена",
-      tone: "chance",
-      balance: 0,
-      banned: false,
-    };
-  }
-
-  const sorted = [...values].sort((a, b) => a - b);
-  const [a, b, c] = sorted;
-  const unique = new Set(values);
-
-  if (a === 1 && b === 2 && c === 3) {
-    return {
-      playerValues: values,
-      payout: 0,
-      net: -bid,
-      label: "1·2·3 - проигрыш",
-      tone: "lose",
-      balance: 0,
-      banned: false,
-    };
-  }
-  if (a === 4 && b === 5 && c === 6) {
-    const net = bid * 2;
-    return {
-      playerValues: values,
-      payout: bid + net,
-      net,
-      label: "4·5·6 - выигрыш",
-      tone: "win",
-      balance: 0,
-      banned: false,
-    };
-  }
   if (a === 1 && b === 1 && c === 1) {
-    const net = bid * 3;
-    return {
-      playerValues: values,
-      payout: bid + net,
-      net,
-      label: "Три единицы - джекпот",
-      tone: "jackpot",
-      balance: 0,
-      banned: false,
-    };
+    return { rank: 5, mult: 5, label: "1·1·1 - джекпот" };
   }
   if (unique.size === 1) {
-    const net = bid * 2;
-    return {
-      playerValues: values,
-      payout: bid + net,
-      net,
-      label: `Три ${a} - выигрыш`,
-      tone: "win",
-      balance: 0,
-      banned: false,
-    };
+    return { rank: 4, mult: 3, kicker: a, label: `Три ${a}` };
+  }
+  if (a === 4 && b === 5 && c === 6) {
+    return { rank: 3, mult: 2, label: "4·5·6" };
   }
   if (unique.size === 2) {
-    const pairValue = values.filter(
-      (v) => values.filter((x) => x === v).length >= 2,
-    )[0];
-    const playerTarget = values.filter((v) => v !== pairValue)[0];
+    const pairValue = a === b ? a : c;
+    const kicker = values.filter((v) => v !== pairValue)[0];
+    return { rank: 2, mult: 1, kicker, label: `Пара ${pairValue} + ${kicker}` };
+  }
+  if (a === 1 && b === 2 && c === 3) {
+    return { rank: 1, mult: 2, label: "1·2·3" };
+  }
+  return { rank: 0, mult: 0, label: "Нет комбинации" };
+}
 
-    if (playerTarget > dealerTarget!) {
-      const net = bid;
-      return {
-        playerValues: values,
-        payout: bid + net,
-        net,
-        label: `${playerTarget} > ${dealerTarget} - выигрыш`,
-        tone: "win",
-        balance: 0,
-        banned: false,
-      };
-    }
-    if (playerTarget === dealerTarget) {
-      return {
-        playerValues: values,
-        payout: bid,
-        net: 0,
-        label: `${playerTarget} = ${dealerTarget} - ничья`,
-        tone: "chance",
-        balance: 0,
-        banned: false,
-      };
-    }
+function compareHands(
+  dealerValues: [number, number, number],
+  playerValues: [number, number, number],
+  bid: number,
+): {
+  payout: number;
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance";
+} {
+  const dealer = evaluateHand(dealerValues);
+  const player = evaluateHand(playerValues);
+
+  if (dealer.rank > player.rank) {
+    const mult = dealer.mult;
     return {
-      playerValues: values,
       payout: 0,
-      net: -bid,
-      label: `${playerTarget} < ${dealerTarget} - проигрыш`,
+      net: -(mult * bid),
+      label: `${dealer.label} - дилер победил`,
       tone: "lose",
-      balance: 0,
-      banned: false,
     };
   }
 
+  if (player.rank > dealer.rank) {
+    const mult = player.mult;
+    return {
+      payout: bid + mult * bid,
+      net: mult * bid,
+      label: `${player.label} - ты победил`,
+      tone: player.rank === 5 ? "jackpot" : "win",
+    };
+  }
+
+  // Same rank — tiebreak
+  if (dealer.rank === 4 && player.kicker !== dealer.kicker) {
+    if (player.kicker! > dealer.kicker!) {
+      return {
+        payout: bid + 3 * bid,
+        net: 3 * bid,
+        label: `${player.label} > ${dealer.label} - ты победил`,
+        tone: "win",
+      };
+    }
+    return {
+      payout: 0,
+      net: -(3 * bid),
+      label: `${player.label} < ${dealer.label} - дилер победил`,
+      tone: "lose",
+    };
+  }
+
+  if (dealer.rank === 2 && player.kicker !== dealer.kicker) {
+    if (player.kicker! > dealer.kicker!) {
+      return {
+        payout: bid + bid,
+        net: bid,
+        label: `${player.kicker} > ${dealer.kicker} - ты победил`,
+        tone: "win",
+      };
+    }
+    return {
+      payout: 0,
+      net: -bid,
+      label: `${player.kicker} < ${dealer.kicker} - дилер победил`,
+      tone: "lose",
+    };
+  }
+
+  // Same rank with equal values or ranks 5/3/1/0 — push
   return {
-    playerValues: values,
     payout: bid,
     net: 0,
-    label: "Ничего - ничья",
-    tone: "reroll",
-    balance: 0,
-    banned: false,
-    reroll: true,
-  };
-}
-
-function finalizeDealerPhase(
-  game: ActiveDiceGame,
-  values: [number, number, number],
-): DiceRollPhaseResult {
-  const resolved = resolveDealerRoll(values);
-  game.dealerValues = values;
-  game.dealerTarget = resolved.target;
-  game.autoResult = resolved.autoResult;
-  game.phase = "player";
-
-  return {
-    phase: "dealer",
-    values,
-    target: resolved.target,
-    autoResult: resolved.autoResult,
-    reroll: false,
+    label: `Ничья - ставка возвращена`,
+    tone: "chance",
   };
 }
 
@@ -251,36 +163,36 @@ export class DiceService {
 
     const values = getRandomDice();
 
-    await deductTickets(this.db, userId, bid);
-
     const game: ActiveDiceGame = {
       dealerValues: values,
-      dealerTarget: null,
       phase: "dealer",
       bid,
       userId,
-      autoResult: null,
       dealerRerolls: 0,
       playerRerolls: 0,
     };
     this.games.set(userId, game);
 
+    const hand = evaluateHand(values);
     logger.info(user.username, "dealer rolled", values.join(", "));
 
-    if (isVoidHand(values) && game.dealerRerolls < MAX_VOID_REROLLS) {
+    if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
-      game.dealerValues = values;
       return {
         phase: "dealer",
         values,
-        target: null,
-        autoResult: null,
         reroll: true,
-        label: "У дилера нет комбинации - переброс",
+        handLabel: "Нет комбинации - переброс",
       };
     }
 
-    return finalizeDealerPhase(game, values);
+    game.phase = "player";
+    return {
+      phase: "dealer",
+      values,
+      reroll: false,
+      handLabel: hand.label,
+    };
   }
 
   async rerollDealer(userId: string): Promise<DiceRollPhaseResult> {
@@ -294,21 +206,26 @@ export class DiceService {
     const values = getRandomDice();
     game.dealerValues = values;
 
+    const hand = evaluateHand(values);
     logger.info(user.username, "dealer reroll", values.join(", "));
 
-    if (isVoidHand(values) && game.dealerRerolls < MAX_VOID_REROLLS) {
+    if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
       return {
         phase: "dealer",
         values,
-        target: null,
-        autoResult: null,
         reroll: true,
-        label: "У дилера нет комбинации - переброс",
+        handLabel: "Нет комбинации - переброс",
       };
     }
 
-    return finalizeDealerPhase(game, values);
+    game.phase = "player";
+    return {
+      phase: "dealer",
+      values,
+      reroll: false,
+      handLabel: hand.label,
+    };
   }
 
   async rollPlayer(userId: string): Promise<DiceGameResult> {
@@ -320,62 +237,60 @@ export class DiceService {
     if (!user) throw new Error("User not found");
 
     const values = getRandomDice();
+    const hand = evaluateHand(values);
 
-    const result = resolvePlayerResult(
-      values,
-      game.dealerTarget,
-      game.autoResult,
-      game.bid,
-    );
-
-    if (result.tone === "reroll" && game.playerRerolls < MAX_VOID_REROLLS) {
+    if (hand.rank === 0 && game.playerRerolls < MAX_VOID_REROLLS) {
       game.playerRerolls++;
       logger.info(user.username, "player reroll", values.join(", "));
       return {
-        ...result,
-        balance: user.tickets,
-        reroll: true,
+        playerValues: values,
+        payout: 0,
+        net: 0,
         label: "Нет комбинации - переброс",
+        tone: "reroll",
+        balance: user.tickets,
+        banned: false,
+        reroll: true,
       };
     }
 
     this.games.delete(userId);
+
+    const comparison = compareHands(game.dealerValues, values, game.bid);
 
     await this.db.insert(schema.history).values({
       id: newId(),
       userId,
       owner: { id: user.id, username: user.username },
       type: "dice",
-      label: result.label,
+      label: comparison.label,
       image: "",
       bid: game.bid,
-      payout: result.payout,
-      net: result.net,
+      payout: comparison.payout,
+      net: comparison.net,
       data: {
         dealerValues: game.dealerValues,
-        dealerTarget: game.dealerTarget,
         playerValues: values,
-        autoResult: game.autoResult,
         dealerRerolls: game.dealerRerolls,
         playerRerolls: game.playerRerolls,
       },
       created: nowIso(),
     });
 
-    const net = result.net;
-
+    const net = comparison.net;
     let gamblingWinnings: number = user.gamblingWinnings ?? 0;
     let gamblingBanned: boolean = user.gamblingBanned ?? false;
-    const profit = result.net;
-    if (profit > 0) {
-      gamblingWinnings += profit;
+    if (net > 0) {
+      gamblingWinnings += net;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
     }
 
-    if (result.payout > 0) {
-      await addTickets(this.db, userId, result.payout);
+    if (comparison.net > 0) {
+      await addTickets(this.db, userId, game.bid + comparison.net);
+    } else if (comparison.net < 0) {
+      await deductTickets(this.db, userId, Math.abs(comparison.net));
     }
 
     await this.db
@@ -397,25 +312,20 @@ export class DiceService {
     );
 
     return {
-      ...result,
+      playerValues: values,
+      payout: comparison.payout,
       net,
+      label: comparison.label,
+      tone: comparison.tone,
       balance: updatedUser?.tickets ?? 0,
       banned: gamblingBanned,
-      tone: result.tone === "reroll" ? "chance" : result.tone,
     };
   }
 
   async abort(userId: string): Promise<{ refunded: number; balance: number }> {
     const game = this.games.get(userId);
-    if (!game) {
-      const user = await this.userService.getById(userId);
-      return { refunded: 0, balance: user?.tickets ?? 0 };
-    }
-
-    await addTickets(this.db, userId, game.bid);
     this.games.delete(userId);
-
-    const updatedUser = await this.userService.getById(userId);
-    return { refunded: game.bid, balance: updatedUser?.tickets ?? 0 };
+    const user = await this.userService.getById(userId);
+    return { refunded: 0, balance: user?.tickets ?? 0 };
   }
 }

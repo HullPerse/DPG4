@@ -1,6 +1,6 @@
 import { PCFShadowMap } from "three";
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, Text, Billboard } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import DiceMesh from "../mesh/mesh.dice";
 import { DEALER_Z, PLAYER_Z } from "@/lib/gambling/dice.utils";
 
@@ -9,20 +9,16 @@ function DiceScene({
   playerThrowKey,
   dealerValues,
   playerValues,
-  dealerTarget,
   onDealerSettled,
   onPlayerSettled,
-  showDealerLabel,
   playerDiceActive,
 }: {
   dealerThrowKey: number;
   playerThrowKey: number;
   dealerValues: [number, number, number] | null;
   playerValues: [number, number, number] | null;
-  dealerTarget: number | null;
   onDealerSettled: (index: number, throwKey: number) => void;
   onPlayerSettled: (index: number, throwKey: number) => void;
-  showDealerLabel?: boolean;
   /** Player row only simulates throws after the first player roll */
   playerDiceActive: boolean;
 }) {
@@ -49,19 +45,6 @@ function DiceScene({
       <pointLight position={[0, 2, 6]} intensity={0.4} color="#f6c177" />
 
       <group position={[0, -0.2, 0]}>
-        {/* Dealer row (back) */}
-        {dealerTarget != null && showDealerLabel && (
-          <Billboard>
-            <Text
-              position={[-5.0, 2, DEALER_Z + 2]}
-              fontSize={0.35}
-              color="#f6c177"
-              anchorX="left"
-            >
-              Цель: {dealerTarget}
-            </Text>
-          </Billboard>
-        )}
         {([0, 1, 2] as const).map((i) => (
           <DiceMesh
             key={`d-${i}`}

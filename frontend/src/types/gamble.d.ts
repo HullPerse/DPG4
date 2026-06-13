@@ -25,10 +25,8 @@ export type DiceResult = {
 export interface DiceDealerResult {
   phase: "dealer";
   values: [number, number, number];
-  target: number | null;
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
   reroll?: boolean;
-  label?: string;
+  handLabel?: string;
 }
 
 export interface DiceGameResult {
