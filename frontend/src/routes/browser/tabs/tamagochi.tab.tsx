@@ -49,21 +49,15 @@ function getMood(
   happiness: number,
   energy: number,
   isAlive: boolean,
-): { emoji: string; label: string } {
-  if (!isAlive) return { emoji: "💀", label: "Мертва" };
-  if (hunger < 30) return { emoji: "🍖", label: "Голоден" };
-  if (energy < 30) return { emoji: "😴", label: "Хочет спать" };
-  if (happiness < 30) return { emoji: "😢", label: "Грустный" };
+): string {
+  if (!isAlive) return "Мертва";
+  if (hunger < 30) return "Голоден";
+  if (energy < 30) return "Хочет спать";
+  if (happiness < 30) return "Грустный";
   if (happiness > 70 && hunger > 70 && energy > 70)
-    return { emoji: "😊", label: "Счастлив" };
-  return { emoji: "😐", label: "Нормально" };
+    return "Счастлив";
+  return "Нормально";
 }
-
-const animEmoji: Record<string, string> = {
-  feed: "🍖",
-  pet: "💕",
-  sleep: "😴",
-};
 
 function RatModel({
   reaction,
@@ -243,36 +237,10 @@ function StatBar({
   );
 }
 
-function MoodBubble({ emoji, label }: { emoji: string; label: string }) {
+function MoodBadge({ label }: { label: string }) {
   return (
-    <div className="absolute top-2 right-2 flex flex-col items-center gap-0.5 bg-background/80 border-2 border-highlight-high rounded-lg px-3 py-1.5 z-10 select-none">
-      <span className="text-3xl">{emoji}</span>
+    <div className="absolute top-2 right-2 flex flex-col items-center bg-background/80 border-2 border-highlight-high rounded-lg px-3 py-1.5 z-10 select-none">
       <span className="text-xs text-muted font-medium">{label}</span>
-    </div>
-  );
-}
-
-function FloatingEffect({ reaction }: { reaction: string | null }) {
-  const [items, setItems] = useState<{ id: number; emoji: string }[]>([]);
-  const idRef = useRef(0);
-
-  useEffect(() => {
-    if (!reaction) return;
-    const id = ++idRef.current;
-    const emoji = animEmoji[reaction] ?? "✨";
-    setItems((prev) => [...prev, { id, emoji }]);
-    setTimeout(() => {
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    }, 1000);
-  }, [reaction]);
-
-  return (
-    <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none z-20">
-      {items.map((item) => (
-        <div key={item.id} className="text-4xl animate-pet-float">
-          {item.emoji}
-        </div>
-      ))}
     </div>
   );
 }
@@ -348,9 +316,9 @@ function TamagotchiTab() {
       claimDailyReward(user.id).then((result) => {
         if (result.claimed) {
           if (result.reward === "money") {
-            setRewardMessage(`🎉 Крыса принесла ${result.amount} монет!`);
+            setRewardMessage(`Крыса принесла ${result.amount} монет!`);
           } else {
-            setRewardMessage(`🎉 Крыса принесла предмет: ${result.itemLabel}!`);
+            setRewardMessage(`Крыса принесла предмет: ${result.itemLabel}!`);
           }
           setTimeout(() => setRewardMessage(null), 4000);
         }
@@ -412,7 +380,7 @@ function TamagotchiTab() {
     mutationFn: () => searchDeadPet(user!.id),
     onSuccess: (result) => {
       if (result.ok) {
-        setRewardMessage(`🔍 Найден предмет: ${result.itemLabel}!`);
+        setRewardMessage(`Найден предмет: ${result.itemLabel}!`);
         setTimeout(() => setRewardMessage(null), 4000);
       }
     },
@@ -434,19 +402,19 @@ function TamagotchiTab() {
     <main className="flex flex-col w-full h-full gap-2 p-2">
       <section className="flex flex-row gap-3 p-2 bg-background border-2 border-highlight-high rounded-lg">
         <StatBar
-          label="🍖 Голод"
+          label="Голод"
           value={data?.hunger ?? 100}
           color="#f6c177"
           dead={petIsDead}
         />
         <StatBar
-          label="😊 Счастье"
+          label="Счастье"
           value={data?.happiness ?? 100}
           color="#c4a7e7"
           dead={petIsDead}
         />
         <StatBar
-          label="🔋 Энергия"
+          label="Энергия"
           value={data?.energy ?? 100}
           color="#9ccfd8"
           dead={petIsDead}
@@ -454,8 +422,7 @@ function TamagotchiTab() {
       </section>
 
       <section className="relative flex-1 rounded-lg overflow-hidden border-2 border-highlight-high">
-        <MoodBubble emoji={mood.emoji} label={mood.label} />
-        <FloatingEffect reaction={lastAction} />
+        <MoodBadge label={mood} />
         <RewardsBanner message={rewardMessage} />
         <Canvas
           camera={{ position: [3.5, 2, 5], fov: 42 }}
@@ -505,7 +472,7 @@ function TamagotchiTab() {
 
       <section className="flex flex-col gap-2 p-2 bg-background border-2 border-highlight-high rounded-lg">
         <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          🎨 Окрас крысы
+          Окрас крысы
         </span>
         <div className="flex flex-row flex-wrap gap-1.5">
           {PALETTE.map((swatch) => (
@@ -531,7 +498,7 @@ function TamagotchiTab() {
 
       <section className="flex flex-col gap-1.5 p-2 bg-background border-2 border-highlight-high rounded-lg">
         <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          🐀 Крысиные предметы
+          Крысиные предметы
         </span>
         {petIsDead ? (
           <div className="flex flex-row gap-2">
