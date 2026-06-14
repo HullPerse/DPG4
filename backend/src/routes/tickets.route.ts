@@ -10,6 +10,7 @@ import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { authPlugin } from "../plugins/auth.plugin";
 import { GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
+import { JackpotService } from "../services/gambling/jackpot.service";
 
 const MAX_TICKETS_PER_DAY = 100;
 const TICKET_PRICE = 1;
@@ -122,6 +123,9 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
         .where(eq(schema.users.id, user.sub));
 
       await updateTicketItem(db, user.sub, newTickets);
+
+      const jp = new JackpotService(db, userService);
+      await jp.addToPool(amount);
 
       broadcast("users", "update", user.sub);
       logger.info("tickets", `user bought ${amount} tickets`, user.sub);

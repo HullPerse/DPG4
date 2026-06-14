@@ -132,6 +132,24 @@ export interface PachinkoState {
   kickAvailable: boolean;
 }
 
+export interface JackpotStatus {
+  pool: number;
+  lastWinnerId: string | null;
+  lastWinnerUsername: string | null;
+  lastWinAmount: number | null;
+  lastWinDate: string | null;
+}
+
+export interface JackpotPlayResult {
+  win: boolean;
+  chosen: number;
+  winningNumber: number;
+  prize: number;
+  newBalance: number;
+  banned: boolean;
+  error: string | null;
+}
+
 export interface MinesState {
   phase: "playing" | "won" | "lost";
   x: number;

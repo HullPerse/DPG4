@@ -10,6 +10,7 @@ const PachinkoTab = lazy(() => import("./tabs/pachinko.tab"));
 const LeaderboardTab = lazy(() => import("./tabs/leaderboard.tab"));
 const StatsTab = lazy(() => import("./tabs/stats.tab"));
 const MinesTab = lazy(() => import("./tabs/mines.tab"));
+const JackpotTab = lazy(() => import("./tabs/jackpot.tab"));
 import HomeTab from "./tabs/home.tab";
 
 type Tab =
@@ -21,7 +22,8 @@ type Tab =
   | "pachinko"
   | "leaderboard"
   | "stats"
-  | "mines";
+  | "mines"
+  | "jackpot";
 
 export default function Gambling() {
   const [tab, setTab] = useState<Tab>("home");
@@ -37,6 +39,7 @@ export default function Gambling() {
       leaderboard: <LeaderboardTab />,
       stats: <StatsTab />,
       mines: <MinesTab />,
+      jackpot: <JackpotTab />,
     };
     return tabMap[tab];
   }, [tab]);

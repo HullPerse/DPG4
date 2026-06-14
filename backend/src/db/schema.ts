@@ -192,6 +192,19 @@ export const pets = sqliteTable("pets", {
   ...timestamps,
 });
 
+export const jackpot = sqliteTable("jackpot", {
+  id: text("id").primaryKey(),
+  pool: integer("pool").notNull().default(0),
+  winningNumber: integer("winning_number").notNull().default(0),
+  winningNumberDate: text("winning_number_date"),
+  lastWinnerId: text("last_winner_id"),
+  lastWinnerUsername: text("last_winner_username"),
+  lastWinAmount: integer("last_win_amount"),
+  lastWinDate: text("last_win_date"),
+  created: text("created").notNull(),
+  updated: text("updated").notNull(),
+});
+
 export const cells = sqliteTable("cells", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),

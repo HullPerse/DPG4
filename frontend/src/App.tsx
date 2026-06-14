@@ -69,10 +69,6 @@ const DesktopAppWindow = memo(function DesktopAppWindow({
     [app.id, setActiveApps],
   );
 
-
-
-
-
   return (
     <Window
       onMinimize={onMinimize}

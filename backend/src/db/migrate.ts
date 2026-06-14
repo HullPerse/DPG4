@@ -207,6 +207,29 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE market ADD COLUMN per_ticket_price INTEGER;",
     ],
   },
+  {
+    hash: "0017_add_jackpot",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS jackpot (
+        id TEXT PRIMARY KEY,
+        pool INTEGER NOT NULL DEFAULT 0,
+        winning_number INTEGER NOT NULL DEFAULT 0,
+        winning_number_date TEXT,
+        last_winner_id TEXT,
+        last_winner_username TEXT,
+        last_win_amount INTEGER,
+        last_win_date TEXT,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+    ],
+  },
+  {
+    hash: "0018_add_winning_number_date",
+    sql: [
+      "ALTER TABLE jackpot ADD COLUMN winning_number_date TEXT;",
+    ],
+  },
 ];
 
 export function runMigrations() {
