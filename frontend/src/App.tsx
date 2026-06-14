@@ -244,32 +244,6 @@ function App() {
       className="relative h-screen w-screen overflow-hidden text-text select-none"
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleDesktopMouseDown}
-      onMouseMove={(e) => {
-        //get speed of cursor
-        let prevTime: number | Date = new Date();
-        let prevPos = {
-          x: 0,
-          y: 0,
-        };
-
-        let speed = 0;
-
-        const now = new Date();
-
-        let currentPos = {
-          x: e.pageX,
-          y: e.pageY,
-        };
-
-        let interval = now.getTime() - prevTime.getTime();
-        if (interval != 0) {
-          speed = Math.abs(currentPos.y - prevPos.y) / interval;
-        } else speed = 0;
-
-        prevTime = 0;
-        prevPos.y = currentPos.y;
-        return speed;
-      }}
     >
       <CreateModal
         label="ЗВОНОК"

@@ -24,7 +24,6 @@ const ItemsTab = lazy(() => import("./tabs/items.tab"));
 const MarketBrowser = lazy(() => import("./tabs/market.tab"));
 const AdvertisementTab = lazy(() => import("./tabs/advertisement.tab"));
 const StoreTab = lazy(() => import("./tabs/store.tab"));
-const RatTab = lazy(() => import("./tabs/rat.tab"));
 const WordleTab = lazy(() => import("./tabs/wordle.tab"));
 const TamagochiTab = lazy(() => import("./tabs/tamagochi.tab"));
 const RatStoreTab = lazy(() => import("./tabs/ratStore.tab"));
@@ -55,7 +54,6 @@ type BrowserTab =
   | "ads"
   | "randomStore"
   | "wordle"
-  | "rat"
   | "tamagochi"
   | "ratStore";
 
@@ -101,8 +99,6 @@ function BrowserTabContent({
       return <StoreTab />;
     case "wordle":
       return <WordleTab />;
-    case "rat":
-      return <RatTab />;
     case "tamagochi":
       return <TamagochiTab />;
     case "ratStore":

@@ -40,7 +40,7 @@ import {
 import type { Inventory } from "@/types/items";
 
 const itemsApi = new ItemsApi();
-useGLTF.preload("/rat.glb");
+useGLTF.preload("/models/rat.glb");
 
 const REWARD_THRESHOLD = 80;
 const PALETTE = [
@@ -83,7 +83,7 @@ function RatModel({
   isAlive: boolean;
   color: string;
 }) {
-  const { scene } = useGLTF("/rat.glb");
+  const { scene } = useGLTF("/models/rat.glb");
   const groupRef = useRef<THREE.Group>(null);
   const cloned = useMemo(() => {
     const c = scene.clone();
