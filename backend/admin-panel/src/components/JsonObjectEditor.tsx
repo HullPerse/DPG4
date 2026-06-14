@@ -7,7 +7,9 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
-function valueKind(v: unknown): "string" | "number" | "boolean" | "object" | "null" {
+function valueKind(
+  v: unknown,
+): "string" | "number" | "boolean" | "object" | "null" {
   if (v === null || v === undefined) return "null";
   if (typeof v === "boolean") return "boolean";
   if (typeof v === "number") return "number";
@@ -55,7 +57,7 @@ export function JsonObjectEditor({
         <p>Объект пуст</p>
         <div className="mt-3 flex justify-center gap-2">
           <Input
-            className="max-w-[200px]"
+            className="max-w-50"
             placeholder="имя поля"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
@@ -96,7 +98,7 @@ export function JsonObjectEditor({
       ))}
       <div className="flex gap-2">
         <Input
-          className="h-8 max-w-[200px] text-xs"
+          className="h-8 max-w-50 text-xs"
           placeholder="новое поле"
           value={newKey}
           onChange={(e) => setNewKey(e.target.value)}
@@ -150,7 +152,7 @@ function CellValueEditor({
       typeof value === "string" ? value : JSON.stringify(value, null, 2);
     return (
       <textarea
-        className="border-iris bg-background text-text min-h-[72px] w-full border-2 p-2 font-mono text-xs"
+        className="border-iris bg-background text-text min-h-18 w-full border-2 p-2 font-mono text-xs"
         value={text}
         onChange={(e) => {
           try {
