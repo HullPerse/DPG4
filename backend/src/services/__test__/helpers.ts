@@ -31,6 +31,9 @@ const CREATE_USERS = `CREATE TABLE users (
   gambling_winnings INTEGER NOT NULL DEFAULT 0,
   gambling_banned INTEGER NOT NULL DEFAULT 0,
   hangman INTEGER NOT NULL DEFAULT 0,
+  tickets INTEGER NOT NULL DEFAULT 0,
+  tickets_bought_today INTEGER NOT NULL DEFAULT 0,
+  tickets_date TEXT,
   created TEXT NOT NULL,
   updated TEXT NOT NULL
 )`;
@@ -58,12 +61,26 @@ const CREATE_HISTORY = `CREATE TABLE history (
   created TEXT NOT NULL
 )`;
 
+const CREATE_INVENTORY = `CREATE TABLE inventory (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  charge INTEGER NOT NULL DEFAULT 0,
+  image BLOB,
+  image_mime TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
 export function createTestDb(): { sqlite: Database; db: Db } {
   const sqlite = new Database(":memory:");
   const db = drizzle(sqlite, { schema });
   sqlite.run(CREATE_USERS);
   sqlite.run(CREATE_ACTIVITY);
   sqlite.run(CREATE_HISTORY);
+  sqlite.run(CREATE_INVENTORY);
   return { sqlite, db };
 }
 
@@ -112,6 +129,9 @@ export async function createUser(
     isAdmin: false,
     position: 0,
     money: 100,
+    tickets: 100,
+    ticketsBoughtToday: 0,
+    ticketsDate: null,
     steam: "",
     currentAction: "MOVE_POSITIVE" as const,
     currentDice: 1,

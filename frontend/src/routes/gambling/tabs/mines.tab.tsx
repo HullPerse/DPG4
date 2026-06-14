@@ -47,7 +47,7 @@ const IDLE_STATE: MinesState = {
 };
 
 function MinesTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -73,7 +73,7 @@ function MinesTab() {
       setResult(null);
       setResetKey((k) => k + 1);
       setGameState(state);
-      useUserStore.setState({ user: { ...user!, money: state.balance } });
+      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
     },
   });
 
@@ -82,7 +82,7 @@ function MinesTab() {
     onSuccess: (state) => {
       setGameState(state);
       if (state.phase === "lost") {
-        useUserStore.setState({ user: { ...user!, money: state.balance } });
+        useUserStore.setState({ user: { ...user!, tickets: state.balance } });
         setResult({ net: state.net, label: state.label, tone: state.tone });
       }
     },
@@ -92,7 +92,7 @@ function MinesTab() {
     mutationFn: () => cashoutMines(),
     onSuccess: (state) => {
       setGameState(state);
-      useUserStore.setState({ user: { ...user!, money: state.balance } });
+      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
       if (state.banned) setGamblingBanned(true);
       setResult({ net: state.net, label: state.label, tone: state.tone });
     },
@@ -120,12 +120,12 @@ function MinesTab() {
   const canStart =
     !startMutation.isPending &&
     !gamblingBanned &&
-    balance >= bid &&
+    ticketBalance >= bid &&
     !gameStarted;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={balance} />
+      <BalanceDisplay balance={balance} ticketBalance={ticketBalance} />
 
       <section className="relative w-full flex-1 min-h-80 max-h-128 overflow-hidden border-2 border-highlight-high bg-background">
         <Suspense fallback={null}>
@@ -197,8 +197,8 @@ function MinesTab() {
           >
             {gamblingBanned
               ? "Вы забанены"
-              : balance < bid
-                ? "Недостаточно чубриков"
+              : ticketBalance < bid
+                ? "Недостаточно тикетов"
                 : `Начать игру (${bid})`}
           </Button>
         ) : gameOver ? (

@@ -24,21 +24,22 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import ImageComponent from "@/components/shared/image.component";
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
 function DiceTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [bid, setBid] = useState(3);
 
-  const [gamePhase, setGamePhase] = useState<
-    "idle" | "dealer" | "player" | "result"
-  >("idle");
+  const [, setGamePhase] = useState<"idle" | "dealer" | "player" | "result">(
+    "idle",
+  );
 
   const [dealerValues, setDealerValues] = useState<
     [number, number, number] | null
@@ -46,13 +47,12 @@ function DiceTab() {
   const [playerValues, setPlayerValues] = useState<
     [number, number, number] | null
   >(null);
-  const [dealerTarget, setDealerTarget] = useState<number | null>(null);
   const [result, setResult] = useState<DiceResult>(null);
 
   const [dealerThrowKey, setDealerThrowKey] = useState(0);
   const [playerThrowKey, setPlayerThrowKey] = useState(0);
   const [playerDiceActive, setPlayerDiceActive] = useState(false);
-  const [displayBalance, setDisplayBalance] = useState(user?.money ?? 0);
+  const [displayBalance, setDisplayBalance] = useState(user?.tickets ?? 0);
 
   const rollCoordinatorRef = useRef(new DiceRollCoordinator());
   const dealerKeyRef = useRef(0);
@@ -119,8 +119,6 @@ function DiceTab() {
       if (!isRoundActive(round)) return dealer;
     }
 
-    setDealerTarget(dealer.target);
-
     return dealer;
   };
 
@@ -150,7 +148,7 @@ function DiceTab() {
   const finishRound = (finalResult: DiceGameResult) => {
     setDisplayBalance(finalResult.balance);
     useUserStore.setState({
-      user: { ...user!, money: finalResult.balance },
+      user: { ...user!, tickets: finalResult.balance },
     });
     if (finalResult.banned) setGamblingBanned(true);
     setResult({
@@ -162,11 +160,11 @@ function DiceTab() {
   };
 
   const failRound = (label: string, balance?: number) => {
-    const money = balance ?? useUserStore.getState().user?.money ?? 0;
+    const tickets = balance ?? useUserStore.getState().user?.tickets ?? 0;
     useUserStore.setState({
-      user: { ...useUserStore.getState().user!, money },
+      user: { ...useUserStore.getState().user!, tickets },
     });
-    setDisplayBalance(money);
+    setDisplayBalance(tickets);
     setResult({ net: 0, label, tone: "chance" });
     setGamePhase("result");
   };
@@ -180,13 +178,12 @@ function DiceTab() {
 
   const gameMutation = useMutation({
     mutationFn: async () => {
-      if (!user || balance < bid || gamblingBanned) return;
+      if (!user || ticketBalance < bid || gamblingBanned) return;
 
       const round = ++roundIdRef.current;
       resetDiceVisuals();
       setResult(null);
-      setDealerTarget(null);
-      setDisplayBalance(balance);
+      setDisplayBalance(ticketBalance);
       setGamePhase("dealer");
 
       await abortDice();
@@ -195,15 +192,11 @@ function DiceTab() {
       const dealerInitial = await rollDiceDealer(bid);
       if (!isRoundActive(round)) return;
 
-      setDisplayBalance(balance - bid);
-
-      const dealer = await settleDealer(dealerInitial, round);
+      await settleDealer(dealerInitial, round);
       if (!isRoundActive(round)) return;
 
-      if (!dealer.autoResult) {
-        await pause(DICE_PLAYER_AUTO_MS);
-        if (!isRoundActive(round)) return;
-      }
+      await pause(DICE_PLAYER_AUTO_MS);
+      if (!isRoundActive(round)) return;
 
       const finalResult = await settlePlayer(round);
       if (!isRoundActive(round)) return;
@@ -220,11 +213,9 @@ function DiceTab() {
     },
   });
 
-  const showDealerLabel = gamePhase !== "idle";
-
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={displayBalance} />
+      <BalanceDisplay balance={balance} ticketBalance={displayBalance} />
 
       <BidSelector
         bidOptions={bidOptions}
@@ -239,10 +230,8 @@ function DiceTab() {
           playerThrowKey={playerThrowKey}
           dealerValues={dealerValues}
           playerValues={playerValues}
-          dealerTarget={dealerTarget}
           onDealerSettled={handleDealerSettled}
           onPlayerSettled={handlePlayerSettled}
-          showDealerLabel={showDealerLabel}
           playerDiceActive={playerDiceActive}
         />
 
@@ -254,10 +243,14 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           loading={gameMutation.isPending}
-          disabled={balance < bid || gamblingBanned}
+          disabled={ticketBalance < bid || gamblingBanned}
           onClick={() => gameMutation.mutate()}
         >
-          {gamblingBanned ? "Вы забанены" : `Кинуть (${bid})`}
+          {gamblingBanned
+            ? "Вы забанены"
+            : ticketBalance < bid
+              ? "Недостаточно тикетов"
+              : `Кинуть (${bid})`}
         </Button>
 
         <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">
@@ -266,67 +259,49 @@ function DiceTab() {
           </summary>
           <div className="mt-2 flex flex-col gap-2 pl-1">
             <p className="text-muted text-xs">
-              Если нет комбинации (3 разных числа, не 1·2·3 и не 4·5·6) -
-              переброс до 2 раз (всего 3 броска), затем играют последние кости.
+              Игрок и дилер кидают по три кубика. Чья комбинация сильнее - тот
+              побеждает и забирает ставку с множителем. Если нет комбинации (3
+              разных числа, не 1·2·3 и не 4·5·6) - до 2 перебросов
             </p>
             <div>
-              <span className="font-semibold text-primary">Бросок дилера:</span>
+              <span className="font-semibold text-primary">
+                Комбинации (сильнее → слабее):
+              </span>
               <ul className="flex flex-col gap-0.5 pl-2">
                 <li className="flex justify-between">
-                  <span>1·2·3</span>
-                  <span className="text-emerald-400">Дилер проигрывает</span>
+                  <span>1·1·1</span>
+                  <span className="text-amber-400">×5</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Три одинаковых (кроме 1·1·1)</span>
+                  <span className="text-emerald-400">×3</span>
                 </li>
                 <li className="flex justify-between">
                   <span>4·5·6</span>
-                  <span className="text-red-400">Дилер побеждает</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Три одинаковых (вкл. 1·1·1)</span>
-                  <span className="text-red-400">Дилер побеждает</span>
+                  <span className="text-emerald-400">×2</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Пара + число</span>
-                  <span className="text-muted">Цель = число</span>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <span className="font-semibold text-primary">Твой бросок:</span>
-              <ul className="flex flex-col gap-0.5 pl-2">
-                <li className="flex justify-between">
-                  <span>4·5·6</span>
-                  <span className="text-emerald-400">+{bid * 2}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Три одинаковых</span>
-                  <span className="text-emerald-400">+{bid * 2}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>1·1·1</span>
-                  <span className="text-amber-400">+{bid * 3} (джекпот)</span>
+                  <span className="text-muted">×1 (сравнить число)</span>
                 </li>
                 <li className="flex justify-between">
                   <span>1·2·3</span>
-                  <span className="text-red-400">−{bid}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Пара → число &gt; цели</span>
-                  <span className="text-emerald-400">+{bid}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Ничего (3 уникальных)</span>
-                  <span className="text-muted">Ничья</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Пара → число = цели</span>
-                  <span className="text-muted">Ничья</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Пара → число &lt; цели</span>
-                  <span className="text-red-400">−{bid}</span>
+                  <span className="text-red-400">×2 сопернику</span>
                 </li>
               </ul>
             </div>
+            <p className="text-muted text-xs">
+              При одинаковых комбинациях сравнивается число (у пары и тройки).
+              Если всё равно - ничья.
+            </p>
+          </div>
+
+          <div className="p-2 flex flex-col w-full items-center justify-center">
+            <ImageComponent
+              src="diceRules.png"
+              alt="dice rules"
+              className="w-120 h-120 border-2 border-highlight-high"
+            />
           </div>
         </details>
       </section>

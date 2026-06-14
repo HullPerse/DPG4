@@ -304,6 +304,26 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "updated", type: "date" },
     ],
   },
+  jackpot: {
+    label: "Jackpot",
+    searchFields: ["id", "lastWinnerId", "lastWinnerUsername"],
+    fields: [
+      { source: "id", type: "text" },
+      { source: "pool", type: "number" },
+      { source: "winningNumber", type: "number" },
+      { source: "winningNumberDate", type: "date" },
+      {
+        source: "lastWinnerId",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
+      { source: "lastWinnerUsername", type: "text" },
+      { source: "lastWinAmount", type: "number" },
+      { source: "lastWinDate", type: "date" },
+      { source: "created", type: "date" },
+      { source: "updated", type: "date" },
+    ],
+  },
   cells: {
     label: "Cells",
     searchFields: ["id", "title", "type", "cellType"],

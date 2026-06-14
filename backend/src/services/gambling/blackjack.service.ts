@@ -21,6 +21,7 @@ import {
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
 } from "../../lib/gambling.constants";
+import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 interface ActiveGame {
   userId: string;
@@ -56,7 +57,7 @@ export class BlackjackService {
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
-      await this.userService.score(userId, payout);
+      await addTickets(this.db, userId, payout);
     }
 
     await this.db
@@ -69,7 +70,7 @@ export class BlackjackService {
       .where(eq(schema.users.id, userId));
 
     const updated = await this.userService.getById(userId);
-    return { banned: gamblingBanned, balance: updated?.money ?? 0 };
+    return { banned: gamblingBanned, balance: updated?.tickets ?? 0 };
   }
 
   private async finishGame(game: ActiveGame): Promise<BlackjackState> {
@@ -177,11 +178,11 @@ export class BlackjackService {
 
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
-    if (user.money < bid) throw new Error("Insufficient balance");
+    if (user.tickets < bid) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
     if (this.games.has(userId)) throw new Error("Game already in progress");
 
-    await this.userService.score(userId, -bid);
+    await deductTickets(this.db, userId, bid);
 
     const game: ActiveGame = {
       userId,
@@ -200,7 +201,7 @@ export class BlackjackService {
     this.games.set(userId, game);
 
     const updated = await this.userService.getById(userId);
-    const balance = updated?.money ?? 0;
+    const balance = updated?.tickets ?? 0;
 
     const instant = await this.maybeResolveAfterDeal(game);
     if (instant) return instant;
@@ -221,7 +222,7 @@ export class BlackjackService {
     game.playerHand.push(draw(game.deck));
 
     const updated = await this.userService.getById(userId);
-    const balance = updated?.money ?? 0;
+    const balance = updated?.tickets ?? 0;
 
     if (handValue(game.playerHand) > 21) {
       return this.finishGame(game);
@@ -250,7 +251,7 @@ export class BlackjackService {
     if (!game || game.phase !== "player") return null;
 
     const user = await this.userService.getById(userId);
-    return this.toState(game, user?.money ?? 0);
+    return this.toState(game, user?.tickets ?? 0);
   }
 
   abandon(userId: string): boolean {

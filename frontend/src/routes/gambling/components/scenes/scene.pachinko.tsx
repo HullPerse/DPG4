@@ -27,7 +27,7 @@ import {
   slotIndexFromX,
 } from "@/lib/gambling/pachinko.utils";
 
-useGLTF.preload("/rat.glb");
+useGLTF.preload("/models/rat.glb");
 
 /** Physics & slot math share this width - do not change without updating utils */
 const BOARD_HALF = BOARD_WIDTH / 2;
@@ -296,7 +296,7 @@ function RatBall({
   const settledRef = useRef(false);
   const dropTimeRef = useRef(Date.now());
   const prevKickRef = useRef(0);
-  const { scene } = useGLTF("/rat.glb");
+  const { scene } = useGLTF("/models/rat.glb");
   const cloned = useMemo(() => scene.clone(), [scene]);
 
   const initialVel = useMemo(

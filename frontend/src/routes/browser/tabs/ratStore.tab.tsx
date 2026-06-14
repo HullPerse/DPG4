@@ -12,10 +12,10 @@ import { useMutation } from "@tanstack/react-query";
 
 const itemsApi = new ItemsApi();
 
-useGLTF.preload("/rat.glb");
+useGLTF.preload("/models/rat.glb");
 
 function RatModel({ spinning }: { spinning: boolean }) {
-  const { scene } = useGLTF("/rat.glb");
+  const { scene } = useGLTF("/models/rat.glb");
   const groupRef = useRef<THREE.Group>(null);
   const cloned = useMemo(() => scene.clone(), [scene]);
 
@@ -84,8 +84,7 @@ function RatStoreTab() {
     itemsApi.getInventory(user.id).then((inv) => {
       setRatItems(
         inv.filter(
-          (i: Inventory) =>
-            i.type === "rat" || ratLabels.includes(i.label),
+          (i: Inventory) => i.type === "rat" || ratLabels.includes(i.label),
         ),
       );
     });

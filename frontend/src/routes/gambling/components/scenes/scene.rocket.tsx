@@ -4,7 +4,7 @@ import { ContactShadows, useGLTF } from "@react-three/drei";
 import React, { useRef, useMemo, Suspense } from "react";
 import * as THREE from "three";
 
-useGLTF.preload("/rat.glb");
+useGLTF.preload("/models/rat.glb");
 
 function RatModel({
   multiplier,
@@ -15,7 +15,7 @@ function RatModel({
   phase: string;
   compact?: boolean;
 }) {
-  const { scene } = useGLTF("/rat.glb");
+  const { scene } = useGLTF("/models/rat.glb");
   const groupRef = useRef<THREE.Group>(null);
   const cloned = useMemo(() => scene.clone(), [scene]);
 

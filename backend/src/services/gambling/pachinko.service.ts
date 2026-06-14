@@ -11,6 +11,7 @@ import {
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
 } from "../../lib/gambling.constants";
+import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 export const PACHINKO_SLOT_MULTIPLIERS = [
   5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5,
@@ -75,10 +76,10 @@ export class PachinkoService {
     const total = bid * ratAmount;
     const user = await this.userService.getById(userId);
     if (!user) throw new Error("User not found");
-    if (user.money < total) throw new Error("Insufficient balance");
+    if (user.tickets < total) throw new Error("Insufficient balance");
     if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-    await this.userService.score(userId, -total);
+    await deductTickets(this.db, userId, total);
     this.activeGames.set(userId, { userId, bid, ratAmount, droppedAt: Date.now() });
 
     const updated = await this.userService.getById(userId);
@@ -87,7 +88,7 @@ export class PachinkoService {
     return {
       phase: "dropping",
       bid: total,
-      balance: updated?.money ?? 0,
+      balance: updated?.tickets ?? 0,
       slotIndex: null,
       multiplier: 0,
       payout: 0,
@@ -126,7 +127,7 @@ export class PachinkoService {
     const net = totalPayout - totalCost;
 
     if (totalPayout > 0) {
-      await this.userService.score(userId, totalPayout);
+      await addTickets(this.db, userId, totalPayout);
     }
 
     const user = await this.userService.getById(userId);
@@ -184,7 +185,7 @@ export class PachinkoService {
     return {
       phase: "done",
       bid: totalCost,
-      balance: updated?.money ?? 0,
+      balance: updated?.tickets ?? 0,
       slotIndex: null,
       multiplier: 0,
       payout: totalPayout,
@@ -210,7 +211,7 @@ export class PachinkoService {
     return {
       phase: "dropping",
       bid: game.bid * game.ratAmount,
-      balance: user?.money ?? 0,
+      balance: user?.tickets ?? 0,
       slotIndex: null,
       multiplier: 0,
       payout: 0,

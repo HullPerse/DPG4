@@ -29,11 +29,13 @@ import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
 import { hangmanRoute } from "./routes/hangman.route";
-import { petsRoute } from "./routes/pets.route";
+import { petsRoute, startPetDecayLoop } from "./routes/pets.route";
 import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
+import { jackpotRoute } from "./routes/jackpot.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
+import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
 
 const app = new Elysia()
   .use(
@@ -67,6 +69,7 @@ const app = new Elysia()
           { name: "history", description: "История действий" },
           { name: "hangman", description: "Виселица" },
           { name: "pets", description: "Питомец-крыса" },
+          { name: "jackpot", description: "Прогрессивный джекпот" },
         ],
       },
       path: "/docs",
@@ -139,6 +142,8 @@ const app = new Elysia()
   .use(rulesRoute)
   .use(filesRoute)
   .use(gameUtilsRoute)
+  .use(ticketsRoute)
+  .use(ticketMarketRoute)
   .use(configRoute)
   .use(steamRoute)
   .use(searchRoute)
@@ -146,7 +151,8 @@ const app = new Elysia()
   .use(historyRoute)
   .use(hangmanRoute)
   .use(ratStoreRoute)
-  .use(petsRoute);
+  .use(petsRoute)
+  .use(jackpotRoute);
 
 runMigrations();
 logger.info("SYSTEM", "DB migrations applied");
@@ -160,6 +166,7 @@ logger.info(
 logger.info(null, `Docs -> /docs  |  Admin -> /admin`);
 
 initAutoBackup();
+startPetDecayLoop();
 
 export type App = typeof app;
 export default app;

@@ -1,13 +1,14 @@
 import { memo, startTransition, useCallback, useState } from "react";
 
 import ItemsApi from "@/api/items.api";
+import { buyMarketTicket, removeMarketTicket } from "@/api/tickets.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user.store";
 import { Market } from "@/types/items";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import { Check, NetworkIcon, Trash } from "lucide-react";
+import { Check, NetworkIcon, Trash, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import { highlightText } from "@/lib/utils";
 import ImageComponent from "@/components/shared/image.component";
@@ -48,6 +49,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       owner,
       price,
       discount,
+      itemType,
     }: {
       type: "buy" | "discount" | "remove";
       index: number;
@@ -55,13 +57,22 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       owner?: string;
       price?: number;
       discount?: number;
+      itemType?: string;
     }) => {
       if (type === "buy") {
-        await itemsApi.buyMarket(marketId, String(user?.id), String(owner));
+        if (itemType === "ticket") {
+          await buyMarketTicket(marketId);
+        } else {
+          await itemsApi.buyMarket(marketId, String(user?.id), String(owner));
+        }
       } else if (type === "discount") {
         await itemsApi.discountMarket(marketId, owner!, price!, discount!);
       } else if (type === "remove") {
-        await itemsApi.removeMarket(marketId);
+        if (itemType === "ticket") {
+          await removeMarketTicket(marketId);
+        } else {
+          await itemsApi.removeMarket(marketId);
+        }
       }
     },
     onSuccess: (_, { type }) => {
@@ -101,7 +112,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
         </div>
       )}
 
-      {filteredItems.map((item, index) => (
+      {filteredItems.map((item, index) => {
+        const isTicket = item.type === "ticket";
+        return (
         <div
           key={item.id}
           className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
@@ -116,7 +129,14 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
             ) : (
               <>
                 <span className="font-bold text-md line-clamp-2">
-                  {highlightText(item.label, searchTerms)}
+                  {isTicket ? (
+                    <span className="flex items-center gap-1">
+                      <Ticket className="size-4" />
+                      {highlightText(item.label, searchTerms)}
+                    </span>
+                  ) : (
+                    highlightText(item.label, searchTerms)
+                  )}
                 </span>
 
                 <div className="flex flex-row gap-0.5 w-24 h-6 items-center justify-center my-1">
@@ -128,16 +148,26 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                   </span>
                 </div>
 
-                <ImageComponent
-                  src={`${getFileUrl(item)}`}
-                  alt={item.label}
-                  className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                  type="cover"
-                />
+                {isTicket ? (
+                  <div className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high flex flex-col items-center justify-center bg-card gap-1">
+                    <Ticket className="size-8 text-primary" />
+                    <span className="text-sm font-bold">{item.charge} шт.</span>
+                    {item.perTicketPrice && (
+                      <span className="text-xs text-muted">{item.perTicketPrice} чуб./шт.</span>
+                    )}
+                  </div>
+                ) : (
+                  <ImageComponent
+                    src={`${getFileUrl(item)}`}
+                    alt={item.label}
+                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
+                    type="cover"
+                  />
+                )}
 
                 <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
                   <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
-                    {item.charge}
+                    {isTicket ? `${item.charge} тикетов` : item.charge}
                   </span>
                 </div>
               </>
@@ -145,7 +175,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
           </section>
 
           <section className="flex flex-col gap-1 mt-auto w-full pb-1">
-            {active === index && item.owner.id === user?.id && (
+            {active === index && item.owner.id === user?.id && !isTicket && (
               <div className="flex flex-row w-full gap-1">
                 <Input
                   placeholder="Скидочная цена"
@@ -194,6 +224,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                     type: "buy",
                     marketId: String(item.id),
                     owner: item.owner.id,
+                    itemType: item.type,
                   })
                 }
               >
@@ -220,6 +251,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
                     index,
                     type: "remove",
                     marketId: String(item.id),
+                    itemType: item.type,
                   })
                 }
               >
@@ -228,7 +260,8 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
             </div>
           </section>
         </div>
-      ))}
+        );
+      })}
     </main>
   );
 }

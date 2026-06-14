@@ -8,15 +8,76 @@ import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
+import { db } from "../db";
+
+const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
 
 const DECAY_PER_HOUR = { hunger: 5, happiness: 3, energy: 4 };
 const MAX_STAT = 100;
 const MIN_STAT = 0;
 const REWARD_THRESHOLD = 80;
 const GOOD_STAT_MIN = 1;
+const DECAY_INTERVAL_MS = 30_000;
 
-function calcDecayed(stat: number, elapsedHours: number, decay: number): number {
+function calcDecayed(
+  stat: number,
+  elapsedHours: number,
+  decay: number,
+): number {
   return Math.max(MIN_STAT, Math.round(stat - elapsedHours * decay));
+}
+
+export function startPetDecayLoop() {
+  setInterval(async () => {
+    try {
+      const now = nowIso();
+      const pets = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.isAlive, true));
+
+      for (const pet of pets) {
+        const elapsedMs =
+          new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
+        if (elapsedMs < DECAY_INTERVAL_MS) continue;
+
+        const elapsedHours = elapsedMs / (1000 * 60 * 60);
+        const hunger = calcDecayed(
+          pet.hunger,
+          elapsedHours,
+          DECAY_PER_HOUR.hunger,
+        );
+        const happiness = calcDecayed(
+          pet.happiness,
+          elapsedHours,
+          DECAY_PER_HOUR.happiness,
+        );
+        const energy = calcDecayed(
+          pet.energy,
+          elapsedHours,
+          DECAY_PER_HOUR.energy,
+        );
+
+        if (
+          hunger === pet.hunger &&
+          happiness === pet.happiness &&
+          energy === pet.energy
+        )
+          continue;
+
+        await db
+          .update(schema.pets)
+          .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
+          .where(eq(schema.pets.id, pet.id));
+
+        broadcast("pets", "update", pet.userId);
+      }
+    } catch (err) {
+      logger.error("pets", "decay loop error", err);
+    }
+  }, DECAY_INTERVAL_MS);
+
+  logger.info("SYSTEM", "Pet decay loop started (interval 30s)");
 }
 
 export const petsRoute = new Elysia({ prefix: "/pets" })
@@ -53,12 +114,25 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
           .where(eq(schema.pets.id, id))
           .get();
       } else {
-        const elapsedMs = new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
+        const elapsedMs =
+          new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
         const elapsedHours = elapsedMs / (1000 * 60 * 60);
 
-        const hunger = calcDecayed(pet.hunger, elapsedHours, DECAY_PER_HOUR.hunger);
-        const happiness = calcDecayed(pet.happiness, elapsedHours, DECAY_PER_HOUR.happiness);
-        const energy = calcDecayed(pet.energy, elapsedHours, DECAY_PER_HOUR.energy);
+        const hunger = calcDecayed(
+          pet.hunger,
+          elapsedHours,
+          DECAY_PER_HOUR.hunger,
+        );
+        const happiness = calcDecayed(
+          pet.happiness,
+          elapsedHours,
+          DECAY_PER_HOUR.happiness,
+        );
+        const energy = calcDecayed(
+          pet.energy,
+          elapsedHours,
+          DECAY_PER_HOUR.energy,
+        );
 
         await db
           .update(schema.pets)
@@ -201,15 +275,38 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         return { claimed: false, reason: "already_claimed" };
       }
 
-      const elapsedMs = new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
+      const elapsedMs =
+        new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
       const elapsedHours = elapsedMs / (1000 * 60 * 60);
 
-      const hunger = calcDecayed(pet.hunger, elapsedHours, DECAY_PER_HOUR.hunger);
-      const happiness = calcDecayed(pet.happiness, elapsedHours, DECAY_PER_HOUR.happiness);
-      const energy = calcDecayed(pet.energy, elapsedHours, DECAY_PER_HOUR.energy);
+      const hunger = calcDecayed(
+        pet.hunger,
+        elapsedHours,
+        DECAY_PER_HOUR.hunger,
+      );
+      const happiness = calcDecayed(
+        pet.happiness,
+        elapsedHours,
+        DECAY_PER_HOUR.happiness,
+      );
+      const energy = calcDecayed(
+        pet.energy,
+        elapsedHours,
+        DECAY_PER_HOUR.energy,
+      );
 
-      if (hunger < REWARD_THRESHOLD || happiness < REWARD_THRESHOLD || energy < REWARD_THRESHOLD) {
-        return { claimed: false, reason: "stats_too_low", hunger, happiness, energy };
+      if (
+        hunger < REWARD_THRESHOLD ||
+        happiness < REWARD_THRESHOLD ||
+        energy < REWARD_THRESHOLD
+      ) {
+        return {
+          claimed: false,
+          reason: "stats_too_low",
+          hunger,
+          happiness,
+          energy,
+        };
       }
 
       const isMoney = Math.random() < 0.5;
@@ -240,7 +337,10 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         logger.info("pets", "daily reward item", params.userId, item.label);
       }
 
-      const updateData: Record<string, unknown> = { lastRewardDate: today, updated: now };
+      const updateData: Record<string, unknown> = {
+        lastRewardDate: today,
+        updated: now,
+      };
 
       if (pet.kvasBuff) {
         const [kalItem] = await db
@@ -267,7 +367,10 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Claim daily reward if pet is well cared for" },
+      detail: {
+        tags: ["pets"],
+        summary: "Claim daily reward if pet is well cared for",
+      },
     },
   )
 
@@ -367,5 +470,82 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     {
       params: t.Object({ userId: t.String() }),
       detail: { tags: ["pets"], summary: "Search the dead pet for loot" },
+    },
+  )
+
+  .post(
+    "/:userId/color",
+    async ({ params, db, body }) => {
+      if (!HEX_COLOR_REGEX.test(body.color)) {
+        throw new Error(
+          "Invalid color format. Must be a hex color like #FF0000",
+        );
+      }
+
+      const now = nowIso();
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+
+      await db
+        .update(schema.pets)
+        .set({ color: body.color, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "changed pet color", params.userId, body.color);
+
+      return await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.id, pet.id))
+        .get();
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      body: t.Object({ color: t.String() }),
+      detail: { tags: ["pets"], summary: "Change pet color" },
+    },
+  )
+
+  .post(
+    "/:userId/model",
+    async ({ params, db, body }) => {
+      const VALID_MODELS = ["rat", "dingus"];
+      if (!VALID_MODELS.includes(body.model)) {
+        throw new Error("Invalid model. Must be one of: rat, dingus");
+      }
+
+      const now = nowIso();
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+
+      await db
+        .update(schema.pets)
+        .set({ model: body.model, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "changed pet model", params.userId, body.model);
+
+      return await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.id, pet.id))
+        .get();
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      body: t.Object({ model: t.String() }),
+      detail: { tags: ["pets"], summary: "Change pet 3D model" },
     },
   );

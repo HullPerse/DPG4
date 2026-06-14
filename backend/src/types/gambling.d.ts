@@ -57,11 +57,9 @@ export interface DiceResult {
 
 export interface ActiveDiceGame {
   dealerValues: [number, number, number];
-  dealerTarget: number | null;
   phase: "dealer" | "player";
   bid: number;
   userId: string;
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
   dealerRerolls: number;
   playerRerolls: number;
 }
@@ -69,10 +67,8 @@ export interface ActiveDiceGame {
 export interface DiceRollPhaseResult {
   phase: "dealer";
   values: [number, number, number];
-  target: number | null;
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
   reroll?: boolean;
-  label?: string;
+  handLabel?: string;
 }
 
 export interface DiceGameResult {

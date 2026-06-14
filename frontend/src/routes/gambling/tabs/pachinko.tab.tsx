@@ -48,7 +48,7 @@ const IDLE_STATE: PachinkoState = {
 };
 
 function PachinkoTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -75,7 +75,7 @@ function PachinkoTab() {
       setStartX(randomDropOffsetX());
       setGameState(state);
       setDropKey((k) => k + 1);
-      useUserStore.setState({ user: { ...user!, money: state.balance } });
+      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
     },
     onError: () => setGameState(IDLE_STATE),
   });
@@ -88,7 +88,7 @@ function PachinkoTab() {
     !dropMutation.isPending &&
     !inDrop &&
     !gamblingBanned &&
-    balance >= totalBid;
+    ticketBalance >= totalBid;
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
@@ -132,7 +132,7 @@ function PachinkoTab() {
       try {
         const state = await settlePachinko(clamped);
         setGameState(state);
-        useUserStore.setState({ user: { ...user, money: state.balance } });
+        useUserStore.setState({ user: { ...user, tickets: state.balance } });
         if (state.banned) setGamblingBanned(true);
         setResult({
           net: state.net,
@@ -185,7 +185,7 @@ function PachinkoTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={balance} />
+      <BalanceDisplay balance={balance} ticketBalance={ticketBalance} />
 
       <section className="flex w-xl gap-0.5 px-1 py-1 border-2 border-highlight-high bg-background overflow-x-auto items-center justify-center">
         {(() => {
@@ -284,8 +284,8 @@ function PachinkoTab() {
             ? "Вы забанены"
             : inDrop
               ? "Крыса летит..."
-              : balance < totalBid
-                ? "Недостаточно чубриков"
+              : ticketBalance < totalBid
+                ? "Недостаточно тикетов"
                 : `Бросить крысу (${totalBid})`}
         </Button>
       </section>

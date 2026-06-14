@@ -96,7 +96,7 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
       }),
       detail: {
         tags: ["wheel"],
-        summary: "Spin the wheel — shuffles items, picks winner, deducts cost",
+        summary: "Spin the wheel - shuffles items, picks winner, deducts cost",
       },
     },
   );

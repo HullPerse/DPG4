@@ -7,21 +7,31 @@ import {
   Trophy,
   BarChart3,
   Bomb,
+  Ticket,
+  Zap,
 } from "lucide-react";
 import { memo } from "react";
 
 type Tab =
   | "home"
+  | "cassa"
   | "dice"
   | "blackjack"
   | "rocket"
   | "pachinko"
   | "leaderboard"
   | "stats"
-  | "mines";
+  | "mines"
+  | "jackpot";
 
 function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const tabs = [
+    {
+      value: "cassa" as Tab,
+      label: "Касса",
+      description: "Купить и продать тикеты казино",
+      icon: <Ticket className="size-10" />,
+    },
     {
       value: "dice" as Tab,
       label: "Чинчирорин",
@@ -51,6 +61,12 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
       label: "Минное поле",
       description: "Азартная игра с минами п̶о̶д̶ ̶К̶и̶е̶в̶о̶м̶ ",
       icon: <Bomb className="size-10" />,
+    },
+    {
+      value: "jackpot" as Tab,
+      label: "Джекпот",
+      description: "1 к 1000 на сорвать банк!",
+      icon: <Zap className="size-10" />,
     },
   ];
 

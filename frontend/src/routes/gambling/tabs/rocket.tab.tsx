@@ -40,7 +40,7 @@ const IDLE_STATE: RocketState = {
 };
 
 function RocketTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -163,7 +163,7 @@ function RocketTab() {
           stopPolling();
           const u = useUserStore.getState().user;
           if (u)
-            useUserStore.setState({ user: { ...u, money: polled.balance } });
+            useUserStore.setState({ user: { ...u, tickets: polled.balance } });
           if (polled.banned) setGamblingBanned(true);
           applyRoundEnd(polled);
           if (polled.phase === "crashed") refreshHistory();
@@ -246,7 +246,7 @@ function RocketTab() {
       stopPolling();
       const state = await cashoutRocket();
       applyRoundEnd(state);
-      useUserStore.setState({ user: { ...user, money: state.balance } });
+      useUserStore.setState({ user: { ...user, tickets: state.balance } });
       if (state.banned) setGamblingBanned(true);
       refreshHistory();
     } catch {
@@ -276,14 +276,14 @@ function RocketTab() {
   const canLaunch =
     !launchMutation.isPending &&
     !gamblingBanned &&
-    balance >= bid &&
+    ticketBalance >= bid &&
     !roundActive &&
     !roundEnded;
-  const canAffordBid = balance >= bid;
+  const canAffordBid = ticketBalance >= bid;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={balance}>
+      <BalanceDisplay balance={balance} ticketBalance={ticketBalance}>
         {isActivePhase(gameState.phase) && (
           <div className="flex items-center justify-between border-t border-foreground/10 pt-1">
             <span className="text-sm text-muted">Текущий выигрыш</span>
@@ -350,9 +350,9 @@ function RocketTab() {
             {gamblingBanned ? (
               "Вы забанены"
             ) : !canAffordBid ? (
-              "Недостаточно чубриков"
+              "Недостаточно тикетов"
             ) : (
-              `Запустить крысу (${bid} чубриков)`
+              `Запустить крысу (${bid} тикетов)`
             )}
           </Button>
         )}

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button.component";
 import { ChevronLeft, Trophy, BarChart3 } from "lucide-react";
 import { useCallback, useState, lazy, Suspense } from "react";
-import HomeTab from "./tabs/home.tab";
 import { WindowLoader } from "@/components/shared/loader.component";
+const CassaTab = lazy(() => import("./tabs/cassa.tab"));
 const DiceTab = lazy(() => import("./tabs/dice.tab"));
 const BlackjackTab = lazy(() => import("./tabs/blackjack.tab"));
 const RocketTab = lazy(() => import("./tabs/rocket.tab"));
@@ -10,16 +10,20 @@ const PachinkoTab = lazy(() => import("./tabs/pachinko.tab"));
 const LeaderboardTab = lazy(() => import("./tabs/leaderboard.tab"));
 const StatsTab = lazy(() => import("./tabs/stats.tab"));
 const MinesTab = lazy(() => import("./tabs/mines.tab"));
+const JackpotTab = lazy(() => import("./tabs/jackpot.tab"));
+import HomeTab from "./tabs/home.tab";
 
 type Tab =
   | "home"
+  | "cassa"
   | "dice"
   | "blackjack"
   | "rocket"
   | "pachinko"
   | "leaderboard"
   | "stats"
-  | "mines";
+  | "mines"
+  | "jackpot";
 
 export default function Gambling() {
   const [tab, setTab] = useState<Tab>("home");
@@ -27,6 +31,7 @@ export default function Gambling() {
   const getComponent = useCallback(() => {
     const tabMap: Record<Tab, React.ReactNode> = {
       home: <HomeTab setTab={setTab} />,
+      cassa: <CassaTab />,
       dice: <DiceTab />,
       blackjack: <BlackjackTab />,
       rocket: <RocketTab />,
@@ -34,6 +39,7 @@ export default function Gambling() {
       leaderboard: <LeaderboardTab />,
       stats: <StatsTab />,
       mines: <MinesTab />,
+      jackpot: <JackpotTab />,
     };
     return tabMap[tab];
   }, [tab]);
@@ -43,7 +49,7 @@ export default function Gambling() {
       {tab !== "home" && (
         <section className="flex flex-row gap-1 items-center min-h-11 ml-auto">
           <Button
-            rendered={["home", "stats", "leaderboard"].includes(tab)}
+            rendered={["home", "cassa", "stats", "leaderboard"].includes(tab)}
             size="icon"
             className="h-10 w-10 p-5"
             onClick={() => setTab("leaderboard")}
@@ -53,7 +59,7 @@ export default function Gambling() {
             <Trophy />
           </Button>
           <Button
-            rendered={["home", "stats", "leaderboard"].includes(tab)}
+            rendered={["home", "cassa", "stats", "leaderboard"].includes(tab)}
             size="icon"
             className="h-10 w-10 p-5"
             onClick={() => setTab("stats")}

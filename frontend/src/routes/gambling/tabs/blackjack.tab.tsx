@@ -32,7 +32,7 @@ function buildDealFlyingCards(state: BlackjackState): Set<string> {
 }
 
 function BlackjackTab() {
-  const { user, balance, gamblingBanned, setGamblingBanned } =
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -67,7 +67,7 @@ function BlackjackTab() {
       setGame(state);
       if (user) {
         useUserStore.setState({
-          user: { ...user, money: state.balance },
+          user: { ...user, tickets: state.balance },
         });
       }
       if (state.result) {
@@ -93,7 +93,7 @@ function BlackjackTab() {
       setFlyingCards(new Set());
       if (user) {
         useUserStore.setState({
-          user: { ...user, money: state.balance },
+          user: { ...user, tickets: state.balance },
         });
       }
       if (state.result) {
@@ -228,7 +228,7 @@ function BlackjackTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
-      <BalanceDisplay balance={balance}>
+      <BalanceDisplay balance={balance} ticketBalance={ticketBalance}>
         {game && (
           <span className="text-sm text-primary">
             Вы: {game.playerValue}
@@ -267,10 +267,10 @@ function BlackjackTab() {
             variant="info"
             className="w-full"
             loading={loading}
-            disabled={balance < bid || gamblingBanned}
+            disabled={ticketBalance < bid || gamblingBanned}
             onClick={() => dealMutation.mutate()}
           >
-            {gamblingBanned ? "Вы забанены" : `Раздать (${bid})`}
+            {gamblingBanned ? "Вы забанены" : ticketBalance < bid ? "Недостаточно тикетов" : `Раздать (${bid})`}
           </Button>
         ) : canPlay ? (
           <div className="flex flex-col gap-2">

@@ -6,7 +6,6 @@ import {
   Boxes,
   Megaphone,
   Shuffle,
-  Rat,
   WholeWord,
   Cat,
 } from "lucide-react";
@@ -15,14 +14,13 @@ import { memo } from "react";
 const TABS = [
   "items",
   "store",
-  "ratStore",
   "randomStore",
+  "ratStore",
   "wordle",
   "tamagochi",
-  "rules",
   "list",
   "ads",
-  "rat",
+  "rules",
 ];
 
 function HomeBrowser({
@@ -39,7 +37,6 @@ function HomeBrowser({
       | "ads"
       | "randomStore"
       | "wordle"
-      | "rat"
       | "tamagochi"
       | "ratStore",
   ) => void;
@@ -54,7 +51,6 @@ function HomeBrowser({
       | "ads"
       | "randomStore"
       | "wordle"
-      | "rat"
       | "tamagochi"
       | "ratStore",
   ) => {
@@ -100,12 +96,6 @@ function HomeBrowser({
         label: "РЕКЛАМА",
         description: "Заказать рекламу",
         icon: <Megaphone className="size-10" />,
-      },
-      rat: {
-        value: "rat",
-        label: "КРЫСА",
-        description: "Крыса",
-        icon: <Rat className="size-10" />,
       },
       tamagochi: {
         value: "tamagochi",

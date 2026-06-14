@@ -28,6 +28,9 @@ export const users = sqliteTable("users", {
   gamblingWinnings: integer("gambling_winnings").notNull().default(0),
   gamblingBanned: integer("gambling_banned", { mode: "boolean" }).notNull().default(false),
   hangman: integer("hangman", { mode: "boolean" }).notNull().default(false),
+  tickets: integer("tickets").notNull().default(0),
+  ticketsBoughtToday: integer("tickets_bought_today").notNull().default(0),
+  ticketsDate: text("tickets_date"),
   ...timestamps,
 });
 
@@ -87,6 +90,7 @@ export const market = sqliteTable("market", {
   charge: integer("charge").notNull().default(0),
   price: integer("price").notNull().default(0),
   discount: integer("discount"),
+  perTicketPrice: integer("per_ticket_price"),
   image: blob("image", { mode: "buffer" }),
   imageMime: text("image_mime"),
   ...timestamps,
@@ -180,11 +184,26 @@ export const pets = sqliteTable("pets", {
   happiness: integer("happiness").notNull().default(100),
   energy: integer("energy").notNull().default(100),
   isAlive: integer("is_alive", { mode: "boolean" }).notNull().default(true),
+  color: text("color").notNull().default("#8B7355"),
+  model: text("model").notNull().default("rat"),
   lastUpdated: text("last_updated").notNull(),
   lastRewardDate: text("last_reward_date"),
   kvasBuff: integer("kvas_buff", { mode: "boolean" }).notNull().default(false),
   lastSearchDate: text("last_search_date"),
   ...timestamps,
+});
+
+export const jackpot = sqliteTable("jackpot", {
+  id: text("id").primaryKey(),
+  pool: integer("pool").notNull().default(0),
+  winningNumber: integer("winning_number").notNull().default(0),
+  winningNumberDate: text("winning_number_date"),
+  lastWinnerId: text("last_winner_id"),
+  lastWinnerUsername: text("last_winner_username"),
+  lastWinAmount: integer("last_win_amount"),
+  lastWinDate: text("last_win_date"),
+  created: text("created").notNull(),
+  updated: text("updated").notNull(),
 });
 
 export const cells = sqliteTable("cells", {

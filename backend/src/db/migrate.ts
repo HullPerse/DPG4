@@ -192,6 +192,50 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE pets ADD COLUMN last_search_date TEXT;",
     ],
   },
+  {
+    hash: "0015_add_pet_color",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN color TEXT NOT NULL DEFAULT '#8B7355';",
+    ],
+  },
+  {
+    hash: "0016_add_tickets",
+    sql: [
+      "ALTER TABLE users ADD COLUMN tickets INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE users ADD COLUMN tickets_bought_today INTEGER NOT NULL DEFAULT 0;",
+      "ALTER TABLE users ADD COLUMN tickets_date TEXT;",
+      "ALTER TABLE market ADD COLUMN per_ticket_price INTEGER;",
+    ],
+  },
+  {
+    hash: "0017_add_jackpot",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS jackpot (
+        id TEXT PRIMARY KEY,
+        pool INTEGER NOT NULL DEFAULT 0,
+        winning_number INTEGER NOT NULL DEFAULT 0,
+        winning_number_date TEXT,
+        last_winner_id TEXT,
+        last_winner_username TEXT,
+        last_win_amount INTEGER,
+        last_win_date TEXT,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+    ],
+  },
+  {
+    hash: "0019_add_pet_model",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN model TEXT NOT NULL DEFAULT 'rat';",
+    ],
+  },
+  {
+    hash: "0018_add_winning_number_date",
+    sql: [
+      "ALTER TABLE jackpot ADD COLUMN winning_number_date TEXT;",
+    ],
+  },
 ];
 
 export function runMigrations() {

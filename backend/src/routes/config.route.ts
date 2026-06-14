@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authPlugin } from "../plugins/auth.plugin";
 import { APP_META, WINDOW_META, LINKS } from "../lib/config.data";
+import { MODEL_CONFIGS } from "../lib/model.config";
 
 export const configRoute = new Elysia({ prefix: "/utils" })
   .use(authPlugin)
@@ -17,6 +18,18 @@ export const configRoute = new Elysia({ prefix: "/utils" })
       detail: {
         tags: ["utils"],
         summary: "UI config (apps, windows, game links)",
+      },
+    },
+  )
+  .get(
+    "/model-configs",
+    () => {
+      return MODEL_CONFIGS;
+    },
+    {
+      detail: {
+        tags: ["utils"],
+        summary: "3D model configs (camera, position, scale per model)",
       },
     },
   );

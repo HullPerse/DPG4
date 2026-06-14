@@ -182,7 +182,7 @@ describe("BlackjackService", () => {
     expect(state.playerValue).toBeGreaterThanOrEqual(2);
     expect(state.result).toBeNull();
     const user = await getUser(db, userId);
-    expect(user!.money).toBe(95);
+    expect(user!.tickets).toBe(95);
   });
 
   test("deal rejects invalid bid", async () => {
@@ -195,7 +195,7 @@ describe("BlackjackService", () => {
   });
 
   test("deal rejects insufficient balance", async () => {
-    const poor = await createUser(db, { money: 2 });
+    const poor = await createUser(db, { tickets: 2 });
     expect(services.blackjackService.deal(poor.id, 5)).rejects.toThrow(
       "Insufficient balance",
     );
@@ -260,14 +260,14 @@ describe("BlackjackService", () => {
     expect(endState.result!.net).toBe(expectedNet);
   });
 
-  test("stand credits money on win", async () => {
+  test("stand credits tickets on win", async () => {
     const state = await services.blackjackService.deal(userId, 10);
     if (state.phase === "player") {
       const endState = await services.blackjackService.stand(userId);
       const user = await getUser(db, userId);
-      const moneyAfterDeal = 100 - 10;
-      const expectedMoney = moneyAfterDeal + endState.result!.payout;
-      expect(user!.money).toBe(expectedMoney);
+      const ticketsAfterDeal = 100 - 10;
+      const expectedTickets = ticketsAfterDeal + endState.result!.payout;
+      expect(user!.tickets).toBe(expectedTickets);
     }
   });
 

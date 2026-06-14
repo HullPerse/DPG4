@@ -1,4 +1,4 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import {
   Suspense,
@@ -18,11 +18,14 @@ import {
   claimDailyReward,
   resurrectPet,
   searchDeadPet,
+  setPetColor,
+  setPetModel,
 } from "@/api/pet.api";
+import { fetchModelConfigs } from "@/api/config.api";
+import type { ModelConfigEntry } from "@/api/config.api";
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
-
-const itemsApi = new ItemsApi();
+import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Button } from "@/components/ui/button.component";
@@ -35,46 +38,59 @@ import {
   FlaskConical,
   Volume2,
   BrickWall,
+  Skull,
 } from "lucide-react";
 import type { Inventory } from "@/types/items";
 
-useGLTF.preload("/rat.glb");
+const itemsApi = new ItemsApi();
 
-const DECAY_INTERVAL_MS = 5000;
-const DECAY_PER_TICK = { hunger: 0.4, happiness: 0.25, energy: 0.33 };
+useGLTF.preload("/models/rat.glb");
+useGLTF.preload("/models/dingus.glb");
+
 const REWARD_THRESHOLD = 80;
+const PALETTE = [
+  "#8B7355",
+  "#2D2D2D",
+  "#FFFFFF",
+  "#FF69B4",
+  "#4A90D9",
+  "#50C878",
+  "#E74C3C",
+  "#9B59B6",
+  "#FF8C00",
+  "#00BCD4",
+  "#FFD700",
+  "#A9A9A9",
+];
 
 function getMood(
   hunger: number,
   happiness: number,
   energy: number,
   isAlive: boolean,
-): { emoji: string; label: string } {
-  if (!isAlive) return { emoji: "💀", label: "Мертва" };
-  if (hunger < 30) return { emoji: "🍖", label: "Голоден" };
-  if (energy < 30) return { emoji: "😴", label: "Хочет спать" };
-  if (happiness < 30) return { emoji: "😢", label: "Грустный" };
-  if (happiness > 70 && hunger > 70 && energy > 70)
-    return { emoji: "😊", label: "Счастлив" };
-  return { emoji: "😐", label: "Нормально" };
+): string {
+  if (!isAlive) return "Мертва";
+  if (hunger < 30) return "Голоден";
+  if (energy < 30) return "Хочет спать";
+  if (happiness < 30) return "Грустный";
+  if (happiness > 70 && hunger > 70 && energy > 70) return "Счастлив";
+  return "Нормально";
 }
-
-const animEmoji: Record<string, string> = {
-  feed: "🍖",
-  pet: "💕",
-  sleep: "😴",
-};
 
 function RatModel({
   reaction,
   spinning,
   isAlive,
+  color,
+  modelCfg,
 }: {
   reaction: string | null;
   spinning: boolean;
   isAlive: boolean;
+  color: string;
+  modelCfg: ModelConfigEntry;
 }) {
-  const { scene } = useGLTF("/rat.glb");
+  const { scene } = useGLTF(modelCfg.file);
   const groupRef = useRef<THREE.Group>(null);
   const cloned = useMemo(() => {
     const c = scene.clone();
@@ -88,6 +104,11 @@ function RatModel({
   const animRef = useRef<{ type: string; elapsed: number } | null>(null);
   const prevReaction = useRef<string | null>(null);
   const deadColor = useRef(new THREE.Color(0x666666));
+  const targetColor = useRef(new THREE.Color(color));
+
+  useEffect(() => {
+    targetColor.current.set(color);
+  }, [color]);
 
   if (reaction && reaction !== prevReaction.current) {
     animRef.current = { type: reaction, elapsed: 0 };
@@ -98,11 +119,15 @@ function RatModel({
     if (!groupRef.current) return;
 
     if (!isAlive) {
-      groupRef.current.rotation.x = -Math.PI / 2.5;
-      groupRef.current.rotation.z = 0.3;
-      groupRef.current.rotation.y = 0;
-      groupRef.current.scale.setScalar(1.15);
-      groupRef.current.position.y = -1.0;
+      groupRef.current.rotation.x = modelCfg.dead.rotation[0];
+      groupRef.current.rotation.z = modelCfg.dead.rotation[2];
+      groupRef.current.rotation.y = modelCfg.dead.rotation[1];
+      groupRef.current.scale.setScalar(modelCfg.dead.scale);
+      groupRef.current.position.set(
+        modelCfg.dead.position[0],
+        modelCfg.dead.position[1],
+        modelCfg.dead.position[2],
+      );
       cloned.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           (child.material as THREE.MeshStandardMaterial).color.lerp(
@@ -114,17 +139,33 @@ function RatModel({
       return;
     }
 
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        (child.material as THREE.MeshStandardMaterial).color.lerp(
+          targetColor.current,
+          0.08,
+        );
+      }
+    });
+
+    const cfgScale = modelCfg.model.scale;
+    const cfgPosY = modelCfg.model.position[1];
+
     const anim = animRef.current;
     if (!anim) {
       if (spinning) {
         groupRef.current.rotation.y += delta * 1.5;
       } else {
-        groupRef.current.rotation.y = 0;
+        groupRef.current.rotation.y = modelCfg.model.rotation[1];
       }
-      groupRef.current.rotation.x = 0;
-      groupRef.current.rotation.z = 0;
-      groupRef.current.scale.setScalar(1.15);
-      groupRef.current.position.y = -0.8;
+      groupRef.current.rotation.x = modelCfg.model.rotation[0];
+      groupRef.current.rotation.z = modelCfg.model.rotation[2];
+      groupRef.current.scale.setScalar(cfgScale);
+      groupRef.current.position.set(
+        modelCfg.model.position[0],
+        cfgPosY,
+        modelCfg.model.position[2],
+      );
       return;
     }
 
@@ -134,12 +175,13 @@ function RatModel({
     if (anim.type === "feed") {
       const bounce =
         1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
-      groupRef.current.scale.setScalar(1.15 * bounce);
+      groupRef.current.scale.setScalar(cfgScale * bounce);
     } else if (anim.type === "pet") {
       groupRef.current.rotation.z =
         Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
     } else if (anim.type === "sleep") {
-      groupRef.current.position.y = -0.8 - Math.sin(progress * Math.PI) * 0.3;
+      groupRef.current.position.y =
+        cfgPosY - Math.sin(progress * Math.PI) * 0.3;
     }
 
     if (progress >= 1) {
@@ -148,24 +190,60 @@ function RatModel({
   });
 
   return (
-    <group ref={groupRef} scale={1.15}>
+    <group
+      ref={groupRef}
+      scale={modelCfg.model.scale}
+      position={[
+        modelCfg.model.position[0],
+        modelCfg.model.position[1],
+        modelCfg.model.position[2],
+      ]}
+      rotation={[
+        modelCfg.model.rotation[0],
+        modelCfg.model.rotation[1],
+        modelCfg.model.rotation[2],
+      ]}
+    >
       <primitive object={cloned} />
     </group>
   );
+}
+
+function CameraController({ modelCfg }: { modelCfg: ModelConfigEntry }) {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    camera.position.set(
+      modelCfg.camera.position[0],
+      modelCfg.camera.position[1],
+      modelCfg.camera.position[2],
+    );
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = modelCfg.camera.fov;
+      camera.updateProjectionMatrix();
+    }
+  }, [modelCfg, camera]);
+
+  return null;
 }
 
 function SceneContent({
   reaction,
   spinning,
   isAlive,
+  color,
+  modelCfg,
 }: {
   reaction: string | null;
   spinning: boolean;
   isAlive: boolean;
+  color: string;
+  modelCfg: ModelConfigEntry;
 }) {
   return (
     <>
-      <OrbitControls enablePan={false} />
+      <CameraController modelCfg={modelCfg} />
+      <OrbitControls enablePan={true} />
       <Environment preset="city" />
       <color attach="background" args={["#232136"]} />
       <ambientLight intensity={0.35} />
@@ -185,11 +263,15 @@ function SceneContent({
         intensity={0.25}
         color="#31748f"
       />
-      <group position={[0, -0.8, 0]}>
-        <Suspense fallback={null}>
-          <RatModel reaction={reaction} spinning={spinning} isAlive={isAlive} />
-        </Suspense>
-      </group>
+      <Suspense fallback={null}>
+        <RatModel
+          reaction={reaction}
+          spinning={spinning}
+          isAlive={isAlive}
+          color={color}
+          modelCfg={modelCfg}
+        />
+      </Suspense>
     </>
   );
 }
@@ -208,11 +290,11 @@ function StatBar({
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div className={`flex flex-col gap-0.5 flex-1 ${dead ? "opacity-40" : ""}`}>
-      <div className="flex justify-between text-xs text-muted">
-        <span>{label}</span>
-        <span>{Math.round(clamped)}%</span>
+      <div className="flex justify-between text-xs">
+        <span className="font-medium">{label}</span>
+        <span className="tabular-nums text-muted">{Math.round(clamped)}</span>
       </div>
-      <div className="h-2 w-full bg-highlight-high rounded-full overflow-hidden border-2 border-highlight-med">
+      <div className="h-1.5 w-full bg-highlight-high rounded-full overflow-hidden">
         <div
           className="h-full transition-all duration-500 ease-linear rounded-full"
           style={{
@@ -225,56 +307,10 @@ function StatBar({
   );
 }
 
-function MoodBubble({ emoji, label }: { emoji: string; label: string }) {
-  return (
-    <div className="absolute top-2 right-2 flex flex-col items-center gap-0.5 bg-background/80 border-2 border-highlight-high rounded-lg px-3 py-1.5 z-10 select-none">
-      <span className="text-3xl">{emoji}</span>
-      <span className="text-xs text-muted font-medium">{label}</span>
-    </div>
-  );
-}
-
-function FloatingEffect({ reaction }: { reaction: string | null }) {
-  const [items, setItems] = useState<{ id: number; emoji: string }[]>([]);
-  const idRef = useRef(0);
-
-  useEffect(() => {
-    if (!reaction) return;
-    const id = ++idRef.current;
-    const emoji = animEmoji[reaction] ?? "✨";
-    setItems((prev) => [...prev, { id, emoji }]);
-    setTimeout(() => {
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    }, 1000);
-  }, [reaction]);
-
-  return (
-    <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none z-20">
-      {items.map((item) => (
-        <div key={item.id} className="text-4xl animate-pet-float">
-          {item.emoji}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function RewardsBanner({ message }: { message: string | null }) {
-  if (!message) return null;
-  return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-900/90 border-2 border-green-500 rounded-lg px-4 py-2 z-30 animate-pulse text-sm font-bold text-green-300 whitespace-nowrap">
-      {message}
-    </div>
-  );
-}
-
 function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
-  const [localHunger, setLocalHunger] = useState(100);
-  const [localHappiness, setLocalHappiness] = useState(100);
-  const [localEnergy, setLocalEnergy] = useState(100);
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
   const [ratItems, setRatItems] = useState<Inventory[]>([]);
@@ -288,8 +324,13 @@ function TamagotchiTab() {
     refetchOnMount: "always",
   });
 
-  const petIsDead = data && !data.isAlive;
+  const refetchPet = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
+  }, [queryClient, user?.id]);
 
+  useSubscription("pets", "*", refetchPet);
+
+  const petIsDead = data && !data.isAlive;
   const brodeforActive = ratItems.some((i) => i.label === "Бродефор");
   const hasKvas = ratItems.some((i) => i.label === "Квас");
   const hasKvaS = ratItems.some((i) => i.label === "КВАс");
@@ -303,23 +344,6 @@ function TamagotchiTab() {
   }, [user?.id, rewardMessage]);
 
   useEffect(() => {
-    if (!data) return;
-    setLocalHunger(data.hunger);
-    setLocalHappiness(data.happiness);
-    setLocalEnergy(data.energy);
-  }, [data]);
-
-  useEffect(() => {
-    if (petIsDead) return;
-    const interval = setInterval(() => {
-      setLocalHunger((h) => Math.max(0, h - DECAY_PER_TICK.hunger));
-      setLocalHappiness((h) => Math.max(0, h - DECAY_PER_TICK.happiness));
-      setLocalEnergy((e) => Math.max(0, e - DECAY_PER_TICK.energy));
-    }, DECAY_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [petIsDead]);
-
-  useEffect(() => {
     if (!data || !user || rewardCheckedRef.current || petIsDead) return;
     if (
       data.hunger > REWARD_THRESHOLD &&
@@ -329,9 +353,9 @@ function TamagotchiTab() {
       claimDailyReward(user.id).then((result) => {
         if (result.claimed) {
           if (result.reward === "money") {
-            setRewardMessage(`🎉 Крыса принесла ${result.amount} монет!`);
+            setRewardMessage(`Крыса принесла ${result.amount} монет!`);
           } else {
-            setRewardMessage(`🎉 Крыса принесла предмет: ${result.itemLabel}!`);
+            setRewardMessage(`Крыса принесла предмет: ${result.itemLabel}!`);
           }
           setTimeout(() => setRewardMessage(null), 4000);
         }
@@ -339,10 +363,6 @@ function TamagotchiTab() {
     }
     rewardCheckedRef.current = true;
   }, [data, user, petIsDead]);
-
-  const refetchPet = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
-  }, [queryClient, user?.id]);
 
   const handleAction = useCallback((action: "feed" | "pet" | "sleep") => {
     if (actionTimeoutRef.current) clearTimeout(actionTimeoutRef.current);
@@ -356,26 +376,17 @@ function TamagotchiTab() {
 
   const feedMutation = useMutation({
     mutationFn: () => feedPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalHunger(pet.hunger);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const petMutation = useMutation({
     mutationFn: () => petPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalHappiness(pet.happiness);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const sleepMutation = useMutation({
     mutationFn: () => sleepPet(user!.id),
-    onSuccess: (pet) => {
-      setLocalEnergy(pet.energy);
-      refetchPet();
-    },
+    onSuccess: () => refetchPet(),
   });
 
   const useItemMutation = useMutation({
@@ -390,6 +401,27 @@ function TamagotchiTab() {
     },
   });
 
+  const { data: modelConfigs = [] } = useQuery({
+    queryKey: ["model-configs"],
+    queryFn: fetchModelConfigs,
+    staleTime: Infinity,
+  });
+
+  const colorMutation = useMutation({
+    mutationFn: (color: string) => setPetColor(user!.id, color),
+    onSuccess: () => refetchPet(),
+  });
+
+  const modelMutation = useMutation({
+    mutationFn: (model: string) => setPetModel(user!.id, model),
+    onSuccess: () => refetchPet(),
+  });
+
+  const currentModel = data?.model ?? "rat";
+  const currentColor = data?.color ?? "#8B7355";
+  const currentModelCfg =
+    modelConfigs.find((m) => m.id === currentModel) ?? modelConfigs[0];
+
   const resurrectMutation = useMutation({
     mutationFn: () => resurrectPet(user!.id),
     onSuccess: () => refetchPet(),
@@ -399,7 +431,7 @@ function TamagotchiTab() {
     mutationFn: () => searchDeadPet(user!.id),
     onSuccess: (result) => {
       if (result.ok) {
-        setRewardMessage(`🔍 Найден предмет: ${result.itemLabel}!`);
+        setRewardMessage(`Найден предмет: ${result.itemLabel}!`);
         setTimeout(() => setRewardMessage(null), 4000);
       }
     },
@@ -415,56 +447,92 @@ function TamagotchiTab() {
     );
   }
 
-  const mood = getMood(localHunger, localHappiness, localEnergy, data?.isAlive ?? true);
+  const mood = getMood(
+    data?.hunger ?? 100,
+    data?.happiness ?? 100,
+    data?.energy ?? 100,
+    data?.isAlive ?? true,
+  );
 
   return (
-    <main className="flex flex-col w-full h-full gap-2 p-2">
-      <section className="flex flex-row gap-3 p-2 bg-background border-2 border-highlight-high rounded-lg">
-        <StatBar
-          label="🍖 Голод"
-          value={localHunger}
-          color="#f6c177"
-          dead={petIsDead}
-        />
-        <StatBar
-          label="😊 Счастье"
-          value={localHappiness}
-          color="#c4a7e7"
-          dead={petIsDead}
-        />
-        <StatBar
-          label="🔋 Энергия"
-          value={localEnergy}
-          color="#9ccfd8"
-          dead={petIsDead}
-        />
-      </section>
-
+    <main className="flex flex-col w-full h-full gap-3 p-2">
       <section className="relative flex-1 rounded-lg overflow-hidden border-2 border-highlight-high">
-        <MoodBubble emoji={mood.emoji} label={mood.label} />
-        <FloatingEffect reaction={lastAction} />
-        <RewardsBanner message={rewardMessage} />
-        <Canvas
-          camera={{ position: [3.5, 2, 5], fov: 42 }}
-          className="h-full w-full"
-          gl={{ antialias: true, alpha: true }}
-        >
+        <div className="absolute top-2 left-2 z-10">
+          <span className="inline-flex items-center gap-1.5 bg-background/80 border border-highlight-med rounded-md px-2.5 py-1 text-sm font-medium">
+            {petIsDead ? (
+              <Skull className="size-4 text-red-400" />
+            ) : (
+              <span
+                className="size-2 rounded-full"
+                style={{
+                  backgroundColor:
+                    mood === "Счастлив"
+                      ? "#50C878"
+                      : mood === "Голоден" ||
+                          mood === "Хочет спать" ||
+                          mood === "Грустный"
+                        ? "#f6c177"
+                        : "#555",
+                }}
+              />
+            )}
+            {mood}
+          </span>
+        </div>
+
+        {rewardMessage && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-900/90 border border-green-500 rounded-md px-4 py-2 z-30 animate-pulse text-sm font-bold text-green-300 whitespace-nowrap">
+            {rewardMessage}
+          </div>
+        )}
+
+        <Canvas className="h-full w-full" gl={{ antialias: true, alpha: true }}>
           <Suspense fallback={null}>
-            <SceneContent reaction={lastAction} spinning={brodeforActive} isAlive={data?.isAlive ?? true} />
+            <SceneContent
+              reaction={lastAction}
+              spinning={brodeforActive}
+              isAlive={data?.isAlive ?? true}
+              color={data?.color ?? "#8B7355"}
+              modelCfg={currentModelCfg ?? modelConfigs[0]!}
+            />
           </Suspense>
         </Canvas>
+
         {petIsDead && (
           <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
         )}
+
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-background/80 border-t border-highlight-med p-2.5 backdrop-blur-sm">
+          <div className="flex flex-row gap-3">
+            <StatBar
+              label="Голод"
+              value={data?.hunger ?? 100}
+              color="#f6c177"
+              dead={petIsDead}
+            />
+            <StatBar
+              label="Счастье"
+              value={data?.happiness ?? 100}
+              color="#c4a7e7"
+              dead={petIsDead}
+            />
+            <StatBar
+              label="Энергия"
+              value={data?.energy ?? 100}
+              color="#9ccfd8"
+              dead={petIsDead}
+            />
+          </div>
+        </div>
       </section>
 
       {!petIsDead && (
-        <section className="flex flex-row gap-2 justify-center p-2 bg-background border-2 border-highlight-high rounded-lg">
+        <section className="flex flex-row gap-2">
           <Button
             variant="default"
             disabled={feedMutation.isPending}
             onClick={() => handleAction("feed")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Apple className="size-5" />
             Кормить
@@ -473,7 +541,7 @@ function TamagotchiTab() {
             variant="default"
             disabled={petMutation.isPending}
             onClick={() => handleAction("pet")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Hand className="size-5" />
             Гладить
@@ -482,7 +550,7 @@ function TamagotchiTab() {
             variant="default"
             disabled={sleepMutation.isPending}
             onClick={() => handleAction("sleep")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Bed className="size-5" />
             Спать
@@ -490,99 +558,145 @@ function TamagotchiTab() {
         </section>
       )}
 
-      <section className="flex flex-col gap-1.5 p-2 bg-background border-2 border-highlight-high rounded-lg">
+      <section className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg">
         <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          🐀 Крысиные предметы
+          Модель
         </span>
-        {petIsDead ? (
-          <div className="flex flex-row gap-2">
+        <div className="flex flex-row flex-wrap gap-1.5">
+          {modelConfigs.map((m) => (
             <Button
-              variant="warning"
-              className="flex items-center gap-2 flex-1"
-              loading={resurrectMutation.isPending}
-              disabled={resurrectMutation.isPending}
-              onClick={() => resurrectMutation.mutate()}
+              key={m.id}
+              disabled={modelMutation.isPending || m.id === data?.model}
+              onClick={() => modelMutation.mutate(m.id)}
             >
-              <RotateCw className="size-4" />
-              Воскресить
+              {m.label}
             </Button>
-            <Button
-              variant="default"
-              className="flex items-center gap-2 flex-1"
-              loading={searchMutation.isPending}
-              disabled={searchMutation.isPending}
-              onClick={() => searchMutation.mutate()}
-            >
-              <Search className="size-4" />
-              Обыскать
-            </Button>
-          </div>
-        ) : (
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-row gap-3">
+        <div className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg flex-1">
+          <span className="text-xs text-muted font-semibold uppercase tracking-wider">
+            Цвет
+          </span>
           <div className="flex flex-row flex-wrap gap-1.5">
-            {hasKvas && (
+            {PALETTE.map((color) => (
               <Button
-                variant="default"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "Квас");
-                  if (inv) useItemMutation.mutate(String(inv.id));
-                }}
+                key={color}
+                size="icon"
+                disabled={colorMutation.isPending || color === data?.color}
+                onClick={() => colorMutation.mutate(color)}
+                className="group relative rounded-full border-2 border-highlight-med transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
+                style={{ backgroundColor: color }}
+                title={color}
               >
-                <FlaskConical className="size-4" />
-                Квас
+                {currentColor === color && (
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                    ✓
+                  </span>
+                )}
               </Button>
-            )}
-            {hasKvaS && (
-              <Button
-                variant="default"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "КВАс");
-                  if (inv) {
-                    useItemMutation.mutate(String(inv.id));
-                    const audio = new Audio("/audio/frog.mp3");
-                    audio.volume = 0.5;
-                    audio.play().catch(() => {});
-                  }
-                }}
-              >
-                <Volume2 className="size-4" />
-                КВАс
-              </Button>
-            )}
-            {hasKirpich && (
-              <Button
-                variant="error"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "Кирпич");
-                  if (inv) useItemMutation.mutate(String(inv.id));
-                }}
-              >
-                <BrickWall className="size-4" />
-                Кирпич
-              </Button>
-            )}
-            {brodeforActive && (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm bg-foreground/5 text-muted border border-highlight-med">
-                <RotateCw className="size-4 animate-spin" />
-                Бродефор активен
-              </span>
-            )}
-            {!hasKvas && !hasKvaS && !hasKirpich && !brodeforActive && (
-              <span className="text-xs text-muted/50 px-1">Нет предметов</span>
-            )}
+            ))}
           </div>
-        )}
+        </div>
+
+        <div className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg flex-1">
+          <span className="text-xs text-muted font-semibold uppercase tracking-wider">
+            Предметы
+          </span>
+          {petIsDead ? (
+            <div className="flex flex-row gap-2">
+              <Button
+                variant="warning"
+                className="flex items-center gap-2 flex-1"
+                loading={resurrectMutation.isPending}
+                disabled={resurrectMutation.isPending}
+                onClick={() => resurrectMutation.mutate()}
+              >
+                <RotateCw className="size-4" />
+                Воскресить
+              </Button>
+              <Button
+                variant="default"
+                className="flex items-center gap-2 flex-1"
+                loading={searchMutation.isPending}
+                disabled={searchMutation.isPending}
+                onClick={() => searchMutation.mutate()}
+              >
+                <Search className="size-4" />
+                Обыскать
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-row flex-wrap gap-1.5">
+              {hasKvas && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "Квас");
+                    if (inv) useItemMutation.mutate(String(inv.id));
+                  }}
+                >
+                  <FlaskConical className="size-4" />
+                  Квас
+                </Button>
+              )}
+              {hasKvaS && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "КВАс");
+                    if (inv) {
+                      useItemMutation.mutate(String(inv.id));
+                      const audio = new Audio("/audio/frog.mp3");
+                      audio.volume = 0.5;
+                      audio.play().catch(() => {});
+                    }
+                  }}
+                >
+                  <Volume2 className="size-4" />
+                  КВАс
+                </Button>
+              )}
+              {hasKirpich && (
+                <Button
+                  variant="error"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "Кирпич");
+                    if (inv) useItemMutation.mutate(String(inv.id));
+                  }}
+                >
+                  <BrickWall className="size-4" />
+                  Кирпич
+                </Button>
+              )}
+              {brodeforActive && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-foreground/5 text-muted border border-highlight-med">
+                  <RotateCw className="size-4 animate-spin" />
+                  Бродефор
+                </span>
+              )}
+              {!hasKvas && !hasKvaS && !hasKirpich && !brodeforActive && (
+                <span className="text-xs text-muted/50 px-1">
+                  Нет предметов
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

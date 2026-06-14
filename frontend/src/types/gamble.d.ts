@@ -25,10 +25,8 @@ export type DiceResult = {
 export interface DiceDealerResult {
   phase: "dealer";
   values: [number, number, number];
-  target: number | null;
-  autoResult: "dealer_win" | "dealer_lose" | "push" | null;
   reroll?: boolean;
-  label?: string;
+  handLabel?: string;
 }
 
 export interface DiceGameResult {
@@ -132,6 +130,24 @@ export interface PachinkoState {
   tone: "jackpot" | "win" | "lose" | "chance" | "";
   banned: boolean;
   kickAvailable: boolean;
+}
+
+export interface JackpotStatus {
+  pool: number;
+  lastWinnerId: string | null;
+  lastWinnerUsername: string | null;
+  lastWinAmount: number | null;
+  lastWinDate: string | null;
+}
+
+export interface JackpotPlayResult {
+  win: boolean;
+  chosen: number;
+  winningNumber: number;
+  prize: number;
+  newBalance: number;
+  banned: boolean;
+  error: string | null;
 }
 
 export interface MinesState {
