@@ -23,8 +23,6 @@ import {
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
 import { useSubscription } from "@/hooks/subscription.hook";
-
-const itemsApi = new ItemsApi();
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Button } from "@/components/ui/button.component";
@@ -37,12 +35,28 @@ import {
   FlaskConical,
   Volume2,
   BrickWall,
+  Skull,
 } from "lucide-react";
 import type { Inventory } from "@/types/items";
 
+const itemsApi = new ItemsApi();
 useGLTF.preload("/rat.glb");
 
 const REWARD_THRESHOLD = 80;
+const PALETTE = [
+  "#8B7355",
+  "#2D2D2D",
+  "#FFFFFF",
+  "#FF69B4",
+  "#4A90D9",
+  "#50C878",
+  "#E74C3C",
+  "#9B59B6",
+  "#FF8C00",
+  "#00BCD4",
+  "#FFD700",
+  "#A9A9A9",
+];
 
 function getMood(
   hunger: number,
@@ -54,8 +68,7 @@ function getMood(
   if (hunger < 30) return "Голоден";
   if (energy < 30) return "Хочет спать";
   if (happiness < 30) return "Грустный";
-  if (happiness > 70 && hunger > 70 && energy > 70)
-    return "Счастлив";
+  if (happiness > 70 && hunger > 70 && energy > 70) return "Счастлив";
   return "Нормально";
 }
 
@@ -177,7 +190,7 @@ function SceneContent({
 }) {
   return (
     <>
-      <OrbitControls enablePan={false} />
+      <OrbitControls enablePan={true} />
       <Environment preset="city" />
       <color attach="background" args={["#232136"]} />
       <ambientLight intensity={0.35} />
@@ -197,9 +210,14 @@ function SceneContent({
         intensity={0.25}
         color="#31748f"
       />
-      <group position={[0, -0.8, 0]}>
+      <group position={[0, 0.3, 0]} rotation={[0, 0.6, 0]}>
         <Suspense fallback={null}>
-          <RatModel reaction={reaction} spinning={spinning} isAlive={isAlive} color={color} />
+          <RatModel
+            reaction={reaction}
+            spinning={spinning}
+            isAlive={isAlive}
+            color={color}
+          />
         </Suspense>
       </group>
     </>
@@ -220,11 +238,11 @@ function StatBar({
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div className={`flex flex-col gap-0.5 flex-1 ${dead ? "opacity-40" : ""}`}>
-      <div className="flex justify-between text-xs text-muted">
-        <span>{label}</span>
-        <span>{Math.round(clamped)}%</span>
+      <div className="flex justify-between text-xs">
+        <span className="font-medium">{label}</span>
+        <span className="tabular-nums text-muted">{Math.round(clamped)}</span>
       </div>
-      <div className="h-2 w-full bg-highlight-high rounded-full overflow-hidden border-2 border-highlight-med">
+      <div className="h-1.5 w-full bg-highlight-high rounded-full overflow-hidden">
         <div
           className="h-full transition-all duration-500 ease-linear rounded-full"
           style={{
@@ -236,38 +254,6 @@ function StatBar({
     </div>
   );
 }
-
-function MoodBadge({ label }: { label: string }) {
-  return (
-    <div className="absolute top-2 right-2 flex flex-col items-center bg-background/80 border-2 border-highlight-high rounded-lg px-3 py-1.5 z-10 select-none">
-      <span className="text-xs text-muted font-medium">{label}</span>
-    </div>
-  );
-}
-
-function RewardsBanner({ message }: { message: string | null }) {
-  if (!message) return null;
-  return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-900/90 border-2 border-green-500 rounded-lg px-4 py-2 z-30 animate-pulse text-sm font-bold text-green-300 whitespace-nowrap">
-      {message}
-    </div>
-  );
-}
-
-const PALETTE = [
-  "#8B7355",
-  "#2D2D2D",
-  "#FFFFFF",
-  "#FF69B4",
-  "#4A90D9",
-  "#50C878",
-  "#E74C3C",
-  "#9B59B6",
-  "#FF8C00",
-  "#00BCD4",
-  "#FFD700",
-  "#A9A9A9",
-];
 
 function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
@@ -293,7 +279,6 @@ function TamagotchiTab() {
   useSubscription("pets", "*", refetchPet);
 
   const petIsDead = data && !data.isAlive;
-
   const brodeforActive = ratItems.some((i) => i.label === "Бродефор");
   const hasKvas = ratItems.some((i) => i.label === "Квас");
   const hasKvaS = ratItems.some((i) => i.label === "КВАс");
@@ -396,55 +381,95 @@ function TamagotchiTab() {
     );
   }
 
-  const mood = getMood(data?.hunger ?? 100, data?.happiness ?? 100, data?.energy ?? 100, data?.isAlive ?? true);
+  const mood = getMood(
+    data?.hunger ?? 100,
+    data?.happiness ?? 100,
+    data?.energy ?? 100,
+    data?.isAlive ?? true,
+  );
 
   return (
-    <main className="flex flex-col w-full h-full gap-2 p-2">
-      <section className="flex flex-row gap-3 p-2 bg-background border-2 border-highlight-high rounded-lg">
-        <StatBar
-          label="Голод"
-          value={data?.hunger ?? 100}
-          color="#f6c177"
-          dead={petIsDead}
-        />
-        <StatBar
-          label="Счастье"
-          value={data?.happiness ?? 100}
-          color="#c4a7e7"
-          dead={petIsDead}
-        />
-        <StatBar
-          label="Энергия"
-          value={data?.energy ?? 100}
-          color="#9ccfd8"
-          dead={petIsDead}
-        />
-      </section>
-
+    <main className="flex flex-col w-full h-full gap-3 p-2">
       <section className="relative flex-1 rounded-lg overflow-hidden border-2 border-highlight-high">
-        <MoodBadge label={mood} />
-        <RewardsBanner message={rewardMessage} />
+        <div className="absolute top-2 left-2 z-10">
+          <span className="inline-flex items-center gap-1.5 bg-background/80 border border-highlight-med rounded-md px-2.5 py-1 text-sm font-medium">
+            {petIsDead ? (
+              <Skull className="size-4 text-red-400" />
+            ) : (
+              <span
+                className="size-2 rounded-full"
+                style={{
+                  backgroundColor:
+                    mood === "Счастлив"
+                      ? "#50C878"
+                      : mood === "Голоден" ||
+                          mood === "Хочет спать" ||
+                          mood === "Грустный"
+                        ? "#f6c177"
+                        : "#555",
+                }}
+              />
+            )}
+            {mood}
+          </span>
+        </div>
+
+        {rewardMessage && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-green-900/90 border border-green-500 rounded-md px-4 py-2 z-30 animate-pulse text-sm font-bold text-green-300 whitespace-nowrap">
+            {rewardMessage}
+          </div>
+        )}
+
         <Canvas
-          camera={{ position: [3.5, 2, 5], fov: 42 }}
+          camera={{ position: [3.5, 1, 1], fov: 48 }}
           className="h-full w-full"
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <SceneContent reaction={lastAction} spinning={brodeforActive} isAlive={data?.isAlive ?? true} color={data?.color ?? "#8B7355"} />
+            <SceneContent
+              reaction={lastAction}
+              spinning={brodeforActive}
+              isAlive={data?.isAlive ?? true}
+              color={data?.color ?? "#8B7355"}
+            />
           </Suspense>
         </Canvas>
+
         {petIsDead && (
           <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
         )}
+
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-background/80 border-t border-highlight-med p-2.5 backdrop-blur-sm">
+          <div className="flex flex-row gap-3">
+            <StatBar
+              label="Голод"
+              value={data?.hunger ?? 100}
+              color="#f6c177"
+              dead={petIsDead}
+            />
+            <StatBar
+              label="Счастье"
+              value={data?.happiness ?? 100}
+              color="#c4a7e7"
+              dead={petIsDead}
+            />
+            <StatBar
+              label="Энергия"
+              value={data?.energy ?? 100}
+              color="#9ccfd8"
+              dead={petIsDead}
+            />
+          </div>
+        </div>
       </section>
 
       {!petIsDead && (
-        <section className="flex flex-row gap-2 justify-center p-2 bg-background border-2 border-highlight-high rounded-lg">
+        <section className="flex flex-row gap-2">
           <Button
             variant="default"
             disabled={feedMutation.isPending}
             onClick={() => handleAction("feed")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Apple className="size-5" />
             Кормить
@@ -453,7 +478,7 @@ function TamagotchiTab() {
             variant="default"
             disabled={petMutation.isPending}
             onClick={() => handleAction("pet")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Hand className="size-5" />
             Гладить
@@ -462,7 +487,7 @@ function TamagotchiTab() {
             variant="default"
             disabled={sleepMutation.isPending}
             onClick={() => handleAction("sleep")}
-            className="flex items-center gap-2 flex-1"
+            className="flex items-center gap-2 flex-1 h-11"
           >
             <Bed className="size-5" />
             Спать
@@ -470,125 +495,136 @@ function TamagotchiTab() {
         </section>
       )}
 
-      <section className="flex flex-col gap-2 p-2 bg-background border-2 border-highlight-high rounded-lg">
-        <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          Окрас крысы
-        </span>
-        <div className="flex flex-row flex-wrap gap-1.5">
-          {PALETTE.map((swatch) => (
-            <button
-              key={swatch}
-              type="button"
-              disabled={colorMutation.isPending}
-              onClick={() => colorMutation.mutate(swatch)}
-              className="group relative size-7 rounded-full border-2 border-highlight-med transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
-              style={{ backgroundColor: swatch }}
-              title={swatch}
-            >
-              {currentColor === swatch && (
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold drop-shadow-md"
-                  style={{ color: swatch === "#FFFFFF" || swatch === "#FFD700" ? "#333" : "#fff" }}>
-                  ✓
+      <section className="flex flex-row gap-3">
+        <div className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg flex-1">
+          <span className="text-xs text-muted font-semibold uppercase tracking-wider">
+            Окрас
+          </span>
+          <div className="flex flex-row flex-wrap gap-1.5">
+            {PALETTE.map((swatch) => (
+              <button
+                key={swatch}
+                type="button"
+                disabled={colorMutation.isPending}
+                onClick={() => colorMutation.mutate(swatch)}
+                className="group relative size-7 rounded-full border-2 border-highlight-med transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
+                style={{ backgroundColor: swatch }}
+                title={swatch}
+              >
+                {currentColor === swatch && (
+                  <span
+                    className="absolute inset-0 flex items-center justify-center text-xs font-bold drop-shadow-md"
+                    style={{
+                      color:
+                        swatch === "#FFFFFF" || swatch === "#FFD700"
+                          ? "#333"
+                          : "#fff",
+                    }}
+                  >
+                    ✓
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg flex-1">
+          <span className="text-xs text-muted font-semibold uppercase tracking-wider">
+            Предметы
+          </span>
+          {petIsDead ? (
+            <div className="flex flex-row gap-2">
+              <Button
+                variant="warning"
+                className="flex items-center gap-2 flex-1"
+                loading={resurrectMutation.isPending}
+                disabled={resurrectMutation.isPending}
+                onClick={() => resurrectMutation.mutate()}
+              >
+                <RotateCw className="size-4" />
+                Воскресить
+              </Button>
+              <Button
+                variant="default"
+                className="flex items-center gap-2 flex-1"
+                loading={searchMutation.isPending}
+                disabled={searchMutation.isPending}
+                onClick={() => searchMutation.mutate()}
+              >
+                <Search className="size-4" />
+                Обыскать
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-row flex-wrap gap-1.5">
+              {hasKvas && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "Квас");
+                    if (inv) useItemMutation.mutate(String(inv.id));
+                  }}
+                >
+                  <FlaskConical className="size-4" />
+                  Квас
+                </Button>
+              )}
+              {hasKvaS && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "КВАс");
+                    if (inv) {
+                      useItemMutation.mutate(String(inv.id));
+                      const audio = new Audio("/audio/frog.mp3");
+                      audio.volume = 0.5;
+                      audio.play().catch(() => {});
+                    }
+                  }}
+                >
+                  <Volume2 className="size-4" />
+                  КВАс
+                </Button>
+              )}
+              {hasKirpich && (
+                <Button
+                  variant="error"
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                  loading={useItemMutation.isPending}
+                  disabled={useItemMutation.isPending}
+                  onClick={() => {
+                    const inv = ratItems.find((i) => i.label === "Кирпич");
+                    if (inv) useItemMutation.mutate(String(inv.id));
+                  }}
+                >
+                  <BrickWall className="size-4" />
+                  Кирпич
+                </Button>
+              )}
+              {brodeforActive && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-foreground/5 text-muted border border-highlight-med">
+                  <RotateCw className="size-4 animate-spin" />
+                  Бродефор
                 </span>
               )}
-            </button>
-          ))}
+              {!hasKvas && !hasKvaS && !hasKirpich && !brodeforActive && (
+                <span className="text-xs text-muted/50 px-1">
+                  Нет предметов
+                </span>
+              )}
+            </div>
+          )}
         </div>
-      </section>
-
-      <section className="flex flex-col gap-1.5 p-2 bg-background border-2 border-highlight-high rounded-lg">
-        <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          Крысиные предметы
-        </span>
-        {petIsDead ? (
-          <div className="flex flex-row gap-2">
-            <Button
-              variant="warning"
-              className="flex items-center gap-2 flex-1"
-              loading={resurrectMutation.isPending}
-              disabled={resurrectMutation.isPending}
-              onClick={() => resurrectMutation.mutate()}
-            >
-              <RotateCw className="size-4" />
-              Воскресить
-            </Button>
-            <Button
-              variant="default"
-              className="flex items-center gap-2 flex-1"
-              loading={searchMutation.isPending}
-              disabled={searchMutation.isPending}
-              onClick={() => searchMutation.mutate()}
-            >
-              <Search className="size-4" />
-              Обыскать
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-row flex-wrap gap-1.5">
-            {hasKvas && (
-              <Button
-                variant="default"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "Квас");
-                  if (inv) useItemMutation.mutate(String(inv.id));
-                }}
-              >
-                <FlaskConical className="size-4" />
-                Квас
-              </Button>
-            )}
-            {hasKvaS && (
-              <Button
-                variant="default"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "КВАс");
-                  if (inv) {
-                    useItemMutation.mutate(String(inv.id));
-                    const audio = new Audio("/audio/frog.mp3");
-                    audio.volume = 0.5;
-                    audio.play().catch(() => {});
-                  }
-                }}
-              >
-                <Volume2 className="size-4" />
-                КВАс
-              </Button>
-            )}
-            {hasKirpich && (
-              <Button
-                variant="error"
-                size="sm"
-                className="flex items-center gap-1.5"
-                loading={useItemMutation.isPending}
-                disabled={useItemMutation.isPending}
-                onClick={() => {
-                  const inv = ratItems.find((i) => i.label === "Кирпич");
-                  if (inv) useItemMutation.mutate(String(inv.id));
-                }}
-              >
-                <BrickWall className="size-4" />
-                Кирпич
-              </Button>
-            )}
-            {brodeforActive && (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm bg-foreground/5 text-muted border border-highlight-med">
-                <RotateCw className="size-4 animate-spin" />
-                Бродефор активен
-              </span>
-            )}
-            {!hasKvas && !hasKvaS && !hasKirpich && !brodeforActive && (
-              <span className="text-xs text-muted/50 px-1">Нет предметов</span>
-            )}
-          </div>
-        )}
       </section>
     </main>
   );
