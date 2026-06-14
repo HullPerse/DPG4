@@ -36,8 +36,15 @@ import { jackpotRoute } from "./routes/jackpot.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
+import { compressionPlugin } from "./plugins/compression.plugin";
+import { errorPlugin } from "./plugins/error.plugin";
+
+runMigrations();
+logger.info("SYSTEM", "DB migrations applied");
 
 const app = new Elysia()
+  .use(errorPlugin)
+  .use(compressionPlugin)
   .use(
     cors({
       origin: config.corsOrigin,
@@ -153,9 +160,6 @@ const app = new Elysia()
   .use(ratStoreRoute)
   .use(petsRoute)
   .use(jackpotRoute);
-
-runMigrations();
-logger.info("SYSTEM", "DB migrations applied");
 
 app.listen(config.port);
 

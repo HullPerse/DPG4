@@ -19,9 +19,19 @@ function parseCorsOrigin(
   return value.trim();
 }
 
+function requiredEnv(name: string, fallback?: string): string {
+  const val = Bun.env[name] || fallback;
+  if (!val) {
+    throw new Error(
+      `Missing required environment variable: ${name}. Check .env file.`,
+    );
+  }
+  return val;
+}
+
 export const config = {
   port: Number(Bun.env.PORT) || 3000,
-  jwtSecret: Bun.env.JWT_SECRET || "dpg-local-jwt",
+  jwtSecret: requiredEnv("JWT_SECRET", "dpg-local-jwt"),
   dbPath: resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite"),
   corsOrigin: parseCorsOrigin(Bun.env.CORS_ORIGIN),
   steamApiKey: Bun.env.STEAM_API_KEY ?? "",

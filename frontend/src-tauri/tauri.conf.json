@@ -4,9 +4,9 @@
   "version": "2.2.1",
   "identifier": "dpg4",
   "build": {
-    "beforeDevCommand": "bun dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
 
