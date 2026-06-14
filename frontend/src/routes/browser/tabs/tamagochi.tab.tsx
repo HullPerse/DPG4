@@ -45,9 +45,7 @@ import type { Inventory } from "@/types/items";
 const itemsApi = new ItemsApi();
 
 useGLTF.preload("/models/rat.glb");
-useGLTF.preload("/models/chicken.glb");
 useGLTF.preload("/models/dingus.glb");
-useGLTF.preload("/models/wolf.glb");
 
 const REWARD_THRESHOLD = 80;
 const PALETTE = [
