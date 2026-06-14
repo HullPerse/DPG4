@@ -444,4 +444,42 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       body: t.Object({ color: t.String() }),
       detail: { tags: ["pets"], summary: "Change pet color" },
     },
+  )
+
+  .post(
+    "/:userId/model",
+    async ({ params, db, body }) => {
+      const VALID_MODELS = ["rat", "chicken", "dingus", "wolf"];
+      if (!VALID_MODELS.includes(body.model)) {
+        throw new Error("Invalid model. Must be one of: rat, chicken, dingus, wolf");
+      }
+
+      const now = nowIso();
+      const pet = await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.userId, params.userId))
+        .get();
+
+      if (!pet) throw new Error("Pet not found");
+
+      await db
+        .update(schema.pets)
+        .set({ model: body.model, updated: now })
+        .where(eq(schema.pets.id, pet.id));
+
+      broadcast("pets", "update", params.userId);
+      logger.info("pets", "changed pet model", params.userId, body.model);
+
+      return await db
+        .select()
+        .from(schema.pets)
+        .where(eq(schema.pets.id, pet.id))
+        .get();
+    },
+    {
+      params: t.Object({ userId: t.String() }),
+      body: t.Object({ model: t.String() }),
+      detail: { tags: ["pets"], summary: "Change pet 3D model" },
+    },
   );

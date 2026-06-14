@@ -35,3 +35,10 @@ export function setPetColor(userId: string, color: string): Promise<PetState> {
     body: { color },
   });
 }
+
+export function setPetModel(userId: string, model: string): Promise<PetState> {
+  return apiFetch<PetState>(`/pets/${userId}/model`, {
+    method: "POST",
+    body: { model },
+  });
+}

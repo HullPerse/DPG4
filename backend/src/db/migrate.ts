@@ -225,6 +225,12 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
+    hash: "0019_add_pet_model",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN model TEXT NOT NULL DEFAULT 'rat';",
+    ],
+  },
+  {
     hash: "0018_add_winning_number_date",
     sql: [
       "ALTER TABLE jackpot ADD COLUMN winning_number_date TEXT;",

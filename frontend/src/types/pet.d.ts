@@ -6,6 +6,7 @@ export interface PetState {
   energy: number;
   isAlive: boolean;
   color: string;
+  model: string;
   lastUpdated: string;
   lastRewardDate?: string;
   kvasBuff: boolean;
