@@ -151,4 +151,4 @@ function Combobox({
   );
 }
 
-export { Combobox, type ComboboxOption, type ComboboxProps };
+export { Combobox };

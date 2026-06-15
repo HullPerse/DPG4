@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import type { RocketPhase } from "@/types/gamble";
 import {
   buildFlightPath,
@@ -9,7 +9,9 @@ import {
 } from "@/lib/gambling/rocket.utils";
 
 const ROCKET_START_MULT = 0.5;
-import { RatMarker } from "./scenes/scene.rocket";
+const RatMarker = lazy(() =>
+  import("./scenes/scene.rocket").then((m) => ({ default: m.RatMarker })),
+);
 
 interface FlightChartProps {
   phase: RocketPhase;
@@ -231,11 +233,13 @@ function FlightChart({
           ref={ratRef}
           className="absolute -translate-x-1/2 -translate-y-1/2 transition-none"
         >
-          <RatMarker
-            multiplier={multiplier || displayMultRef.current}
-            phase={phase}
-            size={120}
-          />
+          <Suspense fallback={null}>
+            <RatMarker
+              multiplier={multiplier || displayMultRef.current}
+              phase={phase}
+              size={120}
+            />
+          </Suspense>
         </div>
       )}
     </div>

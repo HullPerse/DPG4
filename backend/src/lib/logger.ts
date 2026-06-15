@@ -1,83 +1,37 @@
-import { BunFile } from "bun";
-import { mkdir } from "node:fs/promises";
+import pino from "pino";
 import { resolveBackendPath } from "./paths";
 
-type LogLevel = "debug" | "info" | "warn" | "error";
-
-const LEVEL_NUM: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-};
-
-const LEVEL_COLOR: Record<LogLevel, string> = {
-  debug: "\x1b[90m",
-  info: "\x1b[36m",
-  warn: "\x1b[33m",
-  error: "\x1b[31m",
-};
-
-const RESET = "\x1b[0m";
-const BOLD = "\x1b[1m";
-const GRAY = "\x1b[90m";
-
-const config = {
-  minLevel: (Bun.env.LOG_LEVEL as LogLevel) || "info",
-};
-
+const LOG_LEVEL = Bun.env.LOG_LEVEL || "info";
 const LOG_FILE = resolveBackendPath("logs", "server.log");
 
-let fileWriter: ReturnType<BunFile["writer"]> | null = null;
+const fileTransport = pino.transport({
+  target: "pino/file",
+  options: { destination: LOG_FILE, mkdir: true },
+});
 
-async function ensureLogFile() {
-  if (fileWriter) return;
-  await mkdir(resolveBackendPath("logs"), { recursive: true });
-  fileWriter = Bun.file(LOG_FILE).writer();
-}
+const consoleTransport = pino.transport({
+  target: "pino-pretty",
+  options: {
+    colorize: true,
+    translateTime: "HH:MM:ss",
+    ignore: "pid,hostname",
+  },
+});
 
-function time() {
-  const d = new Date();
-  return d.toLocaleTimeString("en-GB", { hour12: false });
-}
-
-function isoTime() {
-  return new Date().toISOString();
-}
+const baseLogger = pino(
+  { level: LOG_LEVEL },
+  pino.multistream([{ stream: consoleTransport }, { stream: fileTransport }]),
+);
 
 function fmtArg(a: unknown): string {
-  if (typeof a === "string") return a;
   if (a instanceof Error) return a.stack ?? a.message;
-  if (typeof a === "object" && a !== null) return Bun.inspect(a);
+  if (typeof a === "object" && a !== null) return JSON.stringify(a);
   return String(a);
 }
 
-async function log(
-  level: LogLevel,
-  username: string | null | undefined,
-  message: string,
-  ...args: unknown[]
-) {
-  if (LEVEL_NUM[level] < LEVEL_NUM[config.minLevel]) return;
-
-  const prefix = username ? `${BOLD}${username}${RESET}: ` : "";
-  const detail = args.length ? ` ${args.map(fmtArg).join(" ")}` : "";
-
-  console.log(
-    `${GRAY}${time()}${RESET} ${LEVEL_COLOR[level]}${level.toUpperCase()}${RESET} ${prefix}${message}${detail}`,
-  );
-
-  try {
-    await ensureLogFile();
-    const entry = {
-      t: isoTime(),
-      l: level.toUpperCase(),
-      u: username ?? null,
-      m: message,
-      d: args.length ? args.map(fmtArg) : [],
-    };
-    fileWriter!.write(JSON.stringify(entry) + "\n");
-  } catch {}
+function buildMsg(message: string, args: unknown[]): string {
+  if (!args.length) return message;
+  return `${message} ${args.map(fmtArg).join(" ")}`;
 }
 
 export const logger = {
@@ -85,22 +39,22 @@ export const logger = {
     username: string | null | undefined,
     message: string,
     ...args: unknown[]
-  ) => log("debug", username, message, ...args),
+  ) => baseLogger.debug({ user: username }, buildMsg(message, args)),
   info: (
     username: string | null | undefined,
     message: string,
     ...args: unknown[]
-  ) => log("info", username, message, ...args),
+  ) => baseLogger.info({ user: username }, buildMsg(message, args)),
   warn: (
     username: string | null | undefined,
     message: string,
     ...args: unknown[]
-  ) => log("warn", username, message, ...args),
+  ) => baseLogger.warn({ user: username }, buildMsg(message, args)),
   error: (
     username: string | null | undefined,
     message: string,
     ...args: unknown[]
-  ) => log("error", username, message, ...args),
+  ) => baseLogger.error({ user: username }, buildMsg(message, args)),
 };
 
 export { LOG_FILE };

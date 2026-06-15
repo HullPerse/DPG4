@@ -77,6 +77,7 @@ export const profileTabs = [
   { value: "profile", label: "Профиль" },
   { value: "library", label: "Игры" },
   { value: "inventory", label: "Инвентарь" },
+  { value: "stats", label: "Статистика" },
   { value: "reviews", label: "Отзывы" },
   { value: "trade", label: "Обмен", disabled: true },
   { value: "chat", label: "Чат", disabled: true },

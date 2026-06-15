@@ -193,6 +193,18 @@ export const pets = sqliteTable("pets", {
   ...timestamps,
 });
 
+export const inventoryLog = sqliteTable("inventory_log", {
+  id: text("id").primaryKey(),
+  inventoryId: text("inventory_id").notNull(),
+  itemLabel: text("item_label").notNull(),
+  itemType: text("item_type").notNull(),
+  owner: text("owner").notNull(),
+  action: text("action").notNull(),
+  actor: text("actor"),
+  details: text("details", { mode: "json" }).$type<Record<string, unknown> | null>(),
+  created: text("created").notNull(),
+});
+
 export const jackpot = sqliteTable("jackpot", {
   id: text("id").primaryKey(),
   pool: integer("pool").notNull().default(0),

@@ -1,6 +1,5 @@
 import { Elysia } from "elysia";
 import { rawDb } from "../db";
-import { checkRedis } from "../lib/cache";
 import { config } from "../server.config";
 import { getClientCount } from "../lib/ws";
 
@@ -74,7 +73,6 @@ export const sentinelRoute = new Elysia({ prefix: "/api" }).get(
   async () => {
     const dbOk = checkDb();
     const mem = process.memoryUsage();
-    const redisOk = await checkRedis();
     return {
       ok: dbOk,
       uptime: Math.floor((Date.now() - startTime) / 1000),
@@ -84,7 +82,6 @@ export const sentinelRoute = new Elysia({ prefix: "/api" }).get(
         rss: mem.rss,
       },
       db: { ok: dbOk, path: config.dbPath },
-      redis: redisOk,
       ws: { clients: getClientCount() },
       tableResponseTimes: measureTableResponseTimes(),
       tableSizes: measureTableSizes(),

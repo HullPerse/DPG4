@@ -20,11 +20,9 @@ import {
 } from "@/lib/gambling/stats.constants";
 import { cn, BORDER_WINDOW } from "@/lib/utils";
 import { StatCard, NetValue } from "../components/stats.shared";
-import {
-  DailyNetChart,
-  GameDistributionChart,
-  BetDistributionChart,
-} from "../components/charts.stats";
+import { lazy, Suspense } from "react";
+
+const StatsCharts = lazy(() => import("../components/charts.stats").then((m) => ({ default: m.StatsCharts })));
 
 export default function StatsTab() {
   const { data, isLoading, isError } = useQuery({
@@ -90,9 +88,13 @@ export default function StatsTab() {
         />
       </section>
 
-      <DailyNetChart data={data.stats.dailyNet} />
-      <GameDistributionChart data={data.stats.gameDistribution} />
-      <BetDistributionChart data={data.stats.betDistribution} />
+      <Suspense fallback={null}>
+        <StatsCharts
+          dailyNet={data.stats.dailyNet}
+          gameDistribution={data.stats.gameDistribution}
+          betDistribution={data.stats.betDistribution}
+        />
+      </Suspense>
 
       {data.history.data.length > 0 && (
         <RecentHistory records={data.history.data} />

@@ -1,4 +1,4 @@
-import type { PlayingCard, BlackjackUiResult } from "@/types/gamble";
+import type { PlayingCard } from "@/types/gamble";
 import { CanvasTexture } from "three";
 
 const SUIT_SYMBOL: Record<PlayingCard["suit"], string> = {
@@ -12,10 +12,6 @@ const textureCache = new Map<string, CanvasTexture>();
 
 function isRed(suit: PlayingCard["suit"]) {
   return suit === "hearts" || suit === "diamonds";
-}
-
-export function cardLabel(card: PlayingCard): string {
-  return `${card.rank}${SUIT_SYMBOL[card.suit]}`;
 }
 
 export function createCardTexture(card: PlayingCard | "back"): CanvasTexture {
@@ -89,16 +85,6 @@ export function rules(bid: number) {
     { text: "Колод", result: "6 (перетасовка)" },
   ];
 }
-
-export const getBlackjackResultColor = (result: BlackjackUiResult) => {
-  if (!result) return "";
-  if (result.net > 0) {
-    if (result.tone === "jackpot") return "text-amber-400";
-    return "text-emerald-400";
-  }
-  if (result.net < 0) return "text-red-400";
-  return "text-white";
-};
 
 export function animDelayMs(cardCount: number) {
   return 400 + cardCount * 130;

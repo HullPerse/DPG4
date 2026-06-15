@@ -236,6 +236,61 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "ALTER TABLE jackpot ADD COLUMN winning_number_date TEXT;",
     ],
   },
+  {
+    hash: "0020_performance_indexes",
+    sql: [
+      "CREATE INDEX IF NOT EXISTS idx_inventory_type ON inventory (type);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_owner_type ON inventory (owner, type);",
+      "CREATE INDEX IF NOT EXISTS idx_market_owner ON market (owner);",
+      "CREATE INDEX IF NOT EXISTS idx_market_type ON market (type);",
+      "CREATE INDEX IF NOT EXISTS idx_market_created ON market (created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_market_type_price ON market (type, price);",
+      "CREATE INDEX IF NOT EXISTS idx_pets_is_alive ON pets (is_alive);",
+      "CREATE INDEX IF NOT EXISTS idx_history_net ON history (net);",
+      "CREATE INDEX IF NOT EXISTS idx_history_user_id_created ON history (user_id, created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_history_user_id_type ON history (user_id, type);",
+      "CREATE INDEX IF NOT EXISTS idx_ads_owner ON ads (owner);",
+      "CREATE INDEX IF NOT EXISTS idx_drawings_author ON drawings (author);",
+      "CREATE INDEX IF NOT EXISTS idx_users_place ON users (place);",
+    ],
+  },
+  {
+    hash: "0022_inventory_log",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS inventory_log (
+        id TEXT PRIMARY KEY,
+        inventory_id TEXT NOT NULL,
+        item_label TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        owner TEXT NOT NULL,
+        action TEXT NOT NULL,
+        actor TEXT,
+        details TEXT,
+        created TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_owner ON inventory_log (owner);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_owner_created ON inventory_log (owner, created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_action ON inventory_log (action);",
+    ],
+  },
+  {
+    hash: "0021_sqlite_cache_queue",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS cache (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        expires_at INTEGER
+      );`,
+      `CREATE TABLE IF NOT EXISTS jobs (
+        id TEXT PRIMARY KEY,
+        queue TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_jobs_queue_created ON jobs (queue, created_at);",
+      "CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache (expires_at);",
+    ],
+  },
 ];
 
 export function runMigrations() {

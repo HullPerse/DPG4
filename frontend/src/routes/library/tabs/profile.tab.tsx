@@ -27,6 +27,7 @@ import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
 import { useDataStore } from "@/store/data.store";
 import { CreateModal } from "@/components/shared/items.modal";
+import UserStats from "../components/stats/profile.stats";
 const userApi = new UserApi();
 const gameApi = new GameApi();
 const activityApi = new ActivityApi();
@@ -93,6 +94,7 @@ function ProfileTab({ id }: { id?: string }) {
       chat: <ChatProfile id={String(data?.user.id)} />,
       trade: <TradeTab id={String(data?.user.id)} />,
       inventory: <InventoryTab id={String(data?.user.id)} />,
+      stats: <UserStats id={String(data?.user.id)} />,
     };
 
     return tabMap[profileTab];

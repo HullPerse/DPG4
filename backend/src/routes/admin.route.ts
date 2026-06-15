@@ -36,6 +36,7 @@ const BROADCAST_TABLES = new Set([
   "cells",
   "hangman",
   "pets",
+  "inventoryLog",
 ]);
 
 function isBlobPlaceholder(val: unknown): boolean {
@@ -60,6 +61,7 @@ const hasTimestamps = new Set([
   "cells",
   "hangman",
   "pets",
+  "inventoryLog",
 ]);
 
 function tryParseJson(v: unknown): unknown {
@@ -252,6 +254,7 @@ export const adminRoute = new Elysia()
           const ok = await economyService.addInventory(
             body.userId,
             body.itemId,
+            "grant",
           );
           if (!ok) {
             set.status = 400;

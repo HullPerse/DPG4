@@ -255,6 +255,19 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   .use(servicesPlugin)
   .use(authPlugin)
   .get(
+    "/history/:userId",
+    async ({ params, db }) => {
+      const rows = await db
+        .select()
+        .from(schema.inventoryLog)
+        .where(eq(schema.inventoryLog.owner, params.userId))
+        .orderBy(desc(schema.inventoryLog.created))
+        .limit(1000);
+      return rows;
+    },
+    { params: t.Object({ userId: t.String() }) },
+  )
+  .get(
     "/",
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
@@ -414,6 +427,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       economyService,
       userService,
       activityService,
+      inventoryLogService,
     }) => {
       if (!user) {
         set.status = 401;
@@ -433,6 +447,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }
       await economyService.chargeInventory(params.id, inv.charge, -1);
       const userData = await userService.getById(user.sub);
+      await inventoryLogService.log("use", params.id, user.sub, user.sub, { consume: true });
       await activityService.create({
         author: user.sub,
         image: userData?.avatar ?? "",
@@ -454,8 +469,18 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
   )
   .delete(
     "/:id",
-    async ({ params, db, user }) => {
+    async ({ params, db, user, inventoryLogService }) => {
+      const [inv] = await db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
       await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
+      if (inv) {
+        await inventoryLogService.logFromData(
+          "delete", inv.id, inv.label, inv.type, inv.owner, user?.sub,
+          { deletedBy: "user" },
+        );
+      }
       broadcast("inventory", "delete", params.id);
       logger.info(user?.username, "deleted inventory item", params.id);
       return { ok: true };

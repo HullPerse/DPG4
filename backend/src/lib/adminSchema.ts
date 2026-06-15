@@ -59,6 +59,21 @@ const RULES_CATEGORIES: AdminChoice[] = [
   { value: "ВЫБОР СЛОЖНОСТИ" },
 ];
 
+const INVENTORY_LOG_ACTIONS: AdminChoice[] = [
+  { value: "receive", label: "receive" },
+  { value: "send", label: "send" },
+  { value: "sell", label: "sell" },
+  { value: "buy", label: "buy" },
+  { value: "use", label: "use" },
+  { value: "delete", label: "delete" },
+  { value: "grant", label: "grant" },
+  { value: "trade_out", label: "trade_out" },
+  { value: "trade_in", label: "trade_in" },
+  { value: "market_list", label: "market_list" },
+  { value: "market_unlist", label: "market_unlist" },
+  { value: "charge_change", label: "charge_change" },
+];
+
 export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
   users: {
     label: "Users",
@@ -322,6 +337,25 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "lastWinDate", type: "date" },
       { source: "created", type: "date" },
       { source: "updated", type: "date" },
+    ],
+  },
+  inventoryLog: {
+    label: "Inventory Log",
+    searchFields: ["id", "inventoryId", "itemLabel", "owner", "action"],
+    fields: [
+      { source: "id", type: "text" },
+      { source: "inventoryId", type: "text" },
+      { source: "itemLabel", type: "text" },
+      { source: "itemType", type: "text" },
+      {
+        source: "owner",
+        type: "text",
+        reference: { table: "users", labelField: "username" },
+      },
+      { source: "action", type: "select", choices: INVENTORY_LOG_ACTIONS },
+      { source: "actor", type: "text" },
+      { source: "details", type: "json" },
+      { source: "created", type: "date" },
     ],
   },
   cells: {

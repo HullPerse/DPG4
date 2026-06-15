@@ -1,100 +1,63 @@
-import {
-  initRedis,
-  isRedisAvailable,
-  setRedisAvailable,
-} from "./redis.client";
+import { rawDb } from "../db";
 
-type CacheValue = string | number | boolean | null | Record<string, unknown> | unknown[];
-
-const memoryStore = new Map<string, { value: CacheValue; ttl: number; expiresAt: number }>();
+type CacheValue =
+  | string
+  | number
+  | boolean
+  | null
+  | Record<string, unknown>
+  | unknown[];
 
 function serialize(value: CacheValue): string {
   return JSON.stringify(value);
 }
 
-function deserialize(raw: string): CacheValue {
-  try {
-    return JSON.parse(raw) as CacheValue;
-  } catch {
-    return raw;
-  }
+function deserialize<T extends CacheValue>(raw: string): T {
+  return JSON.parse(raw) as T;
 }
 
-function now(): number {
-  return Date.now();
-}
+export async function cacheGet<T extends CacheValue>(
+  key: string,
+): Promise<T | null> {
+  const row = rawDb
+    .prepare("SELECT value, expires_at FROM cache WHERE key = ?")
+    .get(key) as { value: string; expires_at: number | null } | undefined;
 
-export async function cacheGet<T extends CacheValue>(key: string): Promise<T | null> {
-  const r = initRedis();
-  if (r && isRedisAvailable()) {
-    try {
-      const raw = await r.get(key);
-      if (raw === null) return null;
-      return deserialize(raw) as T;
-    } catch {
-      setRedisAvailable(false);
-    }
-  }
+  if (!row) return null;
 
-  const entry = memoryStore.get(key);
-  if (!entry) return null;
-  if (now() > entry.expiresAt) {
-    memoryStore.delete(key);
+  if (row.expires_at && Date.now() > row.expires_at) {
+    rawDb.prepare("DELETE FROM cache WHERE key = ?").run(key);
     return null;
   }
-  return entry.value as T;
+
+  return deserialize<T>(row.value);
 }
 
-export async function cacheSet(key: string, value: CacheValue, ttlMs: number): Promise<void> {
-  const r = initRedis();
-  if (r && isRedisAvailable()) {
-    try {
-      const raw = serialize(value);
-      await r.psetex(key, ttlMs, raw);
-      return;
-    } catch {
-      setRedisAvailable(false);
-    }
-  }
-
-  memoryStore.set(key, { value, ttl: ttlMs, expiresAt: now() + ttlMs });
+export async function cacheSet(
+  key: string,
+  value: CacheValue,
+  ttlMs: number,
+): Promise<void> {
+  const expiresAt = Date.now() + ttlMs;
+  const raw = serialize(value);
+  rawDb
+    .prepare(
+      "INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)",
+    )
+    .run(key, raw, expiresAt);
 }
 
 export async function cacheDel(key: string): Promise<void> {
-  const r = initRedis();
-  if (r && isRedisAvailable()) {
-    try {
-      await r.del(key);
-    } catch {
-      setRedisAvailable(false);
-    }
-  }
-  memoryStore.delete(key);
+  rawDb.prepare("DELETE FROM cache WHERE key = ?").run(key);
 }
 
 export async function cacheFlush(): Promise<void> {
-  const r = initRedis();
-  if (r && isRedisAvailable()) {
-    try {
-      await r.send("FLUSHDB", []);
-    } catch {
-      setRedisAvailable(false);
-    }
-  }
-  memoryStore.clear();
+  rawDb.prepare("DELETE FROM cache").run();
 }
 
-export { isRedisAvailable };
-
-export async function checkRedis(): Promise<boolean> {
-  const r = initRedis();
-  if (!r) return false;
-  try {
-    await r.ping();
-    setRedisAvailable(true);
-    return true;
-  } catch {
-    setRedisAvailable(false);
-    return false;
-  }
+export async function sweepExpiredCache(): Promise<number> {
+  const { changes } = rawDb
+    .prepare("DELETE FROM cache WHERE expires_at IS NOT NULL AND expires_at <= ?")
+    .run(Date.now());
+  return changes;
 }

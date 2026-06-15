@@ -299,12 +299,11 @@ describe("BlackjackService", () => {
     if (state.phase === "player") {
       state = await services.blackjackService.stand(lowUser.id);
     }
-    if (state.result!.payout >= 5) {
+    // Payout must be >= 15 for profit of 5+ to push winnings from 95 to 100
+    if (state.result!.payout >= 15) {
       const user = await getUser(db, lowUser.id);
-      if (state.result!.payout > 0) {
-        expect(user!.gamblingWinnings).toBeGreaterThanOrEqual(100);
-        expect(user!.gamblingBanned).toBe(true);
-      }
+      expect(user!.gamblingWinnings).toBeGreaterThanOrEqual(100);
+      expect(user!.gamblingBanned).toBe(true);
     }
   });
 });

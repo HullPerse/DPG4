@@ -4,4 +4,5 @@ export type ProfileTab =
   | "library"
   | "trade"
   | "reviews"
-  | "chat";
+  | "chat"
+  | "stats";

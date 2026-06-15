@@ -30,14 +30,22 @@ import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
 import { hangmanRoute } from "./routes/hangman.route";
 import { petsRoute, startPetDecayLoop } from "./routes/pets.route";
+import { userStatsRoute } from "./routes/stats.route";
 import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
 import { jackpotRoute } from "./routes/jackpot.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
+import { compressionPlugin } from "./plugins/compression.plugin";
+import { errorPlugin } from "./plugins/error.plugin";
+
+runMigrations();
+logger.info("SYSTEM", "DB migrations applied");
 
 const app = new Elysia()
+  .use(errorPlugin)
+  .use(compressionPlugin)
   .use(
     cors({
       origin: config.corsOrigin,
@@ -152,10 +160,8 @@ const app = new Elysia()
   .use(hangmanRoute)
   .use(ratStoreRoute)
   .use(petsRoute)
-  .use(jackpotRoute);
-
-runMigrations();
-logger.info("SYSTEM", "DB migrations applied");
+  .use(jackpotRoute)
+  .use(userStatsRoute);
 
 app.listen(config.port);
 
