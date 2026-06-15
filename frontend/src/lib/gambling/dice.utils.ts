@@ -1,9 +1,8 @@
 import { CanvasTexture } from "three";
-import type { DiceResult, DiceSim } from "@/types/gamble";
+import type { DiceSim } from "@/types/gamble";
 
 export const REST_Y = 0.8;
 export const GRAVITY = 22;
-export const STAGGER_S = 1.8;
 export const MIN_AIR_TIME = 0.7;
 export const MAX_AIR_TIME = 6;
 /** Min bounces on table before snap-to-face settle phase */
@@ -144,13 +143,3 @@ export function createIdleSim(index: number, homeZ = 0): DiceSim {
     angVel: { x: 0, y: 0, z: 0 },
   };
 }
-
-export const getResultColor = (result: DiceResult) => {
-  if (!result) return "";
-
-  if (result.net > 0) {
-    if (result.tone === "jackpot") return "text-amber-400";
-    else return "text-emerald-400";
-  } else if (result.net < 0) return "text-red-400";
-  else return "text-muted";
-};

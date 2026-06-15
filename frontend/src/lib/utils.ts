@@ -21,11 +21,6 @@ export function cn(...inputs: ClassValue[]) {
 
 export const BORDER_WINDOW = "border-2 border-highlight-high";
 
-export const ANIMATE_IN_OUT =
-  "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95";
-
-export const FOCUS_RING = "focus:border-primary focus:outline-none";
-
 let cachedConfig: GamblingConfig | null = null;
 
 /** Server-side score calculation */
@@ -41,14 +36,6 @@ export async function calculateScore(
 }
 
 /** Wheel spin cost from server */
-export async function calculateCost(): Promise<number> {
-  if (cachedConfig) return cachedConfig.spinCost;
-  cachedConfig = await apiFetch<GamblingConfig>("/utils/gambling-config", {
-    auth: false,
-  });
-  return cachedConfig.spinCost;
-}
-
 export function calculateCostSync(): number {
   return cachedConfig?.spinCost ?? 2;
 }
@@ -263,29 +250,9 @@ export function getAdPositionIcon(position: 1 | 2 | 3 | 4) {
   return positionMap[position as keyof typeof positionMap];
 }
 
-export function getDataUrlSizeMB(dataUrl: string): string {
-  const base64 = dataUrl.split(",")[1];
-  if (!base64) return "0";
-  const bytes = Math.ceil((base64.length * 3) / 4);
-  return formatBytesToMB(bytes);
-}
-
-/** Size in megabytes for display (2 decimal places). */
 export function formatBytesToMB(bytes?: number | null): string {
   if (bytes === undefined || bytes === null || bytes <= 0) return "-";
   return (bytes / 1024 / 1024).toFixed(2);
-}
-
-export function dataURLtoBlob(dataURL: string): Blob {
-  const [header, data] = dataURL.split(",");
-  const mimeMatch = header.match(/:(.*?);/);
-  const mime = mimeMatch?.[1] || "application/octet-stream";
-  const binary = atob(data);
-  const array = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    array[i] = binary.charCodeAt(i);
-  }
-  return new Blob([array], { type: mime });
 }
 
 export function translateItemType(type: ItemType) {
@@ -299,22 +266,4 @@ export function translateItemType(type: ItemType) {
   };
 
   return typeMap[type];
-}
-
-export function weightedRandom(max: number): number {
-  const items = Array.from({ length: max }, (_, i) => i + 1);
-
-  const weights = Array.from({ length: max }, (_, i) =>
-    Math.min(i + 1, max - i),
-  );
-
-  const total = weights.reduce((a, b) => a + b, 0);
-  let r = Math.random() * total;
-
-  for (let i = 0; i < items.length; i++) {
-    r -= weights[i];
-    if (r < 0) return items[i];
-  }
-
-  return items[items.length - 1];
 }

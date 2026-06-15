@@ -52,7 +52,4 @@ export function netColorClass(value: number): string {
   return "text-muted";
 }
 
-export function winRate(wins: number, games: number): number {
-  if (games === 0) return 0;
-  return Math.round((wins / games) * 100);
-}
+

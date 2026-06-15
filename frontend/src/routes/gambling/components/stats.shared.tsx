@@ -117,21 +117,3 @@ export function NetValue({
     </span>
   );
 }
-
-export function WinRateBar({ wins, total }: { wins: number; total: number }) {
-  const rate = total > 0 ? (wins / total) * 100 : 0;
-
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="h-1.5 flex-1 bg-highlight-low border border-highlight-high overflow-hidden">
-        <div
-          className="h-full bg-emerald-400/80 transition-all"
-          style={{ width: `${rate}%` }}
-        />
-      </div>
-      <span className="text-[10px] text-muted tabular-nums w-7 text-right">
-        {Math.round(rate)}%
-      </span>
-    </div>
-  );
-}

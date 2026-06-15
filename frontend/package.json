@@ -44,8 +44,6 @@
     "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@raegen/vite-plugin-vitest-cache": "0.3.7",
-    "@tanstack/router-plugin": "1.168.18",
     "@tauri-apps/cli": "2.10.1",
     "@types/node": "25.9.2",
     "@types/react": "19.2.17",
