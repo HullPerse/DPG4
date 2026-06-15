@@ -7,12 +7,14 @@ import { broadcast } from "../lib/ws";
 import { Db } from "@/types";
 import { UserService } from "@/services/user.service";
 import { ActivityService } from "./activity.service";
+import { InventoryLogService } from "./inventory-log.service";
 
 export class EconomyService {
   constructor(
     private db: Db,
     private userService: UserService,
     private activityService: ActivityService,
+    private inventoryLogService: InventoryLogService,
   ) {}
 
   private mapInventory(row: typeof schema.inventory.$inferSelect) {
@@ -45,7 +47,7 @@ export class EconomyService {
     return id;
   }
 
-  async addInventory(userId: string, itemId: string) {
+  async addInventory(userId: string, itemId: string, action: "receive" | "grant" = "receive") {
     const [item] = await this.db
       .select()
       .from(schema.items)
@@ -57,8 +59,16 @@ export class EconomyService {
 
     if (item.type === "effect") {
       await this.userService.changeStatus(userId, item.label, "add");
+      await this.inventoryLogService.logFromData(
+        action, "", item.label, item.type, userId, userId,
+        { fromItem: itemId, isEffect: true },
+      );
     } else {
-      await this.copyInventoryFromItem(item, userId);
+      const invId = await this.copyInventoryFromItem(item, userId);
+      await this.inventoryLogService.logFromData(
+        action, invId, item.label, item.type, userId, userId,
+        { fromItem: itemId },
+      );
     }
 
     await this.activityService.create({
@@ -98,6 +108,8 @@ export class EconomyService {
       created: ts,
       updated: ts,
     });
+
+    await this.inventoryLogService.log("market_list", inventoryId, ownerId, ownerId, { price });
 
     await this.db
       .delete(schema.inventory)
@@ -151,6 +163,15 @@ export class EconomyService {
       updated: ts,
     });
 
+    await this.inventoryLogService.logFromData(
+      "buy", invId, itemData.label, itemData.type, newOwnerId, newOwnerId,
+      { price: itemData.price, discount: itemData.discount, marketId },
+    );
+    await this.inventoryLogService.logFromData(
+      "sell", itemData.originalId ?? "", itemData.label, itemData.type, oldOwnerId, newOwnerId,
+      { price: itemData.price, discount: itemData.discount, marketId },
+    );
+
     await this.db.delete(schema.market).where(eq(schema.market.id, marketId));
 
     await this.activityService.create({
@@ -189,6 +210,11 @@ export class EconomyService {
       updated: ts,
     });
 
+    await this.inventoryLogService.logFromData(
+      "market_unlist", existing.originalId ?? "", existing.label, existing.type, owner.id, owner.id,
+      { marketId },
+    );
+
     await this.db.delete(schema.market).where(eq(schema.market.id, marketId));
 
     const payout = existing.price - (existing.discount ?? 0);
@@ -208,12 +234,20 @@ export class EconomyService {
       await this.userService.score(currentUser.id, -currentUser.money, true);
     }
     if (currentUser.items.length > 0) {
+      const items = await this.db
+        .select()
+        .from(schema.inventory)
+        .where(inArray(schema.inventory.id, currentUser.items));
       await this.db
         .update(schema.inventory)
         .set({ owner: otherUser.id, updated: nowIso() })
         .where(inArray(schema.inventory.id, currentUser.items));
-      for (const itemId of currentUser.items) {
-        broadcast("inventory", "update", itemId);
+      for (const item of items) {
+        broadcast("inventory", "update", item.id);
+        await this.inventoryLogService.log(
+          "trade_out", item.id, currentUser.id, currentUser.id,
+          { toUser: otherUser.id },
+        );
       }
     }
 
@@ -222,12 +256,20 @@ export class EconomyService {
       await this.userService.score(otherUser.id, -otherUser.money, true);
     }
     if (otherUser.items.length > 0) {
+      const items = await this.db
+        .select()
+        .from(schema.inventory)
+        .where(inArray(schema.inventory.id, otherUser.items));
       await this.db
         .update(schema.inventory)
         .set({ owner: currentUser.id, updated: nowIso() })
         .where(inArray(schema.inventory.id, otherUser.items));
-      for (const itemId of otherUser.items) {
-        broadcast("inventory", "update", itemId);
+      for (const item of items) {
+        broadcast("inventory", "update", item.id);
+        await this.inventoryLogService.log(
+          "trade_in", item.id, currentUser.id, currentUser.id,
+          { fromUser: otherUser.id },
+        );
       }
     }
 
@@ -254,17 +296,40 @@ export class EconomyService {
   }
 
   async removeInventoryById(inventoryId: string) {
+    const [inv] = await this.db
+      .select()
+      .from(schema.inventory)
+      .where(eq(schema.inventory.id, inventoryId));
     await this.db
       .delete(schema.inventory)
       .where(eq(schema.inventory.id, inventoryId));
+    if (inv) {
+      await this.inventoryLogService.logFromData(
+        "delete", inv.id, inv.label, inv.type, inv.owner, undefined,
+      );
+    }
     broadcast("inventory", "delete", inventoryId);
   }
 
   async transferInventoryOwner(inventoryId: string, newOwnerId: string) {
+    const [inv] = await this.db
+      .select()
+      .from(schema.inventory)
+      .where(eq(schema.inventory.id, inventoryId));
     await this.db
       .update(schema.inventory)
       .set({ owner: newOwnerId, updated: nowIso() })
       .where(eq(schema.inventory.id, inventoryId));
+    if (inv) {
+      await this.inventoryLogService.log(
+        "send", inventoryId, inv.owner, undefined,
+        { toUser: newOwnerId },
+      );
+      await this.inventoryLogService.logFromData(
+        "receive", inventoryId, inv.label, inv.type, newOwnerId, undefined,
+        { fromUser: inv.owner },
+      );
+    }
     broadcast("inventory", "update", inventoryId);
   }
 
@@ -275,9 +340,19 @@ export class EconomyService {
   ) {
     const total = oldCharge + newCharge;
     if (total === 0) {
+      const [inv] = await this.db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, inventoryId));
       await this.db
         .delete(schema.inventory)
         .where(eq(schema.inventory.id, inventoryId));
+      if (inv) {
+        await this.inventoryLogService.logFromData(
+          "delete", inv.id, inv.label, inv.type, inv.owner, undefined,
+          { reason: "charge_depleted", oldCharge, newCharge },
+        );
+      }
       broadcast("inventory", "delete", inventoryId);
       return null;
     }
@@ -285,11 +360,17 @@ export class EconomyService {
       .update(schema.inventory)
       .set({ charge: total, updated: nowIso() })
       .where(eq(schema.inventory.id, inventoryId));
-    broadcast("inventory", "update", inventoryId);
     const [row] = await this.db
       .select()
       .from(schema.inventory)
       .where(eq(schema.inventory.id, inventoryId));
+    if (row) {
+      await this.inventoryLogService.log(
+        "charge_change", inventoryId, row.owner, undefined,
+        { oldCharge, newCharge, total },
+      );
+    }
+    broadcast("inventory", "update", inventoryId);
     return row ? this.mapInventory(row) : null;
   }
 }

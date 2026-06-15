@@ -17,6 +17,7 @@ export const ADMIN_TABLES = {
   hangman: schema.hangman,
   pets: schema.pets,
   jackpot: schema.jackpot,
+  inventoryLog: schema.inventoryLog,
 } as const;
 
 export type AdminTableName = keyof typeof ADMIN_TABLES;

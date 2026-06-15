@@ -2,7 +2,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -20,7 +19,7 @@ import { TrendingUp, PieChart, Coins } from "lucide-react";
 
 type TooltipPayload = { value: number; payload?: Record<string, unknown> };
 
-function ChartTooltip({
+export function ChartTooltip({
   active,
   payload,
   label,
@@ -87,15 +86,25 @@ export function DailyNetChart({ data }: { data: DailyNet[] }) {
               }
               cursor={{ fill: CHART_THEME.grid, opacity: 0.4 }}
             />
-            <Bar dataKey="net" radius={[2, 2, 0, 0]} maxBarSize={28}>
-              {chartData.map((entry) => (
-                <Cell
-                  key={entry.date}
-                  fill={entry.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
-                  fillOpacity={0.85}
-                />
-              ))}
-            </Bar>
+            <Bar
+              dataKey="net"
+              maxBarSize={28}
+              shape={(props: any) => {
+                const { x, y, width, height, index } = props;
+                const entry = chartData[index];
+                return (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={entry?.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
+                    fillOpacity={0.85}
+                    rx={2}
+                  />
+                );
+              }}
+            />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -146,11 +155,13 @@ export function GameDistributionChart({ data }: { data: GameDistribution[] }) {
               }
               cursor={{ fill: CHART_THEME.grid, opacity: 0.3 }}
             />
-            <Bar dataKey="count" radius={[0, 2, 2, 0]} maxBarSize={18}>
-              {chartData.map((entry) => (
-                <Cell key={entry.type} fill={entry.color} fillOpacity={0.85} />
-              ))}
-            </Bar>
+            <Bar dataKey="count" maxBarSize={18} shape={(props: any) => {
+              const { x, y, width, height, index } = props;
+              const entry = chartData[index];
+              return (
+                <rect x={x} y={y} width={width} height={height} fill={entry?.color} fillOpacity={0.85} rx={2} />
+              );
+            }} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -255,15 +266,21 @@ export function LeaderboardNetChart({
             content={<ChartTooltip formatter={(value) => formatNet(value)} />}
             cursor={{ fill: CHART_THEME.grid, opacity: 0.4 }}
           />
-          <Bar dataKey="net" radius={[2, 2, 0, 0]} maxBarSize={24}>
-            {top.map((entry, i) => (
-              <Cell
-                key={entry.name}
-                fill={entry.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
-                fillOpacity={i < 3 ? 1 : 0.7}
+          <Bar dataKey="net" maxBarSize={24} shape={(props: any) => {
+            const { x, y, width, height, index } = props;
+            const entry = top[index];
+            return (
+              <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                fill={entry?.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
+                fillOpacity={index < 3 ? 1 : 0.7}
+                rx={2}
               />
-            ))}
-          </Bar>
+            );
+          }} />
         </BarChart>
       </ResponsiveContainer>
     </Panel>

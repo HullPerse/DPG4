@@ -1,12 +1,13 @@
 import { apiFetch } from "./client.api";
-import type { BlackjackState, GamblingConfig, RocketState, RocketHistoryEntry, PachinkoState, DiceDealerResult, DiceGameResult, MinesState } from "@/types/gamble";
-
-export type {
+import type {
   BlackjackState,
-  BlackjackGameResult,
+  GamblingConfig,
   RocketState,
   RocketHistoryEntry,
   PachinkoState,
+  DiceDealerResult,
+  DiceGameResult,
+  MinesState,
 } from "@/types/gamble";
 
 export type { DiceDealerResult, DiceGameResult };
@@ -30,7 +31,10 @@ export async function rollDicePlayer(): Promise<DiceGameResult> {
   });
 }
 
-export async function abortDice(): Promise<{ refunded: number; balance: number }> {
+export async function abortDice(): Promise<{
+  refunded: number;
+  balance: number;
+}> {
   return apiFetch<{ refunded: number; balance: number }>("/utils/dice-abort", {
     method: "POST",
   });
@@ -42,9 +46,7 @@ export async function unbanDice(): Promise<{ success: boolean }> {
   });
 }
 
-export async function blackjackDeal(
-  bid: number,
-): Promise<BlackjackState> {
+export async function blackjackDeal(bid: number): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-deal", {
     method: "POST",
     body: { bid },
@@ -77,9 +79,7 @@ export async function abandonBlackjack(): Promise<{ success: boolean }> {
   });
 }
 
-export async function launchRocket(
-  bid: number,
-): Promise<RocketState> {
+export async function launchRocket(bid: number): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-launch", {
     method: "POST",
     body: { bid },
@@ -163,10 +163,7 @@ export async function startMines(
   });
 }
 
-export async function revealMines(
-  x: number,
-  y: number,
-): Promise<MinesState> {
+export async function revealMines(x: number, y: number): Promise<MinesState> {
   return apiFetch<MinesState>("/utils/mines-reveal", {
     method: "POST",
     body: { x, y },
@@ -184,4 +181,3 @@ export async function abortMines(): Promise<{ success: boolean }> {
     method: "POST",
   });
 }
-

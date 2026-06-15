@@ -97,7 +97,12 @@ export type BlackjackUiResult = {
   tone: "jackpot" | "win" | "lose" | "chance";
 } | null;
 
-export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";
+export type RocketPhase =
+  | "idle"
+  | "launching"
+  | "flying"
+  | "crashed"
+  | "cashed";
 
 export interface RocketState {
   phase: RocketPhase;
@@ -166,3 +171,16 @@ export interface MinesState {
   banned: boolean;
 }
 
+export interface TicketInfo {
+  balance: number;
+  dailyRemaining: number;
+  maxPerDay: number;
+  price: number;
+}
+
+export interface BuyTicketsResponse {
+  ok: boolean;
+  balance: number;
+  dailyRemaining: number;
+  cost: number;
+}

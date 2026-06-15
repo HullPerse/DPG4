@@ -255,6 +255,25 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
+    hash: "0022_inventory_log",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS inventory_log (
+        id TEXT PRIMARY KEY,
+        inventory_id TEXT NOT NULL,
+        item_label TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        owner TEXT NOT NULL,
+        action TEXT NOT NULL,
+        actor TEXT,
+        details TEXT,
+        created TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_owner ON inventory_log (owner);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_owner_created ON inventory_log (owner, created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_log_action ON inventory_log (action);",
+    ],
+  },
+  {
     hash: "0021_sqlite_cache_queue",
     sql: [
       `CREATE TABLE IF NOT EXISTS cache (

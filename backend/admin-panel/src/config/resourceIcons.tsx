@@ -15,6 +15,7 @@ import {
   WholeWord,
   Rat,
   Zap,
+  ClipboardList,
 } from "lucide-react";
 
 export const resourceIcons: Record<string, LucideIcon> = {
@@ -34,4 +35,5 @@ export const resourceIcons: Record<string, LucideIcon> = {
   hangman: WholeWord,
   pets: Rat,
   jackpot: Zap,
+  inventoryLog: ClipboardList,
 };

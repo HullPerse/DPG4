@@ -19,6 +19,7 @@ import { UserService } from "@/services/user.service";
 import { ActivityService } from "@/services/activity.service";
 import { GameService } from "@/services/game.service";
 import { EconomyService } from "@/services/economy.service";
+import { InventoryLogService } from "@/services/inventory-log.service";
 
 export class EffectService {
   constructor(
@@ -27,6 +28,7 @@ export class EffectService {
     private activityService: ActivityService,
     private gameService: GameService,
     private economyService: EconomyService,
+    private inventoryLogService: InventoryLogService,
   ) {}
 
   private async getUser(userId: string) {
@@ -816,6 +818,7 @@ export class EffectService {
     if (inv.owner !== userId) return { ok: false, error: "Не ваш предмет" };
 
     if (ITEM_MODAL_LABELS.has(inv.label)) {
+      await this.inventoryLogService.log("use", inventoryId, userId, userId, { mode: "modal" });
       return { ok: true, mode: "modal", label: inv.label };
     }
 
@@ -826,6 +829,8 @@ export class EffectService {
       if (activityText === null) {
         return { ok: false, error: "Эффект не сработал" };
       }
+
+      await this.inventoryLogService.log("use", inventoryId, userId, userId, { handler: inv.label });
 
       if (inv.label !== "Erection - NPC" && inv.label !== "Крысиный тапок") {
         await this.consume(ctx, activityText);
@@ -841,12 +846,14 @@ export class EffectService {
     }
 
     if (inv.type === "effect") {
+      await this.inventoryLogService.log("use", inventoryId, userId, userId, { type: "effect" });
       await this.userService.changeStatus(userId, inv.label, "add");
       await this.economyService.chargeInventory(inventoryId, inv.charge, -1);
       return { ok: true, mode: "done" };
     }
 
     const user = await this.getUser(userId);
+    await this.inventoryLogService.log("use", inventoryId, userId, userId, { type: inv.type });
     await this.economyService.chargeInventory(inventoryId, inv.charge, -1);
     await this.activityService.create({
       author: userId,

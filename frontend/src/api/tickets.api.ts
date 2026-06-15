@@ -1,21 +1,8 @@
+import { BuyTicketsResponse, TicketInfo } from "@/types/gamble";
 import { apiFetch } from "./client.api";
-
-export interface TicketInfo {
-  balance: number;
-  dailyRemaining: number;
-  maxPerDay: number;
-  price: number;
-}
 
 export async function getTicketInfo(): Promise<TicketInfo> {
   return apiFetch<TicketInfo>("/utils/tickets", { method: "GET" });
-}
-
-export interface BuyTicketsResponse {
-  ok: boolean;
-  balance: number;
-  dailyRemaining: number;
-  cost: number;
 }
 
 export async function buyTickets(amount: number): Promise<BuyTicketsResponse> {
@@ -31,14 +18,19 @@ export interface SellDirectResponse {
   newBalance: number;
 }
 
-export async function sellTicketsDirect(amount: number): Promise<SellDirectResponse> {
+export async function sellTicketsDirect(
+  amount: number,
+): Promise<SellDirectResponse> {
   return apiFetch<SellDirectResponse>("/utils/tickets/sell-direct", {
     method: "POST",
     body: { amount },
   });
 }
 
-export async function sellTickets(quantity: number, perTicketPrice: number): Promise<void> {
+export async function sellTickets(
+  quantity: number,
+  perTicketPrice: number,
+): Promise<void> {
   return apiFetch("/utils/tickets/sell", {
     method: "POST",
     body: { quantity, perTicketPrice },
