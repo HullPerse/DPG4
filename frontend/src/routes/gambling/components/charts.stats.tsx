@@ -201,6 +201,24 @@ export function BetDistributionChart({ data }: { data: BetDistribution[] }) {
   );
 }
 
+export function StatsCharts({
+  dailyNet,
+  gameDistribution,
+  betDistribution,
+}: {
+  dailyNet: DailyNet[];
+  gameDistribution: GameDistribution[];
+  betDistribution: BetDistribution[];
+}) {
+  return (
+    <>
+      <DailyNetChart data={dailyNet} />
+      <GameDistributionChart data={gameDistribution} />
+      <BetDistributionChart data={betDistribution} />
+    </>
+  );
+}
+
 export function LeaderboardNetChart({
   entries,
 }: {

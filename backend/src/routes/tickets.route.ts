@@ -128,7 +128,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       await jp.addToPool(amount);
 
       broadcast("users", "update", user.sub);
-      logger.info("tickets", `user bought ${amount} tickets`, user.sub);
+      logger.info(user.username, `user bought ${amount} tickets`, user.sub);
 
       return {
         ok: true,
@@ -180,7 +180,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       await updateTicketItem(db, user.sub, newTickets);
 
       broadcast("users", "update", user.sub);
-      logger.info("tickets", `user sold ${amount} tickets for ${payout} money`, user.sub);
+      logger.info(user.username, `user sold ${amount} tickets for ${payout} money`, user.sub);
 
       return { ok: true, payout, newBalance: newTickets };
     },
@@ -252,7 +252,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
 
       broadcast("market", "create", id);
       logger.info(
-        "tickets",
+        user.username,
         `user listed ${quantity} tickets at ${perTicketPrice} each`,
         user.sub,
       );
@@ -348,7 +348,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
       broadcast("users", "update", user.sub);
       broadcast("market", "delete", params.id);
       logger.info(
-        "tickets",
+        user.username,
         `user bought ${quantity} tickets from ${sellerId}`,
         user.sub,
       );
@@ -407,7 +407,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
 
       broadcast("market", "delete", params.id);
       broadcast("users", "update", user.sub);
-      logger.info("tickets", `user removed ticket listing`, user.sub);
+      logger.info(user.username, `user removed ticket listing`, user.sub);
 
       return { ok: true, refundedTickets: quantity };
     },

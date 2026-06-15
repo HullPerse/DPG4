@@ -164,7 +164,7 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .where(eq(schema.hangman.id, record.id));
 
       broadcast("hangman", "update", params.userId);
-      logger.info("hangman", "user played", params.userId, body.won);
+      logger.info(params.userId, "user played", body.won);
 
       return await db
         .select()
