@@ -76,7 +76,7 @@ const ImageViewer = memo(function ImageViewer({
       >
         {/*HEADER*/}
         <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-          <span className=" flex item-center text-md font-bold line-clamp-1">
+          <span className="flex item-center text-md font-bold line-clamp-1">
             {multi ? `Изображение [${index + 1} / ${src.length}]` : "Просмотр"}
           </span>
 

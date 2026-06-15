@@ -8,6 +8,7 @@ import { logger } from "../../lib/logger";
 import { updateTicketItem } from "../../lib/ticket.helpers";
 import type { UserService } from "../user.service";
 import { GAMBLING_BAN_THRESHOLD } from "../../lib/gambling.constants";
+import { Db } from "@/types";
 
 const JACKPOT_COST = 10;
 const JACKPOT_RANGE = 1000;
@@ -23,12 +24,12 @@ function generateWinningNumber(): number {
 }
 
 export class JackpotService {
-  constructor(
-    private db: BunSQLiteDatabase,
-    private userService: UserService,
-  ) {}
+  constructor(private db: Db) {}
 
-  private async ensureFreshNumber(jackpotRow: typeof schema.jackpot.$inferSelect, ts: string) {
+  private async ensureFreshNumber(
+    jackpotRow: typeof schema.jackpot.$inferSelect,
+    ts: string,
+  ) {
     const today = todayDateString();
     if (jackpotRow.winningNumberDate === today) return;
 
@@ -40,10 +41,7 @@ export class JackpotService {
   }
 
   async getStatus() {
-    const [row] = await this.db
-      .select()
-      .from(schema.jackpot)
-      .limit(1);
+    const [row] = await this.db.select().from(schema.jackpot).limit(1);
 
     if (!row) {
       return {
@@ -68,10 +66,7 @@ export class JackpotService {
     const contribution = Math.floor(ticketAmount * JACKPOT_PERCENT);
     if (contribution < 1) return;
 
-    let [row] = await this.db
-      .select()
-      .from(schema.jackpot)
-      .limit(1);
+    let [row] = await this.db.select().from(schema.jackpot).limit(1);
 
     const ts = nowIso();
     const today = todayDateString();
@@ -93,7 +88,7 @@ export class JackpotService {
       });
     }
 
-    broadcast("jackpot", "update", null);
+    broadcast("jackpot", "update", undefined);
   }
 
   async play(userId: string) {
@@ -109,10 +104,7 @@ export class JackpotService {
     }
     if (userRow.gamblingBanned) return { error: "Banned from gambling" };
 
-    let [jackpotRow] = await this.db
-      .select()
-      .from(schema.jackpot)
-      .limit(1);
+    let [jackpotRow] = await this.db.select().from(schema.jackpot).limit(1);
 
     if (!jackpotRow) {
       return { error: "Jackpot not initialized" };
@@ -121,10 +113,7 @@ export class JackpotService {
     const ts = nowIso();
     await this.ensureFreshNumber(jackpotRow, ts);
 
-    const [refreshed] = await this.db
-      .select()
-      .from(schema.jackpot)
-      .limit(1);
+    const [refreshed] = await this.db.select().from(schema.jackpot).limit(1);
 
     if (!refreshed) return { error: "Jackpot not found" };
 
@@ -173,7 +162,7 @@ export class JackpotService {
         })
         .where(eq(schema.jackpot.id, refreshed.id));
 
-      broadcast("jackpot", "update", null);
+      broadcast("jackpot", "update", undefined);
 
       if (userRow.gamblingWinnings + winAmount >= GAMBLING_BAN_THRESHOLD) {
         await this.db
@@ -184,7 +173,11 @@ export class JackpotService {
           })
           .where(eq(schema.users.id, userId));
 
-        logger.info(userRow.username, `gambling ban triggered (jackpot win ${winAmount})`, userId);
+        logger.info(
+          userRow.username,
+          `gambling ban triggered (jackpot win ${winAmount})`,
+          userId,
+        );
 
         return {
           win: true,
@@ -210,7 +203,7 @@ export class JackpotService {
       };
     }
 
-    broadcast("jackpot", "update", null);
+    broadcast("jackpot", "update", undefined);
 
     return {
       win: false,

@@ -108,7 +108,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
             "span",
             {
               key: index,
-              className: "bg-amber-500/20 text-white rounded font-bold",
+              className: "bg-amber-500/20 text-white font-bold",
             },
             part,
           ),
@@ -138,7 +138,7 @@ export const highlightText = (text: string, query: string): React.ReactNode => {
               "span",
               {
                 key: `${index}-${subIndex}`,
-                className: "bg-amber-500/20 text-white rounded font-bold",
+                className: "bg-amber-500/20 text-white font-bold",
               },
               subPart,
             ),

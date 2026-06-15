@@ -10,9 +10,14 @@ import {
 } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import {
+  Battery,
+  Calendar,
+  ChevronDown,
+  Hash,
   Minus,
   NetworkIcon,
   Plus,
+  Section,
   Send,
   ShoppingCart,
   Trash,
@@ -38,6 +43,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
 import { Dialog, DialogContent } from "@/components/ui/dialog.component";
+import { SortDirection, SortMethod } from "@/routes/browser/browser.root";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -61,6 +67,8 @@ function InventoryTab({ id }: { id?: string }) {
   const [modal, setModal] = useState<string | null>(null);
 
   const [searchTerms, setSearchTerms] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortMethod, setSortMethod] = useState<SortMethod>("date");
   const [active, setActive] = useState<number | null>(null);
   const [price, setPrice] = useState<string>("");
   const [removeStatus, setRemoveStatus] = useState<boolean>(false);
@@ -262,6 +270,22 @@ function InventoryTab({ id }: { id?: string }) {
 
   initialLoadRef.current = true;
 
+  const sortMethodIcons = {
+    name: Hash,
+    date: Calendar,
+    charges: Battery,
+    type: Section,
+  };
+
+  const sortMethodLabels = {
+    name: "По имени",
+    date: "По дате",
+    charges: "По зарядам",
+    type: "По типу",
+  };
+
+  const SortMethodIcon = sortMethodIcons[sortMethod];
+
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
       {user && modalItem?.Modal && modalConsume ? (
@@ -277,13 +301,53 @@ function InventoryTab({ id }: { id?: string }) {
         />
       ) : null}
 
-      <Input
-        autoFocus
-        type="text"
-        placeholder="Поиск пользователя"
-        value={searchTerms}
-        onChange={(e) => setSearchTerms(e.target.value)}
-      />
+      <section className="flex flex-row gap-1 items-center w-full">
+        <Input
+          autoFocus
+          type="text"
+          placeholder="Поиск пользователя"
+          value={searchTerms}
+          onChange={(e) => setSearchTerms(e.target.value)}
+        />
+
+        <HoverCard>
+          <HoverCardTrigger delay={0}>
+            <Button
+              variant="default"
+              size="icon"
+              className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
+            >
+              <SortMethodIcon className="h-4 w-4" />
+              <ChevronDown className="size-3" />
+            </Button>
+          </HoverCardTrigger>
+          <HoverCardContent className="z-10000 flex flex-col gap-1">
+            {Object.entries(sortMethodLabels).map(([method, label]) => (
+              <Button
+                key={method}
+                variant={sortMethod === method ? "default" : "link"}
+                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
+                onClick={() => {
+                  if (sortMethod === method) {
+                    setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+                  } else {
+                    setSortMethod(method as SortMethod);
+                    setSortDirection("asc");
+                  }
+                }}
+              >
+                {label}
+                {sortMethod === method && (
+                  <span className="ml-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </span>
+                )}
+              </Button>
+            ))}
+          </HoverCardContent>
+        </HoverCard>
+      </section>
+
       {data?.statuses && data?.statuses.length > 0 && (
         <section className="flex flex-wrap justify-start w-full min-h-32 max-h-32 h-32 pb-4 gap-2 border-b-2 border-highlight-high overflow-y-scroll">
           <Dialog
@@ -370,8 +434,28 @@ function InventoryTab({ id }: { id?: string }) {
           ))}
         </section>
       )}
+
       <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5">
         {data?.inventory
+          .sort((a, b) => {
+            let result = 0;
+
+            if (sortMethod === "name") {
+              result = a.label.localeCompare(b.label);
+            } else if (sortMethod === "charges") {
+              result = a.charge - b.charge;
+            } else if (sortMethod === "date") {
+              result =
+                new Date(a.created).getTime() - new Date(b.created).getTime();
+            } else if (sortMethod === "type") {
+              result = a.type.localeCompare(b.type);
+            } else {
+              result =
+                new Date(a.created).getTime() - new Date(b.created).getTime();
+            }
+
+            return sortDirection === "asc" ? result : -result;
+          })
           .filter(
             (item) =>
               item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
@@ -539,7 +623,7 @@ function InventoryTab({ id }: { id?: string }) {
                     <SmallLoader size={28} />
                   </div>
                 )}
-                <span className="font-bold text-md line-clamp-1">
+                <span className="font-bold text-md line-clamp-1 w-full text-center wrap-break-word">
                   {highlightText(item.label, searchTerms)}
                 </span>
 

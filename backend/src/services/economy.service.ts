@@ -47,7 +47,11 @@ export class EconomyService {
     return id;
   }
 
-  async addInventory(userId: string, itemId: string, action: "receive" | "grant" = "receive") {
+  async addInventory(
+    userId: string,
+    itemId: string,
+    action: "receive" | "grant" = "receive",
+  ) {
     const [item] = await this.db
       .select()
       .from(schema.items)
@@ -60,13 +64,23 @@ export class EconomyService {
     if (item.type === "effect") {
       await this.userService.changeStatus(userId, item.label, "add");
       await this.inventoryLogService.logFromData(
-        action, "", item.label, item.type, userId, userId,
+        action,
+        "",
+        item.label,
+        item.type,
+        userId,
+        userId,
         { fromItem: itemId, isEffect: true },
       );
     } else {
       const invId = await this.copyInventoryFromItem(item, userId);
       await this.inventoryLogService.logFromData(
-        action, invId, item.label, item.type, userId, userId,
+        action,
+        invId,
+        item.label,
+        item.type,
+        userId,
+        userId,
         { fromItem: itemId },
       );
     }
@@ -109,7 +123,13 @@ export class EconomyService {
       updated: ts,
     });
 
-    await this.inventoryLogService.log("market_list", inventoryId, ownerId, ownerId, { price });
+    await this.inventoryLogService.log(
+      "market_list",
+      inventoryId,
+      ownerId,
+      ownerId,
+      { price },
+    );
 
     await this.db
       .delete(schema.inventory)
@@ -144,7 +164,7 @@ export class EconomyService {
     const buyer = await this.userService.getById(newOwnerId);
     if (!buyer || buyer.money < itemData.price) return null;
 
-    const cost = itemData.price - (itemData.discount ?? 0);
+    const cost = itemData.discount ? itemData.discount : itemData.price;
     await this.userService.score(newOwnerId, -cost, true);
     await this.userService.score(oldOwnerId, cost, true);
 
@@ -164,11 +184,21 @@ export class EconomyService {
     });
 
     await this.inventoryLogService.logFromData(
-      "buy", invId, itemData.label, itemData.type, newOwnerId, newOwnerId,
+      "buy",
+      invId,
+      itemData.label,
+      itemData.type,
+      newOwnerId,
+      newOwnerId,
       { price: itemData.price, discount: itemData.discount, marketId },
     );
     await this.inventoryLogService.logFromData(
-      "sell", itemData.originalId ?? "", itemData.label, itemData.type, oldOwnerId, newOwnerId,
+      "sell",
+      itemData.originalId ?? "",
+      itemData.label,
+      itemData.type,
+      oldOwnerId,
+      newOwnerId,
       { price: itemData.price, discount: itemData.discount, marketId },
     );
 
@@ -211,7 +241,12 @@ export class EconomyService {
     });
 
     await this.inventoryLogService.logFromData(
-      "market_unlist", existing.originalId ?? "", existing.label, existing.type, owner.id, owner.id,
+      "market_unlist",
+      existing.originalId ?? "",
+      existing.label,
+      existing.type,
+      owner.id,
+      owner.id,
       { marketId },
     );
 
@@ -245,7 +280,10 @@ export class EconomyService {
       for (const item of items) {
         broadcast("inventory", "update", item.id);
         await this.inventoryLogService.log(
-          "trade_out", item.id, currentUser.id, currentUser.id,
+          "trade_out",
+          item.id,
+          currentUser.id,
+          currentUser.id,
           { toUser: otherUser.id },
         );
       }
@@ -267,7 +305,10 @@ export class EconomyService {
       for (const item of items) {
         broadcast("inventory", "update", item.id);
         await this.inventoryLogService.log(
-          "trade_in", item.id, currentUser.id, currentUser.id,
+          "trade_in",
+          item.id,
+          currentUser.id,
+          currentUser.id,
           { fromUser: otherUser.id },
         );
       }
@@ -305,7 +346,12 @@ export class EconomyService {
       .where(eq(schema.inventory.id, inventoryId));
     if (inv) {
       await this.inventoryLogService.logFromData(
-        "delete", inv.id, inv.label, inv.type, inv.owner, undefined,
+        "delete",
+        inv.id,
+        inv.label,
+        inv.type,
+        inv.owner,
+        undefined,
       );
     }
     broadcast("inventory", "delete", inventoryId);
@@ -322,11 +368,19 @@ export class EconomyService {
       .where(eq(schema.inventory.id, inventoryId));
     if (inv) {
       await this.inventoryLogService.log(
-        "send", inventoryId, inv.owner, undefined,
+        "send",
+        inventoryId,
+        inv.owner,
+        undefined,
         { toUser: newOwnerId },
       );
       await this.inventoryLogService.logFromData(
-        "receive", inventoryId, inv.label, inv.type, newOwnerId, undefined,
+        "receive",
+        inventoryId,
+        inv.label,
+        inv.type,
+        newOwnerId,
+        undefined,
         { fromUser: inv.owner },
       );
     }
@@ -349,7 +403,12 @@ export class EconomyService {
         .where(eq(schema.inventory.id, inventoryId));
       if (inv) {
         await this.inventoryLogService.logFromData(
-          "delete", inv.id, inv.label, inv.type, inv.owner, undefined,
+          "delete",
+          inv.id,
+          inv.label,
+          inv.type,
+          inv.owner,
+          undefined,
           { reason: "charge_depleted", oldCharge, newCharge },
         );
       }
@@ -366,7 +425,10 @@ export class EconomyService {
       .where(eq(schema.inventory.id, inventoryId));
     if (row) {
       await this.inventoryLogService.log(
-        "charge_change", inventoryId, row.owner, undefined,
+        "charge_change",
+        inventoryId,
+        row.owner,
+        undefined,
         { oldCharge, newCharge, total },
       );
     }

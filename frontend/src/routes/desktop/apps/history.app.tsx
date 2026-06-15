@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { getHistory, type HistoryRecord } from "@/api/history.api";
+import { getHistory } from "@/api/history.api";
 import { ChevronRight } from "lucide-react";
+import { HistoryRecord } from "@/types/history";
 
 const TYPE_FILTERS = [
   { value: "", label: "Все" },

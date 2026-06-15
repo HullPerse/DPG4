@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getLeaderboard, type LeaderboardEntry } from "@/api/history.api";
-import { Trophy, TrendingUp, TrendingDown, DollarSign, Ticket } from "lucide-react";
+import { getLeaderboard } from "@/api/history.api";
+import {
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Ticket,
+} from "lucide-react";
 import { useState } from "react";
 import {
   GAMBLING_GAME_FILTERS,
@@ -16,6 +22,7 @@ import {
   NetValue,
 } from "../components/stats.shared";
 import { LeaderboardNetChart } from "../components/charts.stats";
+import { LeaderboardEntry } from "@/types/history";
 
 export default function LeaderboardTab() {
   const [gameType, setGameType] = useState<string | undefined>(undefined);

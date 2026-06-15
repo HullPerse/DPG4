@@ -6,7 +6,7 @@ import { WindowProps } from "@/types/window";
 import { useUserStore } from "@/store/user.store";
 import { AppProps } from "@/types/desktop";
 import { createWindow } from "@/lib/window.utils";
-import { fetchUiConfig, type AppMeta } from "@/api/config.api";
+import { fetchUiConfig } from "@/api/config.api";
 import { getWindowMeta, setWindowMetaList } from "@/lib/window.utils";
 
 import { lazy, useEffect, useState } from "react";
@@ -23,6 +23,7 @@ import NotepadViewerDesktop from "./components/notepad.component";
 import ContextDesktop from "./components/context.desktop";
 import MessagesDesktop from "./components/messages.desktop";
 import AnnouncementAd from "./components/advertisement.desktop";
+import { AppMeta } from "@/types/config";
 
 const WallpaperApp = lazy(() => import("./apps/wallpaper.app"));
 

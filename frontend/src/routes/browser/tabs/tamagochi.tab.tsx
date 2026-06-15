@@ -22,7 +22,6 @@ import {
   setPetModel,
 } from "@/api/pet.api";
 import { fetchModelConfigs } from "@/api/config.api";
-import type { ModelConfigEntry } from "@/api/config.api";
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
 import { useSubscription } from "@/hooks/subscription.hook";
@@ -41,6 +40,7 @@ import {
   Skull,
 } from "lucide-react";
 import type { Inventory } from "@/types/items";
+import { ModelConfigEntry } from "@/types/config";
 
 const itemsApi = new ItemsApi();
 

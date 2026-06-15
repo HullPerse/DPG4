@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getStats } from "@/api/stats.api";
-import { getHistory, type HistoryRecord } from "@/api/history.api";
+import { getHistory } from "@/api/history.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import {
@@ -21,8 +21,13 @@ import {
 import { cn, BORDER_WINDOW } from "@/lib/utils";
 import { StatCard, NetValue } from "../components/stats.shared";
 import { lazy, Suspense } from "react";
+import { HistoryRecord } from "@/types/history";
 
-const StatsCharts = lazy(() => import("../components/charts.stats").then((m) => ({ default: m.StatsCharts })));
+const StatsCharts = lazy(() =>
+  import("../components/charts.stats").then((m) => ({
+    default: m.StatsCharts,
+  })),
+);
 
 export default function StatsTab() {
   const { data, isLoading, isError } = useQuery({
