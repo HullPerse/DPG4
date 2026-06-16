@@ -5,11 +5,14 @@ import { Ticket, Trophy } from "lucide-react";
 import { memo, useState } from "react";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { getJackpotStatus, playJackpot } from "@/api/jackpot.api";
+import { useDevModeStore } from "../hooks/dev.store";
 
 function JackpotTab() {
   const user = useUserStore((s) => s.user);
   const queryClient = useQueryClient();
   const [playCount, setPlayCount] = useState(0);
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isJackpotDev = useDevModeStore((s) => s.isActive("jackpot"));
 
   const { data: status, isLoading } = useQuery({
     queryKey: ["jackpotStatus"],
@@ -18,7 +21,7 @@ function JackpotTab() {
   });
 
   const playMutation = useMutation({
-    mutationFn: playJackpot,
+    mutationFn: () => playJackpot(getOverrides("jackpot")),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["jackpotStatus"] });
       setPlayCount((c) => c + 1);
@@ -35,7 +38,7 @@ function JackpotTab() {
   });
 
   const canPlay =
-    (user?.tickets ?? 0) >= 10 &&
+    (isJackpotDev || (user?.tickets ?? 0) >= 10) &&
     !playMutation.isPending &&
     !user?.gamblingBanned;
   const lastResult = playMutation.data;
@@ -93,7 +96,7 @@ function JackpotTab() {
         >
           {user?.gamblingBanned
             ? "Забанен"
-            : (user?.tickets ?? 0) < 10
+            : !isJackpotDev && (user?.tickets ?? 0) < 10
               ? "Недостаточно тикетов"
               : "Крутить!"}
         </Button>

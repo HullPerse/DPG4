@@ -20,6 +20,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import { useDevModeStore } from "../hooks/dev.store";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -35,6 +36,8 @@ function BlackjackTab() {
   const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isBjDev = useDevModeStore((s) => s.isActive("blackjack"));
 
   const [game, setGame] = useState<BlackjackState | null>(null);
   const [bid, setBid] = useState(3);
@@ -137,7 +140,7 @@ function BlackjackTab() {
   }, [user?.id, restoreGame]);
 
   const dealMutation = useMutation({
-    mutationFn: () => blackjackDeal(bid),
+    mutationFn: () => blackjackDeal(bid, getOverrides("blackjack")),
     onSuccess: (state) => {
       setUiResult(null);
       setRevealHole(false);
@@ -159,7 +162,7 @@ function BlackjackTab() {
   });
 
   const hitMutation = useMutation({
-    mutationFn: () => blackjackHit(),
+    mutationFn: () => blackjackHit(getOverrides("blackjack")),
     onSuccess: (state) => {
       const newIndex = state.playerHand.length - 1;
       const fly = new Set<string>([`p-${newIndex}`]);
@@ -173,7 +176,7 @@ function BlackjackTab() {
   });
 
   const standMutation = useMutation({
-    mutationFn: () => blackjackStand(),
+    mutationFn: () => blackjackStand(getOverrides("blackjack")),
     onSuccess: async (state) => {
       const hadHole = game?.dealerHoleHidden;
       const fly = new Set<string>();
@@ -267,10 +270,14 @@ function BlackjackTab() {
             variant="info"
             className="w-full"
             loading={loading}
-            disabled={ticketBalance < bid || gamblingBanned}
+            disabled={(!isBjDev && ticketBalance < bid) || gamblingBanned}
             onClick={() => dealMutation.mutate()}
           >
-            {gamblingBanned ? "Вы забанены" : ticketBalance < bid ? "Недостаточно тикетов" : `Раздать (${bid})`}
+            {gamblingBanned
+              ? "Вы забанены"
+              : !isBjDev && ticketBalance < bid
+                ? "Недостаточно тикетов"
+                : `Раздать (${bid})`}
           </Button>
         ) : canPlay ? (
           <div className="flex flex-col gap-2">

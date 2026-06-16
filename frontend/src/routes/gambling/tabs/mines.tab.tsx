@@ -28,6 +28,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import { useDevModeStore } from "../hooks/dev.store";
 
 const IDLE_STATE: MinesState = {
   phase: "playing",
@@ -58,6 +59,8 @@ function MinesTab() {
   const [bid, setBid] = useState<number>(3);
   const [mineCount, setMineCount] = useState<number>(3);
   const [resetKey, setResetKey] = useState(0);
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isMinesDev = useDevModeStore((s) => s.isActive("mines"));
   const [result, setResult] = useState<{
     net: number;
     label: string;
@@ -68,7 +71,7 @@ function MinesTab() {
   const gameOver = gameState.phase === "lost";
 
   const startMutation = useMutation({
-    mutationFn: () => startMines(bid, mineCount),
+    mutationFn: () => startMines(bid, mineCount, getOverrides("mines")),
     onSuccess: (state) => {
       setResult(null);
       setResetKey((k) => k + 1);
@@ -78,7 +81,8 @@ function MinesTab() {
   });
 
   const revealMutation = useMutation({
-    mutationFn: ({ x, y }: { x: number; y: number }) => revealMines(x, y),
+    mutationFn: ({ x, y }: { x: number; y: number }) =>
+      revealMines(x, y, getOverrides("mines")),
     onSuccess: (state) => {
       setGameState(state);
       if (state.phase === "lost") {
@@ -89,7 +93,7 @@ function MinesTab() {
   });
 
   const cashoutMutation = useMutation({
-    mutationFn: () => cashoutMines(),
+    mutationFn: () => cashoutMines(getOverrides("mines")),
     onSuccess: (state) => {
       setGameState(state);
       useUserStore.setState({ user: { ...user!, tickets: state.balance } });
@@ -120,7 +124,7 @@ function MinesTab() {
   const canStart =
     !startMutation.isPending &&
     !gamblingBanned &&
-    ticketBalance >= bid &&
+    (isMinesDev || ticketBalance >= bid) &&
     !gameStarted;
 
   return (
@@ -197,7 +201,7 @@ function MinesTab() {
           >
             {gamblingBanned
               ? "Вы забанены"
-              : ticketBalance < bid
+              : !isMinesDev && ticketBalance < bid
                 ? "Недостаточно тикетов"
                 : `Начать игру (${bid})`}
           </Button>

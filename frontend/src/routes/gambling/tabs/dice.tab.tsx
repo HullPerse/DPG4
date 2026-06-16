@@ -24,7 +24,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
-import ImageComponent from "@/components/shared/image.component";
+import { useDevModeStore } from "../hooks/dev.store";
 
 function pause(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -54,13 +54,36 @@ function DiceTab() {
   const [playerDiceActive, setPlayerDiceActive] = useState(false);
   const [displayBalance, setDisplayBalance] = useState(user?.tickets ?? 0);
 
+  const [dealerBroken, setDealerBroken] = useState(false);
+  const [dealerBrokenDieIndex, setDealerBrokenDieIndex] = useState<
+    number | undefined
+  >();
+  const [playerBroken, setPlayerBroken] = useState(false);
+  const [playerBrokenDieIndex, setPlayerBrokenDieIndex] = useState<
+    number | undefined
+  >();
+  const [brokenFlash, setBrokenFlash] = useState(false);
+
   const rollCoordinatorRef = useRef(new DiceRollCoordinator());
   const dealerKeyRef = useRef(0);
   const playerKeyRef = useRef(0);
   const roundIdRef = useRef(0);
+  const devOverridesRef = useRef<Record<string, unknown>>({});
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isDiceDev = useDevModeStore((s) => s.isActive("dice"));
 
   useEffect(() => {
     return () => rollCoordinatorRef.current.cancel();
+  }, []);
+
+  const playBreakImpact = useCallback(() => {
+    try {
+      const audio = new Audio("/audio/zawa.wav");
+      audio.volume = 0.3;
+      audio.play();
+    } catch {}
+    setBrokenFlash(true);
+    setTimeout(() => setBrokenFlash(false), 400);
   }, []);
 
   const isRoundActive = (round: number) => round === roundIdRef.current;
@@ -76,22 +99,31 @@ function DiceTab() {
   const playDiceRoll = async (
     values: [number, number, number],
     row: DiceRow,
+    brokenInfo?: { broken?: boolean; brokenDieIndex?: number },
   ) => {
     const nextKey =
       row === "dealer" ? dealerKeyRef.current + 1 : playerKeyRef.current + 1;
 
     const settledPromise = rollCoordinatorRef.current.waitFor(row, nextKey);
 
+    if (brokenInfo?.broken) {
+      playBreakImpact();
+    }
+
     flushSync(() => {
       if (row === "dealer") {
         dealerKeyRef.current = nextKey;
         setDealerValues(values);
         setDealerThrowKey(nextKey);
+        setDealerBroken(brokenInfo?.broken || false);
+        setDealerBrokenDieIndex(brokenInfo?.brokenDieIndex);
       } else {
         playerKeyRef.current = nextKey;
         setPlayerValues(values);
         setPlayerThrowKey(nextKey);
         setPlayerDiceActive(true);
+        setPlayerBroken(brokenInfo?.broken || false);
+        setPlayerBrokenDieIndex(brokenInfo?.brokenDieIndex);
       }
     });
 
@@ -102,43 +134,47 @@ function DiceTab() {
   const settleDealer = async (
     initial: DiceDealerResult,
     round: number,
+    devOverrides: Record<string, unknown>,
   ): Promise<DiceDealerResult> => {
     let dealer = initial;
 
-    await playDiceRoll(dealer.values, "dealer");
+    await playDiceRoll(dealer.values, "dealer", dealer);
     if (!isRoundActive(round)) return dealer;
 
     while (dealer.reroll) {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return dealer;
 
-      dealer = await rerollDiceDealer();
+      dealer = await rerollDiceDealer(devOverrides);
       if (!isRoundActive(round)) return dealer;
 
-      await playDiceRoll(dealer.values, "dealer");
+      await playDiceRoll(dealer.values, "dealer", dealer);
       if (!isRoundActive(round)) return dealer;
     }
 
     return dealer;
   };
 
-  const settlePlayer = async (round: number): Promise<DiceGameResult> => {
+  const settlePlayer = async (
+    round: number,
+    devOverrides: Record<string, unknown>,
+  ): Promise<DiceGameResult> => {
     setGamePhase("player");
 
-    let playerResult = await rollDicePlayer();
+    let playerResult = await rollDicePlayer(devOverrides);
     if (!isRoundActive(round)) return playerResult;
 
-    await playDiceRoll(playerResult.playerValues, "player");
+    await playDiceRoll(playerResult.playerValues, "player", playerResult);
     if (!isRoundActive(round)) return playerResult;
 
     while (playerResult.reroll) {
       await pause(DICE_REROLL_PAUSE_MS);
       if (!isRoundActive(round)) return playerResult;
 
-      playerResult = await rollDicePlayer();
+      playerResult = await rollDicePlayer(devOverrides);
       if (!isRoundActive(round)) return playerResult;
 
-      await playDiceRoll(playerResult.playerValues, "player");
+      await playDiceRoll(playerResult.playerValues, "player", playerResult);
       if (!isRoundActive(round)) return playerResult;
     }
 
@@ -174,13 +210,21 @@ function DiceTab() {
     setDealerValues(null);
     setPlayerValues(null);
     setPlayerDiceActive(false);
+    setDealerBroken(false);
+    setDealerBrokenDieIndex(undefined);
+    setPlayerBroken(false);
+    setPlayerBrokenDieIndex(undefined);
+    setBrokenFlash(false);
   };
 
   const gameMutation = useMutation({
     mutationFn: async () => {
-      if (!user || ticketBalance < bid || gamblingBanned) return;
+      if (!user || (!isDiceDev && ticketBalance < bid) || gamblingBanned)
+        return;
 
       const round = ++roundIdRef.current;
+      const overrides = getOverrides("dice");
+      devOverridesRef.current = overrides;
       resetDiceVisuals();
       setResult(null);
       setDisplayBalance(ticketBalance);
@@ -189,16 +233,16 @@ function DiceTab() {
       await abortDice();
       if (!isRoundActive(round)) return;
 
-      const dealerInitial = await rollDiceDealer(bid);
+      const dealerInitial = await rollDiceDealer(bid, overrides);
       if (!isRoundActive(round)) return;
 
-      await settleDealer(dealerInitial, round);
+      await settleDealer(dealerInitial, round, overrides);
       if (!isRoundActive(round)) return;
 
       await pause(DICE_PLAYER_AUTO_MS);
       if (!isRoundActive(round)) return;
 
-      const finalResult = await settlePlayer(round);
+      const finalResult = await settlePlayer(round, overrides);
       if (!isRoundActive(round)) return;
 
       finishRound(finalResult);
@@ -215,6 +259,10 @@ function DiceTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
+      {brokenFlash && (
+        <div className="fixed inset-0 z-40 pointer-events-none" style={{ background: 'rgba(255, 120, 0, 0.08)', transition: 'opacity 0.3s' }} />
+      )}
+
       <BalanceDisplay balance={balance} ticketBalance={displayBalance} />
 
       <BidSelector
@@ -233,6 +281,10 @@ function DiceTab() {
           onDealerSettled={handleDealerSettled}
           onPlayerSettled={handlePlayerSettled}
           playerDiceActive={playerDiceActive}
+          dealerBroken={dealerBroken}
+          dealerBrokenDieIndex={dealerBrokenDieIndex}
+          playerBroken={playerBroken}
+          playerBrokenDieIndex={playerBrokenDieIndex}
         />
 
         <GameResult result={result} />
@@ -243,12 +295,12 @@ function DiceTab() {
           variant="info"
           className="w-xl"
           loading={gameMutation.isPending}
-          disabled={ticketBalance < bid || gamblingBanned}
+          disabled={(!isDiceDev && ticketBalance < bid) || gamblingBanned}
           onClick={() => gameMutation.mutate()}
         >
           {gamblingBanned
             ? "Вы забанены"
-            : ticketBalance < bid
+            : !isDiceDev && ticketBalance < bid
               ? "Недостаточно тикетов"
               : `Кинуть (${bid})`}
         </Button>
@@ -294,14 +346,6 @@ function DiceTab() {
               При одинаковых комбинациях сравнивается число (у пары и тройки).
               Если всё равно - ничья.
             </p>
-          </div>
-
-          <div className="p-2 flex flex-col w-full items-center justify-center">
-            <ImageComponent
-              src="diceRules.png"
-              alt="dice rules"
-              className="w-120 h-120 border-2 border-highlight-high"
-            />
           </div>
         </details>
       </section>

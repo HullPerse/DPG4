@@ -13,6 +13,11 @@ import {
 } from "../../lib/gambling.constants";
 import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
+export interface PachinkoDevOverrides {
+  devForceSlots?: number[];
+  devShowMultipliers?: boolean;
+}
+
 export const PACHINKO_SLOT_MULTIPLIERS = [
   5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5,
 ] as const;
@@ -59,31 +64,41 @@ export class PachinkoService {
     return "chance";
   }
 
-  async drop(userId: string, bid: number, ratAmount = 1): Promise<PachinkoState> {
-    if (
-      bid < GAMBLING_MIN_BET ||
-      bid > GAMBLING_MAX_BET ||
-      !Number.isInteger(bid)
-    )
-      throw new Error("Invalid bid");
+  async drop(
+    userId: string,
+    bid: number,
+    ratAmount = 1,
+    devMode?: boolean,
+    devOverrides?: PachinkoDevOverrides,
+  ): Promise<PachinkoState> {
+    if (!devMode) {
+      if (
+        bid < GAMBLING_MIN_BET ||
+        bid > GAMBLING_MAX_BET ||
+        !Number.isInteger(bid)
+      )
+        throw new Error("Invalid bid");
 
-    if (!Number.isInteger(ratAmount) || ratAmount < 1 || ratAmount > 5)
-      throw new Error("Invalid rat amount");
+      if (!Number.isInteger(ratAmount) || ratAmount < 1 || ratAmount > 5)
+        throw new Error("Invalid rat amount");
 
-    if (this.activeGames.has(userId))
-      throw new Error("Drop already in progress");
+      if (this.activeGames.has(userId))
+        throw new Error("Drop already in progress");
+    }
 
     const total = bid * ratAmount;
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
-    if (user.tickets < total) throw new Error("Insufficient balance");
-    if (user.gamblingBanned) throw new Error("Banned from gambling");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
+    if (!devMode && user!.tickets < total) throw new Error("Insufficient balance");
+    if (!devMode && user!.gamblingBanned) throw new Error("Banned from gambling");
 
-    await deductTickets(this.db, userId, total);
+    if (!devMode) {
+      await deductTickets(this.db, userId, total);
+    }
     this.activeGames.set(userId, { userId, bid, ratAmount, droppedAt: Date.now() });
 
-    const updated = await this.userService.getById(userId);
-    logger.info(user.username, "pachinko drop", `bid:${bid} ratAmount:${ratAmount} total:${total}`);
+    const updated = devMode ? null : await this.userService.getById(userId);
+    logger.info(user?.username ?? "dev", "pachinko drop", `bid:${bid} ratAmount:${ratAmount} total:${total}`);
 
     return {
       phase: "dropping",
@@ -100,7 +115,12 @@ export class PachinkoService {
     };
   }
 
-  async settle(userId: string, slotIndexes: number[]): Promise<PachinkoState> {
+  async settle(
+    userId: string,
+    slotIndexes: number[],
+    devMode?: boolean,
+    devOverrides?: PachinkoDevOverrides,
+  ): Promise<PachinkoState> {
     const game = this.activeGames.get(userId);
     if (!game) throw new Error("No active drop");
 
@@ -111,7 +131,9 @@ export class PachinkoService {
     const totalCost = game.bid * game.ratAmount;
     let totalPayout = 0;
 
-    for (const raw of slotIndexes) {
+    const usedSlots = devOverrides?.devForceSlots ?? slotIndexes;
+
+    for (const raw of usedSlots) {
       const slot = Math.floor(raw);
       if (
         !Number.isFinite(slot) ||
@@ -126,15 +148,16 @@ export class PachinkoService {
 
     const net = totalPayout - totalCost;
 
-    if (totalPayout > 0) {
+    if (!devMode && totalPayout > 0) {
       await addTickets(this.db, userId, totalPayout);
     }
 
-    const user = await this.userService.getById(userId);
+    const user = devMode ? null : await this.userService.getById(userId);
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
 
     if (
+      !devMode &&
       totalPayout > 0 &&
       gamblingWinnings >= GAMBLING_BAN_THRESHOLD &&
       !gamblingBanned
@@ -142,14 +165,16 @@ export class PachinkoService {
       gamblingBanned = true;
     }
 
-    await this.db
-      .update(schema.users)
-      .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
+    if (!devMode) {
+      await this.db
+        .update(schema.users)
+        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
+        .where(eq(schema.users.id, userId));
+    }
 
     this.activeGames.delete(userId);
 
-    if (user) {
+    if (!devMode && user) {
       await this.db.insert(schema.history).values({
         id: newId(),
         userId,
@@ -157,30 +182,30 @@ export class PachinkoService {
         type: "pachinko",
         label:
           net >= 0
-            ? `${slotIndexes.length} крыс +${net}`
-            : `${slotIndexes.length} крыс ${net}`,
+            ? `${usedSlots.length} крыс +${net}`
+            : `${usedSlots.length} крыс ${net}`,
         image: "",
         bid: totalCost,
         payout: totalPayout,
         net,
-        data: { ratAmount: game.ratAmount, perRatBid: game.bid, slots: slotIndexes },
+        data: { ratAmount: game.ratAmount, perRatBid: game.bid, slots: usedSlots },
         created: nowIso(),
       });
     }
 
     const label =
       net >= 0
-        ? `${slotIndexes.length} крысы: выигрыш +${net}`
-        : `${slotIndexes.length} крысы: проигрыш ${net}`;
+        ? `${usedSlots.length} крысы: выигрыш +${net}`
+        : `${usedSlots.length} крысы: проигрыш ${net}`;
 
     const tone = this.toneFromNet(net, totalCost, 0);
 
     logger.info(
       "system",
-      `pachinko settle user:${userId} rats:${slotIndexes.length} totalPayout:${totalPayout} net:${net}`,
+      `pachinko settle user:${userId} rats:${usedSlots.length} totalPayout:${totalPayout} net:${net}`,
     );
 
-    const updated = await this.userService.getById(userId);
+    const updated = devMode ? null : await this.userService.getById(userId);
 
     return {
       phase: "done",

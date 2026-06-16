@@ -124,7 +124,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
 
       await updateTicketItem(db, user.sub, newTickets);
 
-      const jp = new JackpotService(db, userService);
+      const jp = new JackpotService(db);
       await jp.addToPool(amount);
 
       broadcast("users", "update", user.sub);
@@ -180,7 +180,11 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       await updateTicketItem(db, user.sub, newTickets);
 
       broadcast("users", "update", user.sub);
-      logger.info(user.username, `user sold ${amount} tickets for ${payout} money`, user.sub);
+      logger.info(
+        user.username,
+        `user sold ${amount} tickets for ${payout} money`,
+        user.sub,
+      );
 
       return { ok: true, payout, newBalance: newTickets };
     },
@@ -340,9 +344,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
         await updateTicketItem(db, user.sub, buyerRow.tickets + quantity);
       }
 
-      await db
-        .delete(schema.market)
-        .where(eq(schema.market.id, params.id));
+      await db.delete(schema.market).where(eq(schema.market.id, params.id));
 
       broadcast("users", "update", sellerId);
       broadcast("users", "update", user.sub);
@@ -401,9 +403,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
         await updateTicketItem(db, user.sub, newTickets);
       }
 
-      await db
-        .delete(schema.market)
-        .where(eq(schema.market.id, params.id));
+      await db.delete(schema.market).where(eq(schema.market.id, params.id));
 
       broadcast("market", "delete", params.id);
       broadcast("users", "update", user.sub);

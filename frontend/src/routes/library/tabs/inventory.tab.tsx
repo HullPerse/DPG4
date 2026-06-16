@@ -4,30 +4,23 @@ import type { ModalType } from "@/types/effect";
 import ItemFramework from "@/lib/items/item.framework";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/subscription.hook";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import {
-  Minus,
+  Battery,
+  Calendar,
+  ChevronDown,
+  Hash,
   NetworkIcon,
-  Plus,
-  Send,
-  ShoppingCart,
-  Trash,
-  X,
+  Section,
 } from "lucide-react";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
 import { Inventory, Item } from "@/types/items";
 import ItemsApi from "@/api/items.api";
 import UserApi from "@/api/user.api";
-import ImageComponent from "@/components/shared/image.component";
-import { getFileUrl } from "@/api/client.api";
-import { highlightText, translateItemType } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button.component";
-import { Combobox } from "@/components/ui/combobox.component";
 import { User } from "@/types/user";
 import { otherEffect } from "@/lib/items/other.items";
 import { CreateModal } from "@/components/shared/items.modal";
@@ -37,7 +30,10 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover.component";
-import { Dialog, DialogContent } from "@/components/ui/dialog.component";
+import { SortDirection, SortMethod } from "@/routes/browser/browser.root";
+import StatusInventory from "../components/inventory/status.inventory";
+import ItemInventory from "../components/inventory/item.inventory";
+import ActionInventory from "../components/inventory/action.inventory";
 
 const itemsApi = new ItemsApi();
 const userApi = new UserApi();
@@ -48,7 +44,7 @@ type InventoryTabData = {
   statuses: Item[];
 };
 
-type ItemLoadingType = "use" | "delete" | "sell" | "send";
+export type ItemLoadingType = "use" | "delete" | "sell" | "send";
 
 function InventoryTab({ id }: { id?: string }) {
   const queryClient = useQueryClient();
@@ -57,17 +53,43 @@ function InventoryTab({ id }: { id?: string }) {
   const currentId = id ? id : String(user?.id);
 
   const initialLoadRef = useRef(false);
+  const inventoryRefreshRef = useRef<Promise<void> | null>(null);
 
   const [modal, setModal] = useState<string | null>(null);
 
   const [searchTerms, setSearchTerms] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortMethod, setSortMethod] = useState<SortMethod>("date");
   const [active, setActive] = useState<number | null>(null);
   const [price, setPrice] = useState<string>("");
   const [removeStatus, setRemoveStatus] = useState<boolean>(false);
   const [activeStatus, setActiveStatus] = useState<string>("");
-  const [selectedUser, setSelectedUser] = useState<string | undefined>(
-    undefined,
-  );
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["inventoryTab", currentId],
+    queryFn: async (): Promise<InventoryTabData> => {
+      const inventory = await itemsApi.getInventory(currentId);
+      const users = await userApi.getAllUsers();
+
+      //statuses
+      let finalStatuses: Item[] = [];
+
+      const allStatuses = users.find((u) => u.id === currentId)?.status;
+
+      if (!allStatuses) finalStatuses = [];
+      else {
+        finalStatuses = await itemsApi.getItemsByLabels(allStatuses);
+      }
+
+      return {
+        inventory: inventory,
+        users: users.filter((item) => item.id !== currentId),
+        statuses: finalStatuses,
+      };
+    },
+    staleTime: 30_000,
+  });
+
   const itemMutation = useMutation({
     mutationFn: async ({
       type,
@@ -136,31 +158,6 @@ function InventoryTab({ id }: { id?: string }) {
     },
   });
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["inventoryTab", currentId],
-    queryFn: async (): Promise<InventoryTabData> => {
-      const inventory = await itemsApi.getInventory(currentId);
-      const users = await userApi.getAllUsers();
-
-      //statuses
-      let finalStatuses: Item[] = [];
-
-      const allStatuses = users.find((u) => u.id === currentId)?.status;
-
-      if (!allStatuses) finalStatuses = [];
-      else {
-        finalStatuses = await itemsApi.getItemsByLabels(allStatuses);
-      }
-
-      return {
-        inventory: inventory,
-        users: users.filter((item) => item.id !== currentId),
-        statuses: finalStatuses,
-      };
-    },
-    staleTime: 30_000,
-  });
-
   const patchInventoryFor = useCallback(
     async (userId: string) => {
       const inventory = await itemsApi.getInventory(userId);
@@ -208,7 +205,6 @@ function InventoryTab({ id }: { id?: string }) {
     );
   }, [queryClient, currentId]);
 
-  const inventoryRefreshRef = useRef<Promise<void> | null>(null);
   const refreshInventoryCoalesced = useCallback(async () => {
     if (inventoryRefreshRef.current) return inventoryRefreshRef.current;
 
@@ -262,9 +258,43 @@ function InventoryTab({ id }: { id?: string }) {
 
   initialLoadRef.current = true;
 
+  const sortMethodIcons = {
+    name: Hash,
+    date: Calendar,
+    charges: Battery,
+    type: Section,
+  };
+
+  const sortMethodLabels = {
+    name: "По имени",
+    date: "По дате",
+    charges: "По зарядам",
+    type: "По типу",
+  };
+
+  const SortMethodIcon = sortMethodIcons[sortMethod];
+
+  const sortFunction = (a: Inventory, b: Inventory) => {
+    let result = 0;
+
+    if (sortMethod === "name") {
+      result = a.label.localeCompare(b.label);
+    } else if (sortMethod === "charges") {
+      result = a.charge - b.charge;
+    } else if (sortMethod === "date") {
+      result = new Date(a.created).getTime() - new Date(b.created).getTime();
+    } else if (sortMethod === "type") {
+      result = a.type.localeCompare(b.type);
+    } else {
+      result = new Date(a.created).getTime() - new Date(b.created).getTime();
+    }
+
+    return sortDirection === "asc" ? result : -result;
+  };
+
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
-      {user && modalItem?.Modal && modalConsume ? (
+      {user && modalItem?.Modal && modalConsume && (
         <CreateModal
           label={modalItem.label}
           Modal={modalItem.Modal}
@@ -275,103 +305,70 @@ function InventoryTab({ id }: { id?: string }) {
             if (!open) setModal(null);
           }}
         />
-      ) : null}
+      )}
 
-      <Input
-        autoFocus
-        type="text"
-        placeholder="Поиск пользователя"
-        value={searchTerms}
-        onChange={(e) => setSearchTerms(e.target.value)}
-      />
-      {data?.statuses && data?.statuses.length > 0 && (
-        <section className="flex flex-wrap justify-start w-full min-h-32 max-h-32 h-32 pb-4 gap-2 border-b-2 border-highlight-high overflow-y-scroll">
-          <Dialog
-            open={removeStatus}
-            onOpenChange={(value) => setRemoveStatus(value)}
-          >
-            <DialogContent
-              showCloseButton={false}
-              className="p-0 border-0 min-w-xl max-w-full"
+      <section className="flex flex-row gap-1 items-center w-full">
+        <Input
+          autoFocus
+          type="text"
+          placeholder="Поиск пользователя"
+          value={searchTerms}
+          onChange={(e) => setSearchTerms(e.target.value)}
+        />
+
+        <HoverCard>
+          <HoverCardTrigger delay={0}>
+            <Button
+              variant="default"
+              size="icon"
+              className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85 flex gap-0 h-10 w-10 p-5"
             >
-              <main
-                style={{
-                  zIndex: 999,
-                  boxShadow: "4px 4px 0 transparent",
-                  border: "2px solid var(--color-highlight-high)",
-                  display: "grid",
-                  gridTemplateRows: "auto 1fr",
-                }}
-                className="overflow-hidden bg-card text-text transition-none"
-              >
-                {/* Head */}
-                <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-                  <span className=" flex item-center text-md font-bold line-clamp-1">
-                    Удалить статус {activeStatus} ?
-                  </span>
-
-                  <Button
-                    variant="ghost"
-                    title="Закрыть"
-                    onClick={() => setRemoveStatus(false)}
-                  >
-                    <X />
-                  </Button>
-                </section>
-
-                {/* Body */}
-                <section className="flex w-full min-h-0 h-full flex-col p-1">
-                  <Button
-                    variant="error"
-                    loading={statusMutation.isPending}
-                    disabled={currentId !== user?.id}
-                    onClick={() => statusMutation.mutate(activeStatus)}
-                  >
-                    УДАЛИТЬ
-                  </Button>
-                </section>
-              </main>
-            </DialogContent>
-          </Dialog>
-
-          {data?.statuses?.map((status, index) => (
-            <HoverCard key={index}>
-              <HoverCardTrigger
-                delay={300}
-                className="relative flex flex-col min-w-28 min-h-28 w-28 h-28 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
-                style={{
-                  cursor: user?.id === currentId ? "pointer" : "default",
-                }}
+              <SortMethodIcon className="h-4 w-4" />
+              <ChevronDown className="size-3" />
+            </Button>
+          </HoverCardTrigger>
+          <HoverCardContent className="z-10000 flex flex-col gap-1">
+            {Object.entries(sortMethodLabels).map(([method, label]) => (
+              <Button
+                key={method}
+                variant={sortMethod === method ? "default" : "link"}
+                className="text-text hover:bg-text/20 disabled:bg-text/20 disabled:text-primary disabled:opacity-85"
                 onClick={() => {
-                  if (currentId === user?.id) {
-                    setActiveStatus(status.label);
-                    setRemoveStatus(true);
+                  if (sortMethod === method) {
+                    setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+                  } else {
+                    setSortMethod(method as SortMethod);
+                    setSortDirection("asc");
                   }
                 }}
               >
-                <span className="text-xs font-bold line-clamp-2 text-center h-10">
-                  {status.label}
-                </span>
+                {label}
+                {sortMethod === method && (
+                  <span className="ml-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </span>
+                )}
+              </Button>
+            ))}
+          </HoverCardContent>
+        </HoverCard>
+      </section>
 
-                <ImageComponent
-                  src={`${getFileUrl(status)}`}
-                  alt={status.label}
-                  className="min-w-14 w-14 min-h-14 h-14 border border-highlight-high"
-                  type="cover"
-                />
-              </HoverCardTrigger>
-              <HoverCardContent
-                className="z-9999 flex flex-col gap-1 shadow-sharp-sm border-2 border-highlight-high h-30 max-h-30 mi-h-30 min-w-full w-sm  overflow-y-auto"
-                side="top"
-              >
-                <span>{status.description}</span>
-              </HoverCardContent>
-            </HoverCard>
-          ))}
-        </section>
+      {data?.statuses && data?.statuses.length > 0 && (
+        <StatusInventory
+          removeStatus={removeStatus}
+          setRemoveStatus={setRemoveStatus}
+          activeStatus={activeStatus}
+          setActiveStatus={setActiveStatus}
+          statusMutation={statusMutation}
+          currentId={currentId}
+          statuses={data.statuses}
+        />
       )}
+
       <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5">
         {data?.inventory
+          .sort((a, b) => sortFunction(a, b))
           .filter(
             (item) =>
               item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
@@ -381,230 +378,34 @@ function InventoryTab({ id }: { id?: string }) {
           )
           .map((item, index) =>
             active === index ? (
-              <div
+              <ActionInventory
                 key={item.id}
-                className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
-              >
-                {itemLoading(String(item.id), "use") && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70">
-                    <SmallLoader size={28} />
-                  </div>
-                )}
-                <Button
-                  size="icon"
-                  variant="error"
-                  className="absolute top-1 right-1"
-                  onClick={() => {
-                    setPrice("");
-                    setActive(null);
-                  }}
-                >
-                  <X />
-                </Button>
-                <section className="flex flex-col w-full mt-auto gap-1">
-                  <div className="flex flex-row gap-2 w-full items-center">
-                    <Combobox
-                      options={data?.users.map((u) => {
-                        return {
-                          label: u.username,
-                          value: String(u.id),
-                          style: { color: u.color },
-                        };
-                      })}
-                      value={selectedUser}
-                      onChange={setSelectedUser}
-                      placeholder={selectedUser || "Пользователь"}
-                      className="w-64"
-                      loading={itemLoading(String(item.id), "send")}
-                    />
-                    <Button
-                      disabled={
-                        itemLoading(String(item.id), "send") || !selectedUser
-                      }
-                      onClick={() => {
-                        if (!selectedUser) return;
-
-                        itemMutation.mutate({
-                          type: "send",
-                          itemId: String(item.id),
-                          userId: selectedUser,
-                        });
-                      }}
-                      className="my-1"
-                      size="icon"
-                    >
-                      {itemLoading(String(item.id), "send") ? (
-                        <SmallLoader />
-                      ) : (
-                        <Send />
-                      )}
-                    </Button>
-                  </div>
-                  <div
-                    className="flex flex-row gap-2 w-full items-center"
-                    hidden={currentId !== user?.id}
-                  >
-                    <Input
-                      type="number"
-                      placeholder="Продажа"
-                      className="h-9"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      arrows
-                      arrowsGap="0px"
-                      min={0}
-                      max={9999}
-                    />
-                    <Button
-                      size="icon"
-                      variant="info"
-                      onClick={() =>
-                        itemMutation.mutate({
-                          type: "sell",
-                          itemId: String(item.id),
-                          owner: item.owner,
-                          price: Number(price),
-                        })
-                      }
-                      disabled={itemLoading(String(item.id), "sell") || !price}
-                    >
-                      {itemLoading(String(item.id), "sell") ? (
-                        <SmallLoader />
-                      ) : (
-                        <ShoppingCart />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex flex-row gap-2 w-full items-center">
-                    {item.type !== "rat" && (
-                      <Button
-                        variant="success"
-                        className="flex-1"
-                        onClick={() =>
-                          itemMutation.mutate({
-                            type: "use",
-                            itemId: String(item.id),
-                          })
-                        }
-                        hidden={currentId !== user?.id}
-                        disabled={itemLoading(String(item.id), "use")}
-                      >
-                        {itemLoading(String(item.id), "use") ? (
-                          <SmallLoader />
-                        ) : (
-                          "Использовать"
-                        )}
-                      </Button>
-                    )}
-                    <Button
-                      size="icon"
-                      variant="error"
-                      style={{
-                        width:
-                          currentId !== user?.id || item.type === "rat"
-                            ? "100%"
-                            : undefined,
-                      }}
-                      onClick={() =>
-                        itemMutation.mutate({
-                          type: "delete",
-                          itemId: String(item.id),
-                        })
-                      }
-                      disabled={itemLoading(String(item.id), "delete")}
-                    >
-                      {itemLoading(String(item.id), "delete") ? (
-                        <SmallLoader />
-                      ) : (
-                        <Trash />
-                      )}
-                    </Button>
-                  </div>
-                </section>
-              </div>
+                item={item}
+                itemMutation={itemMutation}
+                itemLoading={itemLoading}
+                price={price}
+                setPrice={setPrice}
+                setActive={setActive}
+                users={data.users}
+                currentId={currentId}
+              />
             ) : (
-              <div
+              <ItemInventory
                 key={item.id}
-                role="button"
-                tabIndex={0}
-                className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background hover:opacity-100 opacity-75 hover:cursor-pointer items-center p-2"
-                onClick={() => {
-                  if (itemMutation.isPending) return;
-                  setPrice("");
-                  setActive(index);
-                }}
-              >
-                {itemLoading(String(item.id)) && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70">
-                    <SmallLoader size={28} />
-                  </div>
-                )}
-                <span className="font-bold text-md line-clamp-1">
-                  {highlightText(item.label, searchTerms)}
-                </span>
-
-                <div className="flex flex-col items-center justify-center">
-                  <span className="w-full h-6 items-center justify-center my-1 bg-card text-primary font-bold border border-highlight-high text-center text-[14px]">
-                    {translateItemType(item.type)}
-                  </span>
-                  <ImageComponent
-                    src={`${getFileUrl(item)}`}
-                    alt={item.label}
-                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                    type="cover"
-                  />
-
-                  <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
-                    <Button
-                      variant="error"
-                      size="icon"
-                      rendered={currentId === user?.id}
-                      className="w-6 h-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-
-                        itemMutation.mutate({
-                          type: "charge",
-                          itemId: String(item.id),
-                          oldCharge: item.charge,
-                          newCharge: -1,
-                        });
-                      }}
-                    >
-                      <Minus />
-                    </Button>
-                    <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
-                      {item.charge}
-                    </span>
-                    <Button
-                      rendered={currentId === user?.id}
-                      variant="success"
-                      size="icon"
-                      className="w-6 h-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-
-                        itemMutation.mutate({
-                          type: "charge",
-                          itemId: String(item.id),
-                          oldCharge: item.charge,
-                          newCharge: 1,
-                        });
-                      }}
-                    >
-                      <Plus />
-                    </Button>
-                  </div>
-                </div>
-
-                <span className="line-clamp-3 hover:line-clamp-none hover:overflow-y-auto text-xs leading-tight h-16 max-h-16">
-                  {highlightText(item.description, searchTerms)}
-                </span>
-              </div>
+                item={item}
+                searchTerms={searchTerms}
+                itemMutation={itemMutation}
+                itemLoading={itemLoading}
+                currentId={currentId}
+                index={index}
+                setPrice={setPrice}
+                setActive={setActive}
+              />
             ),
           )}
       </section>
     </main>
   );
 }
+
 export default InventoryTab;

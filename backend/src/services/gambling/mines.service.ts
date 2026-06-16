@@ -13,6 +13,11 @@ import {
 } from "../../lib/gambling.constants";
 import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
+export interface MinesDevOverrides {
+  devShowMines?: boolean;
+  devForceAllSafe?: boolean;
+}
+
 const GRID = 5;
 const HOUSE_EDGE = 0.97;
 
@@ -74,23 +79,27 @@ export class MinesService {
     userId: string,
     bid: number,
     mineCount: number,
+    devMode?: boolean,
+    devOverrides?: MinesDevOverrides,
   ): Promise<MinesRevealResult> {
-    if (
-      bid < GAMBLING_MIN_BET ||
-      bid > GAMBLING_MAX_BET ||
-      !Number.isInteger(bid)
-    )
-      throw new Error("Invalid bid");
-    if (!Number.isInteger(mineCount) || mineCount < 1 || mineCount > 10)
-      throw new Error("Invalid mine count");
-    if (this.games.has(userId)) throw new Error("Game already in progress");
+    if (!devMode) {
+      if (
+        bid < GAMBLING_MIN_BET ||
+        bid > GAMBLING_MAX_BET ||
+        !Number.isInteger(bid)
+      )
+        throw new Error("Invalid bid");
+      if (!Number.isInteger(mineCount) || mineCount < 1 || mineCount > 10)
+        throw new Error("Invalid mine count");
+      if (this.games.has(userId)) throw new Error("Game already in progress");
 
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
-    if (user.tickets < bid) throw new Error("Insufficient balance");
-    if (user.gamblingBanned) throw new Error("Banned from gambling");
+      const user = await this.userService.getById(userId);
+      if (!user) throw new Error("User not found");
+      if (user.tickets < bid) throw new Error("Insufficient balance");
+      if (user.gamblingBanned) throw new Error("Banned from gambling");
 
-    await deductTickets(this.db, userId, bid);
+      await deductTickets(this.db, userId, bid);
+    }
 
     const grid = generateGrid(mineCount);
 
@@ -112,16 +121,23 @@ export class MinesService {
       isMine: false,
       currentMultiplier: 1,
       revealed: game.revealed,
+      ...(devOverrides?.devShowMines ? { minePositions: getMinePositions(game.grid) } : {}),
       payout: 0,
       net: 0,
       label: "",
       tone: "",
-      balance: user.tickets - bid,
+      balance: 0,
       banned: false,
     };
   }
 
-  async reveal(userId: string, x: number, y: number): Promise<MinesRevealResult> {
+  async reveal(
+    userId: string,
+    x: number,
+    y: number,
+    devMode?: boolean,
+    devOverrides?: MinesDevOverrides,
+  ): Promise<MinesRevealResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "playing") throw new Error("No active game");
     if (x < 0 || x >= GRID || y < 0 || y >= GRID) throw new Error("Invalid tile");
@@ -130,15 +146,17 @@ export class MinesService {
     game.revealed[x][y] = true;
     game.revealedCount += 1;
 
-    if (game.grid[x][y]) {
+    const hitMine = game.grid[x][y] && !devOverrides?.devForceAllSafe;
+
+    if (hitMine) {
       game.phase = "lost";
       this.games.delete(userId);
 
       const payout = 0;
       const net = -game.bid;
 
-      const user = await this.userService.getById(userId);
-      if (user) {
+      const user = devMode ? null : await this.userService.getById(userId);
+      if (!devMode && user) {
         await this.db.insert(schema.history).values({
           id: newId(),
           userId,
@@ -178,7 +196,7 @@ export class MinesService {
     }
 
     const mult = computeMultiplier(game.mineCount, game.revealedCount);
-    const user = await this.userService.getById(userId);
+    const user = devMode ? null : await this.userService.getById(userId);
 
     return {
       phase: "playing",
@@ -187,6 +205,7 @@ export class MinesService {
       isMine: false,
       currentMultiplier: mult,
       revealed: game.revealed,
+      ...(devOverrides?.devShowMines ? { minePositions: getMinePositions(game.grid) } : {}),
       payout: 0,
       net: 0,
       label: "",
@@ -196,7 +215,10 @@ export class MinesService {
     };
   }
 
-  async cashout(userId: string): Promise<MinesRevealResult> {
+  async cashout(
+    userId: string,
+    devMode?: boolean,
+  ): Promise<MinesRevealResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "playing") throw new Error("No active game");
 
@@ -204,24 +226,28 @@ export class MinesService {
     const payout = Math.floor(game.bid * mult);
     const net = payout - game.bid;
 
-    await addTickets(this.db, userId, payout);
+    if (!devMode) {
+      await addTickets(this.db, userId, payout);
+    }
 
     game.phase = "won";
     this.games.delete(userId);
 
-    const user = await this.userService.getById(userId);
+    const user = devMode ? null : await this.userService.getById(userId);
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
-    if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
+    if (!devMode && gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
       gamblingBanned = true;
     }
 
-    await this.db
-      .update(schema.users)
-      .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
+    if (!devMode) {
+      await this.db
+        .update(schema.users)
+        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
+        .where(eq(schema.users.id, userId));
+    }
 
-    if (user) {
+    if (!devMode && user) {
       await this.db.insert(schema.history).values({
         id: newId(),
         userId,

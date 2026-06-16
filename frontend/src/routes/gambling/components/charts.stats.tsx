@@ -7,7 +7,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DailyNet, GameDistribution, BetDistribution } from "@/api/stats.api";
 import {
   CHART_THEME,
   GAME_CHART_COLORS,
@@ -16,6 +15,7 @@ import {
 } from "@/lib/gambling/stats.constants";
 import { Panel } from "./stats.shared";
 import { TrendingUp, PieChart, Coins } from "lucide-react";
+import { BetDistribution, DailyNet, GameDistribution } from "@/types/stats";
 
 type TooltipPayload = { value: number; payload?: Record<string, unknown> };
 
@@ -59,11 +59,20 @@ export function DailyNetChart({ data }: { data: DailyNet[] }) {
   return (
     <Panel title="Доход по дням" icon={TrendingUp}>
       {chartData.length === 0 ? (
-        <p className="py-8 text-center text-xs text-muted">Нет данных за последние 30 дней</p>
+        <p className="py-8 text-center text-xs text-muted">
+          Нет данных за последние 30 дней
+        </p>
       ) : (
         <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" vertical={false} />
+          <BarChart
+            data={chartData}
+            margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+          >
+            <CartesianGrid
+              stroke={CHART_THEME.grid}
+              strokeDasharray="3 3"
+              vertical={false}
+            />
             <XAxis
               dataKey="label"
               tick={{ fill: CHART_THEME.muted, fontSize: 10 }}
@@ -98,7 +107,11 @@ export function DailyNetChart({ data }: { data: DailyNet[] }) {
                     y={y}
                     width={width}
                     height={height}
-                    fill={entry?.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
+                    fill={
+                      entry?.net >= 0
+                        ? CHART_THEME.positive
+                        : CHART_THEME.negative
+                    }
                     fillOpacity={0.85}
                     rx={2}
                   />
@@ -124,13 +137,20 @@ export function GameDistributionChart({ data }: { data: GameDistribution[] }) {
       {chartData.length === 0 ? (
         <p className="py-8 text-center text-xs text-muted">Нет сыгранных игр</p>
       ) : (
-        <ResponsiveContainer width="100%" height={Math.max(120, chartData.length * 36)}>
+        <ResponsiveContainer
+          width="100%"
+          height={Math.max(120, chartData.length * 36)}
+        >
           <BarChart
             data={chartData}
             layout="vertical"
             margin={{ top: 0, right: 8, left: 4, bottom: 0 }}
           >
-            <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" horizontal={false} />
+            <CartesianGrid
+              stroke={CHART_THEME.grid}
+              strokeDasharray="3 3"
+              horizontal={false}
+            />
             <XAxis
               type="number"
               tick={{ fill: CHART_THEME.muted, fontSize: 10 }}
@@ -155,13 +175,25 @@ export function GameDistributionChart({ data }: { data: GameDistribution[] }) {
               }
               cursor={{ fill: CHART_THEME.grid, opacity: 0.3 }}
             />
-            <Bar dataKey="count" maxBarSize={18} shape={(props: any) => {
-              const { x, y, width, height, index } = props;
-              const entry = chartData[index];
-              return (
-                <rect x={x} y={y} width={width} height={height} fill={entry?.color} fillOpacity={0.85} rx={2} />
-              );
-            }} />
+            <Bar
+              dataKey="count"
+              maxBarSize={18}
+              shape={(props: any) => {
+                const { x, y, width, height, index } = props;
+                const entry = chartData[index];
+                return (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={entry?.color}
+                    fillOpacity={0.85}
+                    rx={2}
+                  />
+                );
+              }}
+            />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -178,8 +210,15 @@ export function BetDistributionChart({ data }: { data: BetDistribution[] }) {
         <p className="py-8 text-center text-xs text-muted">Нет ставок</p>
       ) : (
         <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={filtered} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-            <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" vertical={false} />
+          <BarChart
+            data={filtered}
+            margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
+          >
+            <CartesianGrid
+              stroke={CHART_THEME.grid}
+              strokeDasharray="3 3"
+              vertical={false}
+            />
             <XAxis
               dataKey="range"
               tick={{ fill: CHART_THEME.muted, fontSize: 10 }}
@@ -245,8 +284,15 @@ export function LeaderboardNetChart({
   return (
     <Panel title="Топ по доходу" icon={TrendingUp}>
       <ResponsiveContainer width="100%" height={140}>
-        <BarChart data={top} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-          <CartesianGrid stroke={CHART_THEME.grid} strokeDasharray="3 3" vertical={false} />
+        <BarChart
+          data={top}
+          margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
+        >
+          <CartesianGrid
+            stroke={CHART_THEME.grid}
+            strokeDasharray="3 3"
+            vertical={false}
+          />
           <XAxis
             dataKey="name"
             tick={{ fill: CHART_THEME.muted, fontSize: 9 }}
@@ -266,21 +312,29 @@ export function LeaderboardNetChart({
             content={<ChartTooltip formatter={(value) => formatNet(value)} />}
             cursor={{ fill: CHART_THEME.grid, opacity: 0.4 }}
           />
-          <Bar dataKey="net" maxBarSize={24} shape={(props: any) => {
-            const { x, y, width, height, index } = props;
-            const entry = top[index];
-            return (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={entry?.net >= 0 ? CHART_THEME.positive : CHART_THEME.negative}
-                fillOpacity={index < 3 ? 1 : 0.7}
-                rx={2}
-              />
-            );
-          }} />
+          <Bar
+            dataKey="net"
+            maxBarSize={24}
+            shape={(props: any) => {
+              const { x, y, width, height, index } = props;
+              const entry = top[index];
+              return (
+                <rect
+                  x={x}
+                  y={y}
+                  width={width}
+                  height={height}
+                  fill={
+                    entry?.net >= 0
+                      ? CHART_THEME.positive
+                      : CHART_THEME.negative
+                  }
+                  fillOpacity={index < 3 ? 1 : 0.7}
+                  rx={2}
+                />
+              );
+            }}
+          />
         </BarChart>
       </ResponsiveContainer>
     </Panel>

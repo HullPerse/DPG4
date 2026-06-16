@@ -14,6 +14,11 @@ import {
 } from "../../lib/gambling.constants";
 import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
+export interface RocketDevOverrides {
+  devForceCrashPoint?: number;
+  devShowCrashPoint?: boolean;
+}
+
 export class RocketService {
   constructor(
     private db: Db,
@@ -57,6 +62,7 @@ export class RocketService {
   private async processCrash(
     userId: string,
     game: ActiveRocketGame,
+    devMode?: boolean,
   ): Promise<RocketState> {
     this.crashHistory.push({
       crashPoint: game.crashPoint,
@@ -64,12 +70,14 @@ export class RocketService {
     });
     if (this.crashHistory.length > this.MAX_HISTORY) this.crashHistory.shift();
 
-    await deductTickets(this.db, userId, game.bid);
+    if (!devMode) {
+      await deductTickets(this.db, userId, game.bid);
+    }
 
-    const user = await this.userService.getById(userId);
+    const user = devMode ? null : await this.userService.getById(userId);
     this.activeGames.delete(userId);
 
-    if (user) {
+    if (!devMode && user) {
       await this.db.insert(schema.history).values({
         id: newId(),
         userId,
@@ -107,25 +115,32 @@ export class RocketService {
     return state;
   }
 
-  async launch(userId: string, bid: number): Promise<RocketState> {
-    if (
-      bid < GAMBLING_MIN_BET ||
-      bid > GAMBLING_MAX_BET ||
-      !Number.isInteger(bid)
-    )
-      throw new Error("Invalid bid");
+  async launch(
+    userId: string,
+    bid: number,
+    devMode?: boolean,
+    devOverrides?: RocketDevOverrides,
+  ): Promise<RocketState> {
+    if (!devMode) {
+      if (
+        bid < GAMBLING_MIN_BET ||
+        bid > GAMBLING_MAX_BET ||
+        !Number.isInteger(bid)
+      )
+        throw new Error("Invalid bid");
 
-    if (this.activeGames.has(userId))
-      throw new Error("Game already in progress");
+      if (this.activeGames.has(userId))
+        throw new Error("Game already in progress");
+    }
 
     this.lastEndedGames.delete(userId);
 
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
-    if (user.tickets < bid) throw new Error("Insufficient balance");
-    if (user.gamblingBanned) throw new Error("Banned from gambling");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
+    if (!devMode && user!.tickets < bid) throw new Error("Insufficient balance");
+    if (!devMode && user!.gamblingBanned) throw new Error("Banned from gambling");
 
-    const crashPoint = this.generateCrashPoint(bid);
+    const crashPoint = devOverrides?.devForceCrashPoint ?? this.generateCrashPoint(bid);
     const now = Date.now();
 
     this.activeGames.set(userId, {
@@ -138,7 +153,7 @@ export class RocketService {
     });
 
     logger.info(
-      user.username,
+      user?.username ?? "dev",
       "launched rocket",
       `bid:${bid}`,
       `crash:${crashPoint}x`,
@@ -147,9 +162,9 @@ export class RocketService {
     return {
       phase: "launching",
       multiplier: 1,
-      crashPoint,
+      crashPoint: devOverrides?.devShowCrashPoint ? crashPoint : crashPoint,
       bid,
-      balance: user.tickets,
+      balance: user?.tickets ?? 0,
       net: 0,
       label: "",
       tone: "",
@@ -157,7 +172,10 @@ export class RocketService {
     };
   }
 
-  async cashout(userId: string): Promise<RocketState> {
+  async cashout(
+    userId: string,
+    devMode?: boolean,
+  ): Promise<RocketState> {
     const game = this.activeGames.get(userId);
     if (!game) throw new Error("No active game");
     if (game.cashedOut) throw new Error("Already cashed out");
@@ -166,7 +184,7 @@ export class RocketService {
     const currentMultiplier = this.computeMultiplier(elapsed);
 
     if (currentMultiplier >= game.crashPoint) {
-      return this.processCrash(userId, game);
+      return this.processCrash(userId, game, devMode);
     }
 
     game.cashedOut = true;
@@ -175,20 +193,24 @@ export class RocketService {
     const payout = Math.floor(game.bid * currentMultiplier);
     const net = payout - game.bid;
 
-    await deductTickets(this.db, userId, game.bid);
-    await addTickets(this.db, userId, payout);
+    if (!devMode) {
+      await deductTickets(this.db, userId, game.bid);
+      await addTickets(this.db, userId, payout);
+    }
 
-    const user = await this.userService.getById(userId);
+    const user = devMode ? null : await this.userService.getById(userId);
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
-    if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
+    if (!devMode && gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
       gamblingBanned = true;
     }
 
-    await this.db
-      .update(schema.users)
-      .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
+    if (!devMode) {
+      await this.db
+        .update(schema.users)
+        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
+        .where(eq(schema.users.id, userId));
+    }
 
     const label = `Результат ${currentMultiplier.toFixed(2)}x - выигрыш +${net}`;
     const tone: "jackpot" | "win" | "chance" =
@@ -196,7 +218,7 @@ export class RocketService {
 
     this.activeGames.delete(userId);
 
-    if (user) {
+    if (!devMode && user) {
       await this.db.insert(schema.history).values({
         id: newId(),
         userId,
@@ -236,7 +258,10 @@ export class RocketService {
     return state;
   }
 
-  async poll(userId: string): Promise<RocketState> {
+  async poll(
+    userId: string,
+    devMode?: boolean,
+  ): Promise<RocketState> {
     const game = this.activeGames.get(userId);
     if (!game) {
       const ended = this.lastEndedGames.get(userId);
@@ -248,7 +273,7 @@ export class RocketService {
     const currentMultiplier = this.computeMultiplier(elapsed);
 
     if (currentMultiplier >= game.crashPoint) {
-      return this.processCrash(userId, game);
+      return this.processCrash(userId, game, devMode);
     }
 
     return {

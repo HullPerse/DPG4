@@ -12,22 +12,28 @@ import type {
 
 export type { DiceDealerResult, DiceGameResult };
 
-export async function rollDiceDealer(bid: number): Promise<DiceDealerResult> {
+function withDev(body: Record<string, unknown>, overrides?: Record<string, unknown>): Record<string, unknown> {
+  return overrides && Object.keys(overrides).length > 0 ? { ...body, ...overrides } : body;
+}
+
+export async function rollDiceDealer(bid: number, devOverrides?: Record<string, unknown>): Promise<DiceDealerResult> {
   return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
-    body: { bid },
+    body: withDev({ bid }, devOverrides),
   });
 }
 
-export async function rerollDiceDealer(): Promise<DiceDealerResult> {
+export async function rerollDiceDealer(devOverrides?: Record<string, unknown>): Promise<DiceDealerResult> {
   return apiFetch<DiceDealerResult>("/utils/dice-roll", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
-export async function rollDicePlayer(): Promise<DiceGameResult> {
+export async function rollDicePlayer(devOverrides?: Record<string, unknown>): Promise<DiceGameResult> {
   return apiFetch<DiceGameResult>("/utils/dice-roll", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
@@ -46,22 +52,24 @@ export async function unbanDice(): Promise<{ success: boolean }> {
   });
 }
 
-export async function blackjackDeal(bid: number): Promise<BlackjackState> {
+export async function blackjackDeal(bid: number, devOverrides?: Record<string, unknown>): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-deal", {
     method: "POST",
-    body: { bid },
+    body: withDev({ bid }, devOverrides),
   });
 }
 
-export async function blackjackHit(): Promise<BlackjackState> {
+export async function blackjackHit(devOverrides?: Record<string, unknown>): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-hit", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
-export async function blackjackStand(): Promise<BlackjackState> {
+export async function blackjackStand(devOverrides?: Record<string, unknown>): Promise<BlackjackState> {
   return apiFetch<BlackjackState>("/utils/blackjack-stand", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
@@ -79,22 +87,24 @@ export async function abandonBlackjack(): Promise<{ success: boolean }> {
   });
 }
 
-export async function launchRocket(bid: number): Promise<RocketState> {
+export async function launchRocket(bid: number, devOverrides?: Record<string, unknown>): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-launch", {
     method: "POST",
-    body: { bid },
+    body: withDev({ bid }, devOverrides),
   });
 }
 
-export async function cashoutRocket(): Promise<RocketState> {
+export async function cashoutRocket(devOverrides?: Record<string, unknown>): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-cashout", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
-export async function pollRocket(): Promise<RocketState> {
+export async function pollRocket(devOverrides?: Record<string, unknown>): Promise<RocketState> {
   return apiFetch<RocketState>("/utils/rocket-poll", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 
@@ -119,19 +129,21 @@ export async function getRocketHistory(): Promise<RocketHistoryEntry[]> {
 export async function dropPachinko(
   bid: number,
   ratAmount = 1,
+  devOverrides?: Record<string, unknown>,
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-drop", {
     method: "POST",
-    body: { bid, ratAmount },
+    body: withDev({ bid, ratAmount }, devOverrides),
   });
 }
 
 export async function settlePachinko(
   slotIndexes: number[],
+  devOverrides?: Record<string, unknown>,
 ): Promise<PachinkoState> {
   return apiFetch<PachinkoState>("/utils/pachinko-settle", {
     method: "POST",
-    body: { slotIndexes },
+    body: withDev({ slotIndexes }, devOverrides),
   });
 }
 
@@ -156,23 +168,25 @@ export async function abandonPachinko(): Promise<{ success: boolean }> {
 export async function startMines(
   bid: number,
   mineCount: number,
+  devOverrides?: Record<string, unknown>,
 ): Promise<MinesState> {
   return apiFetch<MinesState>("/utils/mines-start", {
     method: "POST",
-    body: { bid, mineCount },
+    body: withDev({ bid, mineCount }, devOverrides),
   });
 }
 
-export async function revealMines(x: number, y: number): Promise<MinesState> {
+export async function revealMines(x: number, y: number, devOverrides?: Record<string, unknown>): Promise<MinesState> {
   return apiFetch<MinesState>("/utils/mines-reveal", {
     method: "POST",
-    body: { x, y },
+    body: withDev({ x, y }, devOverrides),
   });
 }
 
-export async function cashoutMines(): Promise<MinesState> {
+export async function cashoutMines(devOverrides?: Record<string, unknown>): Promise<MinesState> {
   return apiFetch<MinesState>("/utils/mines-cashout", {
     method: "POST",
+    body: withDev({}, devOverrides),
   });
 }
 

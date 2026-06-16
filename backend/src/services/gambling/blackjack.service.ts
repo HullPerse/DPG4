@@ -22,6 +22,14 @@ import {
   GAMBLING_MAX_BET,
 } from "../../lib/gambling.constants";
 import { deductTickets, addTickets } from "../../lib/ticket.helpers";
+import type { Card as PlayingCard } from "@/types/gambling";
+
+export interface BlackjackDevOverrides {
+  devForceDealerCards?: PlayingCard[];
+  devForcePlayerCards?: PlayingCard[];
+  devForceHitCard?: PlayingCard;
+  devPeekHole?: boolean;
+}
 
 interface ActiveGame {
   userId: string;
@@ -44,14 +52,15 @@ export class BlackjackService {
     userId: string,
     bid: number,
     payout: number,
+    devMode?: boolean,
   ): Promise<{ banned: boolean; balance: number }> {
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
 
-    let gamblingWinnings = user.gamblingWinnings ?? 0;
-    let gamblingBanned = user.gamblingBanned ?? false;
+    let gamblingWinnings = user?.gamblingWinnings ?? 0;
+    let gamblingBanned = user?.gamblingBanned ?? false;
 
-    if (payout > 0) {
+    if (!devMode && payout > 0) {
       const profit = Math.max(0, payout - bid);
       gamblingWinnings += profit;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
@@ -60,20 +69,25 @@ export class BlackjackService {
       await addTickets(this.db, userId, payout);
     }
 
-    await this.db
-      .update(schema.users)
-      .set({
-        gamblingWinnings,
-        gamblingBanned,
-        updated: nowIso(),
-      })
-      .where(eq(schema.users.id, userId));
+    if (!devMode) {
+      await this.db
+        .update(schema.users)
+        .set({
+          gamblingWinnings,
+          gamblingBanned,
+          updated: nowIso(),
+        })
+        .where(eq(schema.users.id, userId));
+    }
 
-    const updated = await this.userService.getById(userId);
+    const updated = devMode ? null : await this.userService.getById(userId);
     return { banned: gamblingBanned, balance: updated?.tickets ?? 0 };
   }
 
-  private async finishGame(game: ActiveGame): Promise<BlackjackState> {
+  private async finishGame(
+    game: ActiveGame,
+    devMode?: boolean,
+  ): Promise<BlackjackState> {
     game.phase = "ended";
 
     const { payout, outcome } = computeOutcome(
@@ -89,39 +103,41 @@ export class BlackjackService {
       game.userId,
       game.bid,
       payout,
+      devMode,
     );
 
     this.games.delete(game.userId);
 
-    const user = await this.userService.getById(game.userId);
-
-    if (user) {
-      await this.db.insert(schema.history).values({
-        id: newId(),
-        userId: game.userId,
-        owner: { id: user.id, username: user.username },
-        type: "blackjack",
-        label,
-        image: "",
-        bid: game.bid,
-        payout,
-        net: -game.bid + payout,
-        data: {
-          outcome,
-          playerHand: game.playerHand,
-          dealerHand: game.dealerHand,
-          playerValue: handValue(game.playerHand),
-          dealerValue: handValue(game.dealerHand),
-        },
-        created: nowIso(),
-      });
+    if (!devMode) {
+      const user = await this.userService.getById(game.userId);
+      if (user) {
+        await this.db.insert(schema.history).values({
+          id: newId(),
+          userId: game.userId,
+          owner: { id: user.id, username: user.username },
+          type: "blackjack",
+          label,
+          image: "",
+          bid: game.bid,
+          payout,
+          net: -game.bid + payout,
+          data: {
+            outcome,
+            playerHand: game.playerHand,
+            dealerHand: game.dealerHand,
+            playerValue: handValue(game.playerHand),
+            dealerValue: handValue(game.dealerHand),
+          },
+          created: nowIso(),
+        });
+      }
+      logger.info(
+        user?.username,
+        "blackjack",
+        outcome,
+        `net:${-game.bid + payout}`,
+      );
     }
-    logger.info(
-      user?.username,
-      "blackjack",
-      outcome,
-      `net:${-game.bid + payout}`,
-    );
 
     return this.toState(game, balance, {
       outcome,
@@ -167,22 +183,29 @@ export class BlackjackService {
     return null;
   }
 
-  async deal(userId: string, bid: number): Promise<BlackjackState> {
-    if (
-      bid < GAMBLING_MIN_BET ||
-      bid > GAMBLING_MAX_BET ||
-      !Number.isInteger(bid)
-    ) {
-      throw new Error("Invalid bid");
+  async deal(
+    userId: string,
+    bid: number,
+    devMode?: boolean,
+    devOverrides?: BlackjackDevOverrides,
+  ): Promise<BlackjackState> {
+    if (!devMode) {
+      if (
+        bid < GAMBLING_MIN_BET ||
+        bid > GAMBLING_MAX_BET ||
+        !Number.isInteger(bid)
+      ) {
+        throw new Error("Invalid bid");
+      }
+
+      const user = await this.userService.getById(userId);
+      if (!user) throw new Error("User not found");
+      if (user.tickets < bid) throw new Error("Insufficient balance");
+      if (user.gamblingBanned) throw new Error("Banned from gambling");
+      if (this.games.has(userId)) throw new Error("Game already in progress");
+
+      await deductTickets(this.db, userId, bid);
     }
-
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
-    if (user.tickets < bid) throw new Error("Insufficient balance");
-    if (user.gamblingBanned) throw new Error("Banned from gambling");
-    if (this.games.has(userId)) throw new Error("Game already in progress");
-
-    await deductTickets(this.db, userId, bid);
 
     const game: ActiveGame = {
       userId,
@@ -193,57 +216,74 @@ export class BlackjackService {
       phase: "player",
     };
 
-    game.playerHand.push(draw(game.deck));
-    game.dealerHand.push(draw(game.deck));
-    game.playerHand.push(draw(game.deck));
-    game.dealerHand.push(draw(game.deck));
+    if (devOverrides?.devForcePlayerCards && devOverrides.devForcePlayerCards.length >= 2) {
+      game.playerHand = devOverrides.devForcePlayerCards.slice(0, 2);
+    } else {
+      game.playerHand.push(draw(game.deck));
+      game.playerHand.push(draw(game.deck));
+    }
+
+    if (devOverrides?.devForceDealerCards && devOverrides.devForceDealerCards.length >= 2) {
+      game.dealerHand = devOverrides.devForceDealerCards.slice(0, 2);
+    } else {
+      game.dealerHand.push(draw(game.deck));
+      game.dealerHand.push(draw(game.deck));
+    }
 
     this.games.set(userId, game);
 
-    const updated = await this.userService.getById(userId);
+    const updated = devMode ? null : await this.userService.getById(userId);
     const balance = updated?.tickets ?? 0;
 
     const instant = await this.maybeResolveAfterDeal(game);
     if (instant) return instant;
 
     if (handValue(game.playerHand) >= 21) {
-      return this.finishGame(game);
+      return this.finishGame(game, devMode);
     }
 
     return this.toState(game, balance);
   }
 
-  async hit(userId: string): Promise<BlackjackState> {
+  async hit(
+    userId: string,
+    devMode?: boolean,
+    devOverrides?: BlackjackDevOverrides,
+  ): Promise<BlackjackState> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "player") {
       throw new Error("No active game");
     }
 
-    game.playerHand.push(draw(game.deck));
+    const card = devOverrides?.devForceHitCard ?? draw(game.deck);
+    game.playerHand.push(card);
 
-    const updated = await this.userService.getById(userId);
+    const updated = devMode ? null : await this.userService.getById(userId);
     const balance = updated?.tickets ?? 0;
 
     if (handValue(game.playerHand) > 21) {
-      return this.finishGame(game);
+      return this.finishGame(game, devMode);
     }
 
     if (handValue(game.playerHand) === 21) {
       dealerPlay(game.dealerHand, game.deck);
-      return this.finishGame(game);
+      return this.finishGame(game, devMode);
     }
 
     return this.toState(game, balance);
   }
 
-  async stand(userId: string): Promise<BlackjackState> {
+  async stand(
+    userId: string,
+    devMode?: boolean,
+  ): Promise<BlackjackState> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "player") {
       throw new Error("No active game");
     }
 
     dealerPlay(game.dealerHand, game.deck);
-    return this.finishGame(game);
+    return this.finishGame(game, devMode);
   }
 
   async getState(userId: string): Promise<BlackjackState | null> {
