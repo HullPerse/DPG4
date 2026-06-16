@@ -24,7 +24,6 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
-import ImageComponent from "@/components/shared/image.component";
 import { useDevModeStore } from "../hooks/dev.store";
 
 function pause(ms: number) {
@@ -327,14 +326,6 @@ function DiceTab() {
               При одинаковых комбинациях сравнивается число (у пары и тройки).
               Если всё равно - ничья.
             </p>
-          </div>
-
-          <div className="p-2 flex flex-col w-full items-center justify-center">
-            <ImageComponent
-              src="diceRules.png"
-              alt="dice rules"
-              className="w-120 h-120 border-2 border-highlight-high"
-            />
           </div>
         </details>
       </section>

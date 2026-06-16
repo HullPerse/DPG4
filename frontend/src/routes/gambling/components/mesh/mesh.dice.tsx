@@ -2,10 +2,7 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
-  LineBasicMaterial,
-  EdgesGeometry,
-  BoxGeometry,
-  type CanvasTexture,
+  CanvasTexture,
 } from "three";
 import {
   REST_Y,
@@ -29,8 +26,6 @@ import { DiceSim } from "@/types/gamble";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
-const crackGeo = new EdgesGeometry(new BoxGeometry(1.65, 1.65, 1.65));
-
 function DiceHalf({
   value,
   isLeft,
@@ -45,8 +40,8 @@ function DiceHalf({
       const tex = createDiceFaceTexture(fv);
       return new MeshStandardMaterial({
         map: tex,
-        roughness: 0.35,
-        metalness: 0.08,
+        roughness: 0.5,
+        metalness: 0.05,
       });
     });
     const innerMat = new MeshStandardMaterial({
@@ -95,7 +90,6 @@ function DiceMesh({
   const fullCubeRef = useRef<Mesh>(null);
   const leftHalfRef = useRef<Group>(null);
   const rightHalfRef = useRef<Group>(null);
-  const crackRef = useRef<Group>(null);
   const simRef = useRef<DiceSim>(createIdleSim(index, rowZ));
   const settledRef = useRef(false);
   const lastThrowKey = useRef(0);
@@ -113,23 +107,13 @@ function DiceMesh({
       const tex = createDiceFaceTexture(faceValue);
       return new MeshStandardMaterial({
         map: tex,
-        roughness: 0.35,
-        metalness: 0.08,
+        roughness: 0.5,
+        metalness: 0.05,
       });
     });
   }, []);
 
   const innerTexture = useMemo(() => createInnerFaceTexture(), []);
-
-  const crackMat = useMemo(
-    () =>
-      new LineBasicMaterial({
-        color: 0xff6600,
-        transparent: true,
-        opacity: 0.6,
-      }),
-    [],
-  );
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -157,7 +141,6 @@ function DiceMesh({
       if (fullCubeRef.current) fullCubeRef.current.visible = true;
       if (leftHalfRef.current) leftHalfRef.current.visible = false;
       if (rightHalfRef.current) rightHalfRef.current.visible = false;
-      if (crackRef.current) crackRef.current.visible = false;
       return;
     }
 
@@ -171,7 +154,6 @@ function DiceMesh({
       if (fullCubeRef.current) fullCubeRef.current.visible = true;
       if (leftHalfRef.current) leftHalfRef.current.visible = false;
       if (rightHalfRef.current) rightHalfRef.current.visible = false;
-      if (crackRef.current) crackRef.current.visible = isBrokenDie;
 
       simRef.current = isBrokenDie
         ? createBrokenThrowSim(index, now, homeZRef.current)
@@ -187,7 +169,6 @@ function DiceMesh({
     if (sim.phase === "idle") {
       group.position.set(sim.pos.x, sim.pos.y, sim.pos.z);
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
-      if (crackRef.current) crackRef.current.visible = false;
       return;
     }
 
@@ -214,21 +195,21 @@ function DiceMesh({
         sim.pos.y = REST_Y;
         sim.bounceCount += 1;
 
-        const restitution = sim.bounceCount > 2 ? 0.18 : 0.42;
+        const restitution = sim.bounceCount > 3 ? 0.15 : 0.38;
         sim.vel.y = Math.abs(sim.vel.y) * restitution;
-        sim.vel.x += (Math.random() - 0.5) * 0.7;
-        sim.vel.z += (Math.random() - 0.5) * 0.6;
+        sim.vel.x += (Math.random() - 0.5) * 0.6;
+        sim.vel.z += (Math.random() - 0.5) * 0.5;
 
-        sim.angVel.x += (Math.random() - 0.5) * 1;
-        sim.angVel.y += (Math.random() - 0.5) * 1;
-        sim.angVel.z += (Math.random() - 0.5) * 1;
+        sim.angVel.x += (Math.random() - 0.5) * 0.8;
+        sim.angVel.y += (Math.random() - 0.5) * 0.8;
+        sim.angVel.z += (Math.random() - 0.5) * 0.8;
 
-        if (sim.bounceCount > 1) {
-          sim.vel.x *= 0.55;
-          sim.vel.z *= 0.55;
-          sim.angVel.x *= 0.45;
-          sim.angVel.y *= 0.45;
-          sim.angVel.z *= 0.45;
+        if (sim.bounceCount > 2) {
+          sim.vel.x *= 0.5;
+          sim.vel.z *= 0.5;
+          sim.angVel.x *= 0.4;
+          sim.angVel.y *= 0.4;
+          sim.angVel.z *= 0.4;
         }
       }
 
@@ -248,7 +229,7 @@ function DiceMesh({
       if (
         onTable &&
         airTime >= MIN_AIR_TIME &&
-        ((speed < 0.95 && angSpeed < 1.8) || airTime > MAX_AIR_TIME)
+        ((speed < 0.7 && angSpeed < 1.5) || airTime > MAX_AIR_TIME)
       ) {
         sim.phase = "settle";
         sim.settleStart = now;
@@ -262,11 +243,8 @@ function DiceMesh({
       if (isBrokenDie) {
         const bounceGlow = Math.min(sim.bounceCount / 5, 1);
         for (const mat of materials) {
-          mat.emissive = { r: 1, g: 0.27, b: 0 } as any;
-          mat.emissiveIntensity = 0.15 + bounceGlow * 0.5;
-        }
-        if (crackMat) {
-          crackMat.opacity = 0.3 + bounceGlow * 0.5;
+          mat.emissive = { r: 1, g: 0.2, b: 0 } as any;
+          mat.emissiveIntensity = 0.1 + bounceGlow * 0.4;
         }
       }
       return;
@@ -274,16 +252,16 @@ function DiceMesh({
 
     if (sim.phase === "settle") {
       const [tx, ty, tz] = TARGET_ROTATION[targetValue];
-      const t = Math.min((now - sim.settleStart) * 2.2, 1);
+      const t = Math.min((now - sim.settleStart) * 2.0, 1);
       const ease = 1 - Math.pow(1 - t, 3);
 
-      sim.pos.x += (sim.homeX - sim.pos.x) * ease * 0.18;
-      sim.pos.y += (REST_Y - sim.pos.y) * ease * 0.18;
-      sim.pos.z += (sim.homeZ - sim.pos.z) * ease * 0.18;
+      sim.pos.x += (sim.homeX - sim.pos.x) * ease * 0.15;
+      sim.pos.y += (REST_Y - sim.pos.y) * ease * 0.15;
+      sim.pos.z += (sim.homeZ - sim.pos.z) * ease * 0.15;
 
-      sim.rot.x = lerpAngle(sim.rot.x, tx, ease * 0.22);
-      sim.rot.y = lerpAngle(sim.rot.y, ty, ease * 0.22);
-      sim.rot.z = lerpAngle(sim.rot.z, tz, ease * 0.22);
+      sim.rot.x = lerpAngle(sim.rot.x, tx, ease * 0.2);
+      sim.rot.y = lerpAngle(sim.rot.y, ty, ease * 0.2);
+      sim.rot.z = lerpAngle(sim.rot.z, tz, ease * 0.2);
 
       group.position.set(sim.pos.x, sim.pos.y, sim.pos.z);
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
@@ -291,10 +269,7 @@ function DiceMesh({
       if (isBrokenDie) {
         const fadeOut = 1 - t;
         for (const mat of materials) {
-          mat.emissiveIntensity = fadeOut * 0.6;
-        }
-        if (crackMat) {
-          crackMat.opacity = fadeOut * 0.8;
+          mat.emissiveIntensity = fadeOut * 0.5;
         }
       }
 
@@ -311,10 +286,6 @@ function DiceMesh({
         for (const mat of materials) {
           mat.emissiveIntensity = 0;
         }
-        if (crackMat) {
-          crackMat.opacity = 0;
-        }
-        if (crackRef.current) crackRef.current.visible = false;
 
         if (!splitStartedRef.current) {
           splitStartedRef.current = true;
@@ -393,12 +364,6 @@ function DiceMesh({
           innerTexture={innerTexture}
         />
       </group>
-
-      {isBrokenDie && (
-        <group ref={crackRef}>
-          <lineSegments geometry={crackGeo} material={crackMat} />
-        </group>
-      )}
     </group>
   );
 }
