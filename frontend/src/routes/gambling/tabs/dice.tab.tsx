@@ -62,6 +62,7 @@ function DiceTab() {
   const [playerBrokenDieIndex, setPlayerBrokenDieIndex] = useState<
     number | undefined
   >();
+  const [brokenFlash, setBrokenFlash] = useState(false);
 
   const rollCoordinatorRef = useRef(new DiceRollCoordinator());
   const dealerKeyRef = useRef(0);
@@ -73,6 +74,16 @@ function DiceTab() {
 
   useEffect(() => {
     return () => rollCoordinatorRef.current.cancel();
+  }, []);
+
+  const playBreakImpact = useCallback(() => {
+    try {
+      const audio = new Audio("/audio/zawa.wav");
+      audio.volume = 0.3;
+      audio.play();
+    } catch {}
+    setBrokenFlash(true);
+    setTimeout(() => setBrokenFlash(false), 400);
   }, []);
 
   const isRoundActive = (round: number) => round === roundIdRef.current;
@@ -94,6 +105,10 @@ function DiceTab() {
       row === "dealer" ? dealerKeyRef.current + 1 : playerKeyRef.current + 1;
 
     const settledPromise = rollCoordinatorRef.current.waitFor(row, nextKey);
+
+    if (brokenInfo?.broken) {
+      playBreakImpact();
+    }
 
     flushSync(() => {
       if (row === "dealer") {
@@ -199,6 +214,7 @@ function DiceTab() {
     setDealerBrokenDieIndex(undefined);
     setPlayerBroken(false);
     setPlayerBrokenDieIndex(undefined);
+    setBrokenFlash(false);
   };
 
   const gameMutation = useMutation({
@@ -243,6 +259,10 @@ function DiceTab() {
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
+      {brokenFlash && (
+        <div className="fixed inset-0 z-40 pointer-events-none" style={{ background: 'rgba(255, 120, 0, 0.08)', transition: 'opacity 0.3s' }} />
+      )}
+
       <BalanceDisplay balance={balance} ticketBalance={displayBalance} />
 
       <BidSelector

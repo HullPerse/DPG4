@@ -7,6 +7,7 @@ import {
 import {
   REST_Y,
   GRAVITY,
+  BROKEN_GRAVITY,
   MIN_AIR_TIME,
   MAX_AIR_TIME,
   MIN_BOUNCES_BEFORE_SETTLE,
@@ -173,7 +174,7 @@ function DiceMesh({
     }
 
     if (sim.phase === "flying") {
-      sim.vel.y -= GRAVITY * dt;
+      sim.vel.y -= (isBrokenDie ? BROKEN_GRAVITY : GRAVITY) * dt;
       sim.pos.x += sim.vel.x * dt;
       sim.pos.y += sim.vel.y * dt;
       sim.pos.z += sim.vel.z * dt;
@@ -241,10 +242,12 @@ function DiceMesh({
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
 
       if (isBrokenDie) {
+        const pulse = 0.5 + 0.5 * Math.sin(now * 12);
         const bounceGlow = Math.min(sim.bounceCount / 5, 1);
+        const intensity = 0.2 + bounceGlow * 0.6 + pulse * 0.4;
         for (const mat of materials) {
-          mat.emissive = { r: 1, g: 0.2, b: 0 } as any;
-          mat.emissiveIntensity = 0.1 + bounceGlow * 0.4;
+          mat.emissive = { r: 1, g: 0.15, b: 0 } as any;
+          mat.emissiveIntensity = intensity;
         }
       }
       return;
@@ -267,9 +270,10 @@ function DiceMesh({
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
 
       if (isBrokenDie) {
+        const pulse = 0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 14);
         const fadeOut = 1 - t;
         for (const mat of materials) {
-          mat.emissiveIntensity = fadeOut * 0.5;
+          mat.emissiveIntensity = fadeOut * (0.3 + pulse * 0.5);
         }
       }
 
@@ -284,7 +288,8 @@ function DiceMesh({
     if (sim.phase === "done") {
       if (isBrokenDie) {
         for (const mat of materials) {
-          mat.emissiveIntensity = 0;
+          mat.emissive = { r: 1, g: 0.15, b: 0 } as any;
+          mat.emissiveIntensity = 0.15;
         }
 
         if (!splitStartedRef.current) {

@@ -3,6 +3,7 @@ import type { DiceSim } from "@/types/gamble";
 
 export const REST_Y = 0.8;
 export const GRAVITY = 18;
+export const BROKEN_GRAVITY = 10;
 export const MIN_AIR_TIME = 1.0;
 export const MAX_AIR_TIME = 7;
 export const MIN_BOUNCES_BEFORE_SETTLE = 3;
@@ -11,9 +12,9 @@ export const PLAYER_Z = 1.5;
 export const DICE_SETTLE_HOLD_MS = 700;
 export const DICE_REROLL_PAUSE_MS = 600;
 export const DICE_PLAYER_AUTO_MS = 1500;
-export const BROKEN_SPLIT_DELAY = 0.2;
-export const BROKEN_SPLIT_DURATION = 0.5;
-export const BROKEN_HALF_OFFSET = 1.2;
+export const BROKEN_SPLIT_DELAY = 0.4;
+export const BROKEN_SPLIT_DURATION = 0.9;
+export const BROKEN_HALF_OFFSET = 1.5;
 
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
 
@@ -150,11 +151,37 @@ export function createThrowSim(index: number, now: number, homeZ = 0): DiceSim {
 }
 
 export function createBrokenThrowSim(index: number, now: number, homeZ = 0): DiceSim {
-  const sim = createThrowSim(index, now, homeZ);
-  sim.angVel.x *= 2;
-  sim.angVel.y *= 2;
-  sim.angVel.z *= 2;
-  return sim;
+  const homeX = (index - 1) * 2.4;
+  const spread = (Math.random() - 0.5) * 0.6;
+
+  return {
+    phase: "flying",
+    homeX,
+    homeZ,
+    throwStart: now,
+    settleStart: 0,
+    bounceCount: 0,
+    pos: {
+      x: homeX + spread * 0.3,
+      y: 5.5 + Math.random() * 2.5,
+      z: homeZ - 6 - Math.random() * 2,
+    },
+    vel: {
+      x: (homeX - spread) * 0.25 + (Math.random() - 0.5) * 2.5,
+      y: 7 + Math.random() * 4,
+      z: 7 + Math.random() * 3,
+    },
+    rot: {
+      x: Math.random() * Math.PI * 2,
+      y: Math.random() * Math.PI * 2,
+      z: Math.random() * Math.PI * 2,
+    },
+    angVel: {
+      x: (Math.random() - 0.5) * 30,
+      y: (Math.random() - 0.5) * 30,
+      z: (Math.random() - 0.5) * 30,
+    },
+  };
 }
 
 export function createIdleSim(index: number, homeZ = 0): DiceSim {
