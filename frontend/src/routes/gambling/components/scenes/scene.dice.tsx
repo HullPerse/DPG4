@@ -12,6 +12,10 @@ function DiceScene({
   onDealerSettled,
   onPlayerSettled,
   playerDiceActive,
+  dealerBroken,
+  dealerBrokenDieIndex,
+  playerBroken,
+  playerBrokenDieIndex,
 }: {
   dealerThrowKey: number;
   playerThrowKey: number;
@@ -21,6 +25,10 @@ function DiceScene({
   onPlayerSettled: (index: number, throwKey: number) => void;
   /** Player row only simulates throws after the first player roll */
   playerDiceActive: boolean;
+  dealerBroken?: boolean;
+  dealerBrokenDieIndex?: number;
+  playerBroken?: boolean;
+  playerBrokenDieIndex?: number;
 }) {
   return (
     <Canvas
@@ -53,6 +61,8 @@ function DiceScene({
             throwKey={dealerThrowKey}
             targetValue={dealerValues?.[i] ?? 1}
             onSettled={(idx, key) => onDealerSettled(idx, key)}
+            broken={dealerBroken}
+            brokenDieIndex={dealerBrokenDieIndex}
           />
         ))}
 
@@ -66,6 +76,8 @@ function DiceScene({
               enabled
               targetValue={playerValues?.[i] ?? 1}
               onSettled={(idx, key) => onPlayerSettled(idx, key)}
+              broken={playerBroken}
+              brokenDieIndex={playerBrokenDieIndex}
             />
           ))}
       </group>

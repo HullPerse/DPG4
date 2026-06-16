@@ -1,4 +1,12 @@
-import { Group, MeshStandardMaterial } from "three";
+import {
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  LineBasicMaterial,
+  EdgesGeometry,
+  BoxGeometry,
+  type CanvasTexture,
+} from "three";
 import {
   REST_Y,
   GRAVITY,
@@ -8,13 +16,61 @@ import {
   FACE_VALUES,
   TARGET_ROTATION,
   createDiceFaceTexture,
+  createInnerFaceTexture,
   lerpAngle,
   createThrowSim,
+  createBrokenThrowSim,
   createIdleSim,
+  BROKEN_SPLIT_DELAY,
+  BROKEN_SPLIT_DURATION,
+  BROKEN_HALF_OFFSET,
 } from "@/lib/gambling/dice.utils";
 import { DiceSim } from "@/types/gamble";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+
+const crackGeo = new EdgesGeometry(new BoxGeometry(1.65, 1.65, 1.65));
+
+function DiceHalf({
+  value,
+  isLeft,
+  innerTexture,
+}: {
+  value: number;
+  isLeft: boolean;
+  innerTexture: CanvasTexture;
+}) {
+  const materials = useMemo(() => {
+    const normalMats = FACE_VALUES.map((fv) => {
+      const tex = createDiceFaceTexture(fv);
+      return new MeshStandardMaterial({
+        map: tex,
+        roughness: 0.35,
+        metalness: 0.08,
+      });
+    });
+    const innerMat = new MeshStandardMaterial({
+      map: innerTexture,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+    if (isLeft) {
+      normalMats[0] = innerMat;
+    } else {
+      normalMats[1] = innerMat;
+    }
+    return normalMats;
+  }, [value, isLeft, innerTexture]);
+
+  return (
+    <mesh castShadow receiveShadow>
+      <boxGeometry args={[1.6, 0.8, 1.6]} />
+      {materials.map((mat, i) => (
+        <primitive key={i} object={mat} attach={`material-${i}`} />
+      ))}
+    </mesh>
+  );
+}
 
 function DiceMesh({
   index,
@@ -23,20 +79,34 @@ function DiceMesh({
   enabled = true,
   onSettled,
   rowZ = 0,
+  broken,
+  brokenDieIndex,
 }: {
   index: number;
   targetValue: number;
   throwKey: number;
-  /** When false, dice stay parked and ignore throwKey */
   enabled?: boolean;
   onSettled: (index: number, throwKey: number) => void;
   rowZ?: number;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const fullCubeRef = useRef<Mesh>(null);
+  const leftHalfRef = useRef<Group>(null);
+  const rightHalfRef = useRef<Group>(null);
+  const crackRef = useRef<Group>(null);
   const simRef = useRef<DiceSim>(createIdleSim(index, rowZ));
   const settledRef = useRef(false);
   const lastThrowKey = useRef(0);
   const homeZRef = useRef(rowZ);
+
+  const splitStartedRef = useRef(false);
+  const splitTimeRef = useRef(0);
+  const freezeDoneRef = useRef(false);
+  const halfOffset = useRef(0);
+
+  const isBrokenDie = !!(broken && brokenDieIndex === index);
 
   const materials = useMemo(() => {
     return FACE_VALUES.map((faceValue) => {
@@ -48,6 +118,18 @@ function DiceMesh({
       });
     });
   }, []);
+
+  const innerTexture = useMemo(() => createInnerFaceTexture(), []);
+
+  const crackMat = useMemo(
+    () =>
+      new LineBasicMaterial({
+        color: 0xff6600,
+        transparent: true,
+        opacity: 0.6,
+      }),
+    [],
+  );
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -61,16 +143,39 @@ function DiceMesh({
         lastThrowKey.current = throwKey;
         settledRef.current = true;
         simRef.current = createIdleSim(index, homeZRef.current);
-        group.position.set(simRef.current.pos.x, simRef.current.pos.y, simRef.current.pos.z);
-        group.rotation.set(simRef.current.rot.x, simRef.current.rot.y, simRef.current.rot.z);
+        group.position.set(
+          simRef.current.pos.x,
+          simRef.current.pos.y,
+          simRef.current.pos.z,
+        );
+        group.rotation.set(
+          simRef.current.rot.x,
+          simRef.current.rot.y,
+          simRef.current.rot.z,
+        );
       }
+      if (fullCubeRef.current) fullCubeRef.current.visible = true;
+      if (leftHalfRef.current) leftHalfRef.current.visible = false;
+      if (rightHalfRef.current) rightHalfRef.current.visible = false;
+      if (crackRef.current) crackRef.current.visible = false;
       return;
     }
 
     if (throwKey > lastThrowKey.current) {
       lastThrowKey.current = throwKey;
       settledRef.current = false;
-      simRef.current = createThrowSim(index, now, homeZRef.current);
+      splitStartedRef.current = false;
+      freezeDoneRef.current = false;
+      halfOffset.current = 0;
+
+      if (fullCubeRef.current) fullCubeRef.current.visible = true;
+      if (leftHalfRef.current) leftHalfRef.current.visible = false;
+      if (rightHalfRef.current) rightHalfRef.current.visible = false;
+      if (crackRef.current) crackRef.current.visible = isBrokenDie;
+
+      simRef.current = isBrokenDie
+        ? createBrokenThrowSim(index, now, homeZRef.current)
+        : createThrowSim(index, now, homeZRef.current);
     } else if (throwKey < lastThrowKey.current) {
       lastThrowKey.current = throwKey;
       settledRef.current = true;
@@ -82,6 +187,7 @@ function DiceMesh({
     if (sim.phase === "idle") {
       group.position.set(sim.pos.x, sim.pos.y, sim.pos.z);
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
+      if (crackRef.current) crackRef.current.visible = false;
       return;
     }
 
@@ -95,11 +201,14 @@ function DiceMesh({
       sim.rot.y += sim.angVel.y * dt;
       sim.rot.z += sim.angVel.z * dt;
 
-      sim.vel.x *= 1 - 0.4 * dt;
-      sim.vel.z *= 1 - 0.35 * dt;
-      sim.angVel.x *= 1 - 0.8 * dt;
-      sim.angVel.y *= 1 - 0.8 * dt;
-      sim.angVel.z *= 1 - 0.8 * dt;
+      const damp = isBrokenDie ? 0.55 : 0.4;
+      const dampZ = isBrokenDie ? 0.5 : 0.35;
+      const angDamp = isBrokenDie ? 0.65 : 0.8;
+      sim.vel.x *= 1 - damp * dt;
+      sim.vel.z *= 1 - dampZ * dt;
+      sim.angVel.x *= 1 - angDamp * dt;
+      sim.angVel.y *= 1 - angDamp * dt;
+      sim.angVel.z *= 1 - angDamp * dt;
 
       if (sim.pos.y <= REST_Y) {
         sim.pos.y = REST_Y;
@@ -149,6 +258,17 @@ function DiceMesh({
 
       group.position.set(sim.pos.x, sim.pos.y, sim.pos.z);
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
+
+      if (isBrokenDie) {
+        const bounceGlow = Math.min(sim.bounceCount / 5, 1);
+        for (const mat of materials) {
+          mat.emissive = { r: 1, g: 0.27, b: 0 } as any;
+          mat.emissiveIntensity = 0.15 + bounceGlow * 0.5;
+        }
+        if (crackMat) {
+          crackMat.opacity = 0.3 + bounceGlow * 0.5;
+        }
+      }
       return;
     }
 
@@ -168,6 +288,16 @@ function DiceMesh({
       group.position.set(sim.pos.x, sim.pos.y, sim.pos.z);
       group.rotation.set(sim.rot.x, sim.rot.y, sim.rot.z);
 
+      if (isBrokenDie) {
+        const fadeOut = 1 - t;
+        for (const mat of materials) {
+          mat.emissiveIntensity = fadeOut * 0.6;
+        }
+        if (crackMat) {
+          crackMat.opacity = fadeOut * 0.8;
+        }
+      }
+
       if (t >= 1 && !settledRef.current) {
         settledRef.current = true;
         sim.phase = "done";
@@ -177,20 +307,98 @@ function DiceMesh({
     }
 
     if (sim.phase === "done") {
-      const [tx, ty, tz] = TARGET_ROTATION[targetValue];
-      group.position.set(sim.homeX, REST_Y, sim.homeZ);
-      group.rotation.set(tx, ty, tz);
+      if (isBrokenDie) {
+        for (const mat of materials) {
+          mat.emissiveIntensity = 0;
+        }
+        if (crackMat) {
+          crackMat.opacity = 0;
+        }
+        if (crackRef.current) crackRef.current.visible = false;
+
+        if (!splitStartedRef.current) {
+          splitStartedRef.current = true;
+          splitTimeRef.current = now;
+        }
+
+        const elapsed = now - splitTimeRef.current;
+
+        if (elapsed < BROKEN_SPLIT_DELAY) {
+          if (fullCubeRef.current) fullCubeRef.current.visible = true;
+          if (leftHalfRef.current) leftHalfRef.current.visible = false;
+          if (rightHalfRef.current) rightHalfRef.current.visible = false;
+          const [ftx, fty, ftz] = TARGET_ROTATION[targetValue];
+          group.position.set(sim.homeX, REST_Y, sim.homeZ);
+          group.rotation.set(ftx, fty, ftz);
+          return;
+        }
+
+        if (!freezeDoneRef.current) {
+          freezeDoneRef.current = true;
+          if (fullCubeRef.current) fullCubeRef.current.visible = false;
+          if (leftHalfRef.current) leftHalfRef.current.visible = true;
+          if (rightHalfRef.current) rightHalfRef.current.visible = true;
+        }
+
+        const splitElapsed = elapsed - BROKEN_SPLIT_DELAY;
+        const s = Math.min(splitElapsed / BROKEN_SPLIT_DURATION, 1);
+        const ease = 1 - Math.pow(1 - s, 3);
+        const MIN_SPREAD = 0.3;
+        halfOffset.current = MIN_SPREAD + (BROKEN_HALF_OFFSET - MIN_SPREAD) * ease;
+
+        const [ltx, lty, ltz] = TARGET_ROTATION[targetValue];
+        const [rtx, rty, rtz] = TARGET_ROTATION[7 - targetValue];
+
+        if (leftHalfRef.current) {
+          leftHalfRef.current.position.set(-halfOffset.current - 0.8, 0, 0);
+          leftHalfRef.current.rotation.set(ltx, lty, ltz);
+        }
+        if (rightHalfRef.current) {
+          rightHalfRef.current.position.set(halfOffset.current - 0.8, 0, 0);
+          rightHalfRef.current.rotation.set(rtx, rty, rtz);
+        }
+
+        const [ftx, fty, ftz] = TARGET_ROTATION[targetValue];
+        group.position.set(sim.homeX, REST_Y, sim.homeZ);
+        group.rotation.set(ftx, fty, ftz);
+      } else {
+        const [tx, ty, tz] = TARGET_ROTATION[targetValue];
+        group.position.set(sim.homeX, REST_Y, sim.homeZ);
+        group.rotation.set(tx, ty, tz);
+      }
     }
   });
 
   return (
     <group ref={groupRef}>
-      <mesh castShadow receiveShadow>
+      <mesh ref={fullCubeRef} castShadow receiveShadow>
         <boxGeometry args={[1.6, 1.6, 1.6]} />
         {materials.map((material, i) => (
           <primitive key={i} object={material} attach={`material-${i}`} />
         ))}
       </mesh>
+
+      <group ref={leftHalfRef} visible={false}>
+        <DiceHalf
+          value={targetValue}
+          isLeft={true}
+          innerTexture={innerTexture}
+        />
+      </group>
+
+      <group ref={rightHalfRef} visible={false}>
+        <DiceHalf
+          value={7 - targetValue}
+          isLeft={false}
+          innerTexture={innerTexture}
+        />
+      </group>
+
+      {isBrokenDie && (
+        <group ref={crackRef}>
+          <lineSegments geometry={crackGeo} material={crackMat} />
+        </group>
+      )}
     </group>
   );
 }

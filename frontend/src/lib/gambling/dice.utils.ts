@@ -15,6 +15,12 @@ export const DICE_SETTLE_HOLD_MS = 550;
 export const DICE_REROLL_PAUSE_MS = 450;
 /** Delay before auto player roll after dealer phase fully done */
 export const DICE_PLAYER_AUTO_MS = 1100;
+/** Freeze time before split animation */
+export const BROKEN_SPLIT_DELAY = 0.2;
+/** Duration of half-cube split animation */
+export const BROKEN_SPLIT_DURATION = 0.5;
+/** Offset of each half from center (world units) */
+export const BROKEN_HALF_OFFSET = 1.2;
 
 // +x, -x, +y, -y, +z, -z
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
@@ -27,6 +33,42 @@ export const TARGET_ROTATION: Record<number, [number, number, number]> = {
   5: [Math.PI / 2, 0, 0],
   6: [Math.PI, 0, 0],
 };
+
+export function createInnerFaceTexture(): CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(0, 0, 256, 256);
+
+  for (let i = 0; i < 300; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    const r = 2 + Math.random() * 4;
+    const bright = 25 + Math.floor(Math.random() * 30);
+    ctx.fillStyle = `rgb(${bright + 10}, ${bright}, ${bright - 5})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 20; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    ctx.strokeStyle = `rgba(60, 50, 40, 0.3)`;
+    ctx.lineWidth = 1 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + (Math.random() - 0.5) * 40, y + (Math.random() - 0.5) * 40);
+    ctx.stroke();
+  }
+
+  const texture = new CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  return texture;
+}
 
 export function createDiceFaceTexture(value: number): CanvasTexture {
   const canvas = document.createElement("canvas");
@@ -126,6 +168,14 @@ export function createThrowSim(index: number, now: number, homeZ = 0): DiceSim {
       z: (Math.random() - 0.5) * 16,
     },
   };
+}
+
+export function createBrokenThrowSim(index: number, now: number, homeZ = 0): DiceSim {
+  const sim = createThrowSim(index, now, homeZ);
+  sim.angVel.x *= 2;
+  sim.angVel.y *= 2;
+  sim.angVel.z *= 2;
+  return sim;
 }
 
 export function createIdleSim(index: number, homeZ = 0): DiceSim {

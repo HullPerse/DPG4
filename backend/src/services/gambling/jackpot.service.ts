@@ -10,6 +10,11 @@ import type { UserService } from "../user.service";
 import { GAMBLING_BAN_THRESHOLD } from "../../lib/gambling.constants";
 import { Db } from "@/types";
 
+export interface JackpotDevOverrides {
+  devForceWin?: boolean;
+  devShowWinningNumber?: boolean;
+}
+
 const JACKPOT_COST = 10;
 const JACKPOT_RANGE = 1000;
 const JACKPOT_PERCENT = 0.05;
@@ -91,18 +96,20 @@ export class JackpotService {
     broadcast("jackpot", "update", undefined);
   }
 
-  async play(userId: string) {
-    const [userRow] = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .limit(1);
+  async play(userId: string, devMode?: boolean, devOverrides?: JackpotDevOverrides) {
+    if (!devMode) {
+      const [userRow] = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
+        .limit(1);
 
-    if (!userRow) return { error: "User not found" };
-    if (userRow.tickets < JACKPOT_COST) {
-      return { error: "Not enough tickets" };
+      if (!userRow) return { error: "User not found" };
+      if (userRow.tickets < JACKPOT_COST) {
+        return { error: "Not enough tickets" };
+      }
+      if (userRow.gamblingBanned) return { error: "Banned from gambling" };
     }
-    if (userRow.gamblingBanned) return { error: "Banned from gambling" };
 
     let [jackpotRow] = await this.db.select().from(schema.jackpot).limit(1);
 
@@ -119,65 +126,85 @@ export class JackpotService {
 
     const chosen = Math.floor(Math.random() * JACKPOT_RANGE) + 1;
     const winningNumber = refreshed.winningNumber;
-    const isWin = chosen === winningNumber;
+    const isWin = devOverrides?.devForceWin || chosen === winningNumber;
 
-    const newTickets = userRow.tickets - JACKPOT_COST;
+    if (!devMode) {
+      const [userRow] = await this.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
+        .limit(1);
 
-    await this.db
-      .update(schema.users)
-      .set({ tickets: newTickets, updated: ts })
-      .where(eq(schema.users.id, userId));
-
-    await updateTicketItem(this.db, userId, newTickets);
-
-    if (isWin) {
-      const winAmount = refreshed.pool;
-      const totalTickets = newTickets + winAmount;
+      const newTickets = userRow!.tickets - JACKPOT_COST;
 
       await this.db
         .update(schema.users)
-        .set({
-          tickets: totalTickets,
-          gamblingWinnings: userRow.gamblingWinnings + winAmount,
-          updated: ts,
-        })
+        .set({ tickets: newTickets, updated: ts })
         .where(eq(schema.users.id, userId));
 
-      await updateTicketItem(this.db, userId, totalTickets);
+      await updateTicketItem(this.db, userId, newTickets);
 
-      const newWinningNumber = generateWinningNumber();
-      const today = todayDateString();
+      if (isWin) {
+        const winAmount = refreshed.pool;
+        const totalTickets = newTickets + winAmount;
 
-      await this.db
-        .update(schema.jackpot)
-        .set({
-          pool: 0,
-          winningNumber: newWinningNumber,
-          winningNumberDate: today,
-          lastWinnerId: userId,
-          lastWinnerUsername: userRow.username,
-          lastWinAmount: winAmount,
-          lastWinDate: ts,
-          updated: ts,
-        })
-        .where(eq(schema.jackpot.id, refreshed.id));
-
-      broadcast("jackpot", "update", undefined);
-
-      if (userRow.gamblingWinnings + winAmount >= GAMBLING_BAN_THRESHOLD) {
         await this.db
           .update(schema.users)
           .set({
-            gamblingBanned: true,
+            tickets: totalTickets,
+            gamblingWinnings: userRow!.gamblingWinnings + winAmount,
             updated: ts,
           })
           .where(eq(schema.users.id, userId));
 
-        logger.info(
-          userRow.username,
-          `gambling ban triggered (jackpot win ${winAmount})`,
-          userId,
-        );
+        await updateTicketItem(this.db, userId, totalTickets);
+
+        const newWinningNumber = generateWinningNumber();
+        const today = todayDateString();
+
+        await this.db
+          .update(schema.jackpot)
+          .set({
+            pool: 0,
+            winningNumber: newWinningNumber,
+            winningNumberDate: today,
+            lastWinnerId: userId,
+            lastWinnerUsername: userRow!.username,
+            lastWinAmount: winAmount,
+            lastWinDate: ts,
+            updated: ts,
+          })
+          .where(eq(schema.jackpot.id, refreshed.id));
+
+        broadcast("jackpot", "update", undefined);
+
+        if (userRow!.gamblingWinnings + winAmount >= GAMBLING_BAN_THRESHOLD) {
+          await this.db
+            .update(schema.users)
+            .set({
+              gamblingBanned: true,
+              updated: ts,
+            })
+            .where(eq(schema.users.id, userId));
+
+          logger.info(
+            userRow!.username,
+            `gambling ban triggered (jackpot win ${winAmount})`,
+            userId,
+          );
+
+          return {
+            win: true,
+            chosen,
+            winningNumber,
+            prize: winAmount,
+            newBalance: totalTickets,
+            banned: true,
+            error: null as string | null,
+          };
+        }
+
+        logger.info(userRow!.username, `jackpot win ${winAmount} tickets`, userId);
 
         return {
           win: true,
@@ -185,32 +212,31 @@ export class JackpotService {
           winningNumber,
           prize: winAmount,
           newBalance: totalTickets,
-          banned: true,
+          banned: false,
           error: null as string | null,
         };
       }
 
-      logger.info(userRow.username, `jackpot win ${winAmount} tickets`, userId);
+      broadcast("jackpot", "update", undefined);
 
       return {
-        win: true,
+        win: false,
         chosen,
         winningNumber,
-        prize: winAmount,
-        newBalance: totalTickets,
+        prize: 0,
+        newBalance: newTickets,
         banned: false,
         error: null as string | null,
       };
     }
 
-    broadcast("jackpot", "update", undefined);
-
+    // dev mode: no cost, no history
     return {
-      win: false,
+      win: isWin,
       chosen,
-      winningNumber,
-      prize: 0,
-      newBalance: newTickets,
+      winningNumber: devOverrides?.devShowWinningNumber ? winningNumber : winningNumber,
+      prize: isWin ? refreshed.pool : 0,
+      newBalance: 0,
       banned: false,
       error: null as string | null,
     };

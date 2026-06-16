@@ -26,6 +26,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import { useDevModeStore } from "../hooks/dev.store";
 
 const IDLE_STATE: RocketState = {
   phase: "idle",
@@ -61,7 +62,10 @@ function RocketTab() {
 
   const [bid, setBid] = useState<number>(3);
   const [history, setHistory] = useState<RocketHistoryEntry[]>([]);
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isRocketDev = useDevModeStore((s) => s.isActive("rocket"));
   const [flightStart, setFlightStart] = useState<number | null>(null);
+  const devOverridesRef = useRef<Record<string, unknown>>({});
   const [currentMult, setCurrentMult] = useState(1);
   const [result, setResult] = useState<RocketUiResult | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -150,7 +154,7 @@ function RocketTab() {
       pollInFlightRef.current = true;
 
       try {
-        const polled = await pollRocket();
+        const polled = await pollRocket(devOverridesRef.current);
         if (gen !== pollGenRef.current) return;
 
         setGameState((prev) => {
@@ -205,7 +209,9 @@ function RocketTab() {
   useEffect(() => {
     if (!user?.id) return;
 
-    pollRocket()
+    const overrides = getOverrides("rocket");
+    devOverridesRef.current = overrides;
+    pollRocket(overrides)
       .then((state) => {
         const local = gameStateRef.current.phase;
         if (local === "crashed" || local === "cashed") return;
@@ -228,7 +234,11 @@ function RocketTab() {
   }, [user?.id, startPolling, applyRoundEnd, resetToIdle]);
 
   const launchMutation = useMutation({
-    mutationFn: () => launchRocket(bid),
+    mutationFn: () => {
+      const overrides = getOverrides("rocket");
+      devOverridesRef.current = overrides;
+      return launchRocket(bid, overrides);
+    },
     onSuccess: (state) => {
       roundEndedRef.current = false;
       setResult(null);
@@ -244,7 +254,7 @@ function RocketTab() {
 
     try {
       stopPolling();
-      const state = await cashoutRocket();
+      const state = await cashoutRocket(devOverridesRef.current);
       applyRoundEnd(state);
       useUserStore.setState({ user: { ...user, tickets: state.balance } });
       if (state.banned) setGamblingBanned(true);
@@ -279,7 +289,7 @@ function RocketTab() {
     ticketBalance >= bid &&
     !roundActive &&
     !roundEnded;
-  const canAffordBid = ticketBalance >= bid;
+  const canAffordBid = isRocketDev || ticketBalance >= bid;
 
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
@@ -347,13 +357,11 @@ function RocketTab() {
             disabled={!canLaunch}
             onClick={() => launchMutation.mutate()}
           >
-            {gamblingBanned ? (
-              "Вы забанены"
-            ) : !canAffordBid ? (
-              "Недостаточно тикетов"
-            ) : (
-              `Запустить крысу (${bid} тикетов)`
-            )}
+            {gamblingBanned
+              ? "Вы забанены"
+              : !canAffordBid
+                ? "Недостаточно тикетов"
+                : `Запустить крысу (${bid} тикетов)`}
           </Button>
         )}
 

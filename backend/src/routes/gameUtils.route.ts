@@ -60,16 +60,18 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/dice-roll",
-    async ({ body, set, diceService, user }) => {
+    async ({ body, set, headers, diceService, user }) => {
       try {
         const uid = user!.sub;
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devOverrides = body as any;
         if (body.bid !== undefined) {
-          return await diceService.rollDealer(uid, body.bid);
+          return await diceService.rollDealer(uid, body.bid, devMode, devOverrides);
         }
         if (diceService.getActiveGame(uid)?.phase === "dealer") {
-          return await diceService.rerollDealer(uid);
+          return await diceService.rerollDealer(uid, devMode, devOverrides);
         }
-        return await diceService.rollPlayer(uid);
+        return await diceService.rollPlayer(uid, devMode, devOverrides);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -81,7 +83,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
         bid: t.Optional(
           t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
         ),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary:
@@ -102,9 +104,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-deal",
-    async ({ body, set, blackjackService, user }) => {
+    async ({ body, set, headers, blackjackService, user }) => {
       try {
-        return await blackjackService.deal(user!.sub, body.bid);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await blackjackService.deal(user!.sub, body.bid, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -117,7 +120,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
           minimum: GAMBLING_MIN_BET,
           maximum: GAMBLING_MAX_BET,
         }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Deal blackjack hand",
@@ -126,9 +129,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/blackjack-hit",
-    async ({ set, blackjackService, user }) => {
+    async ({ body, set, headers, blackjackService, user }) => {
       try {
-        return await blackjackService.hit(user!.sub);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await blackjackService.hit(user!.sub, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -136,15 +140,16 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      body: t.Object({}),
+      body: t.Object({}, { additionalProperties: true }),
       detail: { tags: ["utils"], summary: "Hit in blackjack" },
     },
   )
   .post(
     "/blackjack-stand",
-    async ({ set, blackjackService, user }) => {
+    async ({ body, set, headers, blackjackService, user }) => {
       try {
-        return await blackjackService.stand(user!.sub);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await blackjackService.stand(user!.sub, devMode);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -152,7 +157,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      body: t.Object({}),
+      body: t.Object({}, { additionalProperties: true }),
       detail: { tags: ["utils"], summary: "Stand in blackjack" },
     },
   )
@@ -215,9 +220,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-launch",
-    async ({ body, set, rocketService, user }) => {
+    async ({ body, set, headers, rocketService, user }) => {
       try {
-        return await rocketService.launch(user!.sub, body.bid);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await rocketService.launch(user!.sub, body.bid, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -230,7 +236,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
           minimum: GAMBLING_MIN_BET,
           maximum: GAMBLING_MAX_BET,
         }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Launch a rocket round - generates crash point",
@@ -239,9 +245,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-cashout",
-    async ({ set, rocketService, user }) => {
+    async ({ body, set, headers, rocketService, user }) => {
       try {
-        return await rocketService.cashout(user!.sub);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await rocketService.cashout(user!.sub, devMode);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -249,7 +256,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      body: t.Object({}),
+      body: t.Object({}, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Cash out rocket - collect winnings at current multiplier",
@@ -258,9 +265,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/rocket-poll",
-    async ({ set, rocketService, user }) => {
+    async ({ body, set, headers, rocketService, user }) => {
       try {
-        return await rocketService.poll(user!.sub);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await rocketService.poll(user!.sub, devMode);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -268,7 +276,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      body: t.Object({}),
+      body: t.Object({}, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Poll current rocket state (multiplier, crash detection)",
@@ -319,9 +327,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-drop",
-    async ({ body, set, pachinkoService, user }) => {
+    async ({ body, set, headers, pachinkoService, user }) => {
       try {
-        return await pachinkoService.drop(user!.sub, body.bid, body.ratAmount);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await pachinkoService.drop(user!.sub, body.bid, body.ratAmount, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -335,7 +344,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
           maximum: GAMBLING_MAX_BET,
         }),
         ratAmount: t.Integer({ minimum: 1, maximum: 5 }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Drop pachinko ball(s) - deducts bid * ratAmount",
@@ -344,9 +353,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/pachinko-settle",
-    async ({ body, set, pachinkoService, user }) => {
+    async ({ body, set, headers, pachinkoService, user }) => {
       try {
-        return await pachinkoService.settle(user!.sub, body.slotIndexes);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await pachinkoService.settle(user!.sub, body.slotIndexes, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -359,7 +369,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
           minItems: 1,
           maxItems: 5,
         }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Settle pachinko drop - payout from slot indexes (one per rat)",
@@ -417,9 +427,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/mines-start",
-    async ({ body, set, minesService, user }) => {
+    async ({ body, set, headers, minesService, user }) => {
       try {
-        return await minesService.start(user!.sub, body.bid, body.mineCount);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await minesService.start(user!.sub, body.bid, body.mineCount, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -430,7 +441,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       body: t.Object({
         bid: t.Integer({ minimum: GAMBLING_MIN_BET, maximum: GAMBLING_MAX_BET }),
         mineCount: t.Integer({ minimum: 1, maximum: 10 }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Start a mines game - deducts bid, reveals initial state",
@@ -439,9 +450,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/mines-reveal",
-    async ({ body, set, minesService, user }) => {
+    async ({ body, set, headers, minesService, user }) => {
       try {
-        return await minesService.reveal(user!.sub, body.x, body.y);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await minesService.reveal(user!.sub, body.x, body.y, devMode, body as any);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -452,7 +464,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
       body: t.Object({
         x: t.Integer({ minimum: 0, maximum: 4 }),
         y: t.Integer({ minimum: 0, maximum: 4 }),
-      }),
+      }, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Reveal a tile in mines game",
@@ -461,9 +473,10 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
   )
   .post(
     "/mines-cashout",
-    async ({ set, minesService, user }) => {
+    async ({ body, set, headers, minesService, user }) => {
       try {
-        return await minesService.cashout(user!.sub);
+        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        return await minesService.cashout(user!.sub, devMode);
       } catch (err) {
         set.status = 400;
         return { error: (err as Error).message };
@@ -471,7 +484,7 @@ export const gameUtilsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      body: t.Object({}),
+      body: t.Object({}, { additionalProperties: true }),
       detail: {
         tags: ["utils"],
         summary: "Cash out current mines winnings",

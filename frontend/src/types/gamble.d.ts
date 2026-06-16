@@ -27,6 +27,8 @@ export interface DiceDealerResult {
   values: [number, number, number];
   reroll?: boolean;
   handLabel?: string;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }
 
 export interface DiceGameResult {
@@ -38,6 +40,8 @@ export interface DiceGameResult {
   balance: number;
   banned: boolean;
   reroll?: boolean;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }
 
 export type CardSuit = "hearts" | "diamonds" | "clubs" | "spades";

@@ -49,6 +49,13 @@ export interface BlackjackState {
   result: BlackjackResult | null;
 }
 
+export interface HandInfo {
+  rank: 5 | 4 | 3 | 2 | 1 | 0;
+  mult: number;
+  kicker?: number;
+  label: string;
+}
+
 export interface DiceResult {
   payout: number;
   label: string;
@@ -57,11 +64,14 @@ export interface DiceResult {
 
 export interface ActiveDiceGame {
   dealerValues: [number, number, number];
+  dealerHandInfo: HandInfo;
   phase: "dealer" | "player";
   bid: number;
   userId: string;
   dealerRerolls: number;
   playerRerolls: number;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }
 
 export interface DiceRollPhaseResult {
@@ -69,6 +79,8 @@ export interface DiceRollPhaseResult {
   values: [number, number, number];
   reroll?: boolean;
   handLabel?: string;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }
 
 export interface DiceGameResult {
@@ -80,6 +92,8 @@ export interface DiceGameResult {
   balance: number;
   banned: boolean;
   reroll?: boolean;
+  broken?: boolean;
+  brokenDieIndex?: number;
 }
 
 export type RocketPhase = "idle" | "launching" | "flying" | "crashed" | "cashed";

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button.component";
 import { ChevronLeft, Trophy, BarChart3 } from "lucide-react";
 import { useCallback, useState, lazy, Suspense } from "react";
 import { WindowLoader } from "@/components/shared/loader.component";
+import { DevPanel } from "./components/dev/dev.component";
 const CassaTab = lazy(() => import("./tabs/cassa.tab"));
 const DiceTab = lazy(() => import("./tabs/dice.tab"));
 const BlackjackTab = lazy(() => import("./tabs/blackjack.tab"));
@@ -12,6 +13,7 @@ const StatsTab = lazy(() => import("./tabs/stats.tab"));
 const MinesTab = lazy(() => import("./tabs/mines.tab"));
 const JackpotTab = lazy(() => import("./tabs/jackpot.tab"));
 import HomeTab from "./tabs/home.tab";
+import { useUserStore } from "@/store/user.store";
 
 type Tab =
   | "home"
@@ -26,6 +28,8 @@ type Tab =
   | "jackpot";
 
 export default function Gambling() {
+  const isAdmin = useUserStore((state) => state.isAdmin);
+
   const [tab, setTab] = useState<Tab>("home");
 
   const getComponent = useCallback(() => {
@@ -81,6 +85,7 @@ export default function Gambling() {
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         <Suspense fallback={<WindowLoader />}>{getComponent()}</Suspense>
       </section>
+      {isAdmin && <DevPanel />}
     </main>
   );
 }

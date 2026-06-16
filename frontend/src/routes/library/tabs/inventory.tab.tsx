@@ -691,4 +691,5 @@ function InventoryTab({ id }: { id?: string }) {
     </main>
   );
 }
+
 export default InventoryTab;

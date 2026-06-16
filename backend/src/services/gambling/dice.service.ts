@@ -7,6 +7,7 @@ import {
   ActiveDiceGame,
   DiceGameResult,
   DiceRollPhaseResult,
+  HandInfo,
 } from "@/types/gambling";
 import { Db } from "@/types";
 import { UserService } from "@/services/user.service";
@@ -18,6 +19,14 @@ import {
 import { deductTickets, addTickets } from "../../lib/ticket.helpers";
 
 const MAX_VOID_REROLLS = 2;
+const DICE_BROKEN_CHANCE = 0.01;
+
+export interface DiceDevOverrides {
+  devForceBreak?: boolean;
+  devForceBreakDieIndex?: number;
+  devForceDealerValues?: [number, number, number];
+  devForcePlayerValues?: [number, number, number];
+}
 
 function getRandomDice(): [number, number, number] {
   return [
@@ -27,12 +36,9 @@ function getRandomDice(): [number, number, number] {
   ];
 }
 
-export type HandInfo = {
-  rank: 5 | 4 | 3 | 2 | 1 | 0;
-  mult: number;
-  kicker?: number;
-  label: string;
-};
+function getOppositeValue(v: number): number {
+  return 7 - v;
+}
 
 export function evaluateHand(values: [number, number, number]): HandInfo {
   const sorted = [...values].sort((a, b) => a - b);
@@ -59,9 +65,50 @@ export function evaluateHand(values: [number, number, number]): HandInfo {
   return { rank: 0, mult: 0, label: "Нет комбинации" };
 }
 
+function evaluateBestHand(values: number[]): HandInfo {
+  let best: HandInfo | null = null;
+  for (let i = 0; i < values.length - 2; i++) {
+    for (let j = i + 1; j < values.length - 1; j++) {
+      for (let k = j + 1; k < values.length; k++) {
+        const combo: [number, number, number] = [
+          values[i],
+          values[j],
+          values[k],
+        ];
+        const hand = evaluateHand(combo);
+        if (
+          !best ||
+          hand.rank > best.rank ||
+          (hand.rank === best.rank &&
+            (hand.kicker ?? 0) > (best.kicker ?? 0))
+        ) {
+          best = hand;
+        }
+      }
+    }
+  }
+  return best!;
+}
+
+function tryRollBreak(
+  values: [number, number, number],
+  overrides?: DiceDevOverrides,
+): { hand: HandInfo; broken: boolean; brokenDieIndex: number } {
+  const forceBreak = overrides?.devForceBreak;
+  const broken = forceBreak || Math.random() < DICE_BROKEN_CHANCE;
+  if (!broken) {
+    return { hand: evaluateHand(values), broken: false, brokenDieIndex: -1 };
+  }
+  const dieIndex = overrides?.devForceBreakDieIndex ?? Math.floor(Math.random() * 3);
+  const opposite = getOppositeValue(values[dieIndex]);
+  const pool = [values[0], values[1], values[2], opposite];
+  const hand = evaluateBestHand(pool);
+  return { hand, broken: true, brokenDieIndex: dieIndex };
+}
+
 function compareHands(
-  dealerValues: [number, number, number],
-  playerValues: [number, number, number],
+  dealerHand: HandInfo,
+  playerHand: HandInfo,
   bid: number,
 ): {
   payout: number;
@@ -69,60 +116,58 @@ function compareHands(
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
 } {
-  const dealer = evaluateHand(dealerValues);
-  const player = evaluateHand(playerValues);
 
-  if (dealer.rank > player.rank) {
-    const mult = dealer.mult;
+  if (dealerHand.rank > playerHand.rank) {
+    const mult = dealerHand.mult;
     return {
       payout: 0,
       net: -(mult * bid),
-      label: `${dealer.label} - дилер победил`,
+      label: `${dealerHand.label} - дилер победил`,
       tone: "lose",
     };
   }
 
-  if (player.rank > dealer.rank) {
-    const mult = player.mult;
+  if (playerHand.rank > dealerHand.rank) {
+    const mult = playerHand.mult;
     return {
       payout: bid + mult * bid,
       net: mult * bid,
-      label: `${player.label} - ты победил`,
-      tone: player.rank === 5 ? "jackpot" : "win",
+      label: `${playerHand.label} - ты победил`,
+      tone: playerHand.rank === 5 ? "jackpot" : "win",
     };
   }
 
   // Same rank — tiebreak
-  if (dealer.rank === 4 && player.kicker !== dealer.kicker) {
-    if (player.kicker! > dealer.kicker!) {
+  if (dealerHand.rank === 4 && playerHand.kicker !== dealerHand.kicker) {
+    if (playerHand.kicker! > dealerHand.kicker!) {
       return {
         payout: bid + 3 * bid,
         net: 3 * bid,
-        label: `${player.label} > ${dealer.label} - ты победил`,
+        label: `${playerHand.label} > ${dealerHand.label} - ты победил`,
         tone: "win",
       };
     }
     return {
       payout: 0,
       net: -(3 * bid),
-      label: `${player.label} < ${dealer.label} - дилер победил`,
+      label: `${playerHand.label} < ${dealerHand.label} - дилер победил`,
       tone: "lose",
     };
   }
 
-  if (dealer.rank === 2 && player.kicker !== dealer.kicker) {
-    if (player.kicker! > dealer.kicker!) {
+  if (dealerHand.rank === 2 && playerHand.kicker !== dealerHand.kicker) {
+    if (playerHand.kicker! > dealerHand.kicker!) {
       return {
         payout: bid + bid,
         net: bid,
-        label: `${player.kicker} > ${dealer.kicker} - ты победил`,
+        label: `${playerHand.kicker} > ${dealerHand.kicker} - ты победил`,
         tone: "win",
       };
     }
     return {
       payout: 0,
       net: -bid,
-      label: `${player.kicker} < ${dealer.kicker} - дилер победил`,
+      label: `${playerHand.kicker} < ${dealerHand.kicker} - дилер победил`,
       tone: "lose",
     };
   }
@@ -148,33 +193,48 @@ export class DiceService {
     return this.games.get(userId);
   }
 
-  async rollDealer(userId: string, bid: number): Promise<DiceRollPhaseResult> {
-    if (
-      bid < GAMBLING_MIN_BET ||
-      bid > GAMBLING_MAX_BET ||
-      !Number.isInteger(bid)
-    )
-      throw new Error("Invalid bid");
+  async rollDealer(
+    userId: string,
+    bid: number,
+    devMode?: boolean,
+    devOverrides?: DiceDevOverrides,
+  ): Promise<DiceRollPhaseResult> {
+    if (!devMode) {
+      if (
+        bid < GAMBLING_MIN_BET ||
+        bid > GAMBLING_MAX_BET ||
+        !Number.isInteger(bid)
+      )
+        throw new Error("Invalid bid");
+    }
 
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
-    if (user.tickets < bid) throw new Error("Insufficient balance");
-    if (user.gamblingBanned) throw new Error("Banned from gambling");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
+    if (!devMode && user!.tickets < bid) throw new Error("Insufficient balance");
+    if (!devMode && user!.gamblingBanned) throw new Error("Banned from gambling");
 
-    const values = getRandomDice();
+    const values = devOverrides?.devForceDealerValues ?? getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
 
     const game: ActiveDiceGame = {
       dealerValues: values,
+      dealerHandInfo: hand,
       phase: "dealer",
       bid,
       userId,
       dealerRerolls: 0,
       playerRerolls: 0,
+      broken: broken || undefined,
+      brokenDieIndex: broken ? brokenDieIndex : undefined,
     };
     this.games.set(userId, game);
 
-    const hand = evaluateHand(values);
-    logger.info(user.username, "dealer rolled", values.join(", "));
+    logger.info(
+      user?.username ?? "dev",
+      "dealer rolled",
+      values.join(", "),
+      broken ? "(BROKEN)" : "",
+    );
 
     if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
@@ -183,6 +243,8 @@ export class DiceService {
         values,
         reroll: true,
         handLabel: "Нет комбинации - переброс",
+        broken: broken || undefined,
+        brokenDieIndex: broken ? brokenDieIndex : undefined,
       };
     }
 
@@ -192,22 +254,36 @@ export class DiceService {
       values,
       reroll: false,
       handLabel: hand.label,
+      broken: broken || undefined,
+      brokenDieIndex: broken ? brokenDieIndex : undefined,
     };
   }
 
-  async rerollDealer(userId: string): Promise<DiceRollPhaseResult> {
+  async rerollDealer(
+    userId: string,
+    devMode?: boolean,
+    devOverrides?: DiceDevOverrides,
+  ): Promise<DiceRollPhaseResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "dealer")
       throw new Error("No active dealer roll");
 
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
 
-    const values = getRandomDice();
+    const values = devOverrides?.devForceDealerValues ?? getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
     game.dealerValues = values;
+    game.dealerHandInfo = hand;
+    game.broken = broken || undefined;
+    game.brokenDieIndex = broken ? brokenDieIndex : undefined;
 
-    const hand = evaluateHand(values);
-    logger.info(user.username, "dealer reroll", values.join(", "));
+    logger.info(
+      user?.username ?? "dev",
+      "dealer reroll",
+      values.join(", "),
+      broken ? "(BROKEN)" : "",
+    );
 
     if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
@@ -216,6 +292,8 @@ export class DiceService {
         values,
         reroll: true,
         handLabel: "Нет комбинации - переброс",
+        broken: broken || undefined,
+        brokenDieIndex: broken ? brokenDieIndex : undefined,
       };
     }
 
@@ -225,91 +303,110 @@ export class DiceService {
       values,
       reroll: false,
       handLabel: hand.label,
+      broken: broken || undefined,
+      brokenDieIndex: broken ? brokenDieIndex : undefined,
     };
   }
 
-  async rollPlayer(userId: string): Promise<DiceGameResult> {
+  async rollPlayer(
+    userId: string,
+    devMode?: boolean,
+    devOverrides?: DiceDevOverrides,
+  ): Promise<DiceGameResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "player")
       throw new Error("No active dice game");
 
-    const user = await this.userService.getById(userId);
-    if (!user) throw new Error("User not found");
+    const user = devMode ? null : await this.userService.getById(userId);
+    if (!devMode && !user) throw new Error("User not found");
 
-    const values = getRandomDice();
-    const hand = evaluateHand(values);
+    const values = devOverrides?.devForcePlayerValues ?? getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
+
+    logger.info(
+      user?.username ?? "dev",
+      "player rolled",
+      values.join(", "),
+      broken ? "(BROKEN)" : "",
+    );
 
     if (hand.rank === 0 && game.playerRerolls < MAX_VOID_REROLLS) {
       game.playerRerolls++;
-      logger.info(user.username, "player reroll", values.join(", "));
       return {
         playerValues: values,
         payout: 0,
         net: 0,
         label: "Нет комбинации - переброс",
         tone: "reroll",
-        balance: user.tickets,
+        balance: user?.tickets ?? 0,
         banned: false,
         reroll: true,
+        broken: broken || undefined,
+        brokenDieIndex: broken ? brokenDieIndex : undefined,
       };
     }
 
     this.games.delete(userId);
 
-    const comparison = compareHands(game.dealerValues, values, game.bid);
+    const comparison = compareHands(
+      game.dealerHandInfo,
+      hand,
+      game.bid,
+    );
 
-    await this.db.insert(schema.history).values({
-      id: newId(),
-      userId,
-      owner: { id: user.id, username: user.username },
-      type: "dice",
-      label: comparison.label,
-      image: "",
-      bid: game.bid,
-      payout: comparison.payout,
-      net: comparison.net,
-      data: {
-        dealerValues: game.dealerValues,
-        playerValues: values,
-        dealerRerolls: game.dealerRerolls,
-        playerRerolls: game.playerRerolls,
-      },
-      created: nowIso(),
-    });
+    if (!devMode && user) {
+      await this.db.insert(schema.history).values({
+        id: newId(),
+        userId,
+        owner: { id: user.id, username: user.username },
+        type: "dice",
+        label: comparison.label,
+        image: "",
+        bid: game.bid,
+        payout: comparison.payout,
+        net: comparison.net,
+        data: {
+          dealerValues: game.dealerValues,
+          playerValues: values,
+          dealerRerolls: game.dealerRerolls,
+          playerRerolls: game.playerRerolls,
+          dealerBroken: game.broken,
+          dealerBrokenDieIndex: game.brokenDieIndex,
+          playerBroken: broken || undefined,
+          playerBrokenDieIndex: broken ? brokenDieIndex : undefined,
+        },
+        created: nowIso(),
+      });
+    }
 
     const net = comparison.net;
-    let gamblingWinnings: number = user.gamblingWinnings ?? 0;
-    let gamblingBanned: boolean = user.gamblingBanned ?? false;
-    if (net > 0) {
+    let gamblingWinnings: number = user?.gamblingWinnings ?? 0;
+    let gamblingBanned: boolean = user?.gamblingBanned ?? false;
+    if (!devMode && net > 0) {
       gamblingWinnings += net;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
         gamblingBanned = true;
       }
     }
 
-    if (comparison.net > 0) {
-      await addTickets(this.db, userId, game.bid + comparison.net);
-    } else if (comparison.net < 0) {
-      await deductTickets(this.db, userId, Math.abs(comparison.net));
+    if (!devMode) {
+      if (comparison.net > 0) {
+        await addTickets(this.db, userId, game.bid + comparison.net);
+      } else if (comparison.net < 0) {
+        await deductTickets(this.db, userId, Math.abs(comparison.net));
+      }
+
+      await this.db
+        .update(schema.users)
+        .set({
+          gamblingWinnings,
+          gamblingBanned,
+          updated: nowIso(),
+        })
+        .where(eq(schema.users.id, userId));
     }
 
-    await this.db
-      .update(schema.users)
-      .set({
-        gamblingWinnings,
-        gamblingBanned,
-        updated: nowIso(),
-      })
-      .where(eq(schema.users.id, userId));
-
-    const updatedUser = await this.userService.getById(userId);
-
-    logger.info(
-      user.username,
-      "rolled player",
-      values.join(", "),
-      `net:${net}`,
-    );
+    const updatedUser = devMode ? null : await this.userService.getById(userId);
 
     return {
       playerValues: values,
@@ -319,6 +416,8 @@ export class DiceService {
       tone: comparison.tone,
       balance: updatedUser?.tickets ?? 0,
       banned: gamblingBanned,
+      broken: broken || undefined,
+      brokenDieIndex: broken ? brokenDieIndex : undefined,
     };
   }
 

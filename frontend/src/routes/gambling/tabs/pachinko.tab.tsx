@@ -32,6 +32,7 @@ import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
+import { useDevModeStore } from "../hooks/dev.store";
 
 const IDLE_STATE: PachinkoState = {
   phase: "idle",
@@ -64,11 +65,13 @@ function PachinkoTab() {
   const [result, setResult] = useState<PachinkoUiResult | null>(null);
   const settlingRef = useRef(false);
   const [kickTrigger, setKickTrigger] = useState(0);
+  const getOverrides = useDevModeStore((s) => s.getOverrides);
+  const isPachinkoDev = useDevModeStore((s) => s.isActive("pachinko"));
   const [showKickButton, setShowKickButton] = useState(false);
   const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const dropMutation = useMutation({
-    mutationFn: () => dropPachinko(bid, ratAmount),
+    mutationFn: () => dropPachinko(bid, ratAmount, getOverrides("pachinko")),
     onSuccess: (state) => {
       setResult(null);
       settlingRef.current = false;
@@ -88,7 +91,7 @@ function PachinkoTab() {
     !dropMutation.isPending &&
     !inDrop &&
     !gamblingBanned &&
-    ticketBalance >= totalBid;
+    (isPachinkoDev || ticketBalance >= totalBid);
   const highlightSlot = roundDone ? gameState.slotIndex : null;
 
   useEffect(() => {
@@ -130,7 +133,7 @@ function PachinkoTab() {
       );
 
       try {
-        const state = await settlePachinko(clamped);
+        const state = await settlePachinko(clamped, getOverrides("pachinko"));
         setGameState(state);
         useUserStore.setState({ user: { ...user, tickets: state.balance } });
         if (state.banned) setGamblingBanned(true);
@@ -284,7 +287,7 @@ function PachinkoTab() {
             ? "Вы забанены"
             : inDrop
               ? "Крыса летит..."
-              : ticketBalance < totalBid
+              : !isPachinkoDev && ticketBalance < totalBid
                 ? "Недостаточно тикетов"
                 : `Бросить крысу (${totalBid})`}
         </Button>
