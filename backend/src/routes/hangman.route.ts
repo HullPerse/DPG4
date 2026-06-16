@@ -5,6 +5,7 @@ import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
+import { resolveUsername } from "../lib/users";
 import { dbPlugin } from "../plugins/db.plugin";
 
 export const hangmanRoute = new Elysia({ prefix: "/hangman" })
@@ -164,7 +165,7 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .where(eq(schema.hangman.id, record.id));
 
       broadcast("hangman", "update", params.userId);
-      logger.info(params.userId, "user played", body.won);
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "user played", body.won);
 
       return await db
         .select()

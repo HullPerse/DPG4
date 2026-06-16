@@ -5,6 +5,7 @@ import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
+import { resolveUsername } from "../lib/users";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
@@ -178,7 +179,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "user fed pet");
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "user fed pet");
 
       return await db
         .select()
@@ -210,7 +211,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "user petted pet");
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "user petted pet");
 
       return await db
         .select()
@@ -242,7 +243,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "user put pet to sleep");
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "user put pet to sleep");
 
       return await db
         .select()
@@ -317,7 +318,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       if (isMoney) {
         moneyAmount = Math.floor(Math.random() * 8) + 1;
         await userService.score(params.userId, moneyAmount);
-        logger.info(params.userId, "daily reward money", moneyAmount);
+        logger.info(await resolveUsername(params.userId) ?? params.userId, "daily reward money", moneyAmount);
       } else {
         const randomLabel = RAT_IDS[Math.floor(Math.random() * RAT_IDS.length)];
         const [item] = await db
@@ -334,7 +335,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         itemLabel = item.label;
         itemId = item.id;
         broadcast("pets", "update", params.userId);
-        logger.info(params.userId, "daily reward item", item.label);
+        logger.info(await resolveUsername(params.userId) ?? params.userId, "daily reward item", item.label);
       }
 
       const updateData: Record<string, unknown> = {
@@ -411,7 +412,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "resurrected pet");
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "resurrected pet");
 
       const updated = await db
         .select()
@@ -463,7 +464,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "searched dead pet");
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "searched dead pet");
 
       return { ok: true, itemLabel: anusItem.label, itemId: anusItem.id };
     },
@@ -497,7 +498,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "changed pet color", body.color);
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "changed pet color", body.color);
 
       return await db
         .select()
@@ -535,7 +536,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(params.userId, "changed pet model", body.model);
+      logger.info(await resolveUsername(params.userId) ?? params.userId, "changed pet model", body.model);
 
       return await db
         .select()
