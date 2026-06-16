@@ -14,6 +14,7 @@ const MinesTab = lazy(() => import("./tabs/mines.tab"));
 const JackpotTab = lazy(() => import("./tabs/jackpot.tab"));
 import HomeTab from "./tabs/home.tab";
 import { useUserStore } from "@/store/user.store";
+import { useDataStore } from "@/store/data.store";
 
 type Tab =
   | "home"
@@ -29,6 +30,7 @@ type Tab =
 
 export default function Gambling() {
   const isAdmin = useUserStore((state) => state.isAdmin);
+  const isEditing = useDataStore((state) => state.isEditing);
 
   const [tab, setTab] = useState<Tab>("home");
 
@@ -85,7 +87,7 @@ export default function Gambling() {
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
         <Suspense fallback={<WindowLoader />}>{getComponent()}</Suspense>
       </section>
-      {isAdmin && <DevPanel />}
+      {isAdmin && isEditing && <DevPanel />}
     </main>
   );
 }
