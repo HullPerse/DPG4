@@ -14,7 +14,7 @@ export const DICE_REROLL_PAUSE_MS = 600;
 export const DICE_PLAYER_AUTO_MS = 1500;
 export const BROKEN_SPLIT_DELAY = 0.4;
 export const BROKEN_SPLIT_DURATION = 0.9;
-export const BROKEN_HALF_OFFSET = 1.5;
+export const BROKEN_HALF_OFFSET = 0.9;
 
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
 
@@ -97,11 +97,36 @@ export function createDiceFaceTexture(value: number): CanvasTexture {
   const c = 128;
   const dots: Record<number, [number, number][]> = {
     1: [[c, c]],
-    2: [[192, 64], [64, 192]],
-    3: [[192, 64], [128, 128], [64, 192]],
-    4: [[64, 64], [192, 64], [64, 192], [192, 192]],
-    5: [[64, 64], [192, 64], [128, 128], [64, 192], [192, 192]],
-    6: [[64, 64], [192, 64], [64, 128], [192, 128], [64, 192], [192, 192]],
+    2: [
+      [192, 64],
+      [64, 192],
+    ],
+    3: [
+      [192, 64],
+      [128, 128],
+      [64, 192],
+    ],
+    4: [
+      [64, 64],
+      [192, 64],
+      [64, 192],
+      [192, 192],
+    ],
+    5: [
+      [64, 64],
+      [192, 64],
+      [128, 128],
+      [64, 192],
+      [192, 192],
+    ],
+    6: [
+      [64, 64],
+      [192, 64],
+      [64, 128],
+      [192, 128],
+      [64, 192],
+      [192, 192],
+    ],
   };
 
   dots[value].forEach(([x, y]) => dot(x, y));
@@ -150,7 +175,11 @@ export function createThrowSim(index: number, now: number, homeZ = 0): DiceSim {
   };
 }
 
-export function createBrokenThrowSim(index: number, now: number, homeZ = 0): DiceSim {
+export function createBrokenThrowSim(
+  index: number,
+  now: number,
+  homeZ = 0,
+): DiceSim {
   const homeX = (index - 1) * 2.4;
   const spread = (Math.random() - 0.5) * 0.6;
 

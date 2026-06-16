@@ -79,8 +79,7 @@ function evaluateBestHand(values: number[]): HandInfo {
         if (
           !best ||
           hand.rank > best.rank ||
-          (hand.rank === best.rank &&
-            (hand.kicker ?? 0) > (best.kicker ?? 0))
+          (hand.rank === best.rank && (hand.kicker ?? 0) > (best.kicker ?? 0))
         ) {
           best = hand;
         }
@@ -99,7 +98,8 @@ function tryRollBreak(
   if (!broken) {
     return { hand: evaluateHand(values), broken: false, brokenDieIndex: -1 };
   }
-  const dieIndex = overrides?.devForceBreakDieIndex ?? Math.floor(Math.random() * 3);
+  const dieIndex =
+    overrides?.devForceBreakDieIndex ?? Math.floor(Math.random() * 3);
   const opposite = getOppositeValue(values[dieIndex]);
   const pool = [values[0], values[1], values[2], opposite];
   const hand = evaluateBestHand(pool);
@@ -116,7 +116,6 @@ function compareHands(
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
 } {
-
   if (dealerHand.rank > playerHand.rank) {
     const mult = dealerHand.mult;
     return {
@@ -210,8 +209,10 @@ export class DiceService {
 
     const user = devMode ? null : await this.userService.getById(userId);
     if (!devMode && !user) throw new Error("User not found");
-    if (!devMode && user!.tickets < bid) throw new Error("Insufficient balance");
-    if (!devMode && user!.gamblingBanned) throw new Error("Banned from gambling");
+    if (!devMode && user!.tickets < bid)
+      throw new Error("Insufficient balance");
+    if (!devMode && user!.gamblingBanned)
+      throw new Error("Banned from gambling");
 
     const values = devOverrides?.devForceDealerValues ?? getRandomDice();
     const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
@@ -348,11 +349,7 @@ export class DiceService {
 
     this.games.delete(userId);
 
-    const comparison = compareHands(
-      game.dealerHandInfo,
-      hand,
-      game.bid,
-    );
+    const comparison = compareHands(game.dealerHandInfo, hand, game.bid);
 
     if (!devMode && user) {
       await this.db.insert(schema.history).values({
