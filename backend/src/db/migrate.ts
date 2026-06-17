@@ -274,6 +274,20 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
+    hash: "0023_quests_table",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS quests (
+        id TEXT PRIMARY KEY,
+        label TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        reward TEXT NOT NULL DEFAULT '[]',
+        claimed TEXT NOT NULL DEFAULT '[]',
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+    ],
+  },
+  {
     hash: "0021_sqlite_cache_queue",
     sql: [
       `CREATE TABLE IF NOT EXISTS cache (

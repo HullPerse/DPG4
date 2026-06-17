@@ -34,6 +34,7 @@ import { userStatsRoute } from "./routes/stats.route";
 import { ratStoreRoute } from "./routes/ratStore.route";
 import { sentinelRoute } from "./routes/response.route";
 import { jackpotRoute } from "./routes/jackpot.route";
+import { questsRoute } from "./routes/quests.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
@@ -161,6 +162,7 @@ const app = new Elysia()
   .use(ratStoreRoute)
   .use(petsRoute)
   .use(jackpotRoute)
+  .use(questsRoute)
   .use(userStatsRoute);
 
 app.listen(config.port);

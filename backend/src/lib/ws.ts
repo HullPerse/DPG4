@@ -27,7 +27,7 @@ export function broadcast(channel: string, action: string, id?: string) {
 
 const ALL_CHANNELS = [
   "users", "games", "presets", "items", "inventory", "market",
-  "activity", "chats", "rules", "ads", "drawings", "cells",
+  "activity", "chats", "rules", "ads", "drawings", "cells", "quests",
 ] as const;
 
 export function broadcastAll(action: string, id?: string) {

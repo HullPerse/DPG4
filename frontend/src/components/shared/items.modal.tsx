@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog.component";
-import { memo, type FC, type ReactNode } from "react";
+import { type FC, type ReactNode } from "react";
 import type { ModalType } from "@/types/effect";
 import type { User } from "@/types/user";
 import { WindowHeader } from "../ui/header.window";
@@ -20,9 +20,7 @@ type SimpleModalProps = {
   body: (close: () => void) => ReactNode;
 };
 
-const CreateModal = memo(function CreateModal(
-  props: ItemModalProps | SimpleModalProps,
-) {
+function CreateModal(props: ItemModalProps | SimpleModalProps) {
   const { label, open, setOpen } = props;
   const close = () => setOpen(false);
 
@@ -58,6 +56,6 @@ const CreateModal = memo(function CreateModal(
       </DialogContent>
     </Dialog>
   );
-});
+}
 
 export { CreateModal };

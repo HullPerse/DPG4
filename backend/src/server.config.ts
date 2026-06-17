@@ -50,4 +50,5 @@ export const COLLECTION_IDS: Record<string, string> = {
   ads: "ads",
   drawings: "drawings",
   cells: "cells",
+  quests: "quests",
 };

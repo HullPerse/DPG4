@@ -218,6 +218,20 @@ export const jackpot = sqliteTable("jackpot", {
   updated: text("updated").notNull(),
 });
 
+export type QuestReward = {
+  type: "item" | "money";
+  value: string | number;
+};
+
+export const quests = sqliteTable("quests", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  reward: text("reward", { mode: "json" }).$type<QuestReward[]>().notNull().default([]),
+  claimed: text("claimed", { mode: "json" }).$type<string[]>().notNull().default([]),
+  ...timestamps,
+});
+
 export const cells = sqliteTable("cells", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),
