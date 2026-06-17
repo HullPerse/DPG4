@@ -22,8 +22,8 @@ describe("constants", () => {
     }
   });
 
-  it("BOARD_WIDTH is 13", () => {
-    expect(BOARD_WIDTH).toBe(13);
+  it("BOARD_WIDTH is 17", () => {
+    expect(BOARD_WIDTH).toBe(17);
   });
 });
 
