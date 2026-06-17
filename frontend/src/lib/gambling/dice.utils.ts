@@ -14,7 +14,7 @@ export const DICE_REROLL_PAUSE_MS = 600;
 export const DICE_PLAYER_AUTO_MS = 1500;
 export const BROKEN_SPLIT_DELAY = 0.4;
 export const BROKEN_SPLIT_DURATION = 0.9;
-export const BROKEN_HALF_OFFSET = 0.9;
+export const BROKEN_HALF_OFFSET = 1.2;
 
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
 

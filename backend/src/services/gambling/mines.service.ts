@@ -121,7 +121,9 @@ export class MinesService {
       isMine: false,
       currentMultiplier: 1,
       revealed: game.revealed,
-      ...(devOverrides?.devShowMines ? { minePositions: getMinePositions(game.grid) } : {}),
+      ...(devOverrides?.devShowMines
+        ? { minePositions: getMinePositions(game.grid) }
+        : {}),
       payout: 0,
       net: 0,
       label: "",
@@ -140,7 +142,8 @@ export class MinesService {
   ): Promise<MinesRevealResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "playing") throw new Error("No active game");
-    if (x < 0 || x >= GRID || y < 0 || y >= GRID) throw new Error("Invalid tile");
+    if (x < 0 || x >= GRID || y < 0 || y >= GRID)
+      throw new Error("Invalid tile");
     if (game.revealed[x][y]) throw new Error("Tile already revealed");
 
     game.revealed[x][y] = true;
@@ -176,7 +179,10 @@ export class MinesService {
         });
       }
 
-      logger.info("system", `mines lose user:${userId} bid:${game.bid} mines:${game.mineCount}`);
+      logger.info(
+        "system",
+        `mines lose user:${userId} bid:${game.bid} mines:${game.mineCount}`,
+      );
 
       return {
         phase: "lost",
@@ -205,7 +211,9 @@ export class MinesService {
       isMine: false,
       currentMultiplier: mult,
       revealed: game.revealed,
-      ...(devOverrides?.devShowMines ? { minePositions: getMinePositions(game.grid) } : {}),
+      ...(devOverrides?.devShowMines
+        ? { minePositions: getMinePositions(game.grid) }
+        : {}),
       payout: 0,
       net: 0,
       label: "",
@@ -215,10 +223,7 @@ export class MinesService {
     };
   }
 
-  async cashout(
-    userId: string,
-    devMode?: boolean,
-  ): Promise<MinesRevealResult> {
+  async cashout(userId: string, devMode?: boolean): Promise<MinesRevealResult> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "playing") throw new Error("No active game");
 
@@ -236,7 +241,11 @@ export class MinesService {
     const user = devMode ? null : await this.userService.getById(userId);
     let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
     let gamblingBanned = user?.gamblingBanned ?? false;
-    if (!devMode && gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
+    if (
+      !devMode &&
+      gamblingWinnings >= GAMBLING_BAN_THRESHOLD &&
+      !gamblingBanned
+    ) {
       gamblingBanned = true;
     }
 
@@ -287,7 +296,7 @@ export class MinesService {
       payout,
       net,
       label: `Выигрыш ${mult.toFixed(2)}x +${net}`,
-      tone,
+      tone: tone as "" | "win" | "lose" | "chance",
       balance: user?.tickets ?? 0,
       banned: gamblingBanned,
     };
