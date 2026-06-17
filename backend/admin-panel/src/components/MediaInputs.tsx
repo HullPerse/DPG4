@@ -130,12 +130,7 @@ export function AudioField({
 
   const url = fileUrl(resource, String(record.id), source);
   return (
-    <audio
-      controls
-      src={url}
-      preload="metadata"
-      className="max-w-[280px] h-8"
-    />
+    <audio controls src={url} preload="metadata" className="max-w-70 h-8" />
   );
 }
 

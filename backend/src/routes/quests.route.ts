@@ -7,9 +7,11 @@ import { withRecordMeta } from "../lib/record";
 import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
+import { servicesPlugin } from "../services.server";
 
 export const questsRoute = new Elysia({ prefix: "/quests" })
   .use(dbPlugin)
+  .use(servicesPlugin)
   .get(
     "/",
     async ({ db }) => {
@@ -122,7 +124,7 @@ export const questsRoute = new Elysia({ prefix: "/quests" })
   )
   .post(
     "/:id/claim",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, userService, economyService }) => {
       const [quest] = await db
         .select()
         .from(schema.quests)
@@ -134,6 +136,14 @@ export const questsRoute = new Elysia({ prefix: "/quests" })
       if (claimed.includes(body.userId)) {
         return { error: "Already claimed" };
       }
+      const rewards = quest.reward as schema.QuestReward[];
+      for (const reward of rewards) {
+        if (reward.type === "money") {
+          await userService.score(body.userId, Number(reward.value));
+        } else if (reward.type === "item") {
+          await economyService.addInventory(body.userId, String(reward.value));
+        }
+      }
       await db
         .update(schema.quests)
         .set({
@@ -142,8 +152,10 @@ export const questsRoute = new Elysia({ prefix: "/quests" })
         })
         .where(eq(schema.quests.id, params.id));
       broadcast("quests", "claim", params.id);
+      broadcast("users", "update", body.userId);
+      broadcast("inventory", "add", body.userId);
       logger.info(null, "claimed quest", params.id, `by ${body.userId}`);
-      return { ok: true };
+      return { ok: true, rewards };
     },
     {
       body: t.Object({

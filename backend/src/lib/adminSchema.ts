@@ -358,6 +358,19 @@ export const ADMIN_SCHEMA: Record<string, AdminTableMeta> = {
       { source: "created", type: "date" },
     ],
   },
+  quests: {
+    label: "Quests",
+    searchFields: ["id", "label"],
+    fields: [
+      { source: "id", type: "text" },
+      { source: "label", type: "text" },
+      { source: "description", type: "text" },
+      { source: "reward", type: "json" },
+      { source: "claimed", type: "stringList" },
+      { source: "created", type: "date" },
+      { source: "updated", type: "date" },
+    ],
+  },
   cells: {
     label: "Cells",
     searchFields: ["id", "title", "type", "cellType"],

@@ -4,7 +4,7 @@ export type QuestReward = {
 };
 
 export interface Quest {
-  id: number;
+  id: string;
   label: string;
   description: string;
   claimed: string[];

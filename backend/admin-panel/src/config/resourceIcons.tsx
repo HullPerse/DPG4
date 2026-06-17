@@ -3,6 +3,7 @@ import {
   Brush,
   Gamepad2,
   Gavel,
+  Gift,
   Grid3x3,
   MessageCircle,
   Megaphone,
@@ -36,4 +37,5 @@ export const resourceIcons: Record<string, LucideIcon> = {
   pets: Rat,
   jackpot: Zap,
   inventoryLog: ClipboardList,
+  quests: Gift,
 };
