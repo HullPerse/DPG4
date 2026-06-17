@@ -83,38 +83,31 @@ function QuestsTab() {
         <Plus />
       </Button>
       <section className="flex flex-col gap-2 w-full h-full">
-        {data?.quests?.map((item) => {
-          const claimMutation = useMutation({
-            mutationFn: () => questsApi.claim(item.id, String(user?.id)),
-            onSuccess: () =>
-              queryClient.invalidateQueries({ queryKey: ["quests"] }),
-          });
-
-          return (
-            <div
-              key={item.id}
-              className="flex flex-row gap-2 p-3 border-2 border-highlight-high bg-card"
-            >
-              <div className="flex flex-col w-full items-start overflow-hidden">
-                <span className="ml-2 font-bold text-xl">{item.label}</span>
-                <span className="ml-2 text-sm font-light text-muted truncate line-clamp-1">
-                  {item.description}
-                </span>
-              </div>
-
-              <div className="flex flex-row gap-1">
-                <Button
-                  variant="success"
-                  loading={claimMutation.isPending}
-                  onClick={() => claimMutation.mutate()}
-                  disabled={item.claimed.includes(String(user?.id))}
-                >
-                  ЗАБРАТЬ
-                </Button>
-              </div>
+        {data?.quests?.map((item) => (
+          <div
+            key={item.id}
+            className="flex flex-row gap-2 p-3 border-2 border-highlight-high bg-card"
+          >
+            <div className="flex flex-col w-full items-start overflow-hidden">
+              <span className="ml-2 font-bold text-xl">{item.label}</span>
+              <span className="ml-2 text-sm font-light text-muted truncate line-clamp-1">
+                {item.description}
+              </span>
             </div>
-          );
-        })}
+
+            <div className="flex flex-row gap-1">
+              <Button
+                variant="success"
+                onClick={async () =>
+                  await questsApi.claim(item.id, String(user?.id))
+                }
+                disabled={item.claimed.includes(String(user?.id))}
+              >
+                ЗАБРАТЬ
+              </Button>
+            </div>
+          </div>
+        ))}
       </section>
     </main>
   );
