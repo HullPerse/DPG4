@@ -42,11 +42,6 @@ export const historyRoute = new Elysia({ prefix: "/history" })
   .get(
     "/",
     async ({ query, user, set, db }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
       const page = Math.max(1, query.page ?? 1);
       const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
       const offset = (page - 1) * limit;
@@ -87,6 +82,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           type: t.Optional(t.String()),
         }),
       ),
+      requireAuth: true,
       detail: {
         tags: ["history"],
         summary: "Get paginated history for current user, optionally filtered by type",
@@ -96,11 +92,6 @@ export const historyRoute = new Elysia({ prefix: "/history" })
   .get(
     "/stats",
     async ({ user, set }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
       const dailyNet = rawDb
         .query<StatsRow, [string]>(
           `SELECT DATE(created) AS date, SUM(net) AS net, COUNT(*) AS gamesPlayed
@@ -170,6 +161,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
       };
     },
     {
+      requireAuth: true,
       detail: {
         tags: ["history"],
         summary: "Get gambling stats and charts data for current user",

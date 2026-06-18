@@ -11,15 +11,11 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
-
-const STATUSES: Record<string, string> = {
-  PLAYING: "В ПРОЦЕССЕ",
-  COMPLETED: "ПРОЙДЕНО",
-  DROPPED: "ДРОПНУТО",
-  REROLLED: "РЕРОЛЬНУТО",
-};
-
-const SUBSCRIPTION_CONTINUE = 1;
+import {
+  GAME_STATUS_LABELS,
+  SUBSCRIPTION_CONTINUE_COST,
+  STATUS_EFFECTS,
+} from "../lib/constants";
 
 const optionalFile = t.Optional(t.Union([t.Null(), t.Any()]));
 
@@ -54,14 +50,6 @@ const gameVoteBody = t.Object({
   score: t.Number(),
 });
 
-const presetCreateBody = t.Object({
-  label: t.String(),
-});
-
-const presetPatchBody = t.Object({
-  label: t.Optional(t.String()),
-  games: t.Optional(t.Array(t.Any())),
-});
 
 function mapGame(row: typeof schema.games.$inferSelect) {
   return withRecordMeta(serializeRow(row, ["image"]), "games");
@@ -75,7 +63,6 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select().from(schema.games);
       const conditions: SQL[] = [];
 
       if (query.userId) {
@@ -90,17 +77,17 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         conditions.push(sql`${schema.games.review} IS NOT NULL`);
       }
 
-      if (conditions.length > 0) {
-        q = q.where(and(...conditions)) as typeof q;
+      if (query.search) {
+        conditions.push(
+          sql`json_extract(${schema.games.data}, '$.name') LIKE ${'%' + query.search + '%'}`,
+        );
       }
 
-      q = q.orderBy(desc(schema.games.created)) as typeof q;
-      const all = await q;
-      const searchLower = query.search?.toLowerCase();
-      const matched = searchLower
-        ? all.filter((r) => String(r.data).toLowerCase().includes(searchLower))
-        : all;
-      const rows = matched.slice(offset, offset + limit);
+      const q = conditions.length > 0
+        ? db.select().from(schema.games).where(and(...conditions))
+        : db.select().from(schema.games);
+
+      const rows = await q.orderBy(desc(schema.games.created)).limit(limit).offset(offset);
       return rows.map(mapGame);
     },
     {
@@ -147,10 +134,9 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
       const user = body.user as { id: string; username: string };
       const data = body.data as { name: string; capsuleImage?: string };
 
-      const userObj = body.user as { id?: string };
-      await db.insert(schema.games).values({
+      const row = {
         id,
-        userId: userObj?.id ?? null,
+        userId: user?.id ?? null,
         user: body.user,
         data: body.data,
         status: body.status ?? "PLAYING",
@@ -161,7 +147,9 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         imageMime: imageFile?.mime ?? null,
         created: ts,
         updated: ts,
-      });
+      };
+
+      await db.insert(schema.games).values(row);
 
       await activityService.create({
         author: user.id,
@@ -172,11 +160,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
 
       broadcast("games", "create", id);
       logger.info(user.username, "added game", data.name);
-      return mapGame(
-        (
-          await db.select().from(schema.games).where(eq(schema.games.id, id))
-        )[0]!,
-      );
+      return mapGame(row as typeof schema.games.$inferSelect);
     },
     { body: gameCreateBody },
   )
@@ -244,35 +228,35 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         author: gameUser.id,
         image: gameData.capsuleImage ?? "",
         type: "image",
-        text: `${gameUser.username} сменил статус игры ${gameData.name} на ${STATUSES[body.status] ?? body.status}`,
+        text: `${gameUser.username} сменил статус игры ${gameData.name} на ${GAME_STATUS_LABELS[body.status] ?? body.status}`,
       });
 
       const currentUser = await userService.getById(gameUser.id);
       if (
         currentUser &&
         Array.isArray(currentUser.status) &&
-        currentUser.status.includes("subscribed")
+        currentUser.status.includes(STATUS_EFFECTS.SUBSCRIBED)
       ) {
-        if (currentUser.money >= SUBSCRIPTION_CONTINUE) {
-          await userService.score(gameUser.id, -SUBSCRIPTION_CONTINUE);
+        if (currentUser.money >= SUBSCRIPTION_CONTINUE_COST) {
+          await userService.score(gameUser.id, -SUBSCRIPTION_CONTINUE_COST);
         } else {
           await activityService.create({
             author: currentUser.id,
             image: currentUser.avatar,
             text: `${currentUser.username} не хватило денег на подписку`,
           });
-          await userService.changeStatus(gameUser.id, "subscribed", "remove");
+          await userService.changeStatus(gameUser.id, STATUS_EFFECTS.SUBSCRIBED, "remove");
           broadcast("ads", "update");
         }
       }
 
       if (
         body.status === "COMPLETED" &&
-        currentUser?.status?.includes("Борщ")
+        currentUser?.status?.includes(STATUS_EFFECTS.BORSCH)
       ) {
         const finalScore = Math.floor(body.time / 2);
         await userService.score(gameUser.id, finalScore);
-        await userService.changeStatus(gameUser.id, "Борщ", "remove");
+        await userService.changeStatus(gameUser.id, STATUS_EFFECTS.BORSCH, "remove");
       }
 
       await db
@@ -290,7 +274,7 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
         gameUser.username,
         "changed game status",
         gameData.name,
-        STATUSES[body.status] ?? body.status,
+        GAME_STATUS_LABELS[body.status] ?? body.status,
       );
       return mapGame(
         (
@@ -357,92 +341,4 @@ export const gamesRoute = new Elysia({ prefix: "/games" })
     { params: t.Object({ id: t.String() }) },
   );
 
-export const presetsRoute = new Elysia({ prefix: "/presets" })
-  .use(dbPlugin)
-  .get(
-    "/",
-    async ({ db, query }) => {
-      const all = await db.select().from(schema.presets);
-      const searchLower = query.search?.toLowerCase();
-      const matched = searchLower
-        ? all.filter((r) => r.label?.toLowerCase().includes(searchLower))
-        : all;
-      return matched.map((r) => withRecordMeta(r, "presets"));
-    },
-    {
-      query: t.Optional(
-        t.Object({
-          search: t.Optional(t.String()),
-        }),
-      ),
-    },
-  )
-  .get(
-    "/:id",
-    async ({ params, db, set }) => {
-      const [row] = await db
-        .select()
-        .from(schema.presets)
-        .where(eq(schema.presets.id, params.id));
-      if (!row) {
-        set.status = 404;
-        return { error: "Not found" };
-      }
-      return withRecordMeta(row, "presets");
-    },
-    { params: t.Object({ id: t.String() }) },
-  )
-  .post(
-    "/",
-    async ({ body, db }) => {
-      const id = newId();
-      const ts = nowIso();
-      await db.insert(schema.presets).values({
-        id,
-        label: body.label,
-        games: [],
-        created: ts,
-        updated: ts,
-      });
-      broadcast("presets", "create", id);
-      logger.info(null, "created preset", body.label);
-      return withRecordMeta(
-        { id, label: body.label, games: [], created: ts, updated: ts },
-        "presets",
-      );
-    },
-    { body: presetCreateBody },
-  )
-  .patch(
-    "/:id",
-    async ({ params, body, db }) => {
-      const patch: Partial<typeof schema.presets.$inferInsert> = {
-        updated: nowIso(),
-      };
-      if (body.label !== undefined) patch.label = body.label;
-      if (body.games !== undefined) patch.games = body.games;
 
-      await db
-        .update(schema.presets)
-        .set(patch)
-        .where(eq(schema.presets.id, params.id));
-      broadcast("presets", "update", params.id);
-      const [row] = await db
-        .select()
-        .from(schema.presets)
-        .where(eq(schema.presets.id, params.id));
-      logger.info(null, "updated preset", row?.label ?? params.id);
-      return withRecordMeta(row!, "presets");
-    },
-    { body: presetPatchBody },
-  )
-  .delete(
-    "/:id",
-    async ({ params, db }) => {
-      await db.delete(schema.presets).where(eq(schema.presets.id, params.id));
-      broadcast("presets", "delete", params.id);
-      logger.info(null, "deleted preset", params.id);
-      return { ok: true };
-    },
-    { params: t.Object({ id: t.String() }) },
-  );

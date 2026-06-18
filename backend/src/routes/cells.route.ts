@@ -7,6 +7,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
+import { ACTIVITY_TYPES } from "../lib/constants";
 
 const cellPatchBody = t.Object({
   type: t.Optional(t.String()),
@@ -153,7 +154,7 @@ export const cellsRoute = new Elysia({ prefix: "/cells" })
       await activityService.create({
         author: body.userId,
         image: "✅",
-        type: "emoji",
+        type: ACTIVITY_TYPES.EMOJI,
         text: `${body.username} захватил клетку ${cell.number}`,
       });
 

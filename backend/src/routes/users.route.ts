@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, eq, not, sql, type SQL } from "drizzle-orm";
+import { and, eq, like, not, sql, type SQL } from "drizzle-orm";
 import * as schema from "../db/schema";
 import { authPlugin } from "../plugins/auth.plugin";
 import { nowIso } from "../lib/dates";
@@ -8,6 +8,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
+import { USER_ACTIONS } from "../lib/constants";
 
 export const usersRoute = new Elysia({ prefix: "/users" })
   .use(dbPlugin)
@@ -18,7 +19,6 @@ export const usersRoute = new Elysia({ prefix: "/users" })
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select().from(schema.users);
       const conditions: SQL[] = [];
 
       if (query.excludeUserId) {
@@ -31,19 +31,18 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         );
       }
 
-      if (conditions.length > 0) {
-        q = q.where(and(...conditions)) as typeof q;
-      }
-
-      const all = await q;
-      let list = all.map((r) => withRecordMeta(omitPassword(r), "users"));
-
       if (query.search) {
-        const s = query.search.toLowerCase();
-        list = list.filter((r) => r.username?.toLowerCase().includes(s));
+        conditions.push(
+          like(schema.users.username, `%${query.search}%`),
+        );
       }
 
-      list = list.slice(offset, offset + limit);
+      const q = conditions.length > 0
+        ? db.select().from(schema.users).where(and(...conditions))
+        : db.select().from(schema.users);
+
+      const rows = await q.limit(limit).offset(offset);
+      let list = rows.map((r) => withRecordMeta(omitPassword(r), "users"));
 
       if (query.fields) {
         const fields = query.fields.split(",").map((f) => f.trim());
@@ -170,8 +169,8 @@ export const usersRoute = new Elysia({ prefix: "/users" })
       body: t.Object({
         realTime: t.Number(),
         action: t.Union([
-          t.Literal("MOVE_POSITIVE"),
-          t.Literal("MOVE_NEGATIVE"),
+          t.Literal(USER_ACTIONS.MOVE_POSITIVE),
+          t.Literal(USER_ACTIONS.MOVE_NEGATIVE),
         ]),
       }),
       detail: { tags: ["users"], summary: "Update dice by playtime" },

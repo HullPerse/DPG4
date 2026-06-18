@@ -9,6 +9,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
+import { USER_ACTIONS, ACTIVITY_TYPES } from "../lib/constants";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
   .use(dbPlugin)
@@ -42,7 +43,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         position: 0,
         money: 0,
         steam: "",
-        currentAction: "MOVE_POSITIVE",
+        currentAction: USER_ACTIONS.MOVE_POSITIVE,
         currentDice: 1,
         status: [],
         place: "0",
@@ -53,7 +54,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       await activityService.create({
         author: id,
         image: body.avatar ?? "",
-        type: "emoji",
+        type: ACTIVITY_TYPES.EMOJI,
         text: `${username} создал аккаунт`,
       });
 
@@ -71,7 +72,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         position: 0,
         money: 0,
         steam: "",
-        currentAction: "MOVE_POSITIVE",
+        currentAction: USER_ACTIONS.MOVE_POSITIVE,
         currentDice: 1,
         status: [],
         place: "0",

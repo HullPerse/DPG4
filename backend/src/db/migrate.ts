@@ -225,15 +225,15 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
     ],
   },
   {
-    hash: "0019_add_pet_model",
-    sql: [
-      "ALTER TABLE pets ADD COLUMN model TEXT NOT NULL DEFAULT 'rat';",
-    ],
-  },
-  {
     hash: "0018_add_winning_number_date",
     sql: [
       "ALTER TABLE jackpot ADD COLUMN winning_number_date TEXT;",
+    ],
+  },
+  {
+    hash: "0019_add_pet_model",
+    sql: [
+      "ALTER TABLE pets ADD COLUMN model TEXT NOT NULL DEFAULT 'rat';",
     ],
   },
   {
@@ -252,6 +252,17 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
       "CREATE INDEX IF NOT EXISTS idx_ads_owner ON ads (owner);",
       "CREATE INDEX IF NOT EXISTS idx_drawings_author ON drawings (author);",
       "CREATE INDEX IF NOT EXISTS idx_users_place ON users (place);",
+    ],
+  },
+  {
+    hash: "0021_sqlite_cache",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS cache (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        expires_at INTEGER
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache (expires_at);",
     ],
   },
   {
@@ -285,24 +296,6 @@ const pendingMigrations: { hash: string; sql: string[] }[] = [
         created TEXT NOT NULL,
         updated TEXT NOT NULL
       );`,
-    ],
-  },
-  {
-    hash: "0021_sqlite_cache_queue",
-    sql: [
-      `CREATE TABLE IF NOT EXISTS cache (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        expires_at INTEGER
-      );`,
-      `CREATE TABLE IF NOT EXISTS jobs (
-        id TEXT PRIMARY KEY,
-        queue TEXT NOT NULL,
-        data TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );`,
-      "CREATE INDEX IF NOT EXISTS idx_jobs_queue_created ON jobs (queue, created_at);",
-      "CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache (expires_at);",
     ],
   },
 ];

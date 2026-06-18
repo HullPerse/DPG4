@@ -9,6 +9,7 @@ import { broadcast } from "../lib/ws";
 import { logger } from "../lib/logger";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
+import { STATUS_EFFECTS } from "../lib/constants";
 
 export const SUBSCRIPTION_COST = 2;
 
@@ -99,7 +100,7 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
       }
 
       await userService.score(body.userId, -SUBSCRIPTION_COST);
-      await userService.changeStatus(body.userId, "subscribed", "add");
+      await userService.changeStatus(body.userId, STATUS_EFFECTS.SUBSCRIBED, "add");
 
       await activityService.create({
         author: body.userId,
@@ -118,7 +119,7 @@ export const adsRoute = new Elysia({ prefix: "/ads" })
       const user = await userService.getById(body.userId);
       if (!user) return { ok: false };
 
-      await userService.changeStatus(body.userId, "subscribed", "remove");
+      await userService.changeStatus(body.userId, STATUS_EFFECTS.SUBSCRIBED, "remove");
       await activityService.create({
         author: body.userId,
         image: user.avatar,

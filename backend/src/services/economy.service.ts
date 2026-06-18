@@ -1,5 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import * as schema from "../db/schema";
+import { rawDb } from "../db";
 import { newId } from "../lib/ids";
 import { nowIso } from "../lib/dates";
 import { withRecordMeta } from "../lib/record";
@@ -8,6 +9,7 @@ import { Db } from "@/types";
 import { UserService } from "@/services/user.service";
 import { ActivityService } from "./activity.service";
 import { InventoryLogService } from "./inventory-log.service";
+import { ACTIVITY_TYPES } from "../lib/constants";
 
 export class EconomyService {
   constructor(
@@ -88,7 +90,7 @@ export class EconomyService {
     await this.activityService.create({
       author: userId,
       image: user.avatar,
-      type: "emoji",
+      type: ACTIVITY_TYPES.EMOJI,
       text: `${user.username} получил предмет ${item.label}`,
     });
 
@@ -138,8 +140,8 @@ export class EconomyService {
     await this.activityService.create({
       author: ownerId,
       image: user.avatar,
-      type: "emoji",
-      text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
+type: ACTIVITY_TYPES.EMOJI,
+        text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
     });
 
     broadcast("market", "create", id);
@@ -165,23 +167,35 @@ export class EconomyService {
     if (!buyer || buyer.money < itemData.price) return null;
 
     const cost = itemData.discount ? itemData.discount : itemData.price;
-    await this.userService.score(newOwnerId, -cost, true);
-    await this.userService.score(oldOwnerId, cost, true);
 
     const invId = newId();
     const ts = nowIso();
-    await this.db.insert(schema.inventory).values({
-      id: invId,
-      type: itemData.type,
-      owner: newOwnerId,
-      label: itemData.label,
-      description: itemData.description,
-      charge: itemData.charge,
-      image: itemData.image,
-      imageMime: itemData.imageMime,
-      created: ts,
-      updated: ts,
-    });
+    const execute = () => {
+      rawDb.exec("BEGIN");
+      try {
+        this.db.insert(schema.inventory).values({
+          id: invId,
+          type: itemData.type,
+          owner: newOwnerId,
+          label: itemData.label,
+          description: itemData.description,
+          charge: itemData.charge,
+          image: itemData.image,
+          imageMime: itemData.imageMime,
+          created: ts,
+          updated: ts,
+        });
+        this.db.delete(schema.market).where(eq(schema.market.id, marketId));
+        rawDb.exec("COMMIT");
+      } catch {
+        rawDb.exec("ROLLBACK");
+        throw new Error("buy transaction failed");
+      }
+    };
+    execute();
+
+    await this.userService.score(newOwnerId, -cost, true);
+    await this.userService.score(oldOwnerId, cost, true);
 
     await this.inventoryLogService.logFromData(
       "buy",
@@ -202,12 +216,10 @@ export class EconomyService {
       { price: itemData.price, discount: itemData.discount, marketId },
     );
 
-    await this.db.delete(schema.market).where(eq(schema.market.id, marketId));
-
     await this.activityService.create({
       author: newOwnerId,
       image: buyer.avatar,
-      type: "emoji",
+      type: ACTIVITY_TYPES.EMOJI,
       text: `${buyer.username} купил предмет ${itemData.label} за ${cost}`,
     });
 

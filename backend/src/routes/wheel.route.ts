@@ -38,11 +38,6 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
   .post(
     "/spin",
     async ({ body, user, set, db, userService }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
       const { items, free, listType } = body;
       if (!Array.isArray(items) || items.length === 0) {
         set.status = 400;
@@ -94,6 +89,7 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
         free: t.Boolean(),
         listType: t.Optional(t.String()),
       }),
+      requireAuth: true,
       detail: {
         tags: ["wheel"],
         summary: "Spin the wheel - shuffles items, picks winner, deducts cost",

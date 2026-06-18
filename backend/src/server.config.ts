@@ -19,22 +19,16 @@ function parseCorsOrigin(
   return value.trim();
 }
 
-function requiredEnv(name: string, fallback?: string): string {
-  const val = Bun.env[name] || fallback;
-  if (!val) {
-    throw new Error(
-      `Missing required environment variable: ${name}. Check .env file.`,
-    );
-  }
-  return val;
-}
-
 export const config = {
-  port: Number(Bun.env.PORT) || 3000,
-  jwtSecret: requiredEnv("JWT_SECRET", "dpg-local-jwt"),
-  dbPath: resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite"),
-  corsOrigin: parseCorsOrigin(Bun.env.CORS_ORIGIN),
-  steamApiKey: Bun.env.STEAM_API_KEY ?? "",
+  get port() { return Number(Bun.env.PORT) || 3000; },
+  get jwtSecret() {
+    const val = Bun.env.JWT_SECRET;
+    if (!val) throw new Error("Missing required JWT_SECRET env var");
+    return val;
+  },
+  get dbPath() { return resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite"); },
+  get corsOrigin() { return parseCorsOrigin(Bun.env.CORS_ORIGIN); },
+  get steamApiKey() { return Bun.env.STEAM_API_KEY ?? ""; },
 };
 
 export const COLLECTION_IDS: Record<string, string> = {

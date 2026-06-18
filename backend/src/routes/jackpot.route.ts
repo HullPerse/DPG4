@@ -21,12 +21,22 @@ export const jackpotRoute = new Elysia({ prefix: "/utils/jackpot" })
   .post(
     "/play",
     async ({ body, headers, user, jackpotService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-      const devMode = headers["x-dev-mode"] === "1" || (body as any)?.devMode;
-      return await jackpotService.play(user.sub, devMode, (body ?? {}) as any);
+      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true;
+      return await jackpotService.play(
+        user.sub,
+        devMode,
+        body.devForceWin !== undefined || body.devShowWinningNumber !== undefined
+          ? body
+          : undefined,
+      );
     },
     {
-      body: t.Object({}, { additionalProperties: true }),
+      requireAuth: true,
+      body: t.Object({
+        devMode: t.Optional(t.Boolean()),
+        devForceWin: t.Optional(t.Boolean()),
+        devShowWinningNumber: t.Optional(t.Boolean()),
+      }),
       detail: { tags: ["jackpot"], summary: "Play the jackpot game" },
     },
   );

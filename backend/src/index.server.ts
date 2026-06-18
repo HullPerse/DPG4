@@ -5,13 +5,12 @@ import { config } from "./server.config";
 import { dbPlugin } from "./plugins/db.plugin";
 import { authRoute } from "./routes/auth.route";
 import { usersRoute } from "./routes/users.route";
-import { gamesRoute, presetsRoute } from "./routes/games.route";
-import {
-  itemsRoute,
-  inventoryRoute,
-  marketRoute,
-  tradeRoute,
-} from "./routes/items.route";
+import { gamesRoute } from "./routes/games.route";
+import { presetsRoute } from "./routes/presets.route";
+import { itemsRoute } from "./routes/items.route";
+import { inventoryRoute } from "./routes/inventory.route";
+import { marketRoute } from "./routes/market.route";
+import { tradeRoute } from "./routes/trade.route";
 import { activityRoute } from "./routes/activity.route";
 import { chatsRoute } from "./routes/chats.route";
 import { adsRoute } from "./routes/ads.route";
@@ -25,6 +24,7 @@ import { searchRoute } from "./routes/search.route";
 import { adminRoute } from "./routes/admin.route";
 import { registerClient, unregisterClient } from "./lib/ws";
 import { logger } from "./lib/logger";
+import { LOG_SYSTEM } from "./lib/constants";
 import { initAutoBackup } from "./lib/autoBackup";
 import { wheelRoute } from "./routes/wheel.route";
 import { historyRoute } from "./routes/history.route";
@@ -38,14 +38,16 @@ import { questsRoute } from "./routes/quests.route";
 import { servicesPlugin } from "./services.server";
 import { runMigrations } from "./db/migrate";
 import { ticketsRoute, ticketMarketRoute } from "./routes/tickets.route";
+import { metricsPlugin } from "./plugins/metrics.plugin";
 import { compressionPlugin } from "./plugins/compression.plugin";
 import { errorPlugin } from "./plugins/error.plugin";
 
 runMigrations();
-logger.info("SYSTEM", "DB migrations applied");
+logger.info(LOG_SYSTEM, "DB migrations applied");
 
 const app = new Elysia()
   .use(errorPlugin)
+  .use(metricsPlugin)
   .use(compressionPlugin)
   .use(
     cors({
@@ -168,7 +170,7 @@ const app = new Elysia()
 app.listen(config.port);
 
 logger.info(
-  "SYSTEM",
+  LOG_SYSTEM,
   `🐀 DPG API -> http://${app.server?.hostname}:${app.server?.port}`,
 );
 logger.info(null, `Docs -> /docs  |  Admin -> /admin`);

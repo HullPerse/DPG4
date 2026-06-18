@@ -44,8 +44,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
   .get(
     "/tickets",
     async ({ user, db }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const [userRow] = await db
         .select()
         .from(schema.users)
@@ -67,6 +65,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       };
     },
     {
+      requireAuth: true,
       detail: { tags: ["tickets"], summary: "Get user ticket info" },
     },
   )
@@ -74,8 +73,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
   .post(
     "/tickets/buy",
     async ({ body, user, db, economyService, userService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const [userRow] = await db
         .select()
         .from(schema.users)
@@ -138,6 +135,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       };
     },
     {
+      requireAuth: true,
       body: t.Object({ amount: t.Integer({ minimum: 1 }) }),
       detail: { tags: ["tickets"], summary: "Buy tickets" },
     },
@@ -146,8 +144,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
   .post(
     "/tickets/sell-direct",
     async ({ body, user, db, userService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const amount = body.amount;
       if (!Number.isInteger(amount) || amount < 1) {
         return { error: "Invalid amount" };
@@ -189,6 +185,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       return { ok: true, payout, newBalance: newTickets };
     },
     {
+      requireAuth: true,
       body: t.Object({ amount: t.Integer({ minimum: 1 }) }),
       detail: { tags: ["tickets"], summary: "Sell tickets for money at 1:1" },
     },
@@ -197,8 +194,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
   .post(
     "/tickets/sell",
     async ({ body, user, db, economyService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const [userRow] = await db
         .select()
         .from(schema.users)
@@ -268,6 +263,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
         quantity: t.Integer({ minimum: MIN_TICKETS_PER_SALE }),
         perTicketPrice: t.Integer({ minimum: 1 }),
       }),
+      requireAuth: true,
       detail: { tags: ["tickets"], summary: "Sell tickets on market" },
     },
   );
@@ -280,8 +276,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
   .post(
     "/:id/buy",
     async ({ params, user, db, userService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const [listing] = await db
         .select()
         .from(schema.market)
@@ -363,6 +357,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
       };
     },
     {
+      requireAuth: true,
       params: t.Object({ id: t.String() }),
       detail: { tags: ["tickets"], summary: "Buy ticket market listing" },
     },
@@ -371,8 +366,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
   .post(
     "/:id/remove",
     async ({ params, user, db }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-
       const [listing] = await db
         .select()
         .from(schema.market)
@@ -412,6 +405,7 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
       return { ok: true, refundedTickets: quantity };
     },
     {
+      requireAuth: true,
       params: t.Object({ id: t.String() }),
       detail: { tags: ["tickets"], summary: "Remove ticket market listing" },
     },

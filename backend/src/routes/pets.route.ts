@@ -9,6 +9,7 @@ import { resolveUsername } from "../lib/users";
 import { dbPlugin } from "../plugins/db.plugin";
 import { servicesPlugin } from "../services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
+import { LOG_SYSTEM } from "../lib/constants";
 import { db } from "../db";
 
 const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
@@ -78,7 +79,7 @@ export function startPetDecayLoop() {
     }
   }, DECAY_INTERVAL_MS);
 
-  logger.info("SYSTEM", "Pet decay loop started (interval 30s)");
+  logger.info(LOG_SYSTEM, "Pet decay loop started (interval 30s)");
 }
 
 export const petsRoute = new Elysia({ prefix: "/pets" })

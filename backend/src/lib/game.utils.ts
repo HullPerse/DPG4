@@ -1,3 +1,5 @@
+import { USER_ACTIONS } from "./constants";
+
 /** @see frontend calculateScore */
 export function calculateScore(realTime: number, hltbTime: number): number {
   if (Number.isNaN(realTime) || Number.isNaN(hltbTime) || hltbTime <= 0)
@@ -26,9 +28,9 @@ export function calculateCost(): number {
 export function getNextDice(
   realTime: number,
   currentCell: number,
-  action: "MOVE_POSITIVE" | "MOVE_NEGATIVE",
+  action: typeof USER_ACTIONS.MOVE_POSITIVE | typeof USER_ACTIONS.MOVE_NEGATIVE,
 ): number {
-  if (action === "MOVE_NEGATIVE") {
+  if (action === USER_ACTIONS.MOVE_NEGATIVE) {
     if (currentCell >= 81) return 2;
     return 1;
   }
