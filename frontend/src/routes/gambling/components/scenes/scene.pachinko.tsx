@@ -201,27 +201,7 @@ function FramePillars() {
           emissiveIntensity={0.3}
         />
       </mesh>
-      {/* Arch title */}
-      <Html
-        position={[0, BOARD_TOP + 0.5, 0.1]}
-        center
-        transform
-        distanceFactor={18}
-      >
-        <span
-          style={{
-            color: "#c4a7e7",
-            fontSize: "20px",
-            fontWeight: 900,
-            fontFamily: "monospace",
-            letterSpacing: "6px",
-            textShadow: "0 0 12px #c4a7e766, 0 2px 4px rgba(0,0,0,0.9)",
-            whiteSpace: "nowrap",
-          }}
-        >
-          パチンコ
-        </span>
-      </Html>
+
       {/* Base panel */}
       <mesh position={[0, 0.35, 0]}>
         <boxGeometry args={[BOARD_WIDTH + 1.2, 0.5, 0.25]} />
@@ -629,7 +609,9 @@ function RatBall({
     if (kickTrigger === 0 || kickTrigger === prevKickRef.current) return;
     prevKickRef.current = kickTrigger;
     if (!bodyRef.current || settledRef.current) return;
-    const vx = (Math.random() - 0.5) * 6;
+    const pos = bodyRef.current.translation();
+    const biasX = -Math.sign(pos.x) * 2.5;
+    const vx = biasX + (Math.random() - 0.5) * 3;
     const vy = -(3 + Math.random() * 4);
     const vz = (Math.random() - 0.5) * 8;
     bodyRef.current.setLinvel({ x: vx, y: vy, z: 0 }, true);
