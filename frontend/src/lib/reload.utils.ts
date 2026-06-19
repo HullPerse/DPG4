@@ -10,13 +10,7 @@ export async function applyAdminReload() {
   window.dispatchEvent(new CustomEvent(ADMIN_RELOAD_EVENT));
 
   const { refresh, isAuth } = useUserStore.getState();
-  if (isAuth) {
-    try {
-      await refresh();
-    } catch {
-      /* server may be restarting */
-    }
-  }
+  if (isAuth) await refresh();
 
   useDataStore.getState().resetSessionCaches();
 }
