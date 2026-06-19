@@ -1,12 +1,10 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "../../db/schema";
 import { newId } from "../../lib/ids";
 import { nowIso } from "../../lib/dates";
 import { broadcast } from "../../lib/ws";
 import { logger } from "../../lib/logger";
 import { updateTicketItem } from "../../lib/ticket.helpers";
-import type { UserService } from "../user.service";
 import { GAMBLING_BAN_THRESHOLD } from "../../lib/gambling.constants";
 import { Db } from "@/types";
 
@@ -96,7 +94,11 @@ export class JackpotService {
     broadcast("jackpot", "update", undefined);
   }
 
-  async play(userId: string, devMode?: boolean, devOverrides?: JackpotDevOverrides) {
+  async play(
+    userId: string,
+    devMode?: boolean,
+    devOverrides?: JackpotDevOverrides,
+  ) {
     if (!devMode) {
       const [userRow] = await this.db
         .select()
@@ -204,7 +206,11 @@ export class JackpotService {
           };
         }
 
-        logger.info(userRow!.username, `jackpot win ${winAmount} tickets`, userId);
+        logger.info(
+          userRow!.username,
+          `jackpot win ${winAmount} tickets`,
+          userId,
+        );
 
         return {
           win: true,
@@ -234,7 +240,9 @@ export class JackpotService {
     return {
       win: isWin,
       chosen,
-      winningNumber: devOverrides?.devShowWinningNumber ? winningNumber : winningNumber,
+      winningNumber: devOverrides?.devShowWinningNumber
+        ? winningNumber
+        : winningNumber,
       prize: isWin ? refreshed.pool : 0,
       newBalance: 0,
       banned: false,

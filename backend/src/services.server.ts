@@ -17,7 +17,12 @@ const activityService = new ActivityService(db);
 const userService = new UserService(db, activityService);
 const gameService = new GameService(db, activityService);
 const inventoryLogService = new InventoryLogService(db);
-const economyService = new EconomyService(db, userService, activityService, inventoryLogService);
+const economyService = new EconomyService(
+  db,
+  userService,
+  activityService,
+  inventoryLogService,
+);
 const effectService = new EffectService(
   db,
   userService,
@@ -31,7 +36,7 @@ const blackjackService = new BlackjackService(db, userService);
 const rocketService = new RocketService(db, userService);
 const pachinkoService = new PachinkoService(db, userService);
 const minesService = new MinesService(db, userService);
-const jackpotService = new JackpotService(db, userService);
+const jackpotService = new JackpotService(db);
 
 export const servicesPlugin = new Elysia({ name: "services" })
   .decorate("activityService", activityService)
