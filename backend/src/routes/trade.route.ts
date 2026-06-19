@@ -1,8 +1,10 @@
-import { Elysia, t } from "elysia";
-import { logger } from "../lib/logger";
-import { servicesPlugin } from "../services.server";
+import { Elysia, t } from "elysia"
+import Logger from "@/lib/logger.utils"
+import servicesPlugin from "@/services.server"
 
-export const tradeRoute = new Elysia({ prefix: "/trade" })
+const logger = new Logger("TRADE")
+
+export default new Elysia({ prefix: "/trade" })
   .use(servicesPlugin)
   .post(
     "/",
@@ -10,13 +12,9 @@ export const tradeRoute = new Elysia({ prefix: "/trade" })
       const result = await economyService.tradeInventory(
         body.currentUser,
         body.otherUser,
-      );
-      logger.info(
-        null,
-        "trade completed",
-        `${body.currentUser.id} ↔ ${body.otherUser.id}`,
-      );
-      return result;
+      )
+      logger.info(`trade completed ${body.currentUser.id} <-> ${body.otherUser.id}`)
+      return result
     },
     {
       body: t.Object({
@@ -32,4 +30,4 @@ export const tradeRoute = new Elysia({ prefix: "/trade" })
         }),
       }),
     },
-  );
+  )

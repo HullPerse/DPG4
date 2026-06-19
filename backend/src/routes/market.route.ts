@@ -1,29 +1,31 @@
-import { Elysia, t } from "elysia";
-import { desc, eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import { Elysia, t } from "elysia"
+import { desc, eq } from "drizzle-orm"
+import * as schema from "@/db/schema.db"
+import { withRecordMeta } from "@/lib/index.utils"
+import { broadcast } from "@/lib/websocket.utils"
+import Logger from "@/lib/logger.utils"
+import databasePlugin from "@/plugins/database.plugin"
+import servicesPlugin from "@/services.server"
 
-export const marketRoute = new Elysia({ prefix: "/market" })
-  .use(dbPlugin)
+const logger = new Logger("MARKET")
+
+export default new Elysia({ prefix: "/market" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .get(
     "/",
     async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
-      const offset = query.offset ? Number(query.offset) : 0;
+      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100
+      const offset = query.offset ? Number(query.offset) : 0
 
       const rows = await db
         .select()
         .from(schema.market)
         .orderBy(desc(schema.market.created))
         .limit(limit)
-        .offset(offset);
+        .offset(offset)
 
-      return rows.map((r) => withRecordMeta(r, "market"));
+      return rows.map((r) => withRecordMeta(r, "market"))
     },
     {
       query: t.Optional(
@@ -41,12 +43,12 @@ export const marketRoute = new Elysia({ prefix: "/market" })
       const [row] = await db
         .select()
         .from(schema.market)
-        .where(eq(schema.market.id, params.id));
+        .where(eq(schema.market.id, params.id))
       if (!row) {
-        set.status = 404;
-        return { error: "Not found" };
+        set.status = 404
+        return { error: "Not found" }
       }
-      return withRecordMeta(row, "market");
+      return withRecordMeta(row, "market")
     },
     { params: t.Object({ id: t.String() }) },
   )
@@ -57,14 +59,9 @@ export const marketRoute = new Elysia({ prefix: "/market" })
         body.inventoryId,
         body.ownerId,
         body.price,
-      );
-      logger.info(
-        null,
-        "listed item on market",
-        `item:${body.inventoryId}`,
-        `price:${body.price}`,
-      );
-      return result;
+      )
+      logger.info(`listed item on market item:${body.inventoryId} price:${body.price}`)
+      return result
     },
     {
       body: t.Object({
@@ -81,14 +78,9 @@ export const marketRoute = new Elysia({ prefix: "/market" })
         params.id,
         body.newOwnerId,
         body.oldOwnerId,
-      );
-      logger.info(
-        null,
-        "bought market item",
-        params.id,
-        `buyer:${body.newOwnerId}`,
-      );
-      return result;
+      )
+      logger.info(`bought market item ${params.id} buyer:${body.newOwnerId}`)
+      return result
     },
     {
       body: t.Object({
@@ -98,9 +90,9 @@ export const marketRoute = new Elysia({ prefix: "/market" })
     },
   )
   .post("/:id/remove", async ({ params, economyService }) => {
-    const result = await economyService.removeMarketListing(params.id);
-    logger.info(null, "removed market listing", params.id);
-    return result;
+    const result = await economyService.removeMarketListing(params.id)
+    logger.info(`removed market listing ${params.id}`)
+    return result
   })
   .post(
     "/:id/discount",
@@ -110,14 +102,9 @@ export const marketRoute = new Elysia({ prefix: "/market" })
         body.ownerId,
         body.price,
         body.discountPrice,
-      );
-      logger.info(
-        null,
-        "discounted market item",
-        params.id,
-        `${body.price}→${body.discountPrice}`,
-      );
-      return result;
+      )
+      logger.info(`discounted market item ${params.id} ${body.price}->${body.discountPrice}`)
+      return result
     },
     {
       body: t.Object({
@@ -130,10 +117,10 @@ export const marketRoute = new Elysia({ prefix: "/market" })
   .delete(
     "/:id",
     async ({ params, db }) => {
-      await db.delete(schema.market).where(eq(schema.market.id, params.id));
-      broadcast("market", "delete", params.id);
-      logger.info(null, "deleted market listing", params.id);
-      return { ok: true };
+      await db.delete(schema.market).where(eq(schema.market.id, params.id))
+      broadcast("market", "delete", params.id)
+      logger.info(`deleted market listing ${params.id}`)
+      return { ok: true }
     },
     { params: t.Object({ id: t.String() }) },
-  );
+  )

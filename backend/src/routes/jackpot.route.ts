@@ -1,9 +1,9 @@
-import { Elysia, t } from "elysia";
-import { authPlugin } from "../plugins/auth.plugin";
-import { servicesPlugin } from "../services.server";
-import { dbPlugin } from "../plugins/db.plugin";
+import { Elysia, t } from "elysia"
+import authPlugin from "@/plugins/auth.plugin"
+import servicesPlugin from "@/services.server"
+import dbPlugin from "@/plugins/database.plugin"
 
-export const jackpotRoute = new Elysia({ prefix: "/utils/jackpot" })
+export default new Elysia({ prefix: "/utils/jackpot" })
   .use(dbPlugin)
   .use(servicesPlugin)
   .use(authPlugin)
@@ -11,24 +11,21 @@ export const jackpotRoute = new Elysia({ prefix: "/utils/jackpot" })
   .get(
     "/",
     async ({ jackpotService }) => {
-      return await jackpotService.getStatus();
-    },
-    {
-      detail: { tags: ["jackpot"], summary: "Get jackpot status" },
+      return await jackpotService.getStatus()
     },
   )
 
   .post(
     "/play",
     async ({ body, headers, user, jackpotService }) => {
-      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true;
+      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true
       return await jackpotService.play(
         user.sub,
         devMode,
         body.devForceWin !== undefined || body.devShowWinningNumber !== undefined
           ? body
           : undefined,
-      );
+      )
     },
     {
       requireAuth: true,
@@ -37,6 +34,5 @@ export const jackpotRoute = new Elysia({ prefix: "/utils/jackpot" })
         devForceWin: t.Optional(t.Boolean()),
         devShowWinningNumber: t.Optional(t.Boolean()),
       }),
-      detail: { tags: ["jackpot"], summary: "Play the jackpot game" },
     },
-  );
+  )

@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
-import { servicesPlugin } from "../services.server";
+import servicesPlugin from "@/services.server";
 
-export const activityRoute = new Elysia({ prefix: "/activity" })
+export default new Elysia({ prefix: "/activity" })
   .use(servicesPlugin)
   .get(
     "/",

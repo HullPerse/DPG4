@@ -1,12 +1,17 @@
-import * as schema from "../db/schema";
-import { removeFirst, getNextDice } from "../lib/game.utils";
-import { omitPassword, withRecordMeta } from "../lib/record";
-import { Db } from "@/types";
-import { ActivityService } from "./activity.service";
-import { BaseService } from "./base.service";
-import { STATUS_EFFECTS, USER_ACTIONS, ACTIVITY_TYPES } from "../lib/constants";
+import { Db } from "@/types/server";
+import ActivityService from "./activity.service";
+import { BaseService } from "./index.service";
+import * as schema from "@/db/schema.db";
+import {
+  ACTIVITY_TYPES,
+  omitPassword,
+  STATUS_EFFECTS,
+  USER_ACTIONS,
+  withRecordMeta,
+} from "@/lib/index.utils";
+import { getNextDice, removeFirst } from "@/lib/game.utils";
 
-export class UserService extends BaseService {
+export default class UserService extends BaseService {
   constructor(
     db: Db,
     private activityService: ActivityService,
@@ -15,29 +20,45 @@ export class UserService extends BaseService {
   }
 
   async getById(userId: string) {
-    const row = await this.findById<typeof schema.users.$inferSelect>(schema.users, userId);
+    const row = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!row) return null;
     return withRecordMeta(omitPassword(row), "users");
   }
 
   async changeStatus(userId: string, status: string, type: "add" | "remove") {
-    const user = await this.findById<typeof schema.users.$inferSelect>(schema.users, userId);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const current = user.status ?? [];
     const newStatuses =
       type === "remove" ? removeFirst(current, status) : [...current, status];
 
-    await this.updateOne(schema.users, userId, { status: newStatuses }, "users");
+    await this.updateOne(
+      schema.users,
+      userId,
+      { status: newStatuses },
+      "users",
+    );
     return this.getById(userId);
   }
 
   async score(userId: string, score: number, trade?: boolean) {
-    const user = await this.findById<typeof schema.users.$inferSelect>(schema.users, userId);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const userStatuses = user.status ?? [];
-    const ephemerality = userStatuses.some((s) => s === STATUS_EFFECTS.EPHEMERALITY);
+    const ephemerality = userStatuses.some(
+      (s) => s === STATUS_EFFECTS.EPHEMERALITY,
+    );
     const blessings = userStatuses.filter(
       (s) => s === STATUS_EFFECTS.GYPSY_BARON_BLESSING,
     );
@@ -88,7 +109,10 @@ export class UserService extends BaseService {
 
     const finalValue = finalPlace();
 
-    const user = await this.findById<typeof schema.users.$inferSelect>(schema.users, userId);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     await this.activityService.create({
@@ -105,9 +129,14 @@ export class UserService extends BaseService {
   async changeDice(
     userId: string,
     realTime: number,
-    action: typeof USER_ACTIONS.MOVE_POSITIVE | typeof USER_ACTIONS.MOVE_NEGATIVE,
+    action:
+      | typeof USER_ACTIONS.MOVE_POSITIVE
+      | typeof USER_ACTIONS.MOVE_NEGATIVE,
   ) {
-    const user = await this.findById<typeof schema.users.$inferSelect>(schema.users, userId);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const currentCell = user.position;

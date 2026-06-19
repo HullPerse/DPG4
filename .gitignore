@@ -198,3 +198,4 @@ old backend
 backend/server
 backend/data/backup-tracker.json
 backend/data
+_backend

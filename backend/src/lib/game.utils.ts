@@ -1,4 +1,4 @@
-import { USER_ACTIONS } from "./constants";
+import { USER_ACTIONS } from "./index.utils";
 
 /** @see frontend calculateScore */
 export function calculateScore(realTime: number, hltbTime: number): number {

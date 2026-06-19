@@ -1,14 +1,14 @@
-import { Elysia, t } from "elysia";
-import { eq, sql, desc, and } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { resolveUsername } from "../lib/users";
-import { dbPlugin } from "../plugins/db.plugin";
+import { Elysia, t } from "elysia"
+import { eq, sql, and } from "drizzle-orm"
+import * as schema from "@/db/schema.db"
+import { newId, nowIso, getUser } from "@/lib/index.utils"
+import { broadcast } from "@/lib/websocket.utils"
+import Logger from "@/lib/logger.utils"
+import dbPlugin from "@/plugins/database.plugin"
 
-export const hangmanRoute = new Elysia({ prefix: "/hangman" })
+const logger = new Logger("HANGMAN")
+
+export default new Elysia({ prefix: "/hangman" })
   .use(dbPlugin)
 
   .get(
@@ -18,13 +18,12 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
-        .orderBy(desc(schema.hangman.created))
-        .get();
-      return record ?? null;
+        .orderBy(sql`${schema.hangman.created} DESC`)
+        .get()
+      return record ?? null
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get user's latest hangman record" },
     },
   )
 
@@ -35,17 +34,16 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
-        .orderBy(desc(schema.hangman.created));
-      let streak = 0;
+        .orderBy(sql`${schema.hangman.created} DESC`)
+      let streak = 0
       for (const row of rows) {
-        if (row.state === "won") streak++;
-        else break;
+        if (row.state === "won") streak++
+        else break
       }
-      return { streak };
+      return { streak }
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get win streak" },
     },
   )
 
@@ -61,19 +59,19 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
             eq(schema.hangman.state, "current"),
           ),
         )
-        .get();
+        .get()
 
-      if (current) return current;
+      if (current) return current
 
       const [randomItem] = await db
         .select({ label: schema.items.label })
         .from(schema.items)
         .orderBy(sql`RANDOM()`)
-        .limit(1);
+        .limit(1)
 
-      const word = randomItem?.label ?? "ПРЕДМЕТ";
-      const now = nowIso();
-      const id = newId();
+      const word = randomItem?.label ?? "ПРЕДМЕТ"
+      const now = nowIso()
+      const id = newId()
 
       await db.insert(schema.hangman).values({
         id,
@@ -82,24 +80,23 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         state: "current",
         created: now,
         updated: now,
-      });
+      })
 
       return await db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, id))
-        .get();
+        .get()
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get latest or create first hangman record" },
     },
   )
 
   .patch(
     "/:userId/state",
     async ({ params, body, db }) => {
-      const now = nowIso();
+      const now = nowIso()
       const record = await db
         .select()
         .from(schema.hangman)
@@ -109,8 +106,8 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
             eq(schema.hangman.state, "current"),
           ),
         )
-        .get();
-      if (!record) throw new Error("No active hangman round");
+        .get()
+      if (!record) throw new Error("No active hangman round")
 
       await db
         .update(schema.hangman)
@@ -119,13 +116,13 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
           wrongLetters: body.wrongLetters,
           updated: now,
         })
-        .where(eq(schema.hangman.id, record.id));
+        .where(eq(schema.hangman.id, record.id))
 
       return await db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, record.id))
-        .get();
+        .get()
     },
     {
       params: t.Object({ userId: t.String() }),
@@ -133,14 +130,13 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         guessedLetters: t.Array(t.String()),
         wrongLetters: t.Array(t.String()),
       }),
-      detail: { tags: ["hangman"], summary: "Save mid-game state" },
     },
   )
 
   .post(
     "/:userId/play",
     async ({ params, body, db }) => {
-      const now = nowIso();
+      const now = nowIso()
       const record = await db
         .select()
         .from(schema.hangman)
@@ -150,9 +146,9 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
             eq(schema.hangman.state, "current"),
           ),
         )
-        .get();
+        .get()
 
-      if (!record) throw new Error("No active hangman round");
+      if (!record) throw new Error("No active hangman round")
 
       await db
         .update(schema.hangman)
@@ -162,16 +158,17 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
           wrongLetters: body.wrongLetters,
           updated: now,
         })
-        .where(eq(schema.hangman.id, record.id));
+        .where(eq(schema.hangman.id, record.id))
 
-      broadcast("hangman", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "user played", body.won);
+      broadcast("hangman", "update", params.userId)
+      const hUser = await getUser(db, params.userId)
+      logger.setAuthor(hUser?.username ?? "SYSTEM").info(`user played ${body.won}`)
 
       return await db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, record.id))
-        .get();
+        .get()
     },
     {
       params: t.Object({ userId: t.String() }),
@@ -180,6 +177,5 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         guessedLetters: t.Array(t.String()),
         wrongLetters: t.Array(t.String()),
       }),
-      detail: { tags: ["hangman"], summary: "Mark current round as played" },
     },
-  );
+  )

@@ -1,16 +1,17 @@
 import { Elysia, t } from "elysia";
 import { and, desc, eq, not, type SQL } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { nowIso } from "../lib/dates";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { authPlugin } from "../plugins/auth.plugin";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import * as schema from "@/db/schema.db";
+import { nowIso, withRecordMeta } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import databasePlugin from "@/plugins/database.plugin";
+import servicesPlugin from "@/services.server";
+import authPlugin from "@/plugins/auth.plugin";
 
-export const inventoryRoute = new Elysia({ prefix: "/inventory" })
-  .use(dbPlugin)
+const logger = new Logger("INVENTORY");
+
+export default new Elysia({ prefix: "/inventory" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
   .get(
@@ -46,14 +47,16 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }
 
       if (query.search) {
-        conditions.push(
-          eq(schema.inventory.label, query.search),
-        );
+        conditions.push(eq(schema.inventory.label, query.search));
       }
 
-      const q = conditions.length > 0
-        ? db.select().from(schema.inventory).where(and(...conditions))
-        : db.select().from(schema.inventory);
+      const q =
+        conditions.length > 0
+          ? db
+              .select()
+              .from(schema.inventory)
+              .where(and(...conditions))
+          : db.select().from(schema.inventory);
 
       const rows = await q.limit(limit).offset(offset);
       return rows.map((r) => withRecordMeta(r, "inventory"));
@@ -93,12 +96,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         body.userId,
         body.itemId,
       );
-      logger.info(
-        user?.username,
-        "added item to inventory",
-        `user:${body.userId}`,
-        `item:${body.itemId}`,
-      );
+      logger
+        .setAuthor(user?.username ?? "SYSTEM")
+        .info(
+          `added item to inventory user:${body.userId} item:${body.itemId}`,
+        );
       return result;
     },
     {
@@ -116,12 +118,9 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         .set({ owner: body.newOwner, updated: nowIso() })
         .where(eq(schema.inventory.id, params.id));
       broadcast("inventory", "update", params.id);
-      logger.info(
-        user?.username,
-        "transferred inventory item",
-        params.id,
-        `to:${body.newOwner}`,
-      );
+      logger
+        .setAuthor(user?.username ?? "SYSTEM")
+        .info(`transferred inventory item ${params.id} to:${body.newOwner}`);
       return { ok: true };
     },
     {
@@ -134,15 +133,13 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
     "/:id/use",
     async ({ params, user, effectService }) => {
       const result = await effectService.executeUse(user.sub, params.id);
-      logger.info(user.username, "used inventory item", params.id);
+      logger
+        .setAuthor(String(user.username))
+        .info(`used inventory item ${params.id}`);
       return result;
     },
     {
       requireAuth: true,
-      detail: {
-        tags: ["items"],
-        summary: "Use inventory item (server effects)",
-      },
     },
   )
   .post(
@@ -153,12 +150,11 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         body.oldCharge,
         body.newCharge,
       );
-      logger.info(
-        user?.username,
-        "charged inventory item",
-        params.id,
-        `${body.oldCharge}→${body.newCharge}`,
-      );
+      logger
+        .setAuthor(user?.username ?? "SYSTEM")
+        .info(
+          `charged inventory item ${params.id} ${body.oldCharge}->${body.newCharge}`,
+        );
       return result;
     },
     {
@@ -179,7 +175,7 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       economyService,
       userService,
       activityService,
-      inventoryLogService,
+      logService,
     }) => {
       const [inv] = await db
         .select()
@@ -195,13 +191,17 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
       }
       await economyService.chargeInventory(params.id, inv.charge, -1);
       const userData = await userService.getById(user.sub);
-      await inventoryLogService.log("use", params.id, user.sub, user.sub, { consume: true });
+      await logService.log("use", params.id, user.sub, user.sub, {
+        consume: true,
+      });
       await activityService.create({
         author: user.sub,
         image: userData?.avatar ?? "",
         text: body.activityText,
       });
-      logger.info(user.username, "consumed inventory item", params.id);
+      logger
+        .setAuthor(String(user.username))
+        .info(`consumed inventory item ${params.id}`);
       return { ok: true };
     },
     {
@@ -209,29 +209,33 @@ export const inventoryRoute = new Elysia({ prefix: "/inventory" })
         activityText: t.String(),
       }),
       requireAuth: true,
-      detail: {
-        tags: ["items"],
-        summary:
-          "Consume inventory item - charge and create activity in one call",
-      },
     },
   )
   .delete(
     "/:id",
-    async ({ params, db, user, inventoryLogService }) => {
+    async ({ params, db, user, logService }) => {
       const [inv] = await db
         .select()
         .from(schema.inventory)
         .where(eq(schema.inventory.id, params.id));
-      await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
+      await db
+        .delete(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
       if (inv) {
-        await inventoryLogService.logFromData(
-          "delete", inv.id, inv.label, inv.type, inv.owner, user?.sub,
+        await logService.logFromData(
+          "delete",
+          inv.id,
+          inv.label,
+          inv.type,
+          inv.owner,
+          user?.sub,
           { deletedBy: "user" },
         );
       }
       broadcast("inventory", "delete", params.id);
-      logger.info(user?.username, "deleted inventory item", params.id);
+      logger
+        .setAuthor(user?.username ?? "SYSTEM")
+        .info(`deleted inventory item ${params.id}`);
       return { ok: true };
     },
     { params: t.Object({ id: t.String() }) },

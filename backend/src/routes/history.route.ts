@@ -1,58 +1,58 @@
-import { Elysia, t } from "elysia";
-import { desc, eq, sql, and } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { rawDb } from "../db";
-import { authPlugin } from "../plugins/auth.plugin";
-import { dbPlugin } from "../plugins/db.plugin";
+import { Elysia, t } from "elysia"
+import { desc, eq, sql, and } from "drizzle-orm"
+import * as schema from "@/db/schema.db"
+import { rawDb } from "@/db/index.db"
+import authPlugin from "@/plugins/auth.plugin"
+import databasePlugin from "@/plugins/database.plugin"
 
 interface StatsRow {
-  date: string;
-  net: number;
-  gamesPlayed: number;
+  date: string
+  net: number
+  gamesPlayed: number
 }
 
 interface GameDistRow {
-  type: string;
-  count: number;
-  totalNet: number;
+  type: string
+  count: number
+  totalNet: number
 }
 
 interface BetDistRow {
-  range: string;
-  count: number;
+  range: string
+  count: number
 }
 
 interface LeaderboardRow {
-  userId: string;
-  username: string;
-  avatar: string;
-  color: string;
-  currentMoney: number;
-  currentTickets: number;
-  totalNet: number;
-  gamesPlayed: number;
-  wins: number;
-  losses: number;
-  biggestWin: number;
+  userId: string
+  username: string
+  avatar: string
+  color: string
+  currentMoney: number
+  currentTickets: number
+  totalNet: number
+  gamesPlayed: number
+  wins: number
+  losses: number
+  biggestWin: number
 }
 
-export const historyRoute = new Elysia({ prefix: "/history" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/history" })
+  .use(databasePlugin)
   .use(authPlugin)
   .get(
     "/",
     async ({ query, user, set, db }) => {
-      const page = Math.max(1, query.page ?? 1);
-      const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
-      const offset = (page - 1) * limit;
+      const page = Math.max(1, query.page ?? 1)
+      const limit = Math.min(Math.max(1, query.limit ?? 50), 100)
+      const offset = (page - 1) * limit
 
-      const where = [];
-      where.push(eq(schema.history.userId, user.sub));
+      const where = []
+      where.push(eq(schema.history.userId, user.sub))
       if (query.type) {
-        where.push(eq(schema.history.type, query.type));
+        where.push(eq(schema.history.type, query.type))
       }
 
-      const conditions = where.length > 1 ? and(...where) : where[0];
+      const conditions = where.length > 1 ? and(...where) : where[0]
 
       const rows = await db
         .select()
@@ -60,19 +60,19 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         .where(conditions)
         .orderBy(desc(schema.history.created))
         .limit(limit)
-        .offset(offset);
+        .offset(offset)
 
       const [countResult] = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(schema.history)
-        .where(conditions);
+        .where(conditions)
 
       return {
         data: rows,
         total: Number(countResult?.count ?? 0),
         page,
         limit,
-      };
+      }
     },
     {
       query: t.Optional(
@@ -83,10 +83,6 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         }),
       ),
       requireAuth: true,
-      detail: {
-        tags: ["history"],
-        summary: "Get paginated history for current user, optionally filtered by type",
-      },
     },
   )
   .get(
@@ -98,7 +94,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
            FROM history WHERE user_id = ?
            GROUP BY DATE(created) ORDER BY date DESC LIMIT 30`,
         )
-        .all(user.sub);
+        .all(user.sub)
 
       const gameDistribution = rawDb
         .query<GameDistRow, [string]>(
@@ -106,13 +102,13 @@ export const historyRoute = new Elysia({ prefix: "/history" })
            FROM history WHERE user_id = ?
            GROUP BY type ORDER BY count DESC`,
         )
-        .all(user.sub);
+        .all(user.sub)
 
       const allBets = rawDb
         .query<{ bid: number }, [string]>(
           `SELECT bid FROM history WHERE user_id = ? AND bid > 0`,
         )
-        .all(user.sub);
+        .all(user.sub)
 
       const betRanges = [
         { label: "1-5", min: 1, max: 5 },
@@ -120,20 +116,20 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         { label: "11-20", min: 11, max: 20 },
         { label: "21-50", min: 21, max: 50 },
         { label: "50+", min: 51, max: Infinity },
-      ];
+      ]
       const betDistribution: BetDistRow[] = betRanges.map((r) => ({
         range: r.label,
         count: allBets.filter((b) => b.bid >= r.min && b.bid <= r.max).length,
-      }));
+      }))
 
       const [summary] = rawDb
         .query<{
-          totalPlayed: number;
-          totalWagered: number;
-          totalNet: number;
-          winRate: number;
-          biggestWin: number;
-          avgBet: number;
+          totalPlayed: number
+          totalWagered: number
+          totalNet: number
+          winRate: number
+          biggestWin: number
+          avgBet: number
         }, [string]>(
           `SELECT
             COUNT(*) AS totalPlayed,
@@ -144,7 +140,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
             ROUND(COALESCE(AVG(bid), 0), 1) AS avgBet
            FROM history WHERE user_id = ?`,
         )
-        .all(user.sub);
+        .all(user.sub)
 
       return {
         dailyNet: dailyNet.reverse(),
@@ -158,14 +154,10 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           biggestWin: 0,
           avgBet: 0,
         },
-      };
+      }
     },
     {
       requireAuth: true,
-      detail: {
-        tags: ["history"],
-        summary: "Get gambling stats and charts data for current user",
-      },
     },
   )
   .get(
@@ -173,12 +165,12 @@ export const historyRoute = new Elysia({ prefix: "/history" })
     async ({ query }) => {
       const typeFilter = query.gameType
         ? `AND h.type = '${query.gameType.replace(/'/g, "''")}'`
-        : "";
+        : ""
       const periodFilter =
         query.period === "weekly"
           ? `AND h.created >= datetime('now', '-7 days')`
-          : "";
-      const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
+          : ""
+      const limit = Math.min(Math.max(1, query.limit ?? 50), 100)
 
       const sql_query = `
         SELECT
@@ -199,13 +191,13 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         GROUP BY h.user_id
         ORDER BY totalNet DESC
         LIMIT ?
-      `;
+      `
 
       const rows = rawDb
         .query<LeaderboardRow, [number]>(sql_query)
-        .all(limit);
+        .all(limit)
 
-      return { data: rows };
+      return { data: rows }
     },
     {
       query: t.Optional(
@@ -225,9 +217,5 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           limit: t.Optional(t.Numeric()),
         }),
       ),
-      detail: {
-        tags: ["history"],
-        summary: "Get gambling leaderboard - ranked by total net profit",
-      },
     },
-  );
+  )

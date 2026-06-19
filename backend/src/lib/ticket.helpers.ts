@@ -1,9 +1,8 @@
 import { and, eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
-import { Db } from "@/types";
+import * as schema from "@/db/schema.db";
+import { Db } from "@/types/server";
+import { newId, nowIso } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
 
 const TICKET_ITEM_LABEL = "Тикет";
 

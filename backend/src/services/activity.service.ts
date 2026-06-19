@@ -1,22 +1,17 @@
 import { desc } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { broadcast } from "../lib/ws";
-import { withRecordMeta } from "../lib/record";
-import { Db } from "@/types";
-import { BaseService } from "./base.service";
-import { ACTIVITY_TYPES } from "../lib/constants";
+import { Db } from "@/types/server";
+import * as schema from "@/db/schema.db";
+import { BaseService } from "./index.service";
+import { Activity } from "@/types/services";
+import { ACTIVITY_TYPES, withRecordMeta } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
 
-export class ActivityService extends BaseService {
+export default class ActivityService extends BaseService {
   constructor(db: Db) {
     super(db);
   }
 
-  async create(data: {
-    author?: string;
-    image?: string;
-    type?: string;
-    text: string;
-  }) {
+  async create(data: Activity) {
     const id = this.newId();
     const created = this.ts().created;
 
@@ -71,7 +66,13 @@ export class ActivityService extends BaseService {
   }
 
   async getById(id: string) {
-    const row = await this.findById<typeof schema.activity.$inferSelect>(schema.activity, id);
-    return row ? withRecordMeta({ ...row, updated: row.created }, "activity") : null;
+    const row = await this.findById<typeof schema.activity.$inferSelect>(
+      schema.activity,
+      id,
+    );
+
+    return row
+      ? withRecordMeta({ ...row, updated: row.created }, "activity")
+      : null;
   }
 }

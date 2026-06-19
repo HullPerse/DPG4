@@ -1,32 +1,31 @@
-import { Elysia, t } from "elysia";
-import { eq, desc } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { parseFileInput } from "../lib/files";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
+import { Elysia, t } from "elysia"
+import { eq, desc } from "drizzle-orm"
+import * as schema from "@/db/schema.db"
+import { newId, nowIso, withRecordMeta } from "@/lib/index.utils"
+import { parseFileInput } from "@/lib/files.utils"
+import { broadcast } from "@/lib/websocket.utils"
+import Logger from "@/lib/logger.utils"
+import databasePlugin from "@/plugins/database.plugin"
 
-import { dbPlugin } from "../plugins/db.plugin";
+const logger = new Logger("DRAWINGS")
 
-export const drawingsRoute = new Elysia({ prefix: "/drawings" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/drawings" })
+  .use(databasePlugin)
   .get(
     "/",
     async ({ db, query }) => {
     const rows = await db
       .select()
       .from(schema.drawings)
-      .orderBy(desc(schema.drawings.created));
+      .orderBy(desc(schema.drawings.created))
     if (query.authorId) {
       return rows
         .filter(
           (r) => (r.author as { id?: string })?.id === query.authorId,
         )
-        .map((r) => withRecordMeta(r, "drawings"));
+        .map((r) => withRecordMeta(r, "drawings"))
     }
-    return rows.map((r) => withRecordMeta(r, "drawings"));
+    return rows.map((r) => withRecordMeta(r, "drawings"))
   },
   {
     query: t.Optional(
@@ -39,11 +38,11 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
   .post(
     "/",
     async ({ body, db }) => {
-      const id = newId();
-      const ts = nowIso();
-      const imageFile = parseFileInput(body.image);
-      const imageData = imageFile?.data ?? null;
-      const imageMime = imageFile?.mime ?? null;
+      const id = newId()
+      const ts = nowIso()
+      const imageFile = parseFileInput(body.image)
+      const imageData = imageFile?.data ?? null
+      const imageMime = imageFile?.mime ?? null
 
       await db.insert(schema.drawings).values({
         id,
@@ -52,14 +51,14 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
         imageMime,
         created: ts,
         updated: ts,
-      });
-      const authorName = (body.author as { username?: string } | undefined)?.username;
-      broadcast("drawings", "create", id);
-      logger.info(authorName ?? null, "created drawing");
+      })
+      const authorName = (body.author as { username?: string } | undefined)?.username
+      broadcast("drawings", "create", id)
+      logger.setAuthor(authorName ?? "").info("created drawing")
       return withRecordMeta(
         (await db.select().from(schema.drawings).where(eq(schema.drawings.id, id)))[0]!,
         "drawings",
-      );
+      )
     },
     {
       body: t.Object({
@@ -71,26 +70,26 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
   .patch(
     "/:id",
     async ({ params, body, db }) => {
-      const imageFile = parseFileInput(body.image);
+      const imageFile = parseFileInput(body.image)
       const patch: Partial<typeof schema.drawings.$inferInsert> = {
         updated: nowIso(),
-      };
-      if (body.author !== undefined) patch.author = body.author;
+      }
+      if (body.author !== undefined) patch.author = body.author
       if (imageFile !== undefined) {
-        patch.image = imageFile?.data ?? null;
-        patch.imageMime = imageFile?.mime ?? null;
+        patch.image = imageFile?.data ?? null
+        patch.imageMime = imageFile?.mime ?? null
       }
       await db
         .update(schema.drawings)
         .set(patch)
-        .where(eq(schema.drawings.id, params.id));
-      broadcast("drawings", "update", params.id);
+        .where(eq(schema.drawings.id, params.id))
+      broadcast("drawings", "update", params.id)
       const [row] = await db
         .select()
         .from(schema.drawings)
-        .where(eq(schema.drawings.id, params.id));
-      logger.info(null, "updated drawing", params.id);
-      return withRecordMeta(row!, "drawings");
+        .where(eq(schema.drawings.id, params.id))
+      logger.info(`updated drawing ${params.id}`)
+      return withRecordMeta(row!, "drawings")
     },
     {
       body: t.Object({
@@ -102,10 +101,10 @@ export const drawingsRoute = new Elysia({ prefix: "/drawings" })
   .delete(
     "/:id",
     async ({ params, db }) => {
-      await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id));
-      broadcast("drawings", "delete", params.id);
-      logger.info(null, "deleted drawing", params.id);
-      return { ok: true };
+      await db.delete(schema.drawings).where(eq(schema.drawings.id, params.id))
+      broadcast("drawings", "delete", params.id)
+      logger.info(`deleted drawing ${params.id}`)
+      return { ok: true }
     },
     { params: t.Object({ id: t.String() }) },
-  );
+  )

@@ -1,15 +1,16 @@
 import { Elysia, t } from "elysia";
 import { and, asc, desc, eq, inArray, not, sql, type SQL } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { parseFileInput } from "../lib/files";
-import { compressSquare, isImageMime } from "../lib/images";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { dbPlugin } from "../plugins/db.plugin";
-import { cacheGet, cacheSet, cacheDel } from "../lib/cache";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso, withRecordMeta } from "@/lib/index.utils";
+import { parseFileInput } from "@/lib/files.utils";
+import { compressSquare, isImageMime } from "@/lib/images.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
+import Logger from "@/lib/logger.utils";
+import databasePlugin from "@/plugins/database.plugin";
+import { Db } from "@/types/server";
+
+const logger = new Logger("ITEMS");
 
 const itemListColumns = {
   id: schema.items.id,
@@ -60,14 +61,16 @@ function buildItemConditions(query: Record<string, string | undefined>): SQL[] {
   return conditions;
 }
 
-function queryItems(
-  db: Parameters<typeof import("drizzle-orm").eq>[0],
-  query: Record<string, string | undefined>,
-) {
+function queryItems(db: Db, query: Record<string, string | undefined>) {
   const conditions = buildItemConditions(query);
-  let q = conditions.length > 0
-    ? db.select(itemListColumns).from(schema.items).where(and(...conditions))
-    : db.select(itemListColumns).from(schema.items);
+
+  let q =
+    conditions.length > 0
+      ? db
+          .select(itemListColumns)
+          .from(schema.items)
+          .where(and(...conditions))
+      : db.select(itemListColumns).from(schema.items);
 
   if (query.sort === "label") {
     q = q.orderBy(
@@ -89,17 +92,15 @@ function queryItems(
     ) as typeof q;
   } else if (query.sort === "type") {
     q = q.orderBy(
-      query.order === "desc"
-        ? desc(schema.items.type)
-        : asc(schema.items.type),
+      query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type),
     ) as typeof q;
   }
 
   return q;
 }
 
-export const itemsRoute = new Elysia({ prefix: "/items" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/items" })
+  .use(databasePlugin)
   .get(
     "/",
     async ({ db, query, set }) => {
@@ -110,9 +111,13 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
 
       if (query.random) {
         const conditions = buildItemConditions(query);
-        let q = conditions.length > 0
-          ? db.select(itemListColumns).from(schema.items).where(and(...conditions))
-          : db.select(itemListColumns).from(schema.items);
+        let q =
+          conditions.length > 0
+            ? db
+                .select(itemListColumns)
+                .from(schema.items)
+                .where(and(...conditions))
+            : db.select(itemListColumns).from(schema.items);
         const all = await q;
         const count = Math.min(Number(query.random), 100);
         const shuffled = [...all].sort(() => Math.random() - 0.5);
@@ -120,21 +125,31 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
       }
 
-      if (query.sort || query.labels || query.type || query.search || query.rollable !== undefined || query.excludeLabel) {
+      if (
+        query.sort ||
+        query.labels ||
+        query.type ||
+        query.search ||
+        query.rollable !== undefined ||
+        query.excludeLabel
+      ) {
         const all = await queryItems(db, query);
         const rows = all.slice(offset, offset + (limit ?? all.length));
         set.headers["Cache-Control"] = "no-store";
         return rows.map((r) => withRecordMeta(r, "items"));
       }
 
-      let rows = await cacheGet<(typeof itemListColumns)[]>("items:list");
+      let rows: any = await cacheGet<(typeof itemListColumns)[]>("items:list");
+
       if (!rows) {
         rows = await db.select(itemListColumns).from(schema.items);
         await cacheSet("items:list", rows, 30_000);
       }
 
       set.headers["Cache-Control"] = "no-store";
-      return rows.slice(offset, offset + (limit ?? rows.length)).map((r) => withRecordMeta(r, "items"));
+      return rows
+        .slice(offset, offset + (limit ?? rows.length))
+        .map((r: any) => withRecordMeta(r, "items"));
     },
     {
       query: t.Optional(
@@ -195,7 +210,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       await db.insert(schema.items).values({ ...row, id });
       cacheDel("items:list");
       broadcast("items", "create", id);
-      logger.info(null, "created item", body.label, `(${body.type})`);
+      logger.info(`created item ${body.label} (${body.type})`);
       return mapItem({ id, ...row } as typeof schema.items.$inferSelect);
     },
     {
@@ -243,7 +258,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         .select()
         .from(schema.items)
         .where(eq(schema.items.id, params.id));
-      logger.info(null, "updated item", row?.label ?? params.id);
+      logger.info(`updated item ${row?.label ?? params.id}`);
       return mapItem(row!);
     },
     {
@@ -264,7 +279,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
       await db.delete(schema.items).where(eq(schema.items.id, params.id));
       cacheDel("items:list");
       broadcast("items", "delete", params.id);
-      logger.info(null, "deleted item", params.id);
+      logger.info(`deleted item ${params.id}`);
       return { ok: true };
     },
     { params: t.Object({ id: t.String() }) },

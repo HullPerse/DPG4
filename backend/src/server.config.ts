@@ -1,4 +1,4 @@
-import { resolveBackendPath } from "./lib/paths";
+import { resolveBackendPath } from "@/lib/path.utils";
 
 function parseCorsOrigin(
   value: string | undefined,
@@ -9,14 +9,14 @@ function parseCorsOrigin(
   if (normalized === "true" || normalized === "*") return true;
   if (normalized === "false") return false;
 
-  if (value.includes(",")) {
-    return value
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-  }
+  const trimmedValue = value.includes(",");
 
-  return value.trim();
+  if (!trimmedValue) return value.trim();
+
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
 }
 
 export const config = {
@@ -26,9 +26,13 @@ export const config = {
     if (!val) throw new Error("Missing required JWT_SECRET env var");
     return val;
   },
-  get dbPath() { return resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite"); },
+  get dbPath() {
+    if (!this._dbPath) this._dbPath = resolveBackendPath(Bun.env.DB_PATH || "data/db.sqlite")
+    return this._dbPath
+  },
   get corsOrigin() { return parseCorsOrigin(Bun.env.CORS_ORIGIN); },
   get steamApiKey() { return Bun.env.STEAM_API_KEY ?? ""; },
+  _dbPath: undefined as string | undefined,
 };
 
 export const COLLECTION_IDS: Record<string, string> = {

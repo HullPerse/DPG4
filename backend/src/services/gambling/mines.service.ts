@@ -1,17 +1,16 @@
 import { eq } from "drizzle-orm";
-import * as schema from "../../db/schema";
-import { logger } from "../../lib/logger";
-import { nowIso } from "../../lib/dates";
-import { newId } from "../../lib/ids";
-import type { ActiveMinesGame, MinesRevealResult } from "@/types/gambling";
-import type { Db } from "@/types";
-import { UserService } from "@/services/user.service";
+import * as schema from "@/db/schema.db";
+import { nowIso, newId } from "@/lib/index.utils";
+import { ActiveMinesGame, MinesRevealResult } from "@/types/gambling";
+import { Db } from "@/types/server";
+import UserService from "@/services/user.service";
+import EconomyService from "@/services/economy.service";
 import {
   GAMBLING_BAN_THRESHOLD,
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
-} from "../../lib/gambling.constants";
-import { deductTickets, addTickets } from "../../lib/ticket.helpers";
+} from "@/lib/gambling.constants";
+import Logger from "@/lib/logger.utils";
 
 export interface MinesDevOverrides {
   devShowMines?: boolean;
@@ -36,9 +35,7 @@ function generateGrid(mineCount: number): boolean[][] {
   const grid: boolean[][] = [];
   for (let r = 0; r < GRID; r++) {
     const row: boolean[] = [];
-    for (let c = 0; c < GRID; c++) {
-      row.push(minePositions.has(r * GRID + c));
-    }
+    for (let c = 0; c < GRID; c++) row.push(minePositions.has(r * GRID + c));
     grid.push(row);
   }
   return grid;
@@ -51,28 +48,26 @@ function emptyGrid(): boolean[][] {
 function computeMultiplier(mineCount: number, revealedCount: number): number {
   if (revealedCount === 0) return 1;
   let prob = 1;
-  for (let i = 0; i < revealedCount; i++) {
+  for (let i = 0; i < revealedCount; i++)
     prob *= (GRID * GRID - mineCount - i) / (GRID * GRID - i);
-  }
   return Math.max(1, Math.floor((HOUSE_EDGE / prob) * 100) / 100);
 }
 
 function getMinePositions(grid: boolean[][]): [number, number][] {
   const positions: [number, number][] = [];
-  for (let r = 0; r < GRID; r++) {
-    for (let c = 0; c < GRID; c++) {
-      if (grid[r][c]) positions.push([r, c]);
-    }
-  }
+  for (let r = 0; r < GRID; r++)
+    for (let c = 0; c < GRID; c++) if (grid[r][c]) positions.push([r, c]);
   return positions;
 }
 
-export class MinesService {
+export default class MinesService {
   private games = new Map<string, ActiveMinesGame>();
+  private logger = new Logger("MINES");
 
   constructor(
     private db: Db,
     private userService: UserService,
+    private economyService: EconomyService,
   ) {}
 
   async start(
@@ -92,17 +87,14 @@ export class MinesService {
       if (!Number.isInteger(mineCount) || mineCount < 1 || mineCount > 10)
         throw new Error("Invalid mine count");
       if (this.games.has(userId)) throw new Error("Game already in progress");
-
       const user = await this.userService.getById(userId);
       if (!user) throw new Error("User not found");
       if (user.tickets < bid) throw new Error("Insufficient balance");
       if (user.gamblingBanned) throw new Error("Banned from gambling");
-
-      await deductTickets(this.db, userId, bid);
+      await this.economyService.deductTickets(userId, bid);
     }
 
     const grid = generateGrid(mineCount);
-
     const game: ActiveMinesGame = {
       userId,
       bid,
@@ -148,16 +140,11 @@ export class MinesService {
 
     game.revealed[x][y] = true;
     game.revealedCount += 1;
-
     const hitMine = game.grid[x][y] && !devOverrides?.devForceAllSafe;
 
     if (hitMine) {
       game.phase = "lost";
       this.games.delete(userId);
-
-      const payout = 0;
-      const net = -game.bid;
-
       const user = devMode ? null : await this.userService.getById(userId);
       if (!devMode && user) {
         await this.db.insert(schema.history).values({
@@ -178,12 +165,7 @@ export class MinesService {
           created: nowIso(),
         });
       }
-
-      logger.info(
-        "system",
-        `mines lose user:${userId} bid:${game.bid} mines:${game.mineCount}`,
-      );
-
+      this.logger.info(`lose bid:${game.bid} mines:${game.mineCount}`);
       return {
         phase: "lost",
         x,
@@ -203,7 +185,6 @@ export class MinesService {
 
     const mult = computeMultiplier(game.mineCount, game.revealedCount);
     const user = devMode ? null : await this.userService.getById(userId);
-
     return {
       phase: "playing",
       x,
@@ -231,9 +212,7 @@ export class MinesService {
     const payout = Math.floor(game.bid * mult);
     const net = payout - game.bid;
 
-    if (!devMode) {
-      await addTickets(this.db, userId, payout);
-    }
+    if (!devMode) await this.economyService.addTickets(userId, payout);
 
     game.phase = "won";
     this.games.delete(userId);
@@ -245,16 +224,13 @@ export class MinesService {
       !devMode &&
       gamblingWinnings >= GAMBLING_BAN_THRESHOLD &&
       !gamblingBanned
-    ) {
+    )
       gamblingBanned = true;
-    }
-
-    if (!devMode) {
+    if (!devMode)
       await this.db
         .update(schema.users)
         .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
         .where(eq(schema.users.id, userId));
-    }
 
     if (!devMode && user) {
       await this.db.insert(schema.history).values({
@@ -277,14 +253,9 @@ export class MinesService {
       });
     }
 
-    const tone: "jackpot" | "win" | "chance" =
+    const tone =
       net >= game.bid * 5 ? "jackpot" : net >= game.bid * 2 ? "win" : "chance";
-
-    logger.info(
-      "system",
-      `mines cashout user:${userId} mult:${mult}x net:${net}`,
-    );
-
+    this.logger.info(`cashout mult:${mult}x net:${net}`);
     return {
       phase: "won",
       x: -1,
@@ -296,7 +267,7 @@ export class MinesService {
       payout,
       net,
       label: `Выигрыш ${mult.toFixed(2)}x +${net}`,
-      tone: tone as "" | "win" | "lose" | "chance",
+      tone,
       balance: user?.tickets ?? 0,
       banned: gamblingBanned,
     };
@@ -305,7 +276,6 @@ export class MinesService {
   abort(userId: string): void {
     this.games.delete(userId);
   }
-
   getState(userId: string): ActiveMinesGame | undefined {
     return this.games.get(userId);
   }

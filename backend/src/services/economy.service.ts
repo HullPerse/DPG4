@@ -1,22 +1,25 @@
-import { eq, inArray } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { rawDb } from "../db";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { Db } from "@/types";
-import { UserService } from "@/services/user.service";
-import { ActivityService } from "./activity.service";
-import { InventoryLogService } from "./inventory-log.service";
-import { ACTIVITY_TYPES } from "../lib/constants";
+import { eq, inArray, sql } from "drizzle-orm";
+import * as schema from "@/db/schema.db";
 
-export class EconomyService {
+import { Db } from "@/types/server";
+import ActivityService from "./activity.service";
+import UserService from "./user.service";
+import LogService from "./log.service";
+import {
+  ACTIVITY_TYPES,
+  newId,
+  nowIso,
+  withRecordMeta,
+} from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import { rawDb } from "@/db/index.db";
+
+export default class EconomyService {
   constructor(
     private db: Db,
     private userService: UserService,
     private activityService: ActivityService,
-    private inventoryLogService: InventoryLogService,
+    private inventoryLogService: LogService,
   ) {}
 
   private mapInventory(row: typeof schema.inventory.$inferSelect) {
@@ -33,6 +36,7 @@ export class EconomyService {
   ) {
     const id = newId();
     const ts = nowIso();
+
     await this.db.insert(schema.inventory).values({
       id,
       type: item.type,
@@ -140,8 +144,8 @@ export class EconomyService {
     await this.activityService.create({
       author: ownerId,
       image: user.avatar,
-type: ACTIVITY_TYPES.EMOJI,
-        text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
+      type: ACTIVITY_TYPES.EMOJI,
+      text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
     });
 
     broadcast("market", "create", id);
@@ -171,7 +175,7 @@ type: ACTIVITY_TYPES.EMOJI,
     const invId = newId();
     const ts = nowIso();
     const execute = () => {
-      rawDb.exec("BEGIN");
+      rawDb.run("BEGIN");
       try {
         this.db.insert(schema.inventory).values({
           id: invId,
@@ -186,16 +190,16 @@ type: ACTIVITY_TYPES.EMOJI,
           updated: ts,
         });
         this.db.delete(schema.market).where(eq(schema.market.id, marketId));
-        rawDb.exec("COMMIT");
+        rawDb.run("COMMIT");
       } catch {
-        rawDb.exec("ROLLBACK");
+        rawDb.run("ROLLBACK");
         throw new Error("buy transaction failed");
       }
     };
     execute();
 
-    await this.userService.score(newOwnerId, -cost, true);
-    await this.userService.score(oldOwnerId, cost, true);
+    await this.removeMoney(newOwnerId, cost, true);
+    await this.addMoney(oldOwnerId, cost, true);
 
     await this.inventoryLogService.logFromData(
       "buy",
@@ -265,7 +269,7 @@ type: ACTIVITY_TYPES.EMOJI,
     await this.db.delete(schema.market).where(eq(schema.market.id, marketId));
 
     const payout = existing.price - (existing.discount ?? 0);
-    await this.userService.score(owner.id, payout);
+    await this.addMoney(owner.id, payout);
 
     broadcast("market", "delete", marketId);
     broadcast("inventory", "create", invId);
@@ -277,8 +281,8 @@ type: ACTIVITY_TYPES.EMOJI,
     otherUser: { id: string; money: number; items: string[] },
   ) {
     if (currentUser.money > 0) {
-      await this.userService.score(otherUser.id, currentUser.money, true);
-      await this.userService.score(currentUser.id, -currentUser.money, true);
+      await this.addMoney(otherUser.id, currentUser.money, true);
+      await this.removeMoney(currentUser.id, currentUser.money, true);
     }
     if (currentUser.items.length > 0) {
       const items = await this.db
@@ -302,8 +306,8 @@ type: ACTIVITY_TYPES.EMOJI,
     }
 
     if (otherUser.money > 0) {
-      await this.userService.score(currentUser.id, otherUser.money, true);
-      await this.userService.score(otherUser.id, -otherUser.money, true);
+      await this.addMoney(currentUser.id, otherUser.money, true);
+      await this.removeMoney(otherUser.id, otherUser.money, true);
     }
     if (otherUser.items.length > 0) {
       const items = await this.db
@@ -343,7 +347,7 @@ type: ACTIVITY_TYPES.EMOJI,
       })
       .where(eq(schema.market.id, marketId));
 
-    await this.userService.score(ownerId, price - discountPrice);
+    await this.addMoney(ownerId, price - discountPrice);
     broadcast("market", "update", marketId);
     return true;
   }
@@ -446,5 +450,55 @@ type: ACTIVITY_TYPES.EMOJI,
     }
     broadcast("inventory", "update", inventoryId);
     return row ? this.mapInventory(row) : null;
+  }
+
+  async deductTickets(userId: string, amount: number): Promise<void> {
+    await this.db
+      .update(schema.users)
+      .set({ tickets: sql`tickets - ${amount}` })
+      .where(eq(schema.users.id, userId))
+    broadcast("users", "update", userId)
+  }
+
+  async addTickets(userId: string, amount: number): Promise<void> {
+    await this.db
+      .update(schema.users)
+      .set({ tickets: sql`tickets + ${amount}` })
+      .where(eq(schema.users.id, userId))
+    broadcast("users", "update", userId)
+  }
+
+  async addMoney(userId: string, amount: number, trade?: boolean): Promise<void> {
+    await this.userService.score(userId, amount, trade);
+    const id = newId();
+    const ts = nowIso();
+    await this.db.insert(schema.inventoryLog).values({
+      id,
+      inventoryId: `money_${id}`,
+      itemLabel: "money",
+      itemType: "currency",
+      owner: userId,
+      action: "money_add",
+      actor: "system",
+      details: { amount, trade },
+      created: ts,
+    });
+  }
+
+  async removeMoney(userId: string, amount: number, trade?: boolean): Promise<void> {
+    await this.userService.score(userId, -amount, trade);
+    const id = newId();
+    const ts = nowIso();
+    await this.db.insert(schema.inventoryLog).values({
+      id,
+      inventoryId: `money_${id}`,
+      itemLabel: "money",
+      itemType: "currency",
+      owner: userId,
+      action: "money_remove",
+      actor: "system",
+      details: { amount, trade },
+      created: ts,
+    });
   }
 }

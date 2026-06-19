@@ -1,10 +1,7 @@
 import type { Card, Rank, Suit } from "@/types/gambling";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-const RANKS: Rank[] = [
-  "A", "2", "3", "4", "5", "6", "7",
-  "8", "9", "10", "J", "Q", "K",
-];
+const RANKS: Rank[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
 export function createShoe(decks = 6): Card[] {
   const cards: Card[] = [];
@@ -56,13 +53,7 @@ export function isBlackjack(cards: Card[]): boolean {
 }
 
 export function isPeekCard(card: Card): boolean {
-  return (
-    card.rank === "A" ||
-    card.rank === "10" ||
-    card.rank === "J" ||
-    card.rank === "Q" ||
-    card.rank === "K"
-  );
+  return card.rank === "A" || card.rank === "10" || card.rank === "J" || card.rank === "Q" || card.rank === "K";
 }
 
 export function blackjackPayout(bid: number): number {
@@ -75,24 +66,15 @@ export function resolveLabels(
   dealerValue: number,
 ): { label: string; tone: "jackpot" | "win" | "lose" | "chance" } {
   switch (outcome) {
-    case "blackjack":
-      return { label: "Блэкджек!", tone: "jackpot" };
-    case "win":
-      return { label: `Победа ${playerValue} - ${dealerValue}`, tone: "win" };
-    case "push":
-      return { label: `Ничья ${playerValue} - ${dealerValue}`, tone: "chance" };
-    case "lose":
-      return {
-        label: `Проигрыш ${playerValue} - ${dealerValue}`,
-        tone: "lose",
-      };
+    case "blackjack": return { label: "Блэкджек!", tone: "jackpot" };
+    case "win": return { label: `Победа ${playerValue} - ${dealerValue}`, tone: "win" };
+    case "push": return { label: `Ничья ${playerValue} - ${dealerValue}`, tone: "chance" };
+    case "lose": return { label: `Проигрыш ${playerValue} - ${dealerValue}`, tone: "lose" };
   }
 }
 
 export function computeOutcome(
-  playerHand: Card[],
-  dealerHand: Card[],
-  bid: number,
+  playerHand: Card[], dealerHand: Card[], bid: number,
 ): { payout: number; outcome: "blackjack" | "win" | "lose" | "push" } {
   const pv = handValue(playerHand);
   const dv = handValue(dealerHand);

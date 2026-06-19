@@ -1,16 +1,16 @@
 import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { updateTicketItem } from "../lib/ticket.helpers";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
-import { authPlugin } from "../plugins/auth.plugin";
-import { GAMBLING_BAN_THRESHOLD } from "../lib/gambling.constants";
-import { JackpotService } from "../services/gambling/jackpot.service";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import { updateTicketItem } from "@/lib/ticket.helpers";
+import databasePlugin from "@/plugins/database.plugin";
+import servicesPlugin from "@/services.server";
+import authPlugin from "@/plugins/auth.plugin";
+import JackpotService from "@/services/gambling/jackpot.service";
+
+const logger = new Logger("TICKETS");
 
 const MAX_TICKETS_PER_DAY = 100;
 const TICKET_PRICE = 1;
@@ -36,8 +36,8 @@ function shouldResetTickets(user: typeof schema.users.$inferSelect): boolean {
   return userDay !== currentDay;
 }
 
-export const ticketsRoute = new Elysia({ prefix: "/utils" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/utils" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
 
@@ -66,7 +66,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
     },
     {
       requireAuth: true,
-      detail: { tags: ["tickets"], summary: "Get user ticket info" },
     },
   )
 
@@ -125,7 +124,7 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       await jp.addToPool(amount);
 
       broadcast("users", "update", user.sub);
-      logger.info(user.username, `user bought ${amount} tickets`, user.sub);
+      logger.setAuthor(String(user?.username)).info(`bought ${amount} tickets`);
 
       return {
         ok: true,
@@ -137,7 +136,6 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
     {
       requireAuth: true,
       body: t.Object({ amount: t.Integer({ minimum: 1 }) }),
-      detail: { tags: ["tickets"], summary: "Buy tickets" },
     },
   )
 
@@ -176,18 +174,15 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       await updateTicketItem(db, user.sub, newTickets);
 
       broadcast("users", "update", user.sub);
-      logger.info(
-        user.username,
-        `user sold ${amount} tickets for ${payout} money`,
-        user.sub,
-      );
+      logger
+        .setAuthor(String(user?.username))
+        .info(`sold ${amount} tickets for ${payout} money`);
 
       return { ok: true, payout, newBalance: newTickets };
     },
     {
       requireAuth: true,
       body: t.Object({ amount: t.Integer({ minimum: 1 }) }),
-      detail: { tags: ["tickets"], summary: "Sell tickets for money at 1:1" },
     },
   )
 
@@ -250,11 +245,9 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
       });
 
       broadcast("market", "create", id);
-      logger.info(
-        user.username,
-        `user listed ${quantity} tickets at ${perTicketPrice} each`,
-        user.sub,
-      );
+      logger
+        .setAuthor(String(user?.username))
+        .info(`listed ${quantity} tickets at ${perTicketPrice} each`);
 
       return { ok: true, marketId: id, quantity, totalPrice };
     },
@@ -264,12 +257,11 @@ export const ticketsRoute = new Elysia({ prefix: "/utils" })
         perTicketPrice: t.Integer({ minimum: 1 }),
       }),
       requireAuth: true,
-      detail: { tags: ["tickets"], summary: "Sell tickets on market" },
     },
   );
 
 export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
-  .use(dbPlugin)
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
 
@@ -343,11 +335,9 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
       broadcast("users", "update", sellerId);
       broadcast("users", "update", user.sub);
       broadcast("market", "delete", params.id);
-      logger.info(
-        user.username,
-        `user bought ${quantity} tickets from ${sellerId}`,
-        user.sub,
-      );
+      logger
+        .setAuthor(String(user?.username))
+        .info(`bought ${quantity} tickets from ${sellerId}`);
 
       return {
         ok: true,
@@ -359,7 +349,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
     {
       requireAuth: true,
       params: t.Object({ id: t.String() }),
-      detail: { tags: ["tickets"], summary: "Buy ticket market listing" },
     },
   )
 
@@ -400,13 +389,12 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
 
       broadcast("market", "delete", params.id);
       broadcast("users", "update", user.sub);
-      logger.info(user.username, `user removed ticket listing`, user.sub);
+      logger.setAuthor(String(user?.username)).info(`removed ticket listing`);
 
       return { ok: true, refundedTickets: quantity };
     },
     {
       requireAuth: true,
       params: t.Object({ id: t.String() }),
-      detail: { tags: ["tickets"], summary: "Remove ticket market listing" },
     },
   );

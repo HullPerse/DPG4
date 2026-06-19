@@ -14,7 +14,7 @@ function d(...roll: number[]): number[] {
 }
 
 function no(count = 1): number[] {
-  return Array(count).fill(0.5); // >= DICE_BROKEN_CHANCE (0.01) → no break
+  return Array(count).fill(0.5);
 }
 
 describe("DiceService", () => {
@@ -43,7 +43,7 @@ describe("DiceService", () => {
     expect(result.reroll).toBe(false);
     expect(result.handLabel).toContain("Пара");
     const user = await getUser(db, userId);
-    expect(user!.tickets).toBe(100); // bid not deducted until rollPlayer
+    expect(user!.tickets).toBe(100);
   });
 
   test("rollDealer rejects invalid bid", async () => {
@@ -77,7 +77,7 @@ describe("DiceService", () => {
     expect(result.payout).toBe(10);
     expect(result.net).toBe(5);
     const user = await getUser(db, userId);
-    expect(user!.tickets).toBe(110); // bid + 1x win = 5+5=10 added
+    expect(user!.tickets).toBe(110);
   });
 
   test("dealer 4-5-6 beats player 1-2-3 for 2x", async () => {
@@ -99,7 +99,7 @@ describe("DiceService", () => {
     expect(result.payout).toBe(0);
     expect(result.net).toBe(-15);
     const user = await getUser(db, userId);
-    expect(user!.tickets).toBe(85); // 5*3=15 deducted from 100
+    expect(user!.tickets).toBe(85);
   });
 
   test("player 4-5-6 wins 2x", async () => {
@@ -264,19 +264,16 @@ describe("DiceService", () => {
   });
 
   test("dealer dice break returns broken flags", async () => {
-    // dice values: [2, 2, 5], break check = 0.005 (< 0.01 → true), die index = 0.1 (→ 0)
     seedRandom([...d(2, 2, 5), 0.005, 0.1]);
     const result = await services.diceService.rollDealer(userId, 3);
     expect(result.broken).toBe(true);
     expect(result.brokenDieIndex).toBe(0);
-    // pool: [2, 2, 5, 5] → best hand: pair 2 + 5 (kicker 5)
     expect(result.handLabel).toContain("Пара");
   });
 
   test("player dice break returns broken flags", async () => {
     seedRandom([...d(2, 2, 5), ...no()]);
     await services.diceService.rollDealer(userId, 3);
-    // player dice: [4, 4, 6], break check = 0.005, die index = 0.5 (→ 1)
     seedRandom([...d(4, 4, 6), 0.005, 0.5]);
     const result = await services.diceService.rollPlayer(userId);
     expect(result.broken).toBe(true);
@@ -284,22 +281,13 @@ describe("DiceService", () => {
   });
 
   test("dealer break with 1-2-3 dice gets extra opposite helps void", async () => {
-    // Most dealer values produce a void hand, but the opposite might help
-    // Dice: [1, 2, 4] → normally void (rank 0)
-    // Break die 0 → opposite = 6 → pool: [1, 2, 4, 6] → [4, 6, 1] still void? No, [2, 4, 6] is also void
-    // Actually [1, 2, 4] is rank 0. Pool: [1, 2, 4, 6]. Best: [1, 2, 4] all void? 
-    // [1, 2, 4] void, [1, 2, 6] void, [1, 4, 6] void, [2, 4, 6] void. Still void.
     seedRandom([...d(1, 2, 4), 0.005, 0.1]);
     const result = await services.diceService.rollDealer(userId, 3);
     expect(result.broken).toBe(true);
-    // Even with break, still void → reroll
     expect(result.reroll).toBe(true);
   });
 
   test("dealer break with pair dice gets stronger kicker", async () => {
-    // Dice: [2, 2, 3] → pair 2 + 3 (kicker 3)
-    // Break die 1 → opposite = 5 → pool: [2, 2, 3, 5]
-    // Best: [2, 2, 5] kicker 5 > [2, 2, 3] kicker 3
     seedRandom([...d(2, 2, 3), 0.005, 0.4]);
     const result = await services.diceService.rollDealer(userId, 3);
     expect(result.broken).toBe(true);
