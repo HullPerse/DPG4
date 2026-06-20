@@ -1,4 +1,5 @@
 import * as schema from "@/db/schema.db";
+import type { AdminTableName, AdminTable } from "@/types/admin";
 
 export const ADMIN_TABLES = {
   users: schema.users,
@@ -20,9 +21,6 @@ export const ADMIN_TABLES = {
   inventoryLog: schema.inventoryLog,
   quests: schema.quests,
 } as const;
-
-export type AdminTableName = keyof typeof ADMIN_TABLES;
-export type AdminTable = (typeof ADMIN_TABLES)[AdminTableName];
 
 export function getAdminTable(name: string): AdminTable | undefined {
   if (name in ADMIN_TABLES) {

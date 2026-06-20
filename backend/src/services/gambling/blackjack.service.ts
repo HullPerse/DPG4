@@ -1,26 +1,13 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { BlackjackResult, BlackjackState, Card } from "@/types/gambling";
+import { BlackjackResult, BlackjackState, Card, BlackjackDevOverrides, ActiveGame } from "@/types/gambling";
 import { createShoe, draw, handValue, isBlackjack, isPeekCard, computeOutcome, resolveLabels, dealerPlay } from "@/lib/blackjack.utils";
 import { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
-
-export interface BlackjackDevOverrides {
-  devForceDealerCards?: Card[];
-  devForcePlayerCards?: Card[];
-  devForceHitCard?: Card[];
-  devPeekHole?: boolean;
-}
-
-interface ActiveGame {
-  userId: string; bid: number; deck: Card[];
-  playerHand: Card[]; dealerHand: Card[];
-  phase: "player" | "ended";
-}
 
 export default class BlackjackService {
   private games = new Map<string, ActiveGame>();

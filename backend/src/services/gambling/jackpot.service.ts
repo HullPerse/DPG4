@@ -6,8 +6,7 @@ import { Db } from "@/types/server";
 import { GAMBLING_BAN_THRESHOLD } from "@/lib/gambling.constants";
 import { updateTicketItem } from "@/lib/ticket.helpers";
 import Logger from "@/lib/logger.utils";
-
-export interface JackpotDevOverrides { devForceWin?: boolean; devShowWinningNumber?: boolean; }
+import type { JackpotDevOverrides } from "@/types/gambling";
 
 const JACKPOT_COST = 10;
 const JACKPOT_RANGE = 1000;

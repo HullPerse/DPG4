@@ -1,4 +1,4 @@
-type FileField = "image" | "audio"
+import type { FileField } from "@/types/files";
 
 export function serializeRow<T extends Record<string, unknown>>(
   row: T,

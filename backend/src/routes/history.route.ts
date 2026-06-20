@@ -4,37 +4,7 @@ import * as schema from "@/db/schema.db"
 import { rawDb } from "@/db/index.db"
 import authPlugin from "@/plugins/auth.plugin"
 import databasePlugin from "@/plugins/database.plugin"
-
-interface StatsRow {
-  date: string
-  net: number
-  gamesPlayed: number
-}
-
-interface GameDistRow {
-  type: string
-  count: number
-  totalNet: number
-}
-
-interface BetDistRow {
-  range: string
-  count: number
-}
-
-interface LeaderboardRow {
-  userId: string
-  username: string
-  avatar: string
-  color: string
-  currentMoney: number
-  currentTickets: number
-  totalNet: number
-  gamesPlayed: number
-  wins: number
-  losses: number
-  biggestWin: number
-}
+import type { StatsRow, GameDistRow, BetDistRow, LeaderboardRow } from "@/types/history"
 
 export default new Elysia({ prefix: "/history" })
   .use(databasePlugin)

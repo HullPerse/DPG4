@@ -102,7 +102,7 @@ export const WINDOW_META = [
   },
 ];
 
-export type LinkEntry = { description: string; link: string };
+import type { LinkEntry } from "@/types/config";
 
 export const BROWSER_GAMES: LinkEntry[] = [
   {

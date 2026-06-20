@@ -8,7 +8,7 @@ import { broadcast } from "@/lib/websocket.utils";
 import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
 import Logger from "@/lib/logger.utils";
 import databasePlugin from "@/plugins/database.plugin";
-import { Db } from "@/types/server";
+import { Db, DbTimestamps } from "@/types/server";
 
 const logger = new Logger("ITEMS");
 
@@ -23,6 +23,19 @@ const itemListColumns = {
   hasImage: sql<boolean>`${schema.items.image} IS NOT NULL`,
   created: schema.items.created,
   updated: schema.items.updated,
+};
+
+type ItemListRow = {
+  id: string;
+  type: string;
+  label: string;
+  description: string;
+  charge: number;
+  rollable: boolean;
+  status: string | null;
+  hasImage: boolean;
+  created: string;
+  updated: string;
 };
 
 function mapItem(row: typeof schema.items.$inferSelect) {
@@ -139,17 +152,17 @@ export default new Elysia({ prefix: "/items" })
         return rows.map((r) => withRecordMeta(r, "items"));
       }
 
-      let rows: any = await cacheGet<(typeof itemListColumns)[]>("items:list");
+      let rows = await cacheGet<ItemListRow[]>("items:list");
 
       if (!rows) {
-        rows = await db.select(itemListColumns).from(schema.items);
+        rows = await db.select(itemListColumns).from(schema.items) as unknown as ItemListRow[];
         await cacheSet("items:list", rows, 30_000);
       }
 
       set.headers["Cache-Control"] = "no-store";
-      return rows
-        .slice(offset, offset + (limit ?? rows.length))
-        .map((r: any) => withRecordMeta(r, "items"));
+      return rows!
+        .slice(offset, offset + (limit ?? rows!.length))
+        .map((r) => withRecordMeta(r as DbTimestamps, "items"));
     },
     {
       query: t.Optional(

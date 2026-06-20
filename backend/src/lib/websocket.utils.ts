@@ -1,4 +1,4 @@
-type WsClient = { send: (data: string) => void };
+import type { WsClient } from "@/types/websocket";
 
 const clients = new Set<WsClient>();
 

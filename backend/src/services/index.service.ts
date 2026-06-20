@@ -1,10 +1,8 @@
 import { eq } from "drizzle-orm";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "@/db/schema.db";
 import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import type { Db } from "@/types/server";
 
 export abstract class BaseService {
   constructor(protected db: Db) {}

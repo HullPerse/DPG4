@@ -1,6 +1,5 @@
 import { resolveBackendPath } from "./path.utils";
-
-type LogLevel = "debug" | "info" | "warn" | "error"
+import type { LogLevel } from "@/types/logger";
 const LEVELS: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 }
 const ENV_LEVEL = Bun.env.LOG_LEVEL as LogLevel | undefined
 const MIN_LEVEL = LEVELS[ENV_LEVEL ?? "info"] ?? 1

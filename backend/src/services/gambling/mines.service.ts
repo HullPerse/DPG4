@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { ActiveMinesGame, MinesRevealResult } from "@/types/gambling";
+import { ActiveMinesGame, MinesRevealResult, MinesDevOverrides } from "@/types/gambling";
 import { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
@@ -11,11 +11,6 @@ import {
   GAMBLING_MAX_BET,
 } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
-
-export interface MinesDevOverrides {
-  devShowMines?: boolean;
-  devForceAllSafe?: boolean;
-}
 
 const GRID = 5;
 const HOUSE_EDGE = 0.97;

@@ -85,8 +85,47 @@ export interface MinesRevealResult {
   revealed: boolean[][];
   minePositions?: [number, number][];
   payout: number; net: number; label: string;
-  tone: "win" | "lose" | "chance" | "";
+  tone: "jackpot" | "win" | "lose" | "chance" | "";
   balance: number; banned: boolean;
 }
 
 export interface CellPath { number: number; ladderTo?: number; snakeTo?: number; }
+
+export interface ActivePachinkoGame { userId: string; bid: number; ratAmount: number; droppedAt: number; }
+
+export interface ActiveGame {
+  userId: string; bid: number; deck: Card[];
+  playerHand: Card[]; dealerHand: Card[];
+  phase: "player" | "ended";
+}
+
+export interface DiceDevOverrides {
+  devForceBreak?: boolean;
+  devForceBreakDieIndex?: number;
+  devForceDealerValues?: [number, number, number];
+  devForcePlayerValues?: [number, number, number];
+}
+
+export interface BlackjackDevOverrides {
+  devForceDealerCards?: Card[];
+  devForcePlayerCards?: Card[];
+  devForceHitCard?: Card[];
+  devPeekHole?: boolean;
+}
+
+export interface PachinkoDevOverrides {
+  devForceSlots?: number[];
+  devShowMultipliers?: boolean;
+}
+
+export interface RocketDevOverrides {
+  devForceCrashPoint?: number;
+  devShowCrashPoint?: boolean;
+}
+
+export interface MinesDevOverrides {
+  devShowMines?: boolean;
+  devForceAllSafe?: boolean;
+}
+
+export interface JackpotDevOverrides { devForceWin?: boolean; devShowWinningNumber?: boolean; }

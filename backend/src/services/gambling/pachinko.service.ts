@@ -1,21 +1,12 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { PachinkoState } from "@/types/gambling";
+import { PachinkoState, PachinkoDevOverrides, ActivePachinkoGame } from "@/types/gambling";
 import { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
-
-export interface PachinkoDevOverrides {
-  devForceSlots?: number[];
-  devShowMultipliers?: boolean;
-}
-
-export const PACHINKO_SLOT_MULTIPLIERS = [5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5] as const;
-
-interface ActivePachinkoGame { userId: string; bid: number; ratAmount: number; droppedAt: number; }
 
 export default class PachinkoService {
   private activeGames = new Map<string, ActivePachinkoGame>();

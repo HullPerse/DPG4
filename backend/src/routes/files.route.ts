@@ -2,8 +2,7 @@ import { Elysia, t } from "elysia"
 import { eq } from "drizzle-orm"
 import * as schema from "@/db/schema.db"
 import databasePlugin from "@/plugins/database.plugin"
-
-type FileField = "image" | "audio"
+import type { FileField } from "@/types/files"
 
 const tables = {
   games: { table: schema.games, fields: ["image"] as const satisfies readonly FileField[] },

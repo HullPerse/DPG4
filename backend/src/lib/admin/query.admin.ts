@@ -14,9 +14,9 @@ import { ADMIN_SCHEMA } from "./schema.admin";
 import {
   ADMIN_TABLES,
   adminTableColumn,
-  type AdminTable,
 } from "./tables.admin";
 import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
+import type { AdminTable } from "@/types/admin";
 import { Db } from "@/types/server";
 
 function buildWhere(

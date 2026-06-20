@@ -4,6 +4,7 @@ import { config } from "@/server.config"
 import { resolveBackendPath } from "@/lib/path.utils"
 import { rawDb } from "@/db/index.db"
 import Logger from "@/lib/logger.utils"
+import type { Tracker } from "@/types/server"
 
 const logger = new Logger("BACKUP")
 const TRACKER_PATH = resolveBackendPath("data", "backup-tracker.json")
@@ -11,10 +12,6 @@ const BACKUP_DIR = resolveBackendPath("backups")
 const INTERVAL_MS = 5 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
 const MAX_AUTO_BACKUPS = 5
-
-interface Tracker {
-  lastBackup: string | null
-}
 
 async function readTracker(): Promise<Tracker> {
   try {

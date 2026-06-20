@@ -1,7 +1,7 @@
 import { mkdir, copyFile } from "node:fs/promises";
 import { join } from "node:path";
 import { config } from "../src/server.config";
-import { resolveBackendPath } from "../src/lib/paths";
+import { resolveBackendPath } from "@/lib/path.utils";
 
 const nameIndex = process.argv.indexOf("--name");
 const customName =

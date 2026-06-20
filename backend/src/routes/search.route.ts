@@ -1,39 +1,8 @@
 import { Elysia, t } from "elysia";
 import { rawDb } from "@/db/index.db";
 import { omitPassword, withRecordMeta } from "@/lib/index.utils";
-
-interface FtsUserRow {
-  id: string;
-  username: string;
-  avatar: string;
-  color: string;
-  status: string;
-  money: number;
-  position: number;
-  isAdmin: number;
-  created: string;
-}
-
-interface FtsGameRow {
-  id: string;
-  data: string;
-  status: string;
-  user: string;
-}
-
-interface FtsItemRow {
-  id: string;
-  type: string;
-  label: string;
-  description: string;
-  charge: number;
-  rollable: number;
-  status: string;
-  imageMime: string | null;
-  hasImage: number;
-  created: string;
-  updated: string;
-}
+import type { FtsUserRow, FtsGameRow, FtsItemRow } from "@/types/search";
+import type { DbTimestamps } from "@/types/server";
 
 export default new Elysia({ prefix: "/search" }).get(
   "/",
@@ -51,7 +20,7 @@ export default new Elysia({ prefix: "/search" }).get(
       .join(" ");
 
     const users = rawDb
-      .query<FtsUserRow, any>(
+      .query<FtsUserRow, [string, number]>(
         `SELECT u.id, u.username, u.avatar, u.color, u.status, u.money, u.position, u.is_admin AS isAdmin, u.created
            FROM users_fts uf JOIN users u ON u.rowid = uf.rowid
            WHERE users_fts MATCH ? ORDER BY rank LIMIT ?`,
@@ -59,7 +28,7 @@ export default new Elysia({ prefix: "/search" }).get(
       .all(ftsQuery, limit) as FtsUserRow[];
 
     const games = rawDb
-      .query<FtsGameRow, any>(
+      .query<FtsGameRow, [string, number]>(
         `SELECT g.id, g.data, g.status, g.user
            FROM games_fts gf JOIN games g ON g.rowid = gf.rowid
            WHERE games_fts MATCH ? ORDER BY rank LIMIT ?`,
@@ -67,7 +36,7 @@ export default new Elysia({ prefix: "/search" }).get(
       .all(ftsQuery, limit) as FtsGameRow[];
 
     const items = rawDb
-      .query<FtsItemRow, any>(
+      .query<FtsItemRow, [string, number]>(
         `SELECT i.id, i.type, i.label, i.description, i.charge, i.rollable, i.status,
                   i.image_mime AS imageMime, i.image IS NOT NULL AS hasImage, i.created, i.updated
            FROM items_fts if JOIN items i ON i.rowid = if.rowid
@@ -77,7 +46,7 @@ export default new Elysia({ prefix: "/search" }).get(
 
     return {
       users: users.map((u) => ({
-        ...withRecordMeta(u as any, "users"),
+        ...withRecordMeta(u as unknown as DbTimestamps, "users"),
         passwordHash: undefined,
       })),
       games: games.map((g) => ({

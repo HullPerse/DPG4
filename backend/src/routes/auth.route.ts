@@ -13,10 +13,13 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
+import databasePlugin from "@/plugins/database.plugin";
+import { DbTimestamps } from "@/types/server";
 
 const logger = new Logger("AUTH");
 
 const authRoute = new Elysia({ prefix: "/auth" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
   .post(
@@ -120,7 +123,7 @@ const authRoute = new Elysia({ prefix: "/auth" })
       }
 
       const token = await signToken(jwt, row.id, row.isAdmin);
-      const user = withRecordMeta(omitPassword(row), "users");
+      const user = withRecordMeta(omitPassword(row) as DbTimestamps, "users");
       logger.setAuthor(row.username).info("logged in");
       return { token, user };
     },
@@ -140,11 +143,12 @@ const authRoute = new Elysia({ prefix: "/auth" })
       .select()
       .from(schema.users)
       .where(eq(schema.users.id, user.sub));
+
     if (!row) {
       set.status = 401;
       return { error: "Unauthorized" };
     }
-    return withRecordMeta(omitPassword(row), "users");
+    return withRecordMeta(omitPassword(row) as DbTimestamps, "users");
   })
   .post("/refresh", async ({ user, db, jwt, set }) => {
     if (!user) {
@@ -155,6 +159,7 @@ const authRoute = new Elysia({ prefix: "/auth" })
       .select()
       .from(schema.users)
       .where(eq(schema.users.id, user.sub));
+
     if (!row) {
       set.status = 401;
       return { error: "Unauthorized" };
@@ -163,7 +168,7 @@ const authRoute = new Elysia({ prefix: "/auth" })
     logger.setAuthor(String(user.username)).info("refreshed session");
     return {
       token,
-      user: withRecordMeta(omitPassword(row), "users"),
+      user: withRecordMeta(omitPassword(row) as DbTimestamps, "users"),
     };
   });
 

@@ -275,6 +275,10 @@ export const migrations: Record<string, Migration> = {
       );`,
     ],
   },
+  "0013_drop_cache": {
+    description: "Drop cache table (moved to in-memory)",
+    sql: ["DROP TABLE IF EXISTS cache;"],
+  },
 };
 
 export function getAppliedMigrations(): Set<string> {

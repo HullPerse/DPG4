@@ -162,12 +162,10 @@ function replaceBuffers(row: Record<string, unknown>): void {
   }
 }
 
-type AdminJwtPayload = { sub: string; role?: string };
-
 async function verifyAdmin(
   headers: Record<string, string | undefined>,
-  adminJwt: { verify: (t: string) => Promise<false | AdminJwtPayload> },
-  db: any,
+  adminJwt: { verify(jwt?: string): Promise<false | Record<string, unknown>> },
+  db: import("@/types/server").Db,
 ): Promise<{ id: string; username: string } | null> {
   const h = headers.authorization;
   const token = h?.startsWith("Bearer ") ? h.slice(7) : null;
@@ -221,9 +219,7 @@ const adminRoute = new Elysia()
       .get("/verify", async ({ headers, adminJwt, db }) => {
         const admin = await verifyAdmin(
           headers,
-          adminJwt as {
-            verify: (t: string) => Promise<false | AdminJwtPayload>;
-          },
+          adminJwt ,
           db,
         );
         if (!admin) {
@@ -239,9 +235,7 @@ const adminRoute = new Elysia()
         if (
           !(await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           ))
         ) {
@@ -253,9 +247,7 @@ const adminRoute = new Elysia()
       .post("/broadcast-reload", async ({ headers, adminJwt, db, set }) => {
         const admin = await verifyAdmin(
           headers,
-          adminJwt as {
-            verify: (t: string) => Promise<false | AdminJwtPayload>;
-          },
+          adminJwt ,
           db,
         );
         if (!admin) {
@@ -271,9 +263,7 @@ const adminRoute = new Elysia()
         async ({ body, db, headers, adminJwt, set, economyService }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -301,9 +291,7 @@ const adminRoute = new Elysia()
         async ({ headers, adminJwt, db, set, query }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -333,9 +321,7 @@ const adminRoute = new Elysia()
       .get("/logs", async ({ headers, adminJwt, db, set, query }) => {
         const admin = await verifyAdmin(
           headers,
-          adminJwt as {
-            verify: (t: string) => Promise<false | AdminJwtPayload>;
-          },
+          adminJwt ,
           db,
         );
         if (!admin) {
@@ -370,9 +356,7 @@ const adminRoute = new Elysia()
         async ({ body, headers, adminJwt, db, set }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -398,9 +382,7 @@ const adminRoute = new Elysia()
           if (
             !(await verifyAdmin(
               headers,
-              adminJwt as {
-                verify: (t: string) => Promise<false | AdminJwtPayload>;
-              },
+              adminJwt,
               db,
             ))
           ) {
@@ -429,9 +411,7 @@ const adminRoute = new Elysia()
           if (
             !(await verifyAdmin(
               headers,
-              adminJwt as {
-                verify: (t: string) => Promise<false | AdminJwtPayload>;
-              },
+              adminJwt,
               db,
             ))
           ) {
@@ -461,9 +441,7 @@ const adminRoute = new Elysia()
         async ({ params, body, db, headers, adminJwt, set }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -517,9 +495,7 @@ const adminRoute = new Elysia()
         async ({ params, body, db, headers, adminJwt, set }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -572,9 +548,7 @@ const adminRoute = new Elysia()
         async ({ params, db, headers, adminJwt, set }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -611,9 +585,7 @@ const adminRoute = new Elysia()
         async ({ params, body, db, headers, adminJwt, set }) => {
           const admin = await verifyAdmin(
             headers,
-            adminJwt as {
-              verify: (t: string) => Promise<false | AdminJwtPayload>;
-            },
+            adminJwt,
             db,
           );
           if (!admin) {
@@ -650,9 +622,7 @@ const adminRoute = new Elysia()
           if (
             !(await verifyAdmin(
               headers,
-              adminJwt as {
-                verify: (t: string) => Promise<false | AdminJwtPayload>;
-              },
+              adminJwt,
               db,
             ))
           ) {

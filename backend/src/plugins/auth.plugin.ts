@@ -4,13 +4,7 @@ import { config } from "@/server.config";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/index.db";
 import * as schema from "@/db/schema.db";
-
-interface JwtUser {
-  id?: string;
-  sub: string;
-  isAdmin: boolean;
-  username: string | null;
-}
+import type { JwtUser } from "@/types/auth";
 
 const usernameCache = new Map<
   string,
@@ -82,7 +76,7 @@ const authPlugin = new Elysia({ name: "auth" })
   });
 
 export function signToken(
-  jwt: { sign: (payload: Record<string, unknown>) => Promise<string> },
+  jwt: { sign: (payload: any) => Promise<string> },
   userId: string,
   isAdmin: boolean,
 ) {

@@ -1,36 +1,17 @@
-import { rawDb } from "@/db/index.db";
+import type { CacheValue, CacheEntry } from "@/types/cache";
 
-type CacheValue =
-  | string
-  | number
-  | boolean
-  | null
-  | Record<string, unknown>
-  | unknown[];
-
-function serialize(value: CacheValue): string {
-  return JSON.stringify(value);
-}
-
-function deserialize<T extends CacheValue>(raw: string): T {
-  return JSON.parse(raw) as T;
-}
+const store = new Map<string, CacheEntry>();
 
 export async function cacheGet<T extends CacheValue>(
   key: string,
 ): Promise<T | null> {
-  const row = rawDb
-    .prepare("SELECT value, expires_at FROM cache WHERE key = ?")
-    .get(key) as { value: string; expires_at: number | null } | undefined;
-
-  if (!row) return null;
-
-  if (row.expires_at && Date.now() > row.expires_at) {
-    rawDb.prepare("DELETE FROM cache WHERE key = ?").run(key);
+  const entry = store.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
+    store.delete(key);
     return null;
   }
-
-  return deserialize<T>(row.value);
+  return entry.value as T;
 }
 
 export async function cacheSet(
@@ -38,28 +19,25 @@ export async function cacheSet(
   value: CacheValue,
   ttlMs: number,
 ): Promise<void> {
-  const expiresAt = Date.now() + ttlMs;
-  const raw = serialize(value);
-  rawDb
-    .prepare(
-      "INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)",
-    )
-    .run(key, raw, expiresAt);
+  store.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
 
 export async function cacheDel(key: string): Promise<void> {
-  rawDb.prepare("DELETE FROM cache WHERE key = ?").run(key);
+  store.delete(key);
 }
 
 export async function cacheFlush(): Promise<void> {
-  rawDb.prepare("DELETE FROM cache").run();
+  store.clear();
 }
 
 export async function sweepExpiredCache(): Promise<number> {
-  const { changes } = rawDb
-    .prepare(
-      "DELETE FROM cache WHERE expires_at IS NOT NULL AND expires_at <= ?",
-    )
-    .run(Date.now());
-  return changes;
+  const now = Date.now();
+  let deleted = 0;
+  for (const [key, entry] of store) {
+    if (entry.expiresAt !== null && now > entry.expiresAt) {
+      store.delete(key);
+      deleted++;
+    }
+  }
+  return deleted;
 }

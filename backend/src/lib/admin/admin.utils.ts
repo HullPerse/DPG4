@@ -2,6 +2,7 @@ import * as schema from "@/db/schema.db";
 import { broadcast } from "../websocket.utils";
 import { ADMIN_BLOB_FIELDS, ADMIN_JSON_FIELDS } from "./schema.admin";
 import { eq } from "drizzle-orm";
+import type { Db } from "@/types/server";
 
 const BROADCAST_TABLES = new Set([
   "users",
@@ -143,12 +144,10 @@ export function replaceBuffers(row: Record<string, unknown>): void {
   }
 }
 
-export type AdminJwtPayload = { sub: string; role?: string };
-
 export async function verifyAdmin(
   headers: Record<string, string | undefined>,
-  adminJwt: { verify: (t: string) => Promise<false | AdminJwtPayload> },
-  db: any,
+  adminJwt: { verify(jwt?: string): Promise<false | Record<string, unknown>> },
+  db: Db,
 ): Promise<{ id: string; username: string } | null> {
   const h = headers.authorization;
   const token = h?.startsWith("Bearer ") ? h.slice(7) : null;
