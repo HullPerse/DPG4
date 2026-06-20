@@ -5,7 +5,7 @@ import { PachinkoState, PachinkoDevOverrides, ActivePachinkoGame } from "@/types
 import { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "@/lib/gambling.constants";
+import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET, PACHINKO_SLOT_MULTIPLIERS } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
 
 export default class PachinkoService {

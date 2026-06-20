@@ -23,7 +23,7 @@ const BROADCAST_TABLES = new Set([
   "quests",
 ]);
 
-function isBlobPlaceholder(val: unknown): boolean {
+export function isBlobPlaceholder(val: unknown): boolean {
   return typeof val === "string" && val.includes("[buffer");
 }
 
@@ -31,7 +31,7 @@ export function maybeBroadcast(table: string, action: string, id: string) {
   if (BROADCAST_TABLES.has(table)) broadcast(table, action, id);
 }
 
-const hasTimestamps = new Set([
+export const hasTimestamps = new Set([
   "users",
   "games",
   "presets",
@@ -49,7 +49,7 @@ const hasTimestamps = new Set([
   "quests",
 ]);
 
-function tryParseJson(v: unknown): unknown {
+export function tryParseJson(v: unknown): unknown {
   if (typeof v !== "string") return v;
   const trimmed = v.trim();
   if (
@@ -65,7 +65,7 @@ function tryParseJson(v: unknown): unknown {
   return v;
 }
 
-function parseDataUrl(value: string): { buffer: Buffer; mime: string } | null {
+export function parseDataUrl(value: string): { buffer: Buffer; mime: string } | null {
   const match = value.match(/^data:(.+?);base64,(.+)$/);
   if (!match) return null;
   return { mime: match[1], buffer: Buffer.from(match[2], "base64") };

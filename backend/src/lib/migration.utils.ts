@@ -279,6 +279,18 @@ export const migrations: Record<string, Migration> = {
     description: "Drop cache table (moved to in-memory)",
     sql: ["DROP TABLE IF EXISTS cache;"],
   },
+  "0014_add_missing_indexes": {
+    description: "Add missing performance indexes on history, games, pets",
+    sql: [
+      "CREATE INDEX IF NOT EXISTS idx_history_user_id ON history (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_history_user_created ON history (user_id, created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_history_type ON history (type);",
+      "CREATE INDEX IF NOT EXISTS idx_games_user_id ON games (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_pets_is_alive ON pets (is_alive);",
+      "CREATE INDEX IF NOT EXISTS idx_users_position ON users (position);",
+    ],
+  },
 };
 
 export function getAppliedMigrations(): Set<string> {

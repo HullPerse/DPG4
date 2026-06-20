@@ -6,12 +6,14 @@ import { broadcast } from "@/lib/websocket.utils"
 import Logger from "@/lib/logger.utils"
 import databasePlugin from "@/plugins/database.plugin"
 import servicesPlugin from "@/services.server"
+import authPlugin from "@/plugins/auth.plugin"
 
 const logger = new Logger("MARKET")
 
 export default new Elysia({ prefix: "/market" })
   .use(databasePlugin)
   .use(servicesPlugin)
+  .use(authPlugin)
   .get(
     "/",
     async ({ db, query }) => {
@@ -54,7 +56,15 @@ export default new Elysia({ prefix: "/market" })
   )
   .post(
     "/sell",
-    async ({ body, economyService }) => {
+    async ({ body, economyService, user, db, set }) => {
+      const [inv] = await db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, body.inventoryId))
+      if (!inv || inv.owner !== user.sub) {
+        set.status = 403
+        return { error: "Not your inventory item" }
+      }
       const result = await economyService.sellInventory(
         body.inventoryId,
         body.ownerId,
@@ -64,6 +74,7 @@ export default new Elysia({ prefix: "/market" })
       return result
     },
     {
+      requireAuth: true,
       body: t.Object({
         inventoryId: t.String(),
         ownerId: t.String(),
@@ -73,7 +84,11 @@ export default new Elysia({ prefix: "/market" })
   )
   .post(
     "/:id/buy",
-    async ({ params, body, economyService }) => {
+    async ({ params, body, economyService, user, set }) => {
+      if (user.sub !== body.newOwnerId) {
+        set.status = 403
+        return { error: "Cannot buy on behalf of another user" }
+      }
       const result = await economyService.buyMarket(
         params.id,
         body.newOwnerId,
@@ -83,20 +98,37 @@ export default new Elysia({ prefix: "/market" })
       return result
     },
     {
+      requireAuth: true,
       body: t.Object({
         newOwnerId: t.String(),
         oldOwnerId: t.String(),
       }),
     },
   )
-  .post("/:id/remove", async ({ params, economyService }) => {
+  .post("/:id/remove", async ({ params, economyService, user, db, set }) => {
+    const [listing] = await db
+      .select()
+      .from(schema.market)
+      .where(eq(schema.market.id, params.id))
+    if (!listing) {
+      set.status = 404
+      return { error: "Listing not found" }
+    }
+    if (listing.owner as unknown as string !== user.sub) {
+      set.status = 403
+      return { error: "Not your listing" }
+    }
     const result = await economyService.removeMarketListing(params.id)
     logger.info(`removed market listing ${params.id}`)
     return result
-  })
+  }, { requireAuth: true })
   .post(
     "/:id/discount",
-    async ({ params, body, economyService }) => {
+    async ({ params, body, economyService, user, set }) => {
+      if (user.sub !== body.ownerId) {
+        set.status = 403
+        return { error: "Not your listing" }
+      }
       const result = await economyService.discountMarket(
         params.id,
         body.ownerId,
@@ -107,6 +139,7 @@ export default new Elysia({ prefix: "/market" })
       return result
     },
     {
+      requireAuth: true,
       body: t.Object({
         ownerId: t.String(),
         price: t.Number(),
@@ -116,11 +149,23 @@ export default new Elysia({ prefix: "/market" })
   )
   .delete(
     "/:id",
-    async ({ params, db }) => {
+    async ({ params, db, user, set }) => {
+      const [listing] = await db
+        .select()
+        .from(schema.market)
+        .where(eq(schema.market.id, params.id))
+      if (!listing) {
+        set.status = 404
+        return { error: "Listing not found" }
+      }
+      if (listing.owner as unknown as string !== user.sub) {
+        set.status = 403
+        return { error: "Not your listing" }
+      }
       await db.delete(schema.market).where(eq(schema.market.id, params.id))
       broadcast("market", "delete", params.id)
       logger.info(`deleted market listing ${params.id}`)
       return { ok: true }
     },
-    { params: t.Object({ id: t.String() }) },
+    { requireAuth: true, params: t.Object({ id: t.String() }) },
   )

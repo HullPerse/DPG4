@@ -118,6 +118,23 @@ const CREATE_GAMES = `CREATE TABLE games (
   updated TEXT NOT NULL
 )`;
 
+const CREATE_MARKET = `CREATE TABLE market (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  original_id TEXT,
+  owner TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  charge INTEGER NOT NULL DEFAULT 0,
+  price INTEGER NOT NULL DEFAULT 0,
+  discount INTEGER,
+  per_ticket_price INTEGER,
+  image BLOB,
+  image_mime TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
 const CREATE_JACKPOT = `CREATE TABLE jackpot (
   id TEXT PRIMARY KEY,
   pool INTEGER NOT NULL DEFAULT 0,
@@ -141,6 +158,7 @@ export function createTestDb(): { sqlite: Database; db: Db } {
   sqlite.run(CREATE_INVENTORY_LOG);
   sqlite.run(CREATE_ITEMS);
   sqlite.run(CREATE_GAMES);
+  sqlite.run(CREATE_MARKET);
   sqlite.run(CREATE_JACKPOT);
   return { sqlite, db };
 }

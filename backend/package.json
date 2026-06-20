@@ -2,7 +2,10 @@
   "name": "dpg_backend",
   "version": "2.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css}\"",
+    "test": "bun test",
     "dev": "bun run --watch src/index.server.ts",
     "lint": "oxlint --deny-warnings src/",
     "lint:fix": "oxlint --fix --deny-warnings src/",
@@ -25,11 +28,14 @@
     "@elysiajs/cors": "^1.4.2",
     "@elysiajs/jwt": "^1.4.2",
     "drizzle-orm": "^0.45.2",
-    "elysia": "latest"
+    "elysia": "1.4.29"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "oxlint": "^1.70.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3"
   },
   "module": "src/index.server.ts"
 }

@@ -67,8 +67,8 @@ describe("MinesService", () => {
   });
 
   test("reveal safe tile returns playing state", async () => {
-    await services.minesService.start(userId, 5, 1);
-    const state = await services.minesService.reveal(userId, 0, 0);
+    await services.minesService.start(userId, 5, 1, true, { devForceAllSafe: true });
+    const state = await services.minesService.reveal(userId, 0, 0, true);
     expect(state.phase).toBe("playing");
     expect(state.isMine).toBe(false);
     expect(state.currentMultiplier).toBeGreaterThan(1);
@@ -99,18 +99,18 @@ describe("MinesService", () => {
   });
 
   test("cashout gives payout and ends game", async () => {
-    await services.minesService.start(userId, 5, 3);
-    await services.minesService.reveal(userId, 0, 0);
-    const state = await services.minesService.cashout(userId);
+    await services.minesService.start(userId, 5, 3, true, { devForceAllSafe: true });
+    await services.minesService.reveal(userId, 0, 0, true);
+    const state = await services.minesService.cashout(userId, true);
     expect(state.phase).toBe("won");
     expect(state.payout).toBeGreaterThanOrEqual(5);
     expect(state.net).toBe(state.payout - 5);
   });
 
   test("cashout credits payout to balance", async () => {
-    await services.minesService.start(userId, 5, 3);
-    await services.minesService.reveal(userId, 0, 0);
-    const state = await services.minesService.cashout(userId);
+    await services.minesService.start(userId, 5, 3, true, { devForceAllSafe: true });
+    await services.minesService.reveal(userId, 0, 0, true);
+    const state = await services.minesService.cashout(userId, true);
     const user = await getUser(db, userId);
     expect(user!.tickets).toBe(95 + state.payout);
   });

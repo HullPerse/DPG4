@@ -174,10 +174,10 @@ export default class EconomyService {
 
     const invId = newId();
     const ts = nowIso();
-    const execute = () => {
+    await (async () => {
       rawDb.run("BEGIN");
       try {
-        this.db.insert(schema.inventory).values({
+        await this.db.insert(schema.inventory).values({
           id: invId,
           type: itemData.type,
           owner: newOwnerId,
@@ -189,14 +189,13 @@ export default class EconomyService {
           created: ts,
           updated: ts,
         });
-        this.db.delete(schema.market).where(eq(schema.market.id, marketId));
+        await this.db.delete(schema.market).where(eq(schema.market.id, marketId));
         rawDb.run("COMMIT");
       } catch {
         rawDb.run("ROLLBACK");
         throw new Error("buy transaction failed");
       }
-    };
-    execute();
+    })();
 
     await this.removeMoney(newOwnerId, cost, true);
     await this.addMoney(oldOwnerId, cost, true);
