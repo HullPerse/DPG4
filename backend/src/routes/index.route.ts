@@ -27,3 +27,4 @@ export { default as steamRoute } from "./steam.route";
 export { default as searchRoute } from "./search.route";
 export { default as wheelRoute } from "./wheel.route";
 export { default as historyRoute } from "./history.route";
+export { default as rulesRoute } from "./rules.route";

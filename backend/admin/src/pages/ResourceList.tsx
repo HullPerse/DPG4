@@ -216,9 +216,7 @@ export function ResourceListPage() {
 
       {selectedIds.size > 0 && (
         <div className="bg-iris/10 border-iris mb-3 flex shrink-0 flex-wrap items-center gap-2 border-2 px-3 py-2 text-sm">
-          <span className="font-medium">
-            Выбрано: {selectedIds.size}
-          </span>
+          <span className="font-medium">Выбрано: {selectedIds.size}</span>
           <Button
             type="button"
             variant="danger"
@@ -226,7 +224,11 @@ export function ResourceListPage() {
             onClick={() => void handleBatchDelete()}
             disabled={busy}
           >
-            {busy ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+            {busy ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Trash2 className="size-3" />
+            )}
             Удалить
           </Button>
           <Button
@@ -330,7 +332,7 @@ export function ResourceListPage() {
                   {listFields.map((f) => (
                     <td
                       key={f.source}
-                      className="border-highlight-high max-w-[240px] border px-2 py-1.5 align-top"
+                      className="border-highlight-high max-w-60 border px-2 py-1.5 align-top"
                     >
                       <div className="max-h-24 overflow-hidden">
                         {renderListCell(f, row, resource)}

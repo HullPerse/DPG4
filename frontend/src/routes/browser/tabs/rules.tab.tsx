@@ -64,6 +64,12 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
     <main className="flex h-full w-full flex-col gap-2 overflow-y-scroll p-2 items-center">
       {categories.map((category, index) => {
         const rules = data?.rules.filter((item) => item.category === category);
+        const filteredRules = rules?.filter((rule) =>
+          rule.rule.toUpperCase().includes(searchTerms.toUpperCase()),
+        );
+
+        if (!filteredRules || filteredRules.length === 0) return;
+
         const anchor = slugCategory(category);
 
         return (
@@ -76,19 +82,17 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
               {index + 1}. {category}
             </div>
             <div className="flex flex-col w-[97%] min-h-fit bg-background border-x-2 border-b-2 border-t-none border-highlight-high shadow-sharp-sm leading-relaxed divide-y divide-highlight-high/30 [&>*:nth-child(odd)]:bg-highlight-high/10 overflow-hidden transition-all duration-300">
-              {rules
-                ?.filter((rule) => rule.rule.toUpperCase().includes(searchTerms.toUpperCase()))
-                .map((rule, ruleIndex) => (
-                  <div
-                    key={`${anchor}-${ruleIndex}`}
-                    id={`rule-${anchor}-${ruleIndex + 1}`}
-                    className="p-2 scroll-mt-20"
-                  >
-                    <p>
-                      {ruleIndex + 1}. {highlightText(String(rule.rule), searchTerms)}
-                    </p>
-                  </div>
-                ))}
+              {filteredRules.map((rule, ruleIndex) => (
+                <div
+                  key={`${anchor}-${ruleIndex}`}
+                  id={`rule-${anchor}-${ruleIndex + 1}`}
+                  className="p-2 scroll-mt-20"
+                >
+                  <p>
+                    {ruleIndex + 1}. {highlightText(String(rule.rule), searchTerms)}
+                  </p>
+                </div>
+              ))}
             </div>
           </section>
         );

@@ -40,6 +40,7 @@ import {
   wheelRoute,
   historyRoute,
   adminRoute,
+  rulesRoute,
 } from "./routes/index.route";
 import { registerClient, unregisterClient } from "./lib/websocket.utils";
 import { initAutoBackup } from "./lib/backup.utils";
@@ -99,6 +100,7 @@ new Elysia()
   .use(jackpotRoute)
   .use(questsRoute)
   .use(statsRoute)
+  .use(rulesRoute)
 
   .get("/", () => "DPG SERVER")
   .listen(Bun.env.PORT ?? 2000, (e) => {
