@@ -1,6 +1,5 @@
 import { describe, expect, test, beforeAll } from "bun:test";
 import { Elysia } from "elysia";
-import { jwt } from "@elysiajs/jwt";
 import { rawDb } from "@/db/index.db";
 import marketRoute from "@/routes/market.route";
 

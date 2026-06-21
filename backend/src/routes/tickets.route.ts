@@ -70,7 +70,7 @@ export default new Elysia({ prefix: "/utils" })
 
   .post(
     "/tickets/buy",
-    async ({ body, user, db, economyService, userService }) => {
+    async ({ body, user, db, economyService: _economyService, userService: _userService }) => {
       const [userRow] = await db
         .select()
         .from(schema.users)
@@ -140,7 +140,7 @@ export default new Elysia({ prefix: "/utils" })
 
   .post(
     "/tickets/sell-direct",
-    async ({ body, user, db, userService }) => {
+    async ({ body, user, db, userService: _userService }) => {
       const amount = body.amount;
       if (!Number.isInteger(amount) || amount < 1) {
         return { error: "Invalid amount" };
@@ -187,7 +187,7 @@ export default new Elysia({ prefix: "/utils" })
 
   .post(
     "/tickets/sell",
-    async ({ body, user, db, economyService }) => {
+    async ({ body, user, db, economyService: _economyService }) => {
       const [userRow] = await db
         .select()
         .from(schema.users)

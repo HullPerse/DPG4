@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
-import { db, rawDb } from "@/db/index.db";
+import { db } from "@/db/index.db";
 import { nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";

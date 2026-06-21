@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { rawDb } from "@/db/index.db";
-import { omitPassword, withRecordMeta } from "@/lib/index.utils";
+import { withRecordMeta } from "@/lib/index.utils";
 import type { FtsUserRow, FtsGameRow, FtsItemRow } from "@/types/search";
 import type { DbTimestamps } from "@/types/server";
 

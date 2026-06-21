@@ -15,7 +15,7 @@ export default new Elysia({ prefix: "/history" })
   .use(authPlugin)
   .get(
     "/",
-    async ({ query, user, set, db }) => {
+    async ({ query, user, set: _set, db }) => {
       const page = Math.max(1, query.page ?? 1);
       const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
       const offset = (page - 1) * limit;
@@ -61,7 +61,7 @@ export default new Elysia({ prefix: "/history" })
   )
   .get(
     "/stats",
-    async ({ user, set }) => {
+    async ({ user, set: _set }) => {
       const dailyNet = rawDb
         .query<StatsRow, [string]>(
           `SELECT DATE(created) AS date, SUM(net) AS net, COUNT(*) AS gamesPlayed

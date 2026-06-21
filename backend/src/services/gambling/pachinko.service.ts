@@ -25,7 +25,7 @@ export default class PachinkoService {
     return "chance";
   }
 
-  async drop(userId: string, bid: number, ratAmount = 1, devMode?: boolean, devOverrides?: PachinkoDevOverrides): Promise<PachinkoState> {
+  async drop(userId: string, bid: number, ratAmount = 1, devMode?: boolean, _devOverrides?: PachinkoDevOverrides): Promise<PachinkoState> {
     if (!devMode) {
       if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid)) throw new Error("Invalid bid");
       if (!Number.isInteger(ratAmount) || ratAmount < 1 || ratAmount > 5) throw new Error("Invalid rat amount");

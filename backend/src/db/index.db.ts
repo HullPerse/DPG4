@@ -2,9 +2,6 @@ import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import config from "@/db/config.db";
 import * as schema from "@/db/schema.db";
-import Logger from "@/lib/logger.utils";
-
-const logger = new Logger("DATABASE");
 
 const sqlite = new Database(config.dbPath, { create: true });
 

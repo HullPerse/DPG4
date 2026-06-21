@@ -73,11 +73,3 @@ export async function getUser(db: Db, id: string) {
   return row ?? null;
 }
 
-export async function getItem(db: Db, id: string) {
-  const [row] = await db
-    .select()
-
-    .from(schema.items)
-    .where(eq(schema.items.id, id));
-  return row ?? null;
-}

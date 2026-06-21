@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import * as schema from "@/db/schema.db";
 import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import type { Db } from "@/types/server";

@@ -1,4 +1,4 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import { desc, eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { databasePlugin } from "@/plugins/index.plugin";

@@ -82,10 +82,8 @@ async function checkAndBackup(): Promise<boolean> {
   return false;
 }
 
-let intervalId: ReturnType<typeof setInterval> | null = null;
-
 export function initAutoBackup() {
   checkAndBackup();
-  intervalId = setInterval(checkAndBackup, INTERVAL_MS);
+  setInterval(checkAndBackup, INTERVAL_MS);
   logger.info("Auto-backup scheduled (every 5 min check, 24h threshold)");
 }

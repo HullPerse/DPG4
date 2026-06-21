@@ -1,4 +1,4 @@
-import { Elysia, t } from "elysia"
+import { Elysia } from "elysia"
 import authPlugin from "@/plugins/auth.plugin"
 import { APP_META, WINDOW_META, LINKS } from "@/lib/config.data"
 import { MODEL_CONFIGS } from "@/lib/model.config"

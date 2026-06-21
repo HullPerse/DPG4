@@ -1,5 +1,4 @@
 import { Elysia } from "elysia"
-import { config } from "@/server.config"
 import { getClientCount } from "@/lib/websocket.utils"
 import { rawDb } from "@/db/index.db"
 
