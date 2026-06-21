@@ -133,8 +133,7 @@ function PresetsTab() {
           className="w-10 h-10"
           hidden={
             (!isAdmin && !currentPreset?.label?.includes(String(user?.username))) ||
-            currentTab === "addPresetGame" ||
-            currentTab === "presetWheel"
+            currentTab !== "presetList"
           }
           onClick={() => setCurrentTab("addPresetGame")}
         >

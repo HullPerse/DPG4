@@ -20,9 +20,7 @@ export default function PresetsList({
 }: {
   searchTerms: string;
   setCurrentPreset: (preset: { id: string; label: string }) => void;
-  setCurrentTab: (
-    tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
-  ) => void;
+  setCurrentTab: (tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame") => void;
   refetchPresetsRef?: React.RefObject<(() => void) | null>;
 }) {
   const queryClient = useQueryClient();
@@ -35,7 +33,7 @@ export default function PresetsList({
       presets: Preset[];
       steamLibrary: Preset;
     }> => {
-      const presets = await gameApi.getPresets(searchTerms || undefined);
+      const presets = await gameApi.getPresets();
 
       const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
 

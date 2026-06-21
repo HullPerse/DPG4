@@ -32,13 +32,7 @@ function PresetComponent({
       <section className="flex flex-row w-full h-full items-center gap-2">
         <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
           {preset.games?.length > 0 && (
-            <Image
-              src={
-                preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
-                  .capsuleImage
-              }
-              alt={preset.label}
-            />
+            <Image src={preset.games[0].capsuleImage} alt={preset.label} />
           )}
         </div>
         <span className="font-bold truncate line-clamp-1">
