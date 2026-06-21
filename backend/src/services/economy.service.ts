@@ -1,7 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import ActivityService from "./activity.service";
 import UserService from "./user.service";
 import LogService from "./log.service";

@@ -14,7 +14,7 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
-import { DbTimestamps } from "@/types/server";
+import type { DbTimestamps } from "@/types/server";
 
 const logger = new Logger("AUTH");
 

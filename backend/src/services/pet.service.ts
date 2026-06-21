@@ -43,7 +43,7 @@ class PetService {
 
           broadcast("pets", "update", pet.userId);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         this.logger.error(`decay loop error ${err}`);
       }
     }, DECAY_INTERVAL_MS);

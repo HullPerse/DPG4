@@ -1,8 +1,8 @@
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { newId, nowIso } from "@/lib/index.utils";
-import { InventoryAction } from "@/types/services";
+import type { InventoryAction } from "@/types/services";
 
 export default class LogService {
   constructor(private db: Db) {}

@@ -1,8 +1,8 @@
 import { desc } from "drizzle-orm";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import * as schema from "@/db/schema.db";
 import { BaseService } from "./index.service";
-import { Activity } from "@/types/services";
+import type { Activity } from "@/types/services";
 import { ACTIVITY_TYPES, withRecordMeta } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 

@@ -17,7 +17,7 @@ import {
 } from "./tables.admin";
 import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
 import type { AdminTable } from "@/types/admin";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 
 function buildWhere(
   table: AdminTable,

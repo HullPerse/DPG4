@@ -38,7 +38,7 @@ export default new Elysia({ prefix: "/steam" })
           }
         }
         return { steamId: data.response.steamid }
-      } catch (e) {
+      } catch (e: unknown) {
         set.status = 502
         return { error: e instanceof Error ? e.message : "Steam API error" }
       }
@@ -61,7 +61,7 @@ export default new Elysia({ prefix: "/steam" })
           makeGameData(g.appid, g.name),
         )
         return games
-      } catch (e) {
+      } catch (e: unknown) {
         set.status = 502
         return { error: e instanceof Error ? e.message : "Steam API error" }
       }
@@ -85,7 +85,7 @@ export default new Elysia({ prefix: "/steam" })
         const appsUrl = `https://api.steampowered.com/IFamilyGroupsService/GetSharedLibraryApps/v1/?access_token=${encodeURIComponent(query.accessToken)}&family_groupid=${familyGroupId}&include_own=true&include_free=true`
         const appsRes = await fetch(appsUrl)
         return await appsRes.json()
-      } catch (e) {
+      } catch (e: unknown) {
         set.status = 502
         return { error: e instanceof Error ? e.message : "Steam API error" }
       }
@@ -151,7 +151,7 @@ export default new Elysia({ prefix: "/steam" })
           websiteLink: data.website ?? "",
           source: "owned",
         }
-      } catch (e) {
+      } catch (e: unknown) {
         set.status = 502
         return { error: e instanceof Error ? e.message : "Steam API error" }
       }

@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import ActivityService from "./activity.service";
 
 const STATUSES: Record<string, string> = {

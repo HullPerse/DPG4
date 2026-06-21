@@ -13,7 +13,7 @@ import {
   ITEM_MODAL_LABELS,
   RAT_IDS,
 } from "@/lib/items/constants";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import type { EffectCtx, UseItemResult } from "@/types/items";
 import UserService from "@/services/user.service";
 import ActivityService from "@/services/activity.service";

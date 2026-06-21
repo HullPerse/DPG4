@@ -1,13 +1,12 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { ActiveDiceGame, DiceGameResult, DiceRollPhaseResult, HandInfo } from "@/types/gambling";
-import { Db } from "@/types/server";
+import type { ActiveDiceGame, DiceGameResult, DiceRollPhaseResult, HandInfo, DiceDevOverrides } from "@/types/gambling";
+import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
-import { DiceDevOverrides } from "@/types/gambling";
 
 const MAX_VOID_REROLLS = 2;
 const DICE_BROKEN_CHANCE = 0.01;

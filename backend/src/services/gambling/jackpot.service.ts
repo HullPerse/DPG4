@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import { GAMBLING_BAN_THRESHOLD } from "@/lib/gambling.constants";
 import { updateTicketItem } from "@/lib/ticket.helpers";
 import Logger from "@/lib/logger.utils";
@@ -33,7 +33,7 @@ export default class JackpotService {
 
   async getStatus() {
     const [row] = await this.db.select().from(schema.jackpot).limit(1);
-    if (!row) return { pool: 0, lastWinnerId: null as string | null, lastWinnerUsername: null as string | null, lastWinAmount: null as number | null, lastWinDate: null as string | null };
+    if (!row) return { pool: 0, lastWinnerId: null, lastWinnerUsername: null, lastWinAmount: null, lastWinDate: null };
     return { pool: row.pool, lastWinnerId: row.lastWinnerId, lastWinnerUsername: row.lastWinnerUsername, lastWinAmount: row.lastWinAmount, lastWinDate: row.lastWinDate };
   }
 
@@ -90,17 +90,17 @@ export default class JackpotService {
         if (userRow!.gamblingWinnings + winAmount >= GAMBLING_BAN_THRESHOLD) {
           await this.db.update(schema.users).set({ gamblingBanned: true, updated: ts }).where(eq(schema.users.id, userId));
           this.logger.info(`gambling ban triggered (jackpot win ${winAmount})`);
-          return { win: true, chosen, winningNumber, prize: winAmount, newBalance: totalTickets, banned: true, error: null as string | null };
+          return { win: true, chosen, winningNumber, prize: winAmount, newBalance: totalTickets, banned: true, error: null };
         }
 
         this.logger.info(`jackpot win ${winAmount} tickets`);
-        return { win: true, chosen, winningNumber, prize: winAmount, newBalance: totalTickets, banned: false, error: null as string | null };
+        return { win: true, chosen, winningNumber, prize: winAmount, newBalance: totalTickets, banned: false, error: null };
       }
 
       broadcast("jackpot", "update", undefined);
-      return { win: false, chosen, winningNumber, prize: 0, newBalance: newTickets, banned: false, error: null as string | null };
+      return { win: false, chosen, winningNumber, prize: 0, newBalance: newTickets, banned: false, error: null };
     }
 
-    return { win: isWin, chosen, winningNumber: devOverrides?.devShowWinningNumber ? winningNumber : winningNumber, prize: isWin ? refreshed.pool : 0, newBalance: 0, banned: false, error: null as string | null };
+    return { win: isWin, chosen, winningNumber: devOverrides?.devShowWinningNumber ? winningNumber : winningNumber, prize: isWin ? refreshed.pool : 0, newBalance: 0, banned: false, error: null };
   }
 }

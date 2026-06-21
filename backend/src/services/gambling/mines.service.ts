@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { ActiveMinesGame, MinesRevealResult, MinesDevOverrides } from "@/types/gambling";
-import { Db } from "@/types/server";
+import type { ActiveMinesGame, MinesRevealResult, MinesDevOverrides } from "@/types/gambling";
+import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import {

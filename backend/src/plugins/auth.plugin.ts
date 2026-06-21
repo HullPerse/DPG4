@@ -44,12 +44,12 @@ const authPlugin = new Elysia({ name: "auth" })
     const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
     if (!token) {
-      return { user: null as JwtUser | null, token: null as string | null };
+      return { user: null, token: null };
     }
 
     const payload = await jwt.verify(token);
     if (!payload || typeof payload.sub !== "string") {
-      return { user: null as JwtUser | null, token };
+      return { user: null, token };
     }
 
     const username = await resolveUsername(payload.sub);

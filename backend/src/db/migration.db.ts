@@ -24,7 +24,7 @@ export default function migrate() {
     for (const stmt of sql) {
       try {
         rawDb.run(stmt);
-      } catch (e) {
+      } catch (e: unknown) {
         const error = e instanceof Error ? e.message : String(e);
 
         const ignorablePatterns = [

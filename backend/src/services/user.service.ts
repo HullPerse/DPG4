@@ -1,4 +1,4 @@
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import ActivityService from "./activity.service";
 import { BaseService } from "./index.service";
 import * as schema from "@/db/schema.db";

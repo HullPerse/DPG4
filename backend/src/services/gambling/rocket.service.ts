@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import { ActiveRocketGame, RocketState, RocketDevOverrides } from "@/types/gambling";
-import { Db } from "@/types/server";
+import type { ActiveRocketGame, RocketState, RocketDevOverrides } from "@/types/gambling";
+import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET, ROCKET_START_MULT } from "@/lib/gambling.constants";

@@ -49,8 +49,8 @@ export default new Elysia({ prefix: "/utils" })
     async ({ body, set, headers, diceService, user }) => {
       try {
         const uid = user!.sub;
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
-        const devOverrides = body as any;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
+        const devOverrides = body as Record<string, unknown>;
         if (body.bid !== undefined) {
           return await diceService.rollDealer(
             uid,
@@ -63,9 +63,9 @@ export default new Elysia({ prefix: "/utils" })
           return await diceService.rerollDealer(uid, devMode, devOverrides);
         }
         return await diceService.rollPlayer(uid, devMode, devOverrides);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -94,16 +94,16 @@ export default new Elysia({ prefix: "/utils" })
     "/blackjack-deal",
     async ({ body, set, headers, blackjackService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await blackjackService.deal(
           user!.sub,
           body.bid,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -123,11 +123,11 @@ export default new Elysia({ prefix: "/utils" })
     "/blackjack-hit",
     async ({ body, set, headers, blackjackService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
-        return await blackjackService.hit(user!.sub, devMode, body as any);
-      } catch (err) {
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
+        return await blackjackService.hit(user!.sub, devMode, body as Record<string, unknown>);
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -139,11 +139,11 @@ export default new Elysia({ prefix: "/utils" })
     "/blackjack-stand",
     async ({ body, set, headers, blackjackService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await blackjackService.stand(user!.sub, devMode);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -186,9 +186,9 @@ export default new Elysia({ prefix: "/utils" })
           })
           .where(eq(schema.users.id, user!.sub));
         return { success: true };
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -200,16 +200,16 @@ export default new Elysia({ prefix: "/utils" })
     "/rocket-launch",
     async ({ body, set, headers, rocketService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await rocketService.launch(
           user!.sub,
           body.bid,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -229,11 +229,11 @@ export default new Elysia({ prefix: "/utils" })
     "/rocket-cashout",
     async ({ body, set, headers, rocketService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await rocketService.cashout(user!.sub, devMode);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -245,11 +245,11 @@ export default new Elysia({ prefix: "/utils" })
     "/rocket-poll",
     async ({ body, set, headers, rocketService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await rocketService.poll(user!.sub, devMode);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -286,17 +286,17 @@ export default new Elysia({ prefix: "/utils" })
     "/pachinko-drop",
     async ({ body, set, headers, pachinkoService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await pachinkoService.drop(
           user!.sub,
           body.bid,
           body.ratAmount,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -317,16 +317,16 @@ export default new Elysia({ prefix: "/utils" })
     "/pachinko-settle",
     async ({ body, set, headers, pachinkoService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await pachinkoService.settle(
           user!.sub,
           body.slotIndexes,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -347,9 +347,9 @@ export default new Elysia({ prefix: "/utils" })
     async ({ set, pachinkoService, user }) => {
       try {
         return await pachinkoService.sync(user!.sub);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -383,17 +383,17 @@ export default new Elysia({ prefix: "/utils" })
     "/mines-start",
     async ({ body, set, headers, minesService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await minesService.start(
           user!.sub,
           body.bid,
           body.mineCount,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -414,17 +414,17 @@ export default new Elysia({ prefix: "/utils" })
     "/mines-reveal",
     async ({ body, set, headers, minesService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await minesService.reveal(
           user!.sub,
           body.x,
           body.y,
           devMode,
-          body as any,
+          body as Record<string, unknown>,
         );
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {
@@ -442,11 +442,11 @@ export default new Elysia({ prefix: "/utils" })
     "/mines-cashout",
     async ({ body, set, headers, minesService, user }) => {
       try {
-        const devMode = headers["x-dev-mode"] === "1" || (body as any).devMode;
+        const devMode = headers["x-dev-mode"] === "1" || !!(body as Record<string, unknown>).devMode;
         return await minesService.cashout(user!.sub, devMode);
-      } catch (err) {
+      } catch (err: unknown) {
         set.status = 400;
-        return { error: (err as Error).message };
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     },
     {

@@ -1,5 +1,5 @@
 import { rawDb } from "@/db/index.db";
-import { Migration } from "@/types/server";
+import type { Migration } from "@/types/server";
 
 export const migrations: Record<string, Migration> = {
   "0001_initial": {

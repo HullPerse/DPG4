@@ -12,7 +12,7 @@ import RocketService from "@/services/gambling/rocket.service";
 import PachinkoService from "@/services/gambling/pachinko.service";
 import MinesService from "@/services/gambling/mines.service";
 import JackpotService from "@/services/gambling/jackpot.service";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 
 const CREATE_USERS = `CREATE TABLE users (
   id TEXT PRIMARY KEY,

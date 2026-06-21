@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, newId } from "@/lib/index.utils";
-import {
+import type {
   BlackjackResult,
   BlackjackState,
   BlackjackDevOverrides,
@@ -17,7 +17,7 @@ import {
   resolveLabels,
   dealerPlay,
 } from "@/lib/blackjack.utils";
-import { Db } from "@/types/server";
+import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
 import {
