@@ -33,7 +33,7 @@ const ALL_CHANNELS = [
   "quests",
 ] as const;
 
-export function broadcastAll(action: string, id?: string) {
+function broadcastAll(action: string, id?: string) {
   const payload = JSON.stringify({ channels: ALL_CHANNELS, action, id });
   const singlePayload = JSON.stringify({
     channel: ALL_CHANNELS[0],

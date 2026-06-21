@@ -25,19 +25,3 @@ export async function cacheSet(
 export async function cacheDel(key: string): Promise<void> {
   store.delete(key);
 }
-
-export async function cacheFlush(): Promise<void> {
-  store.clear();
-}
-
-export async function sweepExpiredCache(): Promise<number> {
-  const now = Date.now();
-  let deleted = 0;
-  for (const [key, entry] of store) {
-    if (entry.expiresAt !== null && now > entry.expiresAt) {
-      store.delete(key);
-      deleted++;
-    }
-  }
-  return deleted;
-}

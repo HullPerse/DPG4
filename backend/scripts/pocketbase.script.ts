@@ -9,8 +9,8 @@ import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { readdirSync, readFileSync, existsSync, statSync } from "fs";
 import { join } from "path";
-import * as schema from "../src/db/schema";
-import { nowIso } from "../src/lib/dates";
+import * as schema from "../src/db/schema.db";
+import { nowIso } from "../src/lib/index.utils";
 
 const PB_DB =
   process.env.PB_DB_PATH ??

@@ -5,7 +5,7 @@ import { resolve, join, dirname } from "node:path";
  * Backend project root (package.json, data/, logs/, backups/).
  * Walks up from import.meta.dir until it finds a directory with package.json.
  */
-export const BACKEND_ROOT = (() => {
+const BACKEND_ROOT = (() => {
   let dir = import.meta.dir;
   while (dir) {
     try {

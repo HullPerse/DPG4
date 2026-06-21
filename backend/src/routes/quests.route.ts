@@ -4,9 +4,9 @@ import * as schema from "@/db/schema.db";
 import { newId, nowIso, withRecordMeta } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
-import databasePlugin from "@/plugins/database.plugin";
+
 import servicesPlugin from "@/services.server";
-import authPlugin from "@/plugins/auth.plugin";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 
 const logger = new Logger("QUESTS");
 

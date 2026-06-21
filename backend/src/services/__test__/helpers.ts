@@ -13,8 +13,7 @@ import RocketService from "@/services/gambling/rocket.service";
 import PachinkoService from "@/services/gambling/pachinko.service";
 import MinesService from "@/services/gambling/mines.service";
 import JackpotService from "@/services/gambling/jackpot.service";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import { Db } from "@/types/server";
 
 const CREATE_USERS = `CREATE TABLE users (
   id TEXT PRIMARY KEY,
@@ -180,9 +179,18 @@ export function createServices(db: Db): TestServices {
   const activityService = new ActivityService(db);
   const userService = new UserService(db, activityService);
   const logService = new LogService(db);
-  const economyService = new EconomyService(db, userService, activityService, logService);
+  const economyService = new EconomyService(
+    db,
+    userService,
+    activityService,
+    logService,
+  );
   const diceService = new DiceService(db, userService, economyService);
-  const blackjackService = new BlackjackService(db, userService, economyService);
+  const blackjackService = new BlackjackService(
+    db,
+    userService,
+    economyService,
+  );
   const rocketService = new RocketService(db, userService, economyService);
   const pachinkoService = new PachinkoService(db, userService, economyService);
   const minesService = new MinesService(db, userService, economyService);

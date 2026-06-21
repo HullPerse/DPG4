@@ -42,7 +42,7 @@ import {
   adminRoute,
 } from "./routes/index.route";
 import { registerClient, unregisterClient } from "./lib/websocket.utils";
-import { initAutoBackup } from "./lib/autoBackup";
+import { initAutoBackup } from "./lib/backup.utils";
 
 const logger = new Logger("SYSTEM");
 

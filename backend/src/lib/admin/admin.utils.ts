@@ -23,7 +23,7 @@ const BROADCAST_TABLES = new Set([
   "quests",
 ]);
 
-export function isBlobPlaceholder(val: unknown): boolean {
+function isBlobPlaceholder(val: unknown): boolean {
   return typeof val === "string" && val.includes("[buffer");
 }
 
@@ -49,23 +49,43 @@ export const hasTimestamps = new Set([
   "quests",
 ]);
 
-export function tryParseJson(v: unknown): unknown {
-  if (typeof v !== "string") return v;
-  const trimmed = v.trim();
-  if (
+const extensionMap: Record<string, string> = {
+  ".js": "application/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
+  ".ttf": "font/ttf",
+};
+
+function tryParseJson(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+
+  const trimmed = value.trim();
+
+  const isValidJson =
     (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
-    (trimmed.startsWith("[") && trimmed.endsWith("]"))
-  ) {
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return v;
-    }
+    (trimmed.startsWith("[") && trimmed.endsWith("]"));
+
+  if (!isValidJson) return value;
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
   }
-  return v;
 }
 
-export function parseDataUrl(value: string): { buffer: Buffer; mime: string } | null {
+export function parseDataUrl(
+  value: string,
+): { buffer: Buffer; mime: string } | null {
   const match = value.match(/^data:(.+?);base64,(.+)$/);
   if (!match) return null;
   return { mime: match[1], buffer: Buffer.from(match[2], "base64") };
@@ -73,28 +93,32 @@ export function parseDataUrl(value: string): { buffer: Buffer; mime: string } | 
 
 export async function cleanBody(
   body: Record<string, unknown>,
-  tbl: string,
+  table: string,
 ): Promise<Record<string, unknown>> {
-  const jf = ADMIN_JSON_FIELDS[tbl] ?? [];
-  const bf = ADMIN_BLOB_FIELDS[tbl] ?? [];
+  const jfSet = new Set(ADMIN_JSON_FIELDS[table] ?? []);
+  const bfSet = new Set(ADMIN_BLOB_FIELDS[table] ?? []);
+
   const out: Record<string, unknown> = {};
   let plainPassword: string | undefined;
 
-  for (const [k, v] of Object.entries(body)) {
-    if (k === "password") {
-      if (typeof v === "string" && v.trim()) plainPassword = v.trim();
+  for (const [key, value] of Object.entries(body)) {
+    if (key === "password") {
+      if (typeof value === "string" && value.trim())
+        plainPassword = value.trim();
       continue;
     }
-    if ((k === "id" || k === "passwordHash") && !v) continue;
-    if (k === "collectionId" || k === "collectionName") continue;
-    out[k] = jf.includes(k) ? tryParseJson(v) : v;
+    if ((key === "id" || key === "passwordHash") && !value) continue;
+    if (key === "collectionId" || key === "collectionName") continue;
+
+    if (jfSet.has(key)) out[key] = tryParseJson(value);
+    else out[key] = value;
   }
 
-  if (tbl === "users" && plainPassword) {
+  if (table === "users" && plainPassword) {
     out.passwordHash = await Bun.password.hash(plainPassword);
   }
 
-  for (const { field, mimeField } of bf) {
+  for (const { field, mimeField } of bfSet) {
     const val = out[field];
     if (typeof val === "string" && val.startsWith("data:")) {
       const parsed = parseDataUrl(val);
@@ -121,19 +145,10 @@ export function sanitizePath(p: string): string {
 }
 
 export function mimeType(fp: string): string {
-  if (fp.endsWith(".js")) return "application/javascript";
-  if (fp.endsWith(".css")) return "text/css";
-  if (fp.endsWith(".html")) return "text/html";
-  if (fp.endsWith(".json")) return "application/json";
-  if (fp.endsWith(".svg")) return "image/svg+xml";
-  if (fp.endsWith(".png")) return "image/png";
-  if (fp.endsWith(".jpg") || fp.endsWith(".jpeg")) return "image/jpeg";
-  if (fp.endsWith(".webp")) return "image/webp";
-  if (fp.endsWith(".ico")) return "image/x-icon";
-  if (fp.endsWith(".woff2")) return "font/woff2";
-  if (fp.endsWith(".woff")) return "font/woff";
-  if (fp.endsWith(".ttf")) return "font/ttf";
-  return "application/octet-stream";
+  const extension = fp.slice(fp.lastIndexOf(".")).toLowerCase();
+
+  if (extensionMap[extension]) return extensionMap[extension];
+  else return "application/octet-stream";
 }
 
 export function replaceBuffers(row: Record<string, unknown>): void {

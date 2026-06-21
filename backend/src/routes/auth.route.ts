@@ -1,7 +1,8 @@
 import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
-import authPlugin, { signToken } from "@/plugins/auth.plugin";
+import { signToken } from "@/plugins/auth.plugin";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 import {
   newId,
   nowIso,
@@ -13,7 +14,6 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
-import databasePlugin from "@/plugins/database.plugin";
 import { DbTimestamps } from "@/types/server";
 
 const logger = new Logger("AUTH");

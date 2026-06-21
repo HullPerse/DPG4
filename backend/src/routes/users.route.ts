@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { and, eq, like, not, sql } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
-import authPlugin from "@/plugins/auth.plugin";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 import {
   nowIso,
   omitPassword,
@@ -11,7 +11,6 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
-import databasePlugin from "@/plugins/database.plugin";
 
 const logger = new Logger("USERS");
 

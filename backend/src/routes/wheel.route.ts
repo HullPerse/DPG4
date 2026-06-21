@@ -1,36 +1,32 @@
-import { Elysia, t } from "elysia"
-import * as schema from "@/db/schema.db"
-import { newId, nowIso } from "@/lib/index.utils"
-import { SPIN_COST } from "@/lib/gambling.constants"
-import authPlugin from "@/plugins/auth.plugin"
-import databasePlugin from "@/plugins/database.plugin"
-import servicesPlugin from "@/services.server"
-import Logger from "@/lib/logger.utils"
-
-const logger = new Logger("WHEEL")
+import { Elysia, t } from "elysia";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso } from "@/lib/index.utils";
+import { SPIN_COST } from "@/lib/gambling.constants";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
+import servicesPlugin from "@/services.server";
 
 const WheelItemSchema = t.Object({
   id: t.String(),
   label: t.String(),
   image: t.String(),
   type: t.String(),
-})
+});
 
 function fisherYatesShuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  const bytes = new Uint32Array(a.length)
-  crypto.getRandomValues(bytes)
+  const a = [...arr];
+  const bytes = new Uint32Array(a.length);
+  crypto.getRandomValues(bytes);
   for (let i = a.length - 1; i > 0; i--) {
-    const j = bytes[i] % (i + 1)
-    ;[a[i], a[j]] = [a[j], a[i]]
+    const j = bytes[i] % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return a
+  return a;
 }
 
 function pickWinner(length: number): number {
-  const buf = new Uint32Array(1)
-  crypto.getRandomValues(buf)
-  return buf[0] % length
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] % length;
 }
 
 export default new Elysia({ prefix: "/wheel" })
@@ -40,28 +36,28 @@ export default new Elysia({ prefix: "/wheel" })
   .post(
     "/spin",
     async ({ body, user, set, db, userService }) => {
-      const { items, free, listType } = body
+      const { items, free, listType } = body;
       if (!Array.isArray(items) || items.length === 0) {
-        set.status = 400
-        return { error: "Items array is required" }
+        set.status = 400;
+        return { error: "Items array is required" };
       }
 
-      const currentUser = await userService.getById(user.sub)
+      const currentUser = await userService.getById(user.sub);
 
       if (!free) {
         if (!currentUser || currentUser.money < SPIN_COST) {
-          set.status = 402
-          return { error: "Недостаточно чубриков" }
+          set.status = 402;
+          return { error: "Недостаточно чубриков" };
         }
-        await userService.score(user.sub, -SPIN_COST)
+        await userService.score(user.sub, -SPIN_COST);
       }
 
-      const shuffled = fisherYatesShuffle(items)
-      const winnerIndex = pickWinner(shuffled.length)
-      const winner = shuffled[winnerIndex]
+      const shuffled = fisherYatesShuffle(items);
+      const winnerIndex = pickWinner(shuffled.length);
+      const winner = shuffled[winnerIndex];
 
-      const id = newId()
-      const ts = nowIso()
+      const id = newId();
+      const ts = nowIso();
       await db.insert(schema.history).values({
         id,
         userId: user.sub,
@@ -81,9 +77,9 @@ export default new Elysia({ prefix: "/wheel" })
           free,
         },
         created: ts,
-      })
+      });
 
-      return { shuffled, winnerIndex }
+      return { shuffled, winnerIndex };
     },
     {
       body: t.Object({
@@ -93,4 +89,4 @@ export default new Elysia({ prefix: "/wheel" })
       }),
       requireAuth: true,
     },
-  )
+  );

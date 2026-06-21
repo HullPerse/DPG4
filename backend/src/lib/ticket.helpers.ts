@@ -46,7 +46,11 @@ export async function addTickets(db: Db, userId: string, amount: number) {
   return newTickets;
 }
 
-export async function updateTicketItem(db: Db, userId: string, ticketCount: number) {
+export async function updateTicketItem(
+  db: Db,
+  userId: string,
+  ticketCount: number,
+) {
   const [existing] = await db
     .select()
     .from(schema.inventory)
@@ -60,7 +64,9 @@ export async function updateTicketItem(db: Db, userId: string, ticketCount: numb
 
   if (ticketCount <= 0) {
     if (existing) {
-      await db.delete(schema.inventory).where(eq(schema.inventory.id, existing.id));
+      await db
+        .delete(schema.inventory)
+        .where(eq(schema.inventory.id, existing.id));
       broadcast("inventory", "delete", existing.id);
     }
     return null;

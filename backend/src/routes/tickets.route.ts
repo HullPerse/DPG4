@@ -5,9 +5,8 @@ import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import { updateTicketItem } from "@/lib/ticket.helpers";
-import databasePlugin from "@/plugins/database.plugin";
 import servicesPlugin from "@/services.server";
-import authPlugin from "@/plugins/auth.plugin";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 import JackpotService from "@/services/gambling/jackpot.service";
 
 const logger = new Logger("TICKETS");

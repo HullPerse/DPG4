@@ -11,14 +11,6 @@ export function nowIso(): string {
   return new Date().toISOString();
 }
 
-export function formatRecordDate(
-  value: string | Date | number | null | undefined,
-): string {
-  if (!value) return nowIso();
-  if (typeof value === "string") return value;
-  return new Date(value).toISOString();
-}
-
 export const USER_ACTIONS = {
   MOVE_POSITIVE: "MOVE_POSITIVE",
   MOVE_NEGATIVE: "MOVE_NEGATIVE",
@@ -36,7 +28,7 @@ export const ACTIVITY_TYPES = {
   IMAGE: "image",
 } as const;
 
-export const GAME_STATUSES = {
+const GAME_STATUSES = {
   PLAYING: "PLAYING",
   COMPLETED: "COMPLETED",
   DROPPED: "DROPPED",

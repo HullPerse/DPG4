@@ -1,13 +1,12 @@
 import { Elysia, t } from "elysia";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
-import { db } from "@/db/index.db";
 import { newId, nowIso, getUser } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
 import { ITEM_DB_IDS, RAT_IDS } from "@/lib/items/constants";
-import dbPlugin from "@/plugins/database.plugin";
+import { databasePlugin } from "@/plugins/index.plugin";
 import PetService, {
   calcDecayed,
   DECAY_PER_HOUR,
@@ -22,13 +21,13 @@ const petService = new PetService();
 petService.startDecayLoop();
 
 export default new Elysia({ prefix: "/pets" })
-  .use(dbPlugin)
+  .use(databasePlugin)
   .use(servicesPlugin)
 
   .get(
     "/:userId",
     async ({ params, db }) => {
-      let pet = await db
+      let pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -50,11 +49,7 @@ export default new Elysia({ prefix: "/pets" })
           updated: now,
         });
 
-        pet = await db
-          .select()
-          .from(schema.pets)
-          .where(eq(schema.pets.id, id))
-          .get();
+        pet = db.select().from(schema.pets).where(eq(schema.pets.id, id)).get();
       } else {
         const elapsedMs =
           new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
@@ -81,7 +76,7 @@ export default new Elysia({ prefix: "/pets" })
           .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
           .where(eq(schema.pets.id, pet.id));
 
-        pet = await db
+        pet = db
           .select()
           .from(schema.pets)
           .where(eq(schema.pets.id, pet.id))
@@ -99,7 +94,7 @@ export default new Elysia({ prefix: "/pets" })
     "/:userId/feed",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -116,7 +111,7 @@ export default new Elysia({ prefix: "/pets" })
       const feedUser = await getUser(db, params.userId);
       logger.setAuthor(feedUser?.username ?? "SYSTEM").info("fed pet");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -131,7 +126,7 @@ export default new Elysia({ prefix: "/pets" })
     "/:userId/pet",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -148,7 +143,7 @@ export default new Elysia({ prefix: "/pets" })
       const petUser = await getUser(db, params.userId);
       logger.setAuthor(petUser?.username ?? "SYSTEM").info("petted pet");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -163,7 +158,7 @@ export default new Elysia({ prefix: "/pets" })
     "/:userId/sleep",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -182,7 +177,7 @@ export default new Elysia({ prefix: "/pets" })
         .setAuthor(sleepUser?.username ?? "SYSTEM")
         .info("put pet to sleep");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -199,7 +194,7 @@ export default new Elysia({ prefix: "/pets" })
       const now = nowIso();
       const today = now.slice(0, 10);
 
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -316,7 +311,7 @@ export default new Elysia({ prefix: "/pets" })
     "/:userId/resurrect",
     async ({ params, db, economyService }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -354,7 +349,7 @@ export default new Elysia({ prefix: "/pets" })
         .setAuthor(resurrectUser?.username ?? "SYSTEM")
         .info("resurrected pet");
 
-      const updated = await db
+      const updated = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -372,7 +367,7 @@ export default new Elysia({ prefix: "/pets" })
     async ({ params, db, economyService }) => {
       const now = nowIso();
       const today = now.slice(0, 10);
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -425,7 +420,7 @@ export default new Elysia({ prefix: "/pets" })
       }
 
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -444,7 +439,7 @@ export default new Elysia({ prefix: "/pets" })
         .setAuthor(colorUser?.username ?? "SYSTEM")
         .info(`changed pet color ${body.color}`);
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -465,7 +460,7 @@ export default new Elysia({ prefix: "/pets" })
       }
 
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -484,7 +479,7 @@ export default new Elysia({ prefix: "/pets" })
         .setAuthor(modelUser?.username ?? "SYSTEM")
         .info(`changed pet model ${body.model}`);
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))

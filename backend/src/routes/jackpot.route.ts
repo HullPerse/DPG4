@@ -1,31 +1,28 @@
-import { Elysia, t } from "elysia"
-import authPlugin from "@/plugins/auth.plugin"
-import servicesPlugin from "@/services.server"
-import dbPlugin from "@/plugins/database.plugin"
+import { Elysia, t } from "elysia";
+import servicesPlugin from "@/services.server";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 
 export default new Elysia({ prefix: "/utils/jackpot" })
-  .use(dbPlugin)
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
 
-  .get(
-    "/",
-    async ({ jackpotService }) => {
-      return await jackpotService.getStatus()
-    },
-  )
+  .get("/", async ({ jackpotService }) => {
+    return await jackpotService.getStatus();
+  })
 
   .post(
     "/play",
     async ({ body, headers, user, jackpotService }) => {
-      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true
+      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true;
       return await jackpotService.play(
         user.sub,
         devMode,
-        body.devForceWin !== undefined || body.devShowWinningNumber !== undefined
+        body.devForceWin !== undefined ||
+          body.devShowWinningNumber !== undefined
           ? body
           : undefined,
-      )
+      );
     },
     {
       requireAuth: true,
@@ -35,4 +32,4 @@ export default new Elysia({ prefix: "/utils/jackpot" })
         devShowWinningNumber: t.Optional(t.Boolean()),
       }),
     },
-  )
+  );

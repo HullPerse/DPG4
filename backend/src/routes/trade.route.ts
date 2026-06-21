@@ -1,9 +1,8 @@
-import { Elysia, t } from "elysia"
-import Logger from "@/lib/logger.utils"
-import servicesPlugin from "@/services.server"
-import authPlugin from "@/plugins/auth.plugin"
-
-const logger = new Logger("TRADE")
+import { Elysia, t } from "elysia";
+import Logger from "@/lib/logger.utils";
+import servicesPlugin from "@/services.server";
+import { authPlugin } from "@/plugins/index.plugin";
+const logger = new Logger("TRADE");
 
 export default new Elysia({ prefix: "/trade" })
   .use(servicesPlugin)
@@ -12,15 +11,17 @@ export default new Elysia({ prefix: "/trade" })
     "/",
     async ({ body, economyService, user, set }) => {
       if (user.sub !== body.currentUser.id) {
-        set.status = 403
-        return { error: "Unauthorized" }
+        set.status = 403;
+        return { error: "Unauthorized" };
       }
       const result = await economyService.tradeInventory(
         body.currentUser,
         body.otherUser,
-      )
-      logger.info(`trade completed ${body.currentUser.id} <-> ${body.otherUser.id}`)
-      return result
+      );
+      logger.info(
+        `trade completed ${body.currentUser.id} <-> ${body.otherUser.id}`,
+      );
+      return result;
     },
     {
       requireAuth: true,
@@ -37,4 +38,4 @@ export default new Elysia({ prefix: "/trade" })
         }),
       }),
     },
-  )
+  );

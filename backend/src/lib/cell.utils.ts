@@ -1,6 +1,9 @@
-export const GRID_COLS = 10;
+const GRID_COLS = 10;
 
-export function getGridPosition(cellNumber: number): { row: number; col: number } {
+export function getGridPosition(cellNumber: number): {
+  row: number;
+  col: number;
+} {
   if (cellNumber < 1 || cellNumber > 100) return { row: -1, col: -1 };
   const zeroBasedIndex = cellNumber - 1;
   const row = Math.floor(zeroBasedIndex / GRID_COLS);
@@ -23,15 +26,22 @@ export function getFirstCellInNextRow(currentRow: number): number {
 import type { CellPath } from "@/types/gambling";
 
 export function calculateMovePath(
-  startingPosition: number, diceRoll: number, cells: CellPath[],
+  startingPosition: number,
+  diceRoll: number,
+  cells: CellPath[],
 ): { path: number[]; finalPosition: number } {
   const path: number[] = [];
   const steps = diceRoll > 0 ? diceRoll : -diceRoll;
   const direction = diceRoll > 0 ? 1 : -1;
   let currentPosition = startingPosition;
 
-  if (startingPosition === 100 && diceRoll > 0) { path.push(101); return { path, finalPosition: 101 }; }
-  if (startingPosition === 101 && diceRoll > 0) { return { path, finalPosition: 101 }; }
+  if (startingPosition === 100 && diceRoll > 0) {
+    path.push(101);
+    return { path, finalPosition: 101 };
+  }
+  if (startingPosition === 101 && diceRoll > 0) {
+    return { path, finalPosition: 101 };
+  }
 
   for (let i = 0; i < steps; i++) {
     currentPosition += direction;
@@ -42,15 +52,24 @@ export function calculateMovePath(
   }
 
   const cell = cells.find((c) => c.number === currentPosition);
-  if (!cell) return { path: [...path, currentPosition], finalPosition: currentPosition };
+  if (!cell)
+    return { path: [...path, currentPosition], finalPosition: currentPosition };
 
   if (diceRoll < 0) {
-    if (cell.snakeTo && cell.snakeTo > 0) { currentPosition = cell.snakeTo; path.push(currentPosition); }
+    if (cell.snakeTo && cell.snakeTo > 0) {
+      currentPosition = cell.snakeTo;
+      path.push(currentPosition);
+    }
     return { path, finalPosition: currentPosition };
   }
 
-  if (cell.ladderTo && cell.ladderTo > 0) { currentPosition = cell.ladderTo; path.push(currentPosition); }
-  else if (cell.snakeTo && cell.snakeTo > 0) { currentPosition = cell.snakeTo; path.push(currentPosition); }
+  if (cell.ladderTo && cell.ladderTo > 0) {
+    currentPosition = cell.ladderTo;
+    path.push(currentPosition);
+  } else if (cell.snakeTo && cell.snakeTo > 0) {
+    currentPosition = cell.snakeTo;
+    path.push(currentPosition);
+  }
 
   return { path: [...path, currentPosition], finalPosition: currentPosition };
 }

@@ -6,11 +6,7 @@ import { config } from "../server.config";
 import databasePlugin from "@/plugins/database.plugin";
 import servicesPlugin from "../services.server";
 import { newId, nowIso } from "@/lib/index.utils";
-import {
-  ADMIN_BLOB_FIELDS,
-  ADMIN_JSON_FIELDS,
-  getAdminSchemaPayload,
-} from "../lib/admin/schema.admin";
+import { getAdminSchemaPayload } from "../lib/admin/schema.admin";
 import {
   getAdminStats,
   invalidateAdminStatsCache,
@@ -18,40 +14,18 @@ import {
 } from "../lib/admin/query.admin";
 import { adminTableColumn, getAdminTable } from "../lib/admin/tables.admin";
 import {
-  isBlobPlaceholder,
   maybeBroadcast,
   hasTimestamps,
-  tryParseJson,
-  parseDataUrl,
   cleanBody,
   sanitizePath,
   mimeType,
   replaceBuffers,
   verifyAdmin,
 } from "../lib/admin/admin.utils";
-import { broadcast, broadcastAdminReload } from "../lib/websocket.utils";
+import { broadcastAdminReload } from "../lib/websocket.utils";
 import Logger, { LOG_FILE } from "../lib/logger.utils";
 
 const logger = new Logger("ADMIN");
-
-const BROADCAST_TABLES = new Set([
-  "users",
-  "games",
-  "presets",
-  "items",
-  "inventory",
-  "market",
-  "activity",
-  "chats",
-  "rules",
-  "ads",
-  "drawings",
-  "cells",
-  "hangman",
-  "pets",
-  "inventoryLog",
-  "quests",
-]);
 
 const adminRoute = new Elysia()
   .use(databasePlugin)
@@ -90,11 +64,7 @@ const adminRoute = new Elysia()
         { body: t.Object({ username: t.String(), password: t.String() }) },
       )
       .get("/verify", async ({ headers, adminJwt, db }) => {
-        const admin = await verifyAdmin(
-          headers,
-          adminJwt ,
-          db,
-        );
+        const admin = await verifyAdmin(headers, adminJwt, db);
         if (!admin) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
@@ -105,24 +75,14 @@ const adminRoute = new Elysia()
       })
       .get("/schema", () => getAdminSchemaPayload())
       .get("/stats", async ({ headers, adminJwt, db, set }) => {
-        if (
-          !(await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          ))
-        ) {
+        if (!(await verifyAdmin(headers, adminJwt, db))) {
           set.status = 401;
           return { error: "Unauthorized" };
         }
         return { counts: await getAdminStats(db) };
       })
       .post("/broadcast-reload", async ({ headers, adminJwt, db, set }) => {
-        const admin = await verifyAdmin(
-          headers,
-          adminJwt ,
-          db,
-        );
+        const admin = await verifyAdmin(headers, adminJwt, db);
         if (!admin) {
           set.status = 401;
           return { error: "Unauthorized" };
@@ -134,11 +94,7 @@ const adminRoute = new Elysia()
       .post(
         "/grant-item",
         async ({ body, db, headers, adminJwt, set, economyService }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -162,11 +118,7 @@ const adminRoute = new Elysia()
       .get(
         "/search",
         async ({ headers, adminJwt, db, set, query }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -192,11 +144,7 @@ const adminRoute = new Elysia()
         { query: t.Object({ q: t.String() }) },
       )
       .get("/logs", async ({ headers, adminJwt, db, set, query }) => {
-        const admin = await verifyAdmin(
-          headers,
-          adminJwt ,
-          db,
-        );
+        const admin = await verifyAdmin(headers, adminJwt, db);
         if (!admin) {
           set.status = 401;
           return { error: "Unauthorized" };
@@ -227,11 +175,7 @@ const adminRoute = new Elysia()
       .post(
         "/exec",
         async ({ body, headers, adminJwt, db, set }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -252,13 +196,7 @@ const adminRoute = new Elysia()
       .get(
         "/data/:table",
         async ({ params, query, db, headers, adminJwt, set }) => {
-          if (
-            !(await verifyAdmin(
-              headers,
-              adminJwt,
-              db,
-            ))
-          ) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -281,13 +219,7 @@ const adminRoute = new Elysia()
       .get(
         "/data/:table/:id",
         async ({ params, db, headers, adminJwt, set }) => {
-          if (
-            !(await verifyAdmin(
-              headers,
-              adminJwt,
-              db,
-            ))
-          ) {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -312,11 +244,7 @@ const adminRoute = new Elysia()
       .post(
         "/data/:table",
         async ({ params, body, db, headers, adminJwt, set }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -366,11 +294,7 @@ const adminRoute = new Elysia()
       .put(
         "/data/:table/:id",
         async ({ params, body, db, headers, adminJwt, set }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -419,11 +343,7 @@ const adminRoute = new Elysia()
       .delete(
         "/data/:table/:id",
         async ({ params, db, headers, adminJwt, set }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -456,11 +376,7 @@ const adminRoute = new Elysia()
       .post(
         "/data/:table/batch-delete",
         async ({ params, body, db, headers, adminJwt, set }) => {
-          const admin = await verifyAdmin(
-            headers,
-            adminJwt,
-            db,
-          );
+          const admin = await verifyAdmin(headers, adminJwt, db);
           if (!admin) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -491,14 +407,8 @@ const adminRoute = new Elysia()
       )
       .get(
         "/data/:table/export",
-        async ({ params, query, db, headers, adminJwt, set }) => {
-          if (
-            !(await verifyAdmin(
-              headers,
-              adminJwt,
-              db,
-            ))
-          ) {
+        async ({ params, db, headers, adminJwt, set }) => {
+          if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
           }

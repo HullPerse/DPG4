@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { withRecordMeta, getUser } from "@/lib/index.utils";
 import Logger from "@/lib/logger.utils";
-import dbPlugin from "@/plugins/database.plugin";
+import { databasePlugin } from "@/plugins/index.plugin";
 import servicesPlugin from "@/services.server";
 import { RAT_IDS } from "@/lib/items/constants";
 
@@ -23,7 +23,7 @@ const exchangeColumns = {
 };
 
 export default new Elysia({ prefix: "/rat-store" })
-  .use(dbPlugin)
+  .use(databasePlugin)
   .use(servicesPlugin)
 
   .get("/rat-labels", () => {
