@@ -5,12 +5,7 @@ import { User } from "@/types/user";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Update } from "@tauri-apps/plugin-updater";
 import { type ClassValue, clsx } from "clsx";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/client.api";
 import type { GamblingConfig } from "@/types/gamble";
@@ -24,10 +19,7 @@ export const BORDER_WINDOW = "border-2 border-highlight-high";
 let cachedConfig: GamblingConfig | null = null;
 
 /** Server-side score calculation */
-export async function calculateScore(
-  realTime: number,
-  hltbTime: number,
-): Promise<number> {
+export async function calculateScore(realTime: number, hltbTime: number): Promise<number> {
   const res = await apiFetch<{ score: number }>(
     `/utils/calculate-score?realTime=${realTime}&hltbTime=${hltbTime}`,
     { auth: false },
@@ -266,4 +258,34 @@ export function translateItemType(type: ItemType) {
   };
 
   return typeMap[type];
+}
+
+export function readFileAsDataUrl(
+  file: File,
+  onProgress?: (loadedRatio: number) => void,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress(event.loaded / event.total);
+      }
+    };
+
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string" && result.startsWith("data:")) {
+        resolve(result);
+        return;
+      }
+      reject(new Error("Invalid image data"));
+    };
+
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("Failed to read file"));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }

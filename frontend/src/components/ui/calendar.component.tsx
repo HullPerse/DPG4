@@ -1,12 +1,7 @@
-import {
-  DayPicker,
-  getDefaultClassNames,
-  type DayButton,
-  type Locale,
-} from "react-day-picker";
+import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
 import { ru } from "react-day-picker/locale";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button, buttonVariants } from "@/components/ui/button.component";
 import { useEffect, useRef } from "react";
 
@@ -38,16 +33,12 @@ function Calendar({
       captionLayout={captionLayout}
       locale={locale}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+        formatMonthDropdown: (date) => date.toLocaleString(locale?.code, { month: "short" }),
         ...formatters,
       }}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
-        months: cn(
-          "relative flex flex-col gap-4 md:flex-row",
-          defaultClassNames.months,
-        ),
+        months: cn("relative flex flex-col gap-4 md:flex-row", defaultClassNames.months),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
         nav: cn(
           "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
@@ -75,10 +66,7 @@ function Calendar({
           "cn-calendar-dropdown-root relative rounded-(--cell-radius)",
           defaultClassNames.dropdown_root,
         ),
-        dropdown: cn(
-          "absolute inset-0 border-2 border-text bg-card",
-          defaultClassNames.dropdown,
-        ),
+        dropdown: cn("absolute inset-0 border-2 border-text bg-card", defaultClassNames.dropdown),
         caption_label: cn(
           "font-bold text-text select-none",
           captionLayout === "label"
@@ -124,28 +112,16 @@ function Calendar({
           "rounded-(--cell-radius) border-2 border-text bg-primary/20 font-bold text-text data-[selected=true]:rounded-none",
           defaultClassNames.today,
         ),
-        outside: cn(
-          "text-text opacity-50 aria-selected:text-text",
-          defaultClassNames.outside,
-        ),
+        outside: cn("text-text opacity-50 aria-selected:text-text", defaultClassNames.outside),
         disabled: cn("text-text opacity-30", defaultClassNames.disabled),
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
       }}
       components={{
         Root: ({ className, rootRef, ...props }) => {
-          return (
-            <div
-              data-slot="calendar"
-              ref={rootRef}
-              className={cn(className)}
-              {...props}
-            />
-          );
+          return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />;
         },
-        DayButton: ({ ...props }) => (
-          <CalendarDayButton locale={locale} {...props} />
-        ),
+        DayButton: ({ ...props }) => <CalendarDayButton locale={locale} {...props} />,
         WeekNumber: ({ children, ...props }) => {
           return (
             <td {...props}>

@@ -1,13 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { memo, startTransition, useCallback, useMemo} from "react";
+import { memo, startTransition, useCallback, useMemo } from "react";
 import RulesApi from "@/api/rules.api";
 import { Rule, RuleCategory } from "@/types/rules";
 import { useSubscription } from "@/hooks/subscription.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
-import { highlightText } from "@/lib/utils";
-
+import { highlightText } from "@/lib/index.utils";
 
 const rulesApi = new RulesApi();
 
@@ -21,7 +20,6 @@ function slugCategory(category: string) {
 
 function RulesBrowser({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();
-  
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["rulesTab"],
@@ -64,7 +62,6 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
 
   return (
     <main className="flex h-full w-full flex-col gap-2 overflow-y-scroll p-2 items-center">
-
       {categories.map((category, index) => {
         const rules = data?.rules.filter((item) => item.category === category);
         const anchor = slugCategory(category);
@@ -80,9 +77,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
             </div>
             <div className="flex flex-col w-[97%] min-h-fit bg-background border-x-2 border-b-2 border-t-none border-highlight-high shadow-sharp-sm leading-relaxed divide-y divide-highlight-high/30 [&>*:nth-child(odd)]:bg-highlight-high/10 overflow-hidden transition-all duration-300">
               {rules
-                ?.filter((rule) =>
-                  rule.rule.toUpperCase().includes(searchTerms.toUpperCase()),
-                )
+                ?.filter((rule) => rule.rule.toUpperCase().includes(searchTerms.toUpperCase()))
                 .map((rule, ruleIndex) => (
                   <div
                     key={`${anchor}-${ruleIndex}`}
@@ -90,8 +85,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
                     className="p-2 scroll-mt-20"
                   >
                     <p>
-                      {ruleIndex + 1}.{" "}
-                      {highlightText(String(rule.rule), searchTerms)}
+                      {ruleIndex + 1}. {highlightText(String(rule.rule), searchTerms)}
                     </p>
                   </div>
                 ))}

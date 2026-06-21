@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 
 interface BidSelectorProps {
   bidOptions: readonly number[];
@@ -7,12 +7,7 @@ interface BidSelectorProps {
   disabled: boolean;
 }
 
-export function BidSelector({
-  bidOptions,
-  bid,
-  onBidChange,
-  disabled,
-}: BidSelectorProps) {
+export function BidSelector({ bidOptions, bid, onBidChange, disabled }: BidSelectorProps) {
   return (
     <section className="flex w-full items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
       <span className="text-sm text-muted mr-1">Ставка</span>

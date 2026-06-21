@@ -2,20 +2,16 @@ import { lazy, Suspense, useState } from "react";
 import { Input } from "@/components/ui/input.component";
 import { useDebounce } from "@/hooks/debounce.hook";
 import { Button } from "@/components/ui/button.component";
-import {
-  Battery,
-  Calendar,
-  ChevronDown,
-  ChevronLeft,
-  Hash,
-  Section,
-} from "lucide-react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover.component";
+import { Battery, Calendar, ChevronDown, ChevronLeft, Hash, Section } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
 import { WindowLoader } from "@/components/shared/loader.component";
+import { SortDirection, SortMethod, sortMethodLabels } from "@/lib/sorting.utils";
+const sortMethodIcons = {
+  name: Hash,
+  date: Calendar,
+  charges: Battery,
+  type: Section,
+};
 
 const HomeTab = lazy(() => import("./tabs/home.tab"));
 const RulesTab = lazy(() => import("./tabs/rules.tab"));
@@ -28,23 +24,6 @@ const WordleTab = lazy(() => import("./tabs/wordle.tab"));
 const TamagochiTab = lazy(() => import("./tabs/tamagochi.tab"));
 const RatStoreTab = lazy(() => import("./tabs/ratStore.tab"));
 const QuestsTab = lazy(() => import("./tabs/quests.tab"));
-
-export type SortMethod = "name" | "date" | "charges" | "type";
-export type SortDirection = "asc" | "desc";
-
-const sortMethodIcons = {
-  name: Hash,
-  date: Calendar,
-  charges: Battery,
-  type: Section,
-};
-
-const sortMethodLabels = {
-  name: "По имени",
-  date: "По дате",
-  charges: "По зарядам",
-  type: "По типу",
-};
 
 type BrowserTab =
   | "home"
@@ -160,9 +139,7 @@ export default function Browser() {
                 >
                   {label}
                   {sortMethod === method && (
-                    <span className="ml-1">
-                      {sortDirection === "asc" ? "↑" : "↓"}
-                    </span>
+                    <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
                   )}
                 </Button>
               ))}

@@ -1,21 +1,13 @@
 import { useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { multiplierColor } from "@/lib/gambling/rocket.utils";
 import type { RocketHistoryEntry } from "@/types/gamble";
 
-export function CrashHistoryPills({
-  history,
-}: {
-  history: RocketHistoryEntry[];
-}) {
+export function CrashHistoryPills({ history }: { history: RocketHistoryEntry[] }) {
   const recent = [...history].reverse().slice(0, 12);
 
   if (recent.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-8 text-muted text-xs">
-        История
-      </div>
-    );
+    return <div className="flex items-center justify-center h-8 text-muted text-xs">История</div>;
   }
 
   return (
@@ -92,13 +84,7 @@ function CrashChart({ history }: { history: RocketHistoryEntry[] }) {
     );
   }
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full"
-      style={{ minHeight: 60 }}
-    />
-  );
+  return <canvas ref={canvasRef} className="w-full h-full" style={{ minHeight: 60 }} />;
 }
 
 export default CrashChart;

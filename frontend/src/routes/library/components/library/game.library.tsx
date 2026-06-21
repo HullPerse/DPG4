@@ -2,15 +2,7 @@ import Image from "@/components/shared/image.component";
 import { Game, GameReview, GameStatus } from "@/types/games";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  memo,
-  RefObject,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { memo, RefObject, startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import {
@@ -27,7 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { gameButtons } from "@/config/library.config";
 import { useSubscription } from "@/hooks/subscription.hook";
-import { calculateScore, getStatusColor, openWindow } from "@/lib/utils";
+import { calculateScore, getStatusColor, openWindow } from "@/lib/index.utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useClickAway } from "@uidotdev/usehooks";
 import { VariantProps } from "class-variance-authority";
@@ -48,13 +40,7 @@ const gameApi = new GameApi();
 const userApi = new UserApi();
 const cellApi = new CellApi();
 
-function GameLibrary({
-  id,
-  switchGame,
-}: {
-  id: string;
-  switchGame: () => void;
-}) {
+function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void }) {
   const queryClient = useQueryClient();
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const setStoreItems = useDataStore((state) => state.setStoreItems);
@@ -156,37 +142,17 @@ function GameLibrary({
           ? await calculateScore(Number(time), data.game.playtime.hltb)
           : data.game.score;
 
-      await gameApi.changeStatus(
-        id,
-        data.game,
-        status,
-        Number(time),
-        Number(score),
-      );
+      await gameApi.changeStatus(id, data.game, status, Number(time), Number(score));
 
       if (status === "DROPPED") {
-        await userApi.changeUserAction(
-          String(data.game.user.id),
-          "MOVE_NEGATIVE",
-        );
-        await userApi.changeUserDice(
-          data.game.user.id,
-          Number(time ?? 0),
-          "MOVE_NEGATIVE",
-        );
+        await userApi.changeUserAction(String(data.game.user.id), "MOVE_NEGATIVE");
+        await userApi.changeUserDice(data.game.user.id, Number(time ?? 0), "MOVE_NEGATIVE");
       }
 
       if (status === "COMPLETED") {
         await userApi.scoreUser(String(data.game.user.id), Number(score));
-        await userApi.changeUserAction(
-          String(data.game.user.id),
-          "MOVE_POSITIVE",
-        );
-        await userApi.changeUserDice(
-          data.game.user.id,
-          Number(time),
-          "MOVE_POSITIVE",
-        );
+        await userApi.changeUserAction(String(data.game.user.id), "MOVE_POSITIVE");
+        await userApi.changeUserDice(data.game.user.id, Number(time), "MOVE_POSITIVE");
         await cellApi.captureCell(
           String(data.game.user.id),
           String(data.game.user.username),
@@ -194,11 +160,7 @@ function GameLibrary({
         );
 
         if (data.user.status?.includes("poop")) {
-          await userApi.changeUserStatus(
-            String(data.user.id),
-            "poop",
-            "remove",
-          );
+          await userApi.changeUserStatus(String(data.user.id), "poop", "remove");
         }
 
         if (data.user.position === 101) {
@@ -234,10 +196,7 @@ function GameLibrary({
   if (isLoading) return <WindowLoader />;
   if (isError)
     return (
-      <WindowError
-        error={new Error("Произошла ошибка при загрузке игры")}
-        icon={<NetworkIcon />}
-      />
+      <WindowError error={new Error("Произошла ошибка при загрузке игры")} icon={<NetworkIcon />} />
     );
 
   return (
@@ -284,10 +243,7 @@ function GameLibrary({
                 size="icon"
                 variant={buttonStyle(item.value)}
                 className="border-2 shadow-sharp-sm font-bold"
-                loading={
-                  statusMutation.isPending &&
-                  statusMutation.variables === item.value
-                }
+                loading={statusMutation.isPending && statusMutation.variables === item.value}
                 disabled={
                   (data?.game && data?.game.status === item.value) ||
                   (item.value === "COMPLETED" && input && !time)
@@ -354,9 +310,7 @@ function GameLibrary({
             <div
               className="absolute top-8 left-14 h-5 w-full rotate-45 border-2 border-highlight-high pointer-events-none"
               style={{
-                backgroundColor: getStatusColor(
-                  data?.game?.status ?? "PLAYING",
-                ),
+                backgroundColor: getStatusColor(data?.game?.status ?? "PLAYING"),
                 boxShadow: "-4px 2px 10px 4px rgba(0, 0, 0, 0.67)",
               }}
             />
@@ -367,15 +321,14 @@ function GameLibrary({
             {/* DATA */}
             <section className="flex flex-row gap-2 w-full">
               {/* USER TIME */}
-              {data?.game?.playtime.user != null &&
-                Number(data?.game.playtime.user) > 0 && (
-                  <div
-                    className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                    title="Время Игрока"
-                  >
-                    <UserStar /> <span>{data?.game?.playtime.user} ч.</span>
-                  </div>
-                )}
+              {data?.game?.playtime.user != null && Number(data?.game.playtime.user) > 0 && (
+                <div
+                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
+                  title="Время Игрока"
+                >
+                  <UserStar /> <span>{data?.game?.playtime.user} ч.</span>
+                </div>
+              )}
 
               {/* HLTB TIME */}
               {data?.game?.playtime.hltb && (
@@ -403,9 +356,7 @@ function GameLibrary({
                   title="Дата добавления"
                 >
                   <Calendar />
-                  <span>
-                    {new Date(data?.game.created).toLocaleDateString()}
-                  </span>
+                  <span>{new Date(data?.game.created).toLocaleDateString()}</span>
                 </div>
               )}
             </section>

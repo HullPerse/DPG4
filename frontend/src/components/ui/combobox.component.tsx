@@ -1,5 +1,5 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
 import { SmallLoader } from "../shared/loader.component";
@@ -43,9 +43,7 @@ function Combobox({
     if (!search) return options;
     const lowerSearch = search.toLowerCase();
     return options.filter(
-      (opt) =>
-        typeof opt.label === "string" &&
-        opt.label.toLowerCase().includes(lowerSearch),
+      (opt) => typeof opt.label === "string" && opt.label.toLowerCase().includes(lowerSearch),
     );
   }, [options, search]);
 
@@ -112,9 +110,7 @@ function Combobox({
             ) : (
               <div className="max-h-60 overflow-x-hidden overflow-y-auto p-1">
                 {filteredOptions.length === 0 ? (
-                  <div className="px-1.5 py-2 text-sm font-normal text-muted">
-                    Нет результатов.
-                  </div>
+                  <div className="px-1.5 py-2 text-sm font-normal text-muted">Нет результатов.</div>
                 ) : (
                   filteredOptions.map((option) => (
                     <button

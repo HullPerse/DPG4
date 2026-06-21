@@ -1,4 +1,4 @@
-import { openWindow } from "@/lib/utils";
+import { openWindow } from "@/lib/index.utils";
 import { createWindow } from "@/lib/window.utils";
 import { getWindowMeta } from "@/lib/window.utils";
 import { useDataStore } from "@/store/data.store";
@@ -37,9 +37,7 @@ function AppDesktop({
       }}
       onDoubleClick={() => {
         if (type && link) {
-          return type === "browser"
-            ? openUrl(link)
-            : openWindow(name, link, label);
+          return type === "browser" ? openUrl(link) : openWindow(name, link, label);
         }
 
         if (link) return openUrl(link);
@@ -47,9 +45,7 @@ function AppDesktop({
 
         if (name === "library") setUserProfile(null);
 
-        setActiveApps((prev) =>
-          createWindow(prev, getWindowMeta(name) as WindowProps, component),
-        );
+        setActiveApps((prev) => createWindow(prev, getWindowMeta(name) as WindowProps, component));
 
         return setTimeout(() => setIsOpening(false), 1000);
       }}
@@ -62,9 +58,7 @@ function AppDesktop({
         ))}
 
       {icon}
-      <span className="text-center text-xs leading-tight font-bold text-text">
-        {label}
-      </span>
+      <span className="text-center text-xs leading-tight font-bold text-text">{label}</span>
     </button>
   );
 }

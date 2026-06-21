@@ -25,13 +25,11 @@ function JackpotTab() {
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["jackpotStatus"] });
       setPlayCount((c) => c + 1);
-      if (user && "newBalance" in res) {
-        useUserStore.setState({
-          user: {
-            ...user,
-            tickets: res.newBalance,
-            gamblingBanned: "banned" in res ? res.banned : user.gamblingBanned,
-          },
+      if ("newBalance" in res) {
+        useUserStore.setState((s) => {
+          const u = s.user;
+          if (!u) return {};
+          return { user: { ...u, tickets: res.newBalance, gamblingBanned: "banned" in res ? res.banned : u.gamblingBanned } };
         });
       }
     },

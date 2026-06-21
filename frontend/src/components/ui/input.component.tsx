@@ -1,12 +1,6 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  EyeIcon,
-  EyeOffIcon,
-  InfinityIcon,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, EyeIcon, EyeOffIcon, InfinityIcon } from "lucide-react";
 import { ChangeEvent, type ComponentProps, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 
 export function Input({
   className,
@@ -166,8 +160,7 @@ export function Input({
           <span
             style={{
               color:
-                props.min !== undefined &&
-                String(inputValue).length < Number(props.min)
+                props.min !== undefined && String(inputValue).length < Number(props.min)
                   ? "var(--color-error)"
                   : "var(--color-success)",
             }}

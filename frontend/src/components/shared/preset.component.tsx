@@ -3,7 +3,7 @@ import { memo } from "react";
 import Image from "@/components/shared/image.component";
 import { Button } from "../ui/button.component";
 import { List, LoaderPinwheel, Trash } from "lucide-react";
-import { highlightText } from "@/lib/utils";
+import { highlightText } from "@/lib/index.utils";
 import { useUserStore } from "@/store/user.store";
 import GameApi from "@/api/games.api";
 const gameApi = new GameApi();
@@ -18,9 +18,7 @@ function PresetComponent({
   preset: Preset;
   searchTerms: string;
   setCurrentPreset: (preset: { id: string; label: string }) => void;
-  setCurrentTab: (
-    tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
-  ) => void;
+  setCurrentTab: (tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame") => void;
   steam?: boolean;
 }) {
   const isAdmin = useUserStore((state) => state.isAdmin);
@@ -36,17 +34,15 @@ function PresetComponent({
           {preset.games?.length > 0 && (
             <Image
               src={
-                preset.games[
-                  Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)
-                ].capsuleImage
+                preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
+                  .capsuleImage
               }
               alt={preset.label}
             />
           )}
         </div>
         <span className="font-bold truncate line-clamp-1">
-          {highlightText(preset.label, searchTerms)} [
-          {preset.games?.length ?? 0}]
+          {highlightText(preset.label, searchTerms)} [{preset.games?.length ?? 0}]
         </span>
       </section>
 

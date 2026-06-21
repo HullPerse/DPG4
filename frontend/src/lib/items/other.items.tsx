@@ -1,6 +1,6 @@
 import ItemFramework from "./item.framework";
 import ItemsApi from "@/api/items.api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button.component";
 import { CircleX } from "lucide-react";
@@ -26,16 +26,13 @@ export const otherEffect: effectInterface[] = [
     "Дырявый сапог",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(String(ctx.user.id));
             return allItems.filter((item) => item.label === "Дырявый сапог");
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory[]>([]);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -152,8 +149,8 @@ export const otherEffect: effectInterface[] = [
     "Пустой пакет",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(String(ctx.user.id));
             return allItems.filter(
@@ -164,9 +161,6 @@ export const otherEffect: effectInterface[] = [
             );
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;

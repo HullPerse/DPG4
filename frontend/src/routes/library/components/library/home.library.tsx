@@ -1,5 +1,5 @@
 import ImageComponent from "@/components/shared/image.component";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor } from "@/lib/index.utils";
 import { Game } from "@/types/games";
 
 const STATUSES = [
@@ -49,16 +49,10 @@ export default function HomeLibrary({
               />
             </div>
             <div className="mt-1 flex flex-col">
-              <span className="line-clamp-1 text-sm text-text">
-                {game.data.name}
-              </span>
+              <span className="line-clamp-1 text-sm text-text">{game.data.name}</span>
               <div className="flex items-center gap-2">
-                <span
-                  className="text-xs"
-                  style={{ color: getStatusColor(game.status) }}
-                >
-                  {STATUSES.find((s) => s.name === game.status)?.label ??
-                    game.status}
+                <span className="text-xs" style={{ color: getStatusColor(game.status) }}>
+                  {STATUSES.find((s) => s.name === game.status)?.label ?? game.status}
                 </span>
               </div>
             </div>

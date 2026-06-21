@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { Music, X, Play, Pause, Volume2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "../ui/button.component";
 import { useFileUpload } from "@/hooks/upload.hook";
 
@@ -93,27 +93,11 @@ const AudioUploader = memo(function AudioUploader({
             className="hidden"
           />
           <div className="flex items-center gap-2">
-            <Button
-              variant="default"
-              size="icon"
-              onClick={togglePlayback}
-              type="button"
-            >
-              {isPlaying ? (
-                <Pause className="size-4" />
-              ) : (
-                <Play className="size-4" />
-              )}
+            <Button variant="default" size="icon" onClick={togglePlayback} type="button">
+              {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
             </Button>
-            <span className="text-sm truncate flex-1">
-              {value?.name || "Audio"}
-            </span>
-            <Button
-              variant="error"
-              size="icon"
-              onClick={handleRemove}
-              type="button"
-            >
+            <span className="text-sm truncate flex-1">{value?.name || "Audio"}</span>
+            <Button variant="error" size="icon" onClick={handleRemove} type="button">
               <X className="size-4" />
             </Button>
           </div>
@@ -133,9 +117,7 @@ const AudioUploader = memo(function AudioUploader({
               onChange={handleVolumeChange}
               className="flex-1"
             />
-            <span className="text-xs w-10 text-right">
-              {Math.round(volume * 100)}%
-            </span>
+            <span className="text-xs w-10 text-right">{Math.round(volume * 100)}%</span>
           </div>
         </div>
       ) : (

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { useDevModeStore } from "../../hooks/dev.store";
 import { Button } from "@/components/ui/button.component";
 import { Code, X } from "lucide-react";
@@ -32,13 +32,9 @@ function Section({
         <label role="button" className="flex-1" htmlFor={title}>
           {title}
         </label>
-        <span className="text-[10px] opacity-50">
-          {enabled ? "free" : "off"}
-        </span>
+        <span className="text-[10px] opacity-50">{enabled ? "free" : "off"}</span>
       </summary>
-      {enabled && (
-        <div className="flex flex-col gap-1 pl-2 pb-1">{children}</div>
-      )}
+      {enabled && <div className="flex flex-col gap-1 pl-2 pb-1">{children}</div>}
     </details>
   );
 }
@@ -166,37 +162,21 @@ export function DevPanel() {
       <div className="flex items-center justify-between p-1.5 border-b border-white/10 sticky top-0 bg-background/95">
         <span className="text-xs font-bold">Dev Mode</span>
         <div className="flex gap-1 items-center">
-          <Button
-            onClick={handleReset}
-            className="h-6 w-12 text-xs"
-            title="Reset all"
-          >
+          <Button onClick={handleReset} className="h-6 w-12 text-xs" title="Reset all">
             Reset
           </Button>
-          <Button
-            size="icon"
-            onClick={() => setCollapsed(true)}
-            className="text-xs h-6 w-6"
-          >
+          <Button size="icon" onClick={() => setCollapsed(true)} className="text-xs h-6 w-6">
             <X />
           </Button>
         </div>
       </div>
 
       <div className="p-1.5 flex flex-col gap-1 w-full">
-        <Toggle
-          label="Master dev mode toggle"
-          checked={devMode}
-          onChange={setDevMode}
-        />
+        <Toggle label="Master dev mode toggle" checked={devMode} onChange={setDevMode} />
 
         {devMode && (
           <>
-            <Section
-              title="Dice"
-              enabled={dice.enabled}
-              onToggle={(v) => setDice({ enabled: v })}
-            >
+            <Section title="Dice" enabled={dice.enabled} onToggle={(v) => setDice({ enabled: v })}>
               <Toggle
                 label="Force break"
                 checked={dice.devForceBreak}
@@ -212,11 +192,7 @@ export function DevPanel() {
               />
               <TextInput
                 label="Dealer values"
-                value={
-                  dice.devForceDealerValues
-                    ? dice.devForceDealerValues.join("")
-                    : ""
-                }
+                value={dice.devForceDealerValues ? dice.devForceDealerValues.join("") : ""}
                 onChange={(v) =>
                   setDice({
                     devForceDealerValues: v
@@ -232,11 +208,7 @@ export function DevPanel() {
               />
               <TextInput
                 label="Player values"
-                value={
-                  dice.devForcePlayerValues
-                    ? dice.devForcePlayerValues.join("")
-                    : ""
-                }
+                value={dice.devForcePlayerValues ? dice.devForcePlayerValues.join("") : ""}
                 onChange={(v) =>
                   setDice({
                     devForcePlayerValues: v
@@ -260,17 +232,13 @@ export function DevPanel() {
               <TextInput
                 label="Force dealer"
                 value={blackjack.devForceDealerCards ?? ""}
-                onChange={(v) =>
-                  setBlackjack({ devForceDealerCards: v || null })
-                }
+                onChange={(v) => setBlackjack({ devForceDealerCards: v || null })}
                 placeholder='[{"suit":"hearts","rank":"A"}]'
               />
               <TextInput
                 label="Force player"
                 value={blackjack.devForcePlayerCards ?? ""}
-                onChange={(v) =>
-                  setBlackjack({ devForcePlayerCards: v || null })
-                }
+                onChange={(v) => setBlackjack({ devForcePlayerCards: v || null })}
                 placeholder='[{"suit":"spades","rank":"10"}]'
               />
               <TextInput
@@ -313,11 +281,7 @@ export function DevPanel() {
             >
               <TextInput
                 label="Force slots"
-                value={
-                  pachinko.devForceSlots
-                    ? pachinko.devForceSlots.replace(/[^0-9,]/g, "")
-                    : ""
-                }
+                value={pachinko.devForceSlots ? pachinko.devForceSlots.replace(/[^0-9,]/g, "") : ""}
                 onChange={(v) =>
                   setPachinko({
                     devForceSlots: v.replace(/[^0-9,]/g, "") || null,

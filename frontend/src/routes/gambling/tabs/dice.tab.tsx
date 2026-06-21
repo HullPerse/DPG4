@@ -184,7 +184,7 @@ function DiceTab() {
   const finishRound = (finalResult: DiceGameResult) => {
     setDisplayBalance(finalResult.balance);
     useUserStore.setState({
-      user: { ...user!, tickets: finalResult.balance },
+      user: { ...useUserStore.getState().user!, tickets: finalResult.balance },
     });
     if (finalResult.banned) setGamblingBanned(true);
     setResult({

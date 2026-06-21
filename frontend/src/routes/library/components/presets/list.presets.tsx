@@ -9,7 +9,7 @@ import GameApi from "@/api/games.api";
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
-import { highlightText, openWindow } from "@/lib/utils";
+import { highlightText, openWindow } from "@/lib/index.utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
@@ -18,13 +18,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
 
-function PresetSettings({
-  id,
-  searchTerms,
-}: {
-  id: string;
-  searchTerms: string;
-}) {
+function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }) {
   const queryClient = useQueryClient();
   const isAdmin = useUserStore((state) => state.isAdmin);
   const user = useUserStore((state) => state.user);
@@ -195,15 +189,10 @@ function PresetSettings({
                 onClick={() => {
                   if (!item.steamLink) return;
 
-                  openWindow(
-                    `steam-${item.id}`,
-                    item.steamLink,
-                    `Страница ${String(item.name)}`,
-                  );
+                  openWindow(`steam-${item.id}`, item.steamLink, `Страница ${String(item.name)}`);
                 }}
               >
-                {highlightText(String(item?.name), searchTerms)} [
-                {item?.time ?? "?"} ч.]
+                {highlightText(String(item?.name), searchTerms)} [{item?.time ?? "?"} ч.]
               </span>
             </section>
 
@@ -224,9 +213,7 @@ function PresetSettings({
                 variant="success"
                 size="icon"
                 onClick={async () => await handleAddGame(Number(item?.id))}
-                disabled={
-                  input.enabled && input.id === String(item?.id) && !time
-                }
+                disabled={input.enabled && input.id === String(item?.id) && !time}
               >
                 <Plus />
               </Button>
@@ -235,15 +222,10 @@ function PresetSettings({
                 variant="error"
                 size="icon"
                 hidden={
-                  (!isAdmin &&
-                    !data?.label?.includes(String(user?.username))) ||
-                  isSteamPreset
+                  (!isAdmin && !data?.label?.includes(String(user?.username))) || isSteamPreset
                 }
                 onClick={async () => {
-                  await gameApi.removePresetGame(
-                    String(data?.id),
-                    Number(item?.id),
-                  );
+                  await gameApi.removePresetGame(String(data?.id), Number(item?.id));
                 }}
               >
                 <Trash />

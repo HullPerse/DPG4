@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { calculateScore, getStatusColor } from "@/lib/utils";
+import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
@@ -151,10 +151,7 @@ export default function CustomLibrary({
         {currentType === "library" && (
           <div className="leading-tight">
             <span>Сложность</span>
-            <Select
-              value={status}
-              onValueChange={(e) => setStatus(e as GameStatus)}
-            >
+            <Select value={status} onValueChange={(e) => setStatus(e as GameStatus)}>
               <SelectTrigger className="w-full py-5">
                 <SelectValue placeholder="Сложность" />
               </SelectTrigger>
@@ -185,9 +182,7 @@ export default function CustomLibrary({
         </Button>
       </section>
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">
-        <span className="text-xl font-bold text-wrap">
-          {name || "Название игры"}
-        </span>
+        <span className="text-xl font-bold text-wrap">{name || "Название игры"}</span>
         {headerImage && (
           <Image
             src={headerImage ?? ""}

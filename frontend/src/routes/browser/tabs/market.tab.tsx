@@ -10,7 +10,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Check, NetworkIcon, Trash, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
-import { highlightText } from "@/lib/utils";
+import { highlightText } from "@/lib/index.utils";
 import ImageComponent from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
 import { Input } from "@/components/ui/input.component";
@@ -115,151 +115,150 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       {filteredItems.map((item, index) => {
         const isTicket = item.type === "ticket";
         return (
-        <div
-          key={item.id}
-          className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
-          onMouseOver={() => setActive(index)}
-          onMouseLeave={() => setActive(-1)}
-        >
-          <section className="flex flex-col items-center w-full flex-1">
-            {active === index ? (
-              <span className="text-xs leading-tight max-h-50 overflow-y-auto mt-2">
-                {highlightText(item.description, searchTerms)}
-              </span>
-            ) : (
-              <>
-                <span className="font-bold text-md line-clamp-2">
-                  {isTicket ? (
-                    <span className="flex items-center gap-1">
-                      <Ticket className="size-4" />
-                      {highlightText(item.label, searchTerms)}
-                    </span>
-                  ) : (
-                    highlightText(item.label, searchTerms)
-                  )}
+          <div
+            key={item.id}
+            className="relative flex flex-col min-w-64 min-h-64 w-64 h-64 overflow-hidden border-2 border-highlight-high shadow-sharp-sm bg-background items-center p-2"
+            onMouseOver={() => setActive(index)}
+            onMouseLeave={() => setActive(-1)}
+          >
+            <section className="flex flex-col items-center w-full flex-1">
+              {active === index ? (
+                <span className="text-xs leading-tight max-h-50 overflow-y-auto mt-2">
+                  {highlightText(item.description, searchTerms)}
                 </span>
-
-                <div className="flex flex-row gap-0.5 w-24 h-6 items-center justify-center my-1">
-                  <span className="h-6 w-6 border border-highlight-high">
-                    {item.owner.avatar}
-                  </span>
-                  <span className="flex-1 h-6 bg-card text-primary font-bold border border-highlight-high text-center px-0.5">
-                    {highlightText(item.owner.username, searchTerms)}
-                  </span>
-                </div>
-
-                {isTicket ? (
-                  <div className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high flex flex-col items-center justify-center bg-card gap-1">
-                    <Ticket className="size-8 text-primary" />
-                    <span className="text-sm font-bold">{item.charge} шт.</span>
-                    {item.perTicketPrice && (
-                      <span className="text-xs text-muted">{item.perTicketPrice} чуб./шт.</span>
+              ) : (
+                <>
+                  <span className="font-bold text-md line-clamp-2">
+                    {isTicket ? (
+                      <span className="flex items-center gap-1">
+                        <Ticket className="size-4" />
+                        {highlightText(item.label, searchTerms)}
+                      </span>
+                    ) : (
+                      highlightText(item.label, searchTerms)
                     )}
-                  </div>
-                ) : (
-                  <ImageComponent
-                    src={`${getFileUrl(item)}`}
-                    alt={item.label}
-                    className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
-                    type="cover"
-                  />
-                )}
-
-                <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
-                  <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
-                    {isTicket ? `${item.charge} тикетов` : item.charge}
                   </span>
-                </div>
-              </>
-            )}
-          </section>
 
-          <section className="flex flex-col gap-1 mt-auto w-full pb-1">
-            {active === index && item.owner.id === user?.id && !isTicket && (
+                  <div className="flex flex-row gap-0.5 w-24 h-6 items-center justify-center my-1">
+                    <span className="h-6 w-6 border border-highlight-high">
+                      {item.owner.avatar}
+                    </span>
+                    <span className="flex-1 h-6 bg-card text-primary font-bold border border-highlight-high text-center px-0.5">
+                      {highlightText(item.owner.username, searchTerms)}
+                    </span>
+                  </div>
+
+                  {isTicket ? (
+                    <div className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high flex flex-col items-center justify-center bg-card gap-1">
+                      <Ticket className="size-8 text-primary" />
+                      <span className="text-sm font-bold">{item.charge} шт.</span>
+                      {item.perTicketPrice && (
+                        <span className="text-xs text-muted">{item.perTicketPrice} чуб./шт.</span>
+                      )}
+                    </div>
+                  ) : (
+                    <ImageComponent
+                      src={`${getFileUrl(item)}`}
+                      alt={item.label}
+                      className="min-w-24 w-24 min-h-24 h-24 border border-highlight-high"
+                      type="cover"
+                    />
+                  )}
+
+                  <div className="flex flex-row gap-0.5 w-full h-6 items-center justify-center my-1">
+                    <span className="w-24 h-6 bg-card text-primary font-bold border border-highlight-high text-center">
+                      {isTicket ? `${item.charge} тикетов` : item.charge}
+                    </span>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-1 mt-auto w-full pb-1">
+              {active === index && item.owner.id === user?.id && !isTicket && (
+                <div className="flex flex-row w-full gap-1">
+                  <Input
+                    placeholder="Скидочная цена"
+                    max={item.price}
+                    min={0}
+                    value={inputDiscount}
+                    onChange={(e) => setInputDiscount(e.target.value)}
+                    className="h-9"
+                    disabled={isLoadingIndex(index) || Number(inputDiscount) === item.price}
+                  />
+                  <Button
+                    variant="success"
+                    size="icon"
+                    className="w-9 h-9"
+                    loading={isLoadingIndex(index)}
+                    disabled={
+                      !inputDiscount ||
+                      Number(inputDiscount) > item.price ||
+                      Number(inputDiscount) <= 0
+                    }
+                    onClick={() =>
+                      marketMutation.mutate({
+                        index,
+                        type: "discount",
+                        marketId: String(item.id),
+                        owner: item.owner.id,
+                        price: item.price,
+                        discount: Number(inputDiscount),
+                      })
+                    }
+                  >
+                    <Check />
+                  </Button>
+                </div>
+              )}
               <div className="flex flex-row w-full gap-1">
-                <Input
-                  placeholder="Скидочная цена"
-                  max={item.price}
-                  min={0}
-                  value={inputDiscount}
-                  onChange={(e) => setInputDiscount(e.target.value)}
-                  className="h-9"
-                  disabled={
-                    isLoadingIndex(index) ||
-                    Number(inputDiscount) === item.price
-                  }
-                />
                 <Button
                   variant="success"
-                  size="icon"
-                  className="w-9 h-9"
+                  className="flex-1"
                   loading={isLoadingIndex(index)}
-                  disabled={
-                    !inputDiscount || Number(inputDiscount) > item.price || Number(inputDiscount) <= 0
-                  }
+                  disabled={Number(user?.money) < item.price}
                   onClick={() =>
                     marketMutation.mutate({
                       index,
-                      type: "discount",
+                      type: "buy",
                       marketId: String(item.id),
                       owner: item.owner.id,
-                      price: item.price,
-                      discount: Number(inputDiscount),
+                      itemType: item.type,
                     })
                   }
                 >
-                  <Check />
+                  <div className="flex flex-row items-center justify-center gap-1">
+                    <span>КУПИТЬ ЗА</span>
+                    <div className="flex flex-row gap-1 items-end justify-center">
+                      <span className="font-bold">
+                        {item.discount ? item.discount : item.price}
+                      </span>
+                      <span className="line-through text-xs font-light">
+                        {item.discount != null && item.discount > 0 ? item.price : null}
+                      </span>
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  rendered={item.owner.id === user?.id && active === index}
+                  variant="error"
+                  size="icon"
+                  className="w-9 h-9"
+                  loading={isLoadingIndex(index)}
+                  onClick={() =>
+                    marketMutation.mutate({
+                      index,
+                      type: "remove",
+                      marketId: String(item.id),
+                      itemType: item.type,
+                    })
+                  }
+                >
+                  <Trash />
                 </Button>
               </div>
-            )}
-            <div className="flex flex-row w-full gap-1">
-              <Button
-                variant="success"
-                className="flex-1"
-                loading={isLoadingIndex(index)}
-                disabled={Number(user?.money) < item.price}
-                onClick={() =>
-                  marketMutation.mutate({
-                    index,
-                    type: "buy",
-                    marketId: String(item.id),
-                    owner: item.owner.id,
-                    itemType: item.type,
-                  })
-                }
-              >
-                <div className="flex flex-row items-center justify-center gap-1">
-                  <span>КУПИТЬ ЗА</span>
-                  <div className="flex flex-row gap-1 items-end justify-center">
-                    <span className="font-bold">
-                      {item.discount ? item.discount : item.price}
-                    </span>
-                    <span className="line-through text-xs font-light">
-                      {item.discount != null && item.discount > 0 ? item.price : null}
-                    </span>
-                  </div>
-                </div>
-              </Button>
-              <Button
-                rendered={item.owner.id === user?.id && active === index}
-                variant="error"
-                size="icon"
-                className="w-9 h-9"
-                loading={isLoadingIndex(index)}
-                onClick={() =>
-                  marketMutation.mutate({
-                    index,
-                    type: "remove",
-                    marketId: String(item.id),
-                    itemType: item.type,
-                  })
-                }
-              >
-                <Trash />
-              </Button>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
         );
       })}
     </main>

@@ -1,8 +1,5 @@
-import { cn } from "@/lib/utils";
-import {
-  getResultColor,
-  type GameResultData,
-} from "@/lib/gambling/gambling.utils";
+import { cn } from "@/lib/index.utils";
+import { getResultColor, type GameResultData } from "@/lib/gambling/gambling.utils";
 
 interface GameResultProps {
   result: GameResultData | null;

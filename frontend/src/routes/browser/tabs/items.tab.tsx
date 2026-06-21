@@ -11,7 +11,7 @@ import { memo, startTransition, useCallback, useRef, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText, translateItemType } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/index.utils";
 import ImageViewer from "@/components/shared/viewer.component";
 import { CreateModal } from "@/components/shared/items.modal";
 import {
@@ -98,9 +98,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const visibleItems = data.items.filter(
-    (item) => !hiddenItems.includes(String(item.id)),
-  );
+  const visibleItems = data.items.filter((item) => !hiddenItems.includes(String(item.id)));
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -120,21 +118,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue
-                      placeholder="Игрок"
-                      style={{ color: selected?.color }}
-                    >
+                    <SelectValue placeholder="Игрок" style={{ color: selected?.color }}>
                       {selected?.username}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.users?.map((item, index) => (
-                        <SelectItem
-                          key={item.id}
-                          value={item.id!}
-                          style={{ color: item.color }}
-                        >
+                        <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}
                         </SelectItem>
@@ -161,10 +152,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   onClick={async () => {
                     if (!selected || !itemData) return;
 
-                    await itemsApi.addInventory(
-                      String(selected?.id),
-                      String(itemData.id),
-                    );
+                    await itemsApi.addInventory(String(selected?.id), String(itemData.id));
 
                     queryClient.invalidateQueries({
                       queryKey: ["inventoryTab", selected.id],
@@ -211,9 +199,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
           }))}
           onResult={(it) => {
             return setResult(
-              data?.items.find(
-                (item) => String(item.id) === String(it?.id),
-              ) as Item,
+              data?.items.find((item) => String(item.id) === String(it?.id)) as Item,
             );
           }}
           free={false}
@@ -272,10 +258,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
         className="relative flex h-full w-full overflow-y-auto p-2 border-t-2 border-highlight-high"
         style={{ contain: "strict" }}
       >
-        <div
-          className="relative w-full"
-          style={{ height: `${virtualizer.getTotalSize()}px` }}
-        >
+        <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualItem) => {
             const item = data.items[virtualItem.index];
             if (!item) return null;
@@ -286,9 +269,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 className="absolute top-0 left-0 flex flex-row w-full h-32 max-h-32 min-h-32 p-2 border-2 border-highlight-high items-center bg-card"
                 style={{
                   transform: `translateY(${virtualItem.start}px)`,
-                  opacity: hiddenItems.includes(String(item.id))
-                    ? "50%"
-                    : undefined,
+                  opacity: hiddenItems.includes(String(item.id)) ? "50%" : undefined,
                 }}
               >
                 <div className="flex flex-col gap-1">
@@ -321,18 +302,11 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                     size="icon"
                     onClick={() => {
                       const existingGame =
-                        hiddenItems.filter((h) => h === String(item.id))
-                          .length > 0;
+                        hiddenItems.filter((h) => h === String(item.id)).length > 0;
 
-                      if (!existingGame)
-                        return setHiddenItems([
-                          ...hiddenItems,
-                          String(item.id),
-                        ]);
+                      if (!existingGame) return setHiddenItems([...hiddenItems, String(item.id)]);
 
-                      return setHiddenItems(
-                        hiddenItems.filter((h) => h !== String(item.id)),
-                      );
+                      return setHiddenItems(hiddenItems.filter((h) => h !== String(item.id)));
                     }}
                   >
                     {hiddenItems.includes(String(item.id)) ? (

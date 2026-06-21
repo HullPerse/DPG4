@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import ImageComponent from "@/components/shared/image.component";
 import { Input } from "@/components/ui/input.component";
-import { getStatusColor, highlightText, openWindow } from "@/lib/utils";
+import { getStatusColor, highlightText, openWindow } from "@/lib/index.utils";
 import { Game } from "@/types/games";
 
 const STATUSES = [
@@ -27,8 +27,7 @@ function matchesSearch(game: Game, query: string) {
   const q = query.trim().toUpperCase();
   if (!q) return true;
 
-  const statusLabel =
-    STATUSES.find((s) => s.name === game.status)?.label ?? game.status;
+  const statusLabel = STATUSES.find((s) => s.name === game.status)?.label ?? game.status;
 
   return (
     game.data.name.toUpperCase().includes(q) ||
@@ -66,8 +65,7 @@ export default function Games({ games }: { games: Game[] }) {
         {filteredGames.length > 0 ? (
           filteredGames.map((game) => {
             const statusLabel =
-              STATUSES.find((status) => status.name === game.status)?.label ??
-              game.status;
+              STATUSES.find((status) => status.name === game.status)?.label ?? game.status;
 
             return (
               <div
@@ -80,17 +78,12 @@ export default function Games({ games }: { games: Game[] }) {
                       src={game.data.capsuleImage}
                       alt={game.data.name}
                       onClick={() => {
-                        openWindow(
-                          String(game.data.id),
-                          game.data.capsuleImage,
-                          "Изображение",
-                        );
+                        openWindow(String(game.data.id), game.data.capsuleImage, "Изображение");
                       }}
                     />
                   </div>
                   <span className="font-bold line-clamp-2">
-                    {highlightText(game.data.name, searchTerm)} [
-                    {game.playtime.hltb} ч.]
+                    {highlightText(game.data.name, searchTerm)} [{game.playtime.hltb} ч.]
                   </span>
                 </section>
 

@@ -3,12 +3,7 @@ import { Cell as CellType } from "@/types/cell";
 import { User } from "@/types/user";
 import { getCellClass, translateCell } from "@/lib/cell.utils";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.component";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.component";
 import Settings from "./settings.tabletop";
 import { cellsConfig } from "@/config/cells.config";
 import { useDataStore } from "@/store/data.store";
@@ -26,7 +21,7 @@ import { Button } from "@/components/ui/button.component";
 import LadderSvg from "@/components/svg/ladder.component";
 import SnakeSvg from "@/components/svg/snake.component";
 import SteamSvg from "@/components/svg/steam.component";
-import { getPlaceColor } from "@/lib/utils";
+import { getPlaceColor } from "@/lib/index.utils";
 import ImageComponent from "@/components/shared/image.component";
 
 function CellComponent({
@@ -53,9 +48,7 @@ function CellComponent({
   const statusesPerPage = 5;
 
   const color = cellsConfig.difficulty.find(
-    (item) =>
-      item.label === cell.difficulty &&
-      !["start", "finish"].includes(cell.type),
+    (item) => item.label === cell.difficulty && !["start", "finish"].includes(cell.type),
   )?.color;
 
   const textColor = (type: CellType["type"]) => {
@@ -98,17 +91,12 @@ function CellComponent({
   const computeStatusPages = useCallback(() => {
     if (!cell?.status?.length) return { statuses: [], totalPages: 0 };
 
-    const statusCounts = cell.status.reduce(
-      (acc: { [key: string]: number }, status: string) => {
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      },
-      {},
-    );
+    const statusCounts = cell.status.reduce((acc: { [key: string]: number }, status: string) => {
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
 
-    const sortedStatuses = Object.entries(statusCounts).sort(
-      (a, b) => b[1] - a[1],
-    );
+    const sortedStatuses = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
 
     const totalPages = Math.ceil(sortedStatuses.length / statusesPerPage);
 
@@ -154,14 +142,11 @@ function CellComponent({
 
             <div className="flex flex-row gap-1">
               {/* ladders and snakes */}
-              {["icons", "all"].includes(arrowType) &&
-                (cell.snakeTo > 0 || cell.ladderTo > 0) && (
-                  <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
-                    {getCellArrows(
-                      cell.ladderTo > 0 ? cell.ladderTo : cell.snakeTo,
-                    )}
-                  </div>
-                )}
+              {["icons", "all"].includes(arrowType) && (cell.snakeTo > 0 || cell.ladderTo > 0) && (
+                <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
+                  {getCellArrows(cell.ladderTo > 0 ? cell.ladderTo : cell.snakeTo)}
+                </div>
+              )}
 
               {/* game type */}
               <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
@@ -193,10 +178,7 @@ function CellComponent({
           {/* users */}
           <section className="flex h-full w-full flex-row flex-wrap items-start gap-2 p-1">
             {users
-              .filter(
-                (user) =>
-                  user.position === cell.number && user.id !== movingUserId,
-              )
+              .filter((user) => user.position === cell.number && user.id !== movingUserId)
               .map((user) => (
                 <span
                   key={user.id}
@@ -251,9 +233,7 @@ function CellComponent({
           <section className="flex h-8 max-h-8 min-h-8 w-full flex-row items-center justify-between gap-1 border-t bg-card p-1">
             <div className="flex flex-row gap-1">
               {computeStatusPages().statuses.map(({ status, count }) => {
-                const statusData =
-                  cellsConfig.status.find((item) => item.name === status) ??
-                  null;
+                const statusData = cellsConfig.status.find((item) => item.name === status) ?? null;
 
                 return (
                   <div
@@ -310,9 +290,7 @@ function CellComponent({
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             Клетка:{" "}
-            {["start", "finish"].includes(cell.type)
-              ? translateCell(cell.type)
-              : cell.number}
+            {["start", "finish"].includes(cell.type) ? translateCell(cell.type) : cell.number}
           </DialogTitle>
         </DialogHeader>
         <Settings cell={cell} setOpen={setOpen} />

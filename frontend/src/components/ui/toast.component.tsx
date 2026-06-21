@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity } from "@/types/activity";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "./button.component";
 import ImageComponent from "../shared/image.component";
 
@@ -11,7 +11,11 @@ export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
 
   return (
-    <div className="fixed bottom-4 right-4 z-9999 flex flex-col gap-2" role="alert" aria-live="polite">
+    <div
+      className="fixed bottom-4 right-4 z-9999 flex flex-col gap-2"
+      role="alert"
+      aria-live="polite"
+    >
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -90,11 +94,7 @@ function Toast({
         </Button>
       )}
       {showClose && (
-        <Button
-          variant="error"
-          size="icon"
-          onClick={() => removeToast(String(toast.id))}
-        >
+        <Button variant="error" size="icon" onClick={() => removeToast(String(toast.id))}>
           <X className="size-4 pointer-events-none" />
         </Button>
       )}

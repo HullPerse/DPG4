@@ -73,7 +73,7 @@ function WordleTab() {
   useEffect(() => {
     if (!data?.word) return;
     if (data?.word.guessedLetters?.length || data?.word.wrongLetters?.length) {
-      setLetters(new Set([" ", "-", ...data?.word.guessedLetters]));
+      setLetters(new Set([" ", "-", ...(data?.word.guessedLetters ?? [])]));
       setErrors(data?.word.wrongLetters);
     }
   }, [data?.word]);

@@ -1,5 +1,5 @@
 import { useUserStore } from "@/store/user.store";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "@/components/ui/button.component";
 import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -41,8 +41,7 @@ const IDLE_STATE: RocketState = {
 };
 
 function RocketTab() {
-  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
-    useGamblingStore();
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } = useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [gameState, setGameState] = useState<RocketState>({
@@ -73,12 +72,8 @@ function RocketTab() {
   const pollInFlightRef = useRef(false);
   const roundEndedRef = useRef(false);
   const activeBid = isActivePhase(gameState.phase) ? gameState.bid : bid;
-  const potentialWin = isActivePhase(gameState.phase)
-    ? potentialPayout(activeBid, currentMult)
-    : 0;
-  const potentialGain = isActivePhase(gameState.phase)
-    ? potentialNet(activeBid, currentMult)
-    : 0;
+  const potentialWin = isActivePhase(gameState.phase) ? potentialPayout(activeBid, currentMult) : 0;
+  const potentialGain = isActivePhase(gameState.phase) ? potentialNet(activeBid, currentMult) : 0;
 
   useEffect(() => {
     if (!isActivePhase(gameState.phase) || !flightStart) {
@@ -87,9 +82,7 @@ function RocketTab() {
     }
     let raf = 0;
     const tick = () => {
-      setCurrentMult(
-        liveMultiplier(gameState.phase, flightStart, gameState.multiplier),
-      );
+      setCurrentMult(liveMultiplier(gameState.phase, flightStart, gameState.multiplier));
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -99,7 +92,7 @@ function RocketTab() {
   useEffect(() => {
     getRocketHistory()
       .then(setHistory)
-      .catch(() => {});
+      .catch((e) => console.warn("Failed to fetch rocket history:", e));
   }, []);
 
   const stopPolling = useCallback(() => {
@@ -114,7 +107,7 @@ function RocketTab() {
   const refreshHistory = useCallback(() => {
     getRocketHistory()
       .then(setHistory)
-      .catch(() => {});
+      .catch((e) => console.warn("Failed to refresh rocket history:", e));
   }, []);
 
   /** Show result overlay when round ends - do not auto-clear on idle (only via «Готово») */
@@ -166,8 +159,7 @@ function RocketTab() {
         if (polled.phase === "crashed" || polled.phase === "cashed") {
           stopPolling();
           const u = useUserStore.getState().user;
-          if (u)
-            useUserStore.setState({ user: { ...u, tickets: polled.balance } });
+          if (u) useUserStore.setState({ user: { ...u, tickets: polled.balance } });
           if (polled.banned) setGamblingBanned(true);
           applyRoundEnd(polled);
           if (polled.phase === "crashed") refreshHistory();
@@ -176,8 +168,7 @@ function RocketTab() {
         if (polled.phase === "idle") {
           let resetActive = false;
           setGameState((prev) => {
-            if (prev.phase === "crashed" || prev.phase === "cashed")
-              return prev;
+            if (prev.phase === "crashed" || prev.phase === "cashed") return prev;
             if (roundEndedRef.current) return prev;
             if (!isActivePhase(prev.phase)) return prev;
             resetActive = true;
@@ -192,10 +183,7 @@ function RocketTab() {
       } catch {
         if (gen !== pollGenRef.current) return;
         stopPolling();
-        if (
-          isActivePhase(gameStateRef.current.phase) &&
-          !roundEndedRef.current
-        ) {
+        if (isActivePhase(gameStateRef.current.phase) && !roundEndedRef.current) {
           setFlightStart(null);
           setGameState(IDLE_STATE);
           setResult(null);
@@ -222,15 +210,11 @@ function RocketTab() {
           startPolling();
         } else if (state.phase === "crashed" || state.phase === "cashed") {
           applyRoundEnd(state);
-        } else if (
-          state.phase === "idle" &&
-          local === "idle" &&
-          !roundEndedRef.current
-        ) {
+        } else if (state.phase === "idle" && local === "idle" && !roundEndedRef.current) {
           resetToIdle();
         }
       })
-      .catch(() => {});
+      .catch((e) => console.warn("Rocket poll error:", e));
   }, [user?.id, startPolling, applyRoundEnd, resetToIdle]);
 
   const launchMutation = useMutation({
@@ -256,7 +240,7 @@ function RocketTab() {
       stopPolling();
       const state = await cashoutRocket(devOverridesRef.current);
       applyRoundEnd(state);
-      useUserStore.setState({ user: { ...user, tickets: state.balance } });
+      useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
       if (state.banned) setGamblingBanned(true);
       refreshHistory();
     } catch {
@@ -267,7 +251,7 @@ function RocketTab() {
 
   const handleDismiss = async () => {
     resetToIdle();
-    dismissRocket().catch(() => {});
+    dismissRocket().catch((e) => console.warn("Failed to dismiss rocket:", e));
   };
 
   useEffect(() => {
@@ -275,13 +259,12 @@ function RocketTab() {
       stopPolling();
       const gs = gameStateRef.current;
       if (gs.phase === "flying" || gs.phase === "launching") {
-        abandonRocket().catch(() => {});
+        abandonRocket().catch((e) => console.warn("Failed to abandon rocket:", e));
       }
     };
   }, [stopPolling]);
 
-  const roundEnded =
-    gameState.phase === "crashed" || gameState.phase === "cashed";
+  const roundEnded = gameState.phase === "crashed" || gameState.phase === "cashed";
   const roundActive = isActivePhase(gameState.phase);
   const canLaunch =
     !launchMutation.isPending &&
@@ -319,20 +302,11 @@ function RocketTab() {
         <GameResult result={result} />
       </section>
 
-      <BidSelector
-        bidOptions={bidOptions}
-        bid={bid}
-        onBidChange={setBid}
-        disabled={roundActive}
-      />
+      <BidSelector bidOptions={bidOptions} bid={bid} onBidChange={setBid} disabled={roundActive} />
 
       <section className="flex flex-col gap-1 w-xl mt-auto">
         {gameState.phase === "crashed" || gameState.phase === "cashed" ? (
-          <Button
-            variant="info"
-            className="w-full h-11"
-            onClick={handleDismiss}
-          >
+          <Button variant="info" className="w-full h-11" onClick={handleDismiss}>
             {`Завершить`}
           </Button>
         ) : roundActive ? (

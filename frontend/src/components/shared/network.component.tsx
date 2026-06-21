@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Download, Loader, Wifi, WifiOff, WifiSync } from "lucide-react";
 import { useCallback, useEffect, memo } from "react";
 import { useDataStore } from "@/store/data.store";
-import { cn, networkClass, checkForUpdates, installUpdate } from "@/lib/utils";
+import { cn, networkClass, checkForUpdates, installUpdate } from "@/lib/index.utils";
 import { useNetworkState } from "@uidotdev/usehooks";
 import { useToastStore } from "@/store/toast.store";
 import type { UpdateData, Activity } from "@/types/activity";
@@ -14,30 +14,29 @@ const NetworkConnection = memo(function NetworkConnection() {
   const addToast = useToastStore((s) => s.addToast);
 
   //checking for connection
-  const { data, isLoading, isError, refetch, isRefetching, isRefetchError } =
-    useQuery({
-      queryKey: ["connection", network.online],
-      queryFn: async () => {
-        const isOnline = network.online;
-        let [isConnected, updateAvailable] = [false, false];
+  const { data, isLoading, isError, refetch, isRefetching, isRefetchError } = useQuery({
+    queryKey: ["connection", network.online],
+    queryFn: async () => {
+      const isOnline = network.online;
+      let [isConnected, updateAvailable] = [false, false];
 
-        try {
-          isConnected = await checkConnection();
-        } catch {
-          isConnected = false;
-        }
+      try {
+        isConnected = await checkConnection();
+      } catch {
+        isConnected = false;
+      }
 
-        try {
-          const update = await checkForUpdates();
-          updateAvailable = !!update;
-        } catch {
-          updateAvailable = false;
-        }
+      try {
+        const update = await checkForUpdates();
+        updateAvailable = !!update;
+      } catch {
+        updateAvailable = false;
+      }
 
-        setConnected(isConnected);
-        return { isConnected: isConnected && isOnline, updateAvailable };
-      },
-    });
+      setConnected(isConnected);
+      return { isConnected: isConnected && isOnline, updateAvailable };
+    },
+  });
 
   const handleRefetch = useCallback(() => {
     refetch().then((data) => {
@@ -82,14 +81,7 @@ const NetworkConnection = memo(function NetworkConnection() {
 
   //connection loading
   if (isLoading || isRefetching)
-    return (
-      <Loader
-        className={cn(
-          "h-4 w-4 animate-spin",
-          networkClass(!!data?.isConnected),
-        )}
-      />
-    );
+    return <Loader className={cn("h-4 w-4 animate-spin", networkClass(!!data?.isConnected))} />;
 
   //connection lost
   if (isError || !data?.isConnected || isRefetchError)
@@ -110,12 +102,7 @@ const NetworkConnection = memo(function NetworkConnection() {
     );
 
   //connection found
-  return (
-    <Wifi
-      className="h-4 w-4 cursor-pointer hover:text-text"
-      onClick={handleRefetch}
-    />
-  );
+  return <Wifi className="h-4 w-4 cursor-pointer hover:text-text" onClick={handleRefetch} />;
 });
 
 export default NetworkConnection;

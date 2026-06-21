@@ -25,15 +25,11 @@ function CassaTab() {
     mutationFn: () => buyTickets(Number(buyAmount)),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["ticketInfo"] });
-      if (user) {
-        useUserStore.setState({
-          user: {
-            ...user,
-            money: user.money - res.cost,
-            tickets: res.balance,
-          },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, money: u.money - res.cost, tickets: res.balance } };
+      });
       setBuyAmount("");
     },
   });
@@ -42,15 +38,11 @@ function CassaTab() {
     mutationFn: () => sellTicketsDirect(Number(directSellAmount)),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["ticketInfo"] });
-      if (user) {
-        useUserStore.setState({
-          user: {
-            ...user,
-            money: user.money + res.payout,
-            tickets: res.newBalance,
-          },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, money: u.money + res.payout, tickets: res.newBalance } };
+      });
       setDirectSellAmount("");
     },
   });
@@ -59,14 +51,11 @@ function CassaTab() {
     mutationFn: () => sellTickets(Number(marketSellAmount), Number(marketSellPrice)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ticketInfo"] });
-      if (user) {
-        useUserStore.setState({
-          user: {
-            ...user,
-            tickets: (user.tickets ?? 0) - Number(marketSellAmount),
-          },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, tickets: (u.tickets ?? 0) - Number(marketSellAmount) } };
+      });
       setMarketSellAmount("");
       setMarketSellPrice("");
     },

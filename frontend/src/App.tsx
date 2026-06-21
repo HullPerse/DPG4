@@ -1,13 +1,6 @@
 import { useUserStore } from "./store/user.store";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Suspense,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Suspense, memo, useCallback, useEffect, useRef, useState } from "react";
 import Desktop from "./routes/desktop/desktop.root";
 import { WindowProps } from "./types/window";
 import { useDataStore } from "./store/data.store";
@@ -21,7 +14,7 @@ import {
   refreshWindow,
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
-import { selectionMouse } from "./lib/utils";
+import { selectionMouse } from "./lib/index.utils";
 import { wallpaperAssetUrl } from "./lib/tauri/wallpaper";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
@@ -30,10 +23,7 @@ import { CreateModal } from "./components/shared/items.modal";
 import ImageComponent from "./components/shared/image.component";
 import { Button } from "./components/ui/button.component";
 import UserApi from "./api/user.api";
-import {
-  cleanupRealtimeServices,
-  initRealtimeServices,
-} from "./lib/activity.utils";
+import { cleanupRealtimeServices, initRealtimeServices } from "./lib/activity.utils";
 
 const userApi = new UserApi();
 
@@ -95,9 +85,7 @@ function App() {
   const wallpaperData = useDataStore((state) => state.wallpaper);
   const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
   const negativeScoreModal = useDataStore((state) => state.negativeScoreModal);
-  const setNegativeScoreModal = useDataStore(
-    (state) => state.setNegativeScoreModal,
-  );
+  const setNegativeScoreModal = useDataStore((state) => state.setNegativeScoreModal);
   const isAuth = useUserStore((state) => state.isAuth);
   const loggedIn = useUserStore((state) => state.loggedIn);
 
@@ -106,16 +94,12 @@ function App() {
     const filters = [];
     if (wallpaperFilters.brightness !== 100)
       filters.push(`brightness(${wallpaperFilters.brightness}%)`);
-    if (wallpaperFilters.contrast !== 100)
-      filters.push(`contrast(${wallpaperFilters.contrast}%)`);
-    if (wallpaperFilters.saturate !== 100)
-      filters.push(`saturate(${wallpaperFilters.saturate}%)`);
-    if (wallpaperFilters.blur > 0)
-      filters.push(`blur(${wallpaperFilters.blur}px)`);
+    if (wallpaperFilters.contrast !== 100) filters.push(`contrast(${wallpaperFilters.contrast}%)`);
+    if (wallpaperFilters.saturate !== 100) filters.push(`saturate(${wallpaperFilters.saturate}%)`);
+    if (wallpaperFilters.blur > 0) filters.push(`blur(${wallpaperFilters.blur}px)`);
     if (wallpaperFilters.hueRotate > 0)
       filters.push(`hue-rotate(${wallpaperFilters.hueRotate}deg)`);
-    if (wallpaperFilters.filter !== "none")
-      filters.push(wallpaperFilters.filter);
+    if (wallpaperFilters.filter !== "none") filters.push(wallpaperFilters.filter);
     return filters.length > 0 ? filters.join(" ") : "none";
   })();
 
@@ -130,47 +114,44 @@ function App() {
   const selectionStartRef = useRef({ x: 0, y: 0 });
   const [isSelecting, setIsSelecting] = useState(false);
 
-  const handleDesktopMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.button !== 0) return;
+  const handleDesktopMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
 
-      const rect = desktopRef.current?.getBoundingClientRect();
-      if (!rect) return;
+    const rect = desktopRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-      //prevent taskbar selection
-      const taskbarHeight = 60;
-      if (y > rect.height - taskbarHeight) return;
+    //prevent taskbar selection
+    const taskbarHeight = 60;
+    if (y > rect.height - taskbarHeight) return;
 
-      const target = e.target as HTMLElement;
+    const target = e.target as HTMLElement;
 
-      //check if mouse is over desktop button
-      const buttonElement = target.closest('[data-desktop-button="true"]');
-      if (buttonElement) return;
+    //check if mouse is over desktop button
+    const buttonElement = target.closest('[data-desktop-button="true"]');
+    if (buttonElement) return;
 
-      //check if mouse is over any window
-      const windowElement = target.closest('[data-window="true"]');
-      if (windowElement) return;
+    //check if mouse is over any window
+    const windowElement = target.closest('[data-window="true"]');
+    if (windowElement) return;
 
-      //check if mouse over calendar
-      const calendarElement = target.closest('[data-calendar="true"]');
-      if (calendarElement) return;
+    //check if mouse over calendar
+    const calendarElement = target.closest('[data-calendar="true"]');
+    if (calendarElement) return;
 
-      //check if mouse over notepad viewer
-      const notepadElement = target.closest('[data-notepad="true"]');
-      if (notepadElement) return;
+    //check if mouse over notepad viewer
+    const notepadElement = target.closest('[data-notepad="true"]');
+    if (notepadElement) return;
 
-      //check if mouse is over image viewer
-      const viewerElement = target.closest(`[data-image-viewer="true"]`);
-      if (viewerElement) return;
+    //check if mouse is over image viewer
+    const viewerElement = target.closest(`[data-image-viewer="true"]`);
+    if (viewerElement) return;
 
-      selectionStartRef.current = { x, y };
-      setIsSelecting(true);
-    },
-    [],
-  );
+    selectionStartRef.current = { x, y };
+    setIsSelecting(true);
+  }, []);
 
   useEffect(() => {
     if (!isSelecting) return;
@@ -250,11 +231,7 @@ function App() {
         body={() => (
           <main className="flex flex-col gap-2 p-2">
             <section className="w-40 h-40 border-2 border-highlight-high self-center">
-              <ImageComponent
-                src="/death.png"
-                alt="Смерть в нищите"
-                className="w-full h-full"
-              />
+              <ImageComponent src="/death.png" alt="Смерть в нищите" className="w-full h-full" />
             </section>
 
             <section className="flex flex-col leading-tight self-center">
@@ -268,10 +245,7 @@ function App() {
                 className="w-full h-20"
                 onClick={async () => {
                   await userApi
-                    .scoreUser(
-                      String(user?.id),
-                      Math.floor(Math.random() * 10) + 1,
-                    )
+                    .scoreUser(String(user?.id), Math.floor(Math.random() * 10) + 1)
                     .then(() => setNegativeScoreModal(false));
                 }}
               >

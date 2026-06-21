@@ -33,7 +33,7 @@ export function playHangman(
 }
 
 export function getStreak(userId: string): Promise<number> {
-  return apiFetch<{ streak: number }>(`/hangman/${userId}/streak`).then((res) =>
-    Number(res),
+  return apiFetch<{ streak: number }>(`/hangman/${userId}/streak`).then(
+    (res) => res.streak,
   );
 }

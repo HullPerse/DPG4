@@ -48,7 +48,7 @@ const IDLE_STATE: MinesState = {
 };
 
 function MinesTab() {
-  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
+  const { balance, ticketBalance, gamblingBanned, setGamblingBanned } =
     useGamblingStore();
   const bidOptions = useBidOptions();
 
@@ -76,7 +76,7 @@ function MinesTab() {
       setResult(null);
       setResetKey((k) => k + 1);
       setGameState(state);
-      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
+      useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
     },
   });
 
@@ -86,7 +86,7 @@ function MinesTab() {
     onSuccess: (state) => {
       setGameState(state);
       if (state.phase === "lost") {
-        useUserStore.setState({ user: { ...user!, tickets: state.balance } });
+        useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
         setResult({ net: state.net, label: state.label, tone: state.tone });
       }
     },
@@ -96,7 +96,7 @@ function MinesTab() {
     mutationFn: () => cashoutMines(getOverrides("mines")),
     onSuccess: (state) => {
       setGameState(state);
-      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
+      useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
       if (state.banned) setGamblingBanned(true);
       setResult({ net: state.net, label: state.label, tone: state.tone });
     },
@@ -108,7 +108,7 @@ function MinesTab() {
         gameStateRef.current.phase === "playing" &&
         gameStateRef.current.revealed.some((r) => r.some((c) => c))
       ) {
-        abortMines().catch(() => {});
+        abortMines().catch((e) => console.warn("Failed to abort mines:", e));
       }
     };
   }, []);

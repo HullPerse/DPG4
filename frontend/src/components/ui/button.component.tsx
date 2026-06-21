@@ -1,7 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Spinner } from "@/components/ui/spinner.component";
 
 const buttonVariants = cva(
@@ -13,8 +13,7 @@ const buttonVariants = cva(
           "bg-background text-text border-iris hover:bg-iris/20 hover:text-text active:bg-iris/40 shadow-sharp-sm",
         success:
           "bg-green-500/20 text-text border-green-500 hover:bg-green-500/60 active:bg-green-500/50",
-        error:
-          "bg-red-500/20 text-text border-red-500 hover:bg-red-500/60 active:bg-red-500/50",
+        error: "bg-red-500/20 text-text border-red-500 hover:bg-red-500/60 active:bg-red-500/50",
         info: "bg-blue-500/20 text-text border-blue-500 hover:bg-blue-500/60 active:bg-blue-500/50",
         warning:
           "bg-yellow-500/20 text-text border-yellow-500 hover:bg-yellow-500/60 active:bg-yellow-500/50",

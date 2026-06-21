@@ -15,7 +15,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { openWindow } from "@/lib/utils";
+import { openWindow } from "@/lib/index.utils";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
 
@@ -137,8 +137,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
-  const visibleGames =
-    data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
+  const visibleGames = data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -154,9 +153,7 @@ export default function PresetsWheel({ id }: { id: string }) {
           }))}
           onResult={(item) => {
             return setResult(
-              data?.games.find(
-                (game) => Number(game.id) === Number(item?.id),
-              ) as GameData,
+              data?.games.find((game) => Number(game.id) === Number(item?.id)) as GameData,
             );
           }}
           free
@@ -189,11 +186,7 @@ export default function PresetsWheel({ id }: { id: string }) {
 
                   if (!link) return;
 
-                  openWindow(
-                    `steam-${result.id}`,
-                    link,
-                    `Страница ${String(result.name)}`,
-                  );
+                  openWindow(`steam-${result.id}`, link, `Страница ${String(result.name)}`);
                 }}
               >
                 {result?.name}[{result?.time ?? "?"} ч.]
@@ -202,18 +195,16 @@ export default function PresetsWheel({ id }: { id: string }) {
 
             {/* BUTTONS */}
             <section className="flex flex-row items-center gap-1">
-              {input.enabled &&
-                input.type === "result" &&
-                input.id === String(result?.id) && (
-                  <Input
-                    autoFocus
-                    type="text"
-                    placeholder="Введите время"
-                    value={time ?? ""}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="h-9 w-36 ml-2 shadow-sharp-sm"
-                  />
-                )}
+              {input.enabled && input.type === "result" && input.id === String(result?.id) && (
+                <Input
+                  autoFocus
+                  type="text"
+                  placeholder="Введите время"
+                  value={time ?? ""}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="h-9 w-36 ml-2 shadow-sharp-sm"
+                />
+              )}
               <Button
                 title="Добавить в библиотеку"
                 variant="success"
@@ -245,8 +236,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                 position: "absolute",
                 transform: `translateY(${virtualItem.start}px)`,
                 width: "99%",
-                opacity:
-                  hiddenGames.find((h) => h === String(item.id)) && "50%",
+                opacity: hiddenGames.find((h) => h === String(item.id)) && "50%",
               }}
               data-index={virtualItem.index}
               ref={virtualizer.measureElement}
@@ -255,10 +245,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               {/* LABEL */}
               <section className="flex flex-row w-full h-full items-center gap-2">
                 <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
-                  <Image
-                    src={item.capsuleImage ?? "https://placehold.co/16x10"}
-                    alt={item.name}
-                  />
+                  <Image src={item.capsuleImage ?? "https://placehold.co/16x10"} alt={item.name} />
                 </div>
 
                 <span
@@ -272,11 +259,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                   onClick={() => {
                     if (!item.steamLink) return;
 
-                    openWindow(
-                      `steam-${item.id}`,
-                      item.steamLink,
-                      `Страница ${String(item.name)}`,
-                    );
+                    openWindow(`steam-${item.id}`, item.steamLink, `Страница ${String(item.name)}`);
                   }}
                 >
                   {item?.name}[{item?.time ?? "?"} ч.]
@@ -289,15 +272,11 @@ export default function PresetsWheel({ id }: { id: string }) {
                   size="icon"
                   onClick={() => {
                     const existingGame =
-                      hiddenGames.filter((h) => h === String(item.id)).length >
-                      0;
+                      hiddenGames.filter((h) => h === String(item.id)).length > 0;
 
-                    if (!existingGame)
-                      return setHiddenGames([...hiddenGames, String(item.id)]);
+                    if (!existingGame) return setHiddenGames([...hiddenGames, String(item.id)]);
 
-                    return setHiddenGames(
-                      hiddenGames.filter((h) => h !== String(item.id)),
-                    );
+                    return setHiddenGames(hiddenGames.filter((h) => h !== String(item.id)));
                   }}
                 >
                   {hiddenGames.find((h) => h === String(item.id)) ? (
@@ -306,17 +285,15 @@ export default function PresetsWheel({ id }: { id: string }) {
                     <EyeOffIcon size={20} />
                   )}
                 </Button>
-                {input.enabled &&
-                  input.type === "list" &&
-                  input.id === String(item?.id) && (
-                    <Input
-                      type="text"
-                      placeholder="Введите время"
-                      value={time ?? ""}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="h-9 w-36 ml-2 shadow-sharp-sm"
-                    />
-                  )}
+                {input.enabled && input.type === "list" && input.id === String(item?.id) && (
+                  <Input
+                    type="text"
+                    placeholder="Введите время"
+                    value={time ?? ""}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="h-9 w-36 ml-2 shadow-sharp-sm"
+                  />
+                )}
                 <Button
                   title="Добавить в библиотеку"
                   variant="success"

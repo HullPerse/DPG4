@@ -68,11 +68,11 @@ function BlackjackTab() {
   const applyState = useCallback(
     (state: BlackjackState) => {
       setGame(state);
-      if (user) {
-        useUserStore.setState({
-          user: { ...user, tickets: state.balance },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, tickets: state.balance } };
+      });
       if (state.result) {
         const netLabel =
           state.result.net >= 0
@@ -86,7 +86,7 @@ function BlackjackTab() {
         if (state.result.banned) setGamblingBanned(true);
       }
     },
-    [user, setGamblingBanned],
+    [setGamblingBanned],
   );
 
   const restoreGame = useCallback(
@@ -94,11 +94,11 @@ function BlackjackTab() {
       setGame(state);
       setBid(state.bid);
       setFlyingCards(new Set());
-      if (user) {
-        useUserStore.setState({
-          user: { ...user, tickets: state.balance },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, tickets: state.balance } };
+      });
       if (state.result) {
         const netLabel =
           state.result.net >= 0
@@ -114,7 +114,7 @@ function BlackjackTab() {
         setUiResult(null);
       }
     },
-    [user, setGamblingBanned],
+    [setGamblingBanned],
   );
 
   useEffect(() => {
@@ -155,8 +155,8 @@ function BlackjackTab() {
       try {
         const existing = await syncBlackjack();
         if (existing) restoreGame(existing);
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.warn("Failed to sync blackjack:", e);
       }
     },
   });
@@ -209,8 +209,8 @@ function BlackjackTab() {
     if (user && game?.phase === "player") {
       try {
         await abandonBlackjack();
-      } catch {
-        /* server may already be clear */
+      } catch (e) {
+        console.warn("Failed to abandon blackjack:", e);
       }
     }
     if (flyClearRef.current) clearTimeout(flyClearRef.current);

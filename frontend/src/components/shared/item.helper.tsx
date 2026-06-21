@@ -1,4 +1,4 @@
-import { translateItemType } from "@/lib/utils";
+import { translateItemType } from "@/lib/index.utils";
 import { Inventory, Item } from "@/types/items";
 import ImageComponent from "./image.component";
 import { getFileUrl } from "@/api/client.api";

@@ -1,11 +1,4 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Button } from "../ui/button.component";
 import { EasingAnimation, WheelItem, WheelRoll } from "@/types/wheel";
@@ -25,8 +18,8 @@ import {
 } from "@/config/wheel.config";
 import WheelItems from "./renderer.component";
 import { spinWheel } from "@/api/wheel.api";
-import { shuffleArray } from "@/lib/utils";
-import { calculateCostSync } from "@/lib/utils";
+import { shuffleArray } from "@/lib/index.utils";
+import { calculateCostSync } from "@/lib/index.utils";
 import { useUserStore } from "@/store/user.store";
 import { RefreshCcw } from "lucide-react";
 
@@ -107,8 +100,7 @@ function Wheel({
     if (items.length === 0) return;
 
     const wIndex = winnerRef.current;
-    const selectedItem =
-      wIndex >= 0 && wIndex < items.length ? items[wIndex] : items[0];
+    const selectedItem = wIndex >= 0 && wIndex < items.length ? items[wIndex] : items[0];
 
     lastHighlightRef.current = wIndex;
     setHighlightedIndex(wIndex >= 0 ? wIndex : 0);
@@ -148,17 +140,9 @@ function Wheel({
 
   const startSpinAnimation = useCallback(
     (winnerIndex: number, itemCount: number) => {
-      const containerWidth =
-        containerRef.current?.parentElement?.clientWidth ?? 0;
-      const targetScroll = buildSpinTargetScroll(
-        winnerIndex,
-        itemCount,
-        containerWidth,
-      );
-      const duration = randomInRange(
-        ANIMATION_DURATION_MIN,
-        ANIMATION_DURATION_MAX,
-      );
+      const containerWidth = containerRef.current?.parentElement?.clientWidth ?? 0;
+      const targetScroll = buildSpinTargetScroll(winnerIndex, itemCount, containerWidth);
+      const duration = randomInRange(ANIMATION_DURATION_MIN, ANIMATION_DURATION_MAX);
 
       scrollPositionRef.current = 0;
       highlightFrameThrottleRef.current = 0;
@@ -254,9 +238,7 @@ function Wheel({
           isRolling: false,
           hasRolled: false,
         });
-        setError(
-          err instanceof Error ? err.message : "Не удалось крутить колесо",
-        );
+        setError(err instanceof Error ? err.message : "Не удалось крутить колесо");
       }
     },
     [rolling.isRolling, list, free, listType, queueSpin, refreshUser],

@@ -1,6 +1,6 @@
 import { Chat } from "@/types/chat";
 import { User } from "@/types/user";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import ImageComponent from "./image.component";
 import { getFileUrl } from "@/api/client.api";
 import { CheckCheck, Trash } from "lucide-react";
@@ -13,15 +13,9 @@ interface ChatBubbleProps {
   onRemove?: (message: Chat) => void;
 }
 
-export default function ChatBubble({
-  item,
-  currentUser,
-  onEdit,
-  onRemove,
-}: ChatBubbleProps) {
+export default function ChatBubble({ item, currentUser, onEdit, onRemove }: ChatBubbleProps) {
   const sender = item.data.sender;
-  const isAuthor =
-    sender.username === currentUser?.username || sender.id === currentUser?.id;
+  const isAuthor = sender.username === currentUser?.username || sender.id === currentUser?.id;
 
   const senderColor = isAuthor ? currentUser?.color : sender.color;
   const senderAvatar = isAuthor ? currentUser?.avatar : sender.avatar;
@@ -50,9 +44,7 @@ export default function ChatBubble({
           item.image && "min-h-40",
         )}
         style={{
-          borderColor:
-            senderColor ||
-            (isAuthor ? undefined : "var(--color-highlight-high)"),
+          borderColor: senderColor || (isAuthor ? undefined : "var(--color-highlight-high)"),
         }}
       >
         <span
@@ -79,11 +71,7 @@ export default function ChatBubble({
           </section>
         )}
 
-        {item.message && (
-          <span className="text-sm text-text wrap-break-word">
-            {item.message}
-          </span>
-        )}
+        {item.message && <span className="text-sm text-text wrap-break-word">{item.message}</span>}
 
         <section className="flex flex-row items-center gap-1 text-xs text-muted w-full">
           {item.isRead && <CheckCheck className="size-4" />}

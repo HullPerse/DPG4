@@ -1,22 +1,9 @@
 import { useUserStore } from "@/store/user.store";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "@/components/ui/button.component";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  memo,
-  lazy,
-  Suspense,
-} from "react";
+import { useCallback, useEffect, useRef, useState, memo, lazy, Suspense } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  dropPachinko,
-  settlePachinko,
-  syncPachinko,
-  abandonPachinko,
-} from "@/api/gambling.api";
+import { dropPachinko, settlePachinko, syncPachinko, abandonPachinko } from "@/api/gambling.api";
 const PachinkoScene = lazy(() => import("../components/scenes/scene.pachinko"));
 import type {
   PachinkoState,
@@ -56,8 +43,7 @@ const IDLE_STATE: PachinkoState = {
 };
 
 function PachinkoTab() {
-  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
-    useGamblingStore();
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } = useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [gameState, setGameState] = useState<PachinkoState>(IDLE_STATE);
@@ -105,7 +91,7 @@ function PachinkoTab() {
       setStartX(randomDropOffsetX());
       setGameState(state);
       setDropKey((k) => k + 1);
-      useUserStore.setState({ user: { ...user!, tickets: state.balance } });
+      useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
       startZawa(setZawaText);
     },
     onError: () => {
@@ -180,27 +166,23 @@ function PachinkoTab() {
 
   const handleSettled = useCallback(
     async (slotIndexes: number[]) => {
-      if (
-        !user ||
-        settlingRef.current ||
-        gameStateRef.current.phase !== "dropping"
-      )
-        return;
+      if (!user || settlingRef.current || gameStateRef.current.phase !== "dropping") return;
       settlingRef.current = true;
       stopZawa();
       setZawaText("");
 
       const clamped = slotIndexes.map((raw) =>
-        Math.max(
-          0,
-          Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(raw)),
-        ),
+        Math.max(0, Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(raw))),
       );
 
       try {
         const state = await settlePachinko(clamped, getOverrides("pachinko"));
         setGameState(state);
-        useUserStore.setState({ user: { ...user, tickets: state.balance } });
+        useUserStore.setState((s) => {
+          const u = s.user;
+          if (!u) return {};
+          return { user: { ...u, tickets: state.balance } };
+        });
         if (state.banned) setGamblingBanned(true);
 
         // Dramatic effects
@@ -337,10 +319,7 @@ function PachinkoTab() {
               countdown={countdown}
               onCountdownEnd={handleCountdownEnd}
               zawaText={zawaText}
-              showRiskGate={
-                riskGateActive ||
-                (showRiskGatePrompt && riskGateChoice === null)
-              }
+              showRiskGate={riskGateActive || (showRiskGatePrompt && riskGateChoice === null)}
               riskGateChoice={riskGateChoice}
               settleTrigger={settleTrigger}
               shakeIntensity={shakeIntensity}
@@ -372,9 +351,7 @@ function PachinkoTab() {
 
           {!showRat && !result && !countdown && (
             <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-              <p className="text-muted text-sm font-mono tracking-widest">
-                ПАЧИНКО
-              </p>
+              <p className="text-muted text-sm font-mono tracking-widest">ПАЧИНКО</p>
             </div>
           )}
 
@@ -415,17 +392,13 @@ function PachinkoTab() {
               <p className="text-amber-400 text-lg font-bold font-mono mb-1 tracking-wider">
                 ВЫБЕРИ ВРАТА
               </p>
-              <p className="text-muted text-xs mb-4">
-                Какая сторона принесет удачу?
-              </p>
+              <p className="text-muted text-xs mb-4">Какая сторона принесет удачу?</p>
               <div className="flex gap-6">
                 <button
                   onClick={() => handleRiskGatePick("left")}
                   className="flex flex-col items-center gap-1 px-6 py-3 border-2 border-highlight-high bg-background hover:border-amber-500/60 hover:bg-amber-500/10 transition-colors cursor-pointer"
                 >
-                  <span className="text-2xl font-bold font-mono text-c4a7e7">
-                    ←
-                  </span>
+                  <span className="text-2xl font-bold font-mono text-c4a7e7">←</span>
                   <span className="text-sm font-bold text-text">ЛЕВЫЕ</span>
                   <span className="text-[10px] text-muted">x2 бонус</span>
                 </button>
@@ -433,9 +406,7 @@ function PachinkoTab() {
                   onClick={() => handleRiskGatePick("right")}
                   className="flex flex-col items-center gap-1 px-6 py-3 border-2 border-highlight-high bg-background hover:border-amber-500/60 hover:bg-amber-500/10 transition-colors cursor-pointer"
                 >
-                  <span className="text-2xl font-bold font-mono text-eb6f92">
-                    →
-                  </span>
+                  <span className="text-2xl font-bold font-mono text-eb6f92">→</span>
                   <span className="text-sm font-bold text-text">ПРАВЫЕ</span>
                   <span className="text-[10px] text-muted">x2 бонус</span>
                 </button>
@@ -462,9 +433,7 @@ function PachinkoTab() {
               key={i}
               className={cn(
                 "flex flex-none flex-col items-center justify-center py-1 rounded text-[10px] font-mono font-bold border transition-colors",
-                highlightSlot === i
-                  ? "border-white/70 scale-105 z-10"
-                  : "border-transparent",
+                highlightSlot === i ? "border-white/70 scale-105 z-10" : "border-transparent",
               )}
               style={{
                 width: `${(slotWidths[i] / BOARD_WIDTH) * 95}%`,

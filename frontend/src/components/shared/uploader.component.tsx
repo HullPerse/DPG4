@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { ImagePlus, Upload, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "../ui/button.component";
 import Image from "@/components/shared/image.component";
 import { useFileUpload } from "@/hooks/upload.hook";
@@ -20,13 +20,12 @@ const ImageUploader = memo(function ImageUploader({
   onRemove,
   className,
 }: ImageUploaderProps) {
-  const { inputRef, objectUrl, handleFileSelect, clear, openFileDialog } =
-    useFileUpload({
-      acceptPrefix: "image/",
-      value,
-      onChange,
-      existingUrl: existingImageUrl,
-    });
+  const { inputRef, objectUrl, handleFileSelect, clear, openFileDialog } = useFileUpload({
+    acceptPrefix: "image/",
+    value,
+    onChange,
+    existingUrl: existingImageUrl,
+  });
 
   return (
     <div

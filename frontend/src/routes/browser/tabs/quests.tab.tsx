@@ -11,7 +11,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
 import { CreateModal } from "@/components/shared/items.modal";
 import { Button } from "@/components/ui/button.component";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import CreateQuest from "../components/create.quest";
 
 const questsApi = new QuestsApi();

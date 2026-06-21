@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import Image from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
-import { highlightText, translateItemType } from "@/lib/utils";
-import type { SortMethod, SortDirection } from "../browser.root";
+import { highlightText, translateItemType } from "@/lib/index.utils";
+import type { SortMethod, SortDirection } from "@/lib/sorting.utils";
 import AddItem from "./add.tab";
 import { User } from "@/types/user";
 import UserApi from "@/api/user.api";
@@ -42,11 +42,7 @@ interface ListBrowserProps {
   setSortDirection: (direction: SortDirection) => void;
 }
 
-function ListBrowser({
-  searchTerms,
-  sortMethod,
-  sortDirection,
-}: ListBrowserProps) {
+function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProps) {
   const queryClient = useQueryClient();
   const isAdmin = useUserStore((state) => state.isAdmin);
   const user = useUserStore((state) => state.user);
@@ -70,11 +66,7 @@ function ListBrowser({
       const [items, users] = await Promise.all([
         itemsApi.getItems({
           search: searchTerms || undefined,
-          sort: sortFieldMap[sortMethod] as
-            | "label"
-            | "created"
-            | "charge"
-            | "type",
+          sort: sortFieldMap[sortMethod] as "label" | "created" | "charge" | "type",
           order: sortDirection,
           signal,
         }),
@@ -142,21 +134,14 @@ function ListBrowser({
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue
-                      placeholder="Игрок"
-                      style={{ color: selected?.color }}
-                    >
+                    <SelectValue placeholder="Игрок" style={{ color: selected?.color }}>
                       {selected?.username}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.users?.map((item, index) => (
-                        <SelectItem
-                          key={item.id}
-                          value={item.id!}
-                          style={{ color: item.color }}
-                        >
+                        <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}
                         </SelectItem>
@@ -183,10 +168,7 @@ function ListBrowser({
                   onClick={async () => {
                     if (!selected || !itemData) return;
 
-                    await itemsApi.addInventory(
-                      String(selected?.id),
-                      String(itemData.id),
-                    );
+                    await itemsApi.addInventory(String(selected?.id), String(itemData.id));
 
                     queryClient.invalidateQueries({
                       queryKey: ["inventoryTab", selected.id],
@@ -277,12 +259,8 @@ function ListBrowser({
               </span>
             </div>
             <div className="flex flex-col ml-2">
-              <span className="font-bold text-xl">
-                {highlightText(item.label, searchTerms)}
-              </span>
-              <span className="text-text/80">
-                {highlightText(item.description, searchTerms)}
-              </span>
+              <span className="font-bold text-xl">{highlightText(item.label, searchTerms)}</span>
+              <span className="text-text/80">{highlightText(item.description, searchTerms)}</span>
             </div>
             <div className="ml-auto mb-auto flex flex-row gap-1">
               <Button

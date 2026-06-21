@@ -49,7 +49,7 @@ function StoreTab() {
       const userMoney = await userApi.getUserScore(String(user?.id));
       if (userMoney < rerollPrice) return;
 
-      await userApi.scoreUser(String(user?.id), -rerollPrice);
+      const uid = String(user?.id);
 
       const randomSixItems = await itemsApi.getItems({ random: ITEMS_AMOUNT });
       const finalArray: StoreItem[] = [];
@@ -62,6 +62,7 @@ function StoreTab() {
         finalArray.push({ item, price, bought: false });
       }
 
+      await userApi.scoreUser(uid, -rerollPrice);
       setStoreItems(finalArray);
       setRerollPrice(rerollPrice * 2);
     },
@@ -76,11 +77,12 @@ function StoreTab() {
       price: number;
       index: number;
     }) => {
-      const userMoney = await userApi.getUserScore(String(user?.id));
+      const uid = String(user?.id);
+      const userMoney = await userApi.getUserScore(uid);
       if (userMoney < price) return;
 
-      await itemsApi.addInventory(String(user?.id), String(item.id));
-      await userApi.scoreUser(String(user?.id), -price);
+      await userApi.scoreUser(uid, -price);
+      await itemsApi.addInventory(uid, String(item.id));
 
       const activityData = {
         author: user?.id,
