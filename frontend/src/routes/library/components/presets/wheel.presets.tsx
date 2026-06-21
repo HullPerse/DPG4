@@ -27,7 +27,7 @@ export default function PresetsWheel({ id }: { id: string }) {
   const isSteamPreset = id === STEAM_PRESET_ID;
   const listRef = useRef<HTMLDivElement>(null);
 
-  const [hiddenGames, setHiddenGames] = useState<string[]>([]);
+  const [hiddenGames, setHiddenGames] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<GameData | null>(null);
 
   const [time, setTime] = useState<string | null>(null);
@@ -137,14 +137,14 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
-  const visibleGames = data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
+  const visibleGames = data?.games.filter((game) => !hiddenGames.has(String(game.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenGames.join(",")}
+          key={[...hiddenGames].join(",")}
           list={visibleGames.map((game) => ({
             id: String(game.id),
             label: game.name,
@@ -236,7 +236,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                 position: "absolute",
                 transform: `translateY(${virtualItem.start}px)`,
                 width: "99%",
-                opacity: hiddenGames.find((h) => h === String(item.id)) && "50%",
+                opacity: hiddenGames.has(String(item.id)) ? "50%" : undefined,
               }}
               data-index={virtualItem.index}
               ref={virtualizer.measureElement}
@@ -271,15 +271,14 @@ export default function PresetsWheel({ id }: { id: string }) {
                 <Button
                   size="icon"
                   onClick={() => {
-                    const existingGame =
-                      hiddenGames.filter((h) => h === String(item.id)).length > 0;
-
-                    if (!existingGame) return setHiddenGames([...hiddenGames, String(item.id)]);
-
-                    return setHiddenGames(hiddenGames.filter((h) => h !== String(item.id)));
+                    const next = new Set(hiddenGames);
+                    const id = String(item.id);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    setHiddenGames(next);
                   }}
                 >
-                  {hiddenGames.find((h) => h === String(item.id)) ? (
+                  {hiddenGames.has(String(item.id)) ? (
                     <EyeIcon size={20} />
                   ) : (
                     <EyeOffIcon size={20} />

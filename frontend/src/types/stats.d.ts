@@ -1,4 +1,4 @@
-export type UserStatsProfile = {
+type UserStatsProfile = {
   accountAge: number;
   totalMoney: number;
   position: number;
@@ -94,7 +94,7 @@ export type BetDistribution = {
   count: number;
 };
 
-export type StatsSummary = {
+type StatsSummary = {
   totalPlayed: number;
   totalWagered: number;
   totalNet: number;

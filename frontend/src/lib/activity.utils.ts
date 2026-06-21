@@ -25,7 +25,7 @@ function showActivityToast(activity: Activity) {
   useToastStore.getState().addToast(activity);
 }
 
-export async function initActivitySubscription() {
+async function initActivitySubscription() {
   if (activityUnsub) return;
 
   try {
@@ -46,12 +46,12 @@ export async function initActivitySubscription() {
   });
 }
 
-export function cleanupActivitySubscription() {
+function cleanupActivitySubscription() {
   activityUnsub?.();
   activityUnsub = null;
 }
 
-export async function initChatSubscription() {
+async function initChatSubscription() {
   if (chatUnsub) return;
 
   chatUnsub = subscribeWsChannel("chats", (data) => {
@@ -94,7 +94,7 @@ export async function initChatSubscription() {
   });
 }
 
-export function cleanupChatSubscription() {
+function cleanupChatSubscription() {
   chatUnsub?.();
   chatUnsub = null;
 }

@@ -48,7 +48,7 @@ function CellComponent({
   const statusesPerPage = 5;
 
   const color = cellsConfig.difficulty.find(
-    (item) => item.label === cell.difficulty && !["start", "finish"].includes(cell.type),
+    (item) => item.label === cell.difficulty && cell.type !== "start" && cell.type !== "finish",
   )?.color;
 
   const textColor = (type: CellType["type"]) => {
@@ -142,7 +142,7 @@ function CellComponent({
 
             <div className="flex flex-row gap-1">
               {/* ladders and snakes */}
-              {["icons", "all"].includes(arrowType) && (cell.snakeTo > 0 || cell.ladderTo > 0) && (
+              {(arrowType === "icons" || arrowType === "all") && (cell.snakeTo > 0 || cell.ladderTo > 0) && (
                 <div className="flex h-6 w-6 items-center justify-center rounded border border-highlight-high bg-background">
                   {getCellArrows(cell.ladderTo > 0 ? cell.ladderTo : cell.snakeTo)}
                 </div>
@@ -290,7 +290,7 @@ function CellComponent({
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             Клетка:{" "}
-            {["start", "finish"].includes(cell.type) ? translateCell(cell.type) : cell.number}
+            {cell.type === "start" || cell.type === "finish" ? translateCell(cell.type) : cell.number}
           </DialogTitle>
         </DialogHeader>
         <Settings cell={cell} setOpen={setOpen} />

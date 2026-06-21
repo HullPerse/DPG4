@@ -1,6 +1,6 @@
 export const MINE_COUNT_OPTIONS = [1, 2, 3, 5, 8, 10];
 
-export function computeMultiplier(mineCount: number, revealedCount: number): number {
+export function computeMinesMultiplier(mineCount: number, revealedCount: number): number {
   const GRID = 5;
   const HOUSE_EDGE = 0.97;
   if (revealedCount === 0) return 1;

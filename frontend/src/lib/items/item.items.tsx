@@ -43,7 +43,7 @@ const userApi = new UserApi();
 const gameApi = new GameApi();
 const itemsApi = new ItemsApi();
 
-const ratIds: string[] = [
+const ratIds = new Set([
   "Восьмибитная Крыса",
   "Добрая крыса",
   "Запаянный Крысиный Сундук",
@@ -76,9 +76,9 @@ const ratIds: string[] = [
   "Крысиный анус",
   "Квакающая Крыса",
   "Крысиный потоп",
-];
+]);
 
-const pigIds = [
+const pigIds = new Set([
   "Подброшенная свинья",
   "Хрюкающая свинья",
   "Ебануто живучая свинья",
@@ -91,9 +91,9 @@ const pigIds = [
   "СпецСвин",
   "Свинство",
   "Свинский Сектор Приз",
-];
+]);
 
-const gremlinIds = ["Гремлин", "Гремлинизатор", "Гремлинская залупа"];
+const gremlinIds = new Set(["Гремлин", "Гремлинизатор", "Гремлинская залупа"]);
 
 export const itemEffect: effectInterface[] = [
   //EFFECTS
@@ -2725,7 +2725,7 @@ export const itemEffect: effectInterface[] = [
           queryFn: async () => {
             const allItems = await itemsApi
               .getAllItems()
-              .then((res) => res.filter((i) => ratIds.includes(String(i.label))));
+              .then((res) => res.filter((i) => ratIds.has(i.label)));
 
             return allItems;
           },
@@ -2897,9 +2897,9 @@ export const itemEffect: effectInterface[] = [
                 .filter((i) => i.label !== "Волшебный Крысиный Дождь")
                 .filter(
                   (i) =>
-                    ratIds.includes(i.label) ||
-                    pigIds.includes(i.label) ||
-                    gremlinIds.includes(i.label),
+                    ratIds.has(i.label) ||
+                    pigIds.has(i.label) ||
+                    gremlinIds.has(i.label),
                 ),
               users: allUsers,
             };
@@ -3001,7 +3001,7 @@ export const itemEffect: effectInterface[] = [
 
         return (
           <main className="flex flex-col gap-2">
-            <span>Подсказка: крысиных предметов где-то между 0 и {ratIds.length}</span>
+            <span>Подсказка: крысиных предметов где-то между 0 и {ratIds.size}</span>
 
             {input.map((val, index) => (
               <label key={index} className="flex flex-col gap-1">
@@ -3050,7 +3050,7 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!input || input.length < 13) return;
 
-                  const ratSuccess = input.filter((v) => ratIds.includes(v)).length ?? 0;
+                  const ratSuccess = input.filter((v) => ratIds.has(v)).length ?? 0;
 
                   await userApi.scoreUser(ctx.user.id, ratSuccess);
 

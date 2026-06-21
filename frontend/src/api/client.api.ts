@@ -18,7 +18,7 @@ export function setToken(token: string | null) {
 
 const DEFAULT_TIMEOUT_MS = 5000;
 
-export async function fetchWithTimeout(
+async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
   timeoutMs = DEFAULT_TIMEOUT_MS,

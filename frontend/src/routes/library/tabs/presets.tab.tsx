@@ -10,7 +10,7 @@ import {
 import { memo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
-import { useDebounce } from "@/hooks/debounce.hook";
+import { useDebounce } from "@uidotdev/usehooks";
 import { useUserStore } from "@/store/user.store";
 
 import PresetsList from "../components/presets/presets.presets";

@@ -86,9 +86,9 @@ function SelectContent({
           )}
           {...props}
         >
-          <SelectScrollUpButton />
+          <_SelectScrollUpButton />
           <SelectPrimitive.List>{children}</SelectPrimitive.List>
-          <SelectScrollDownButton />
+          <_SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>
@@ -119,7 +119,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
   );
 }
 
-function SelectScrollUpButton({
+function _SelectScrollUpButton({
   className,
   ...props
 }: ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
@@ -137,7 +137,7 @@ function SelectScrollUpButton({
   );
 }
 
-function SelectScrollDownButton({
+function _SelectScrollDownButton({
   className,
   ...props
 }: ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
@@ -160,8 +160,6 @@ export {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
   SelectTrigger,
   SelectValue,
 };

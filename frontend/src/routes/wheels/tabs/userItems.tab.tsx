@@ -29,7 +29,7 @@ function UserItems({
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Inventory | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -80,13 +80,13 @@ function UserItems({
   };
 
   const visibleItems =
-    data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+    data?.items.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${selected}-${hiddenItems.join(",")}`}
+          key={`wheel-${selected}-${[...hiddenItems].join(",")}`}
           list={visibleItems
             .filter((item) =>
               selected === 0
@@ -154,7 +154,7 @@ function UserItems({
               className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
               style={{
                 opacity:
-                  hiddenItems.find((h) => h === String(item.id)) && "50%",
+                  hiddenItems.has(String(item.id)) ? "50%" : undefined,
               }}
             >
               <ImageComponent
@@ -171,19 +171,14 @@ function UserItems({
                 <Button
                   size="icon"
                   onClick={() => {
-                    const existingGame =
-                      hiddenItems.filter((h) => h === String(item.id)).length >
-                      0;
-
-                    if (!existingGame)
-                      return setHiddenItems([...hiddenItems, String(item.id)]);
-
-                    return setHiddenItems(
-                      hiddenItems.filter((h) => h !== String(item.id)),
-                    );
+                    const next = new Set(hiddenItems);
+                    const id = String(item.id);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    setHiddenItems(next);
                   }}
                 >
-                  {hiddenItems.find((h) => h === String(item.id)) ? (
+                  {hiddenItems.has(String(item.id)) ? (
                     <EyeIcon size={20} />
                   ) : (
                     <EyeOffIcon size={20} />

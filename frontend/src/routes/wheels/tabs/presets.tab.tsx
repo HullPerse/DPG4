@@ -15,7 +15,7 @@ const gameApi = new GameApi();
 function PresetsWheel() {
   const queryClient = useQueryClient();
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsWheel"],
@@ -51,14 +51,14 @@ function PresetsWheel() {
     );
 
   const visibleItems =
-    data?.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+    data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
+          key={[...hiddenItems].join(",")}
           list={visibleItems.map((preset) => ({
             id: String(preset.id),
             label: preset.label,
@@ -80,7 +80,7 @@ function PresetsWheel() {
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
               opacity:
-                hiddenItems.find((h) => h === String(preset.id)) && "50%",
+                hiddenItems.has(String(preset.id)) ? "50%" : undefined,
             }}
           >
             <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
@@ -105,19 +105,14 @@ function PresetsWheel() {
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(preset.id)).length >
-                    0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(preset.id)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(preset.id)),
-                  );
+                  const next = new Set(hiddenItems);
+                  const id = String(preset.id);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(preset.id)) ? (
+                {hiddenItems.has(String(preset.id)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

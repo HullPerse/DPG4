@@ -51,7 +51,7 @@ function UserGames({
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Game | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -138,14 +138,14 @@ function UserGames({
   };
 
   const visibleItems =
-    data?.games.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+    data?.games.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${selected}-${selectedFilter}-${hiddenItems.join(",")}`}
+          key={`wheel-${selected}-${selectedFilter}-${[...hiddenItems].join(",")}`}
           list={visibleItems.map((item) => ({
             id: String(item.id),
             label: item.data.name,
@@ -203,7 +203,7 @@ function UserGames({
             key={item.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity: hiddenItems.find((h) => h === String(item.id)) && "50%",
+              opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
             }}
           >
             <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
@@ -220,18 +220,14 @@ function UserGames({
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(item.id)).length > 0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(item.id)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(item.id)),
-                  );
+                  const next = new Set(hiddenItems);
+                  const id = String(item.id);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(item.id)) ? (
+                {hiddenItems.has(String(item.id)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

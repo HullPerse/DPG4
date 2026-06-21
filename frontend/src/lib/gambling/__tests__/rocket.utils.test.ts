@@ -4,7 +4,6 @@ import {
   multiplierColor,
   elapsedFromMultiplier,
   isActivePhase,
-  getRocketResultColor,
   formatRocketResultLabel,
   potentialPayout,
   potentialNet,
@@ -95,28 +94,6 @@ describe("isActivePhase", () => {
 
   it("returns false for crashed", () => {
     expect(isActivePhase("crashed")).toBe(false);
-  });
-});
-
-describe("getRocketResultColor", () => {
-  it("returns empty for null", () => {
-    expect(getRocketResultColor(null)).toBe("");
-  });
-
-  it("returns amber for jackpot", () => {
-    expect(getRocketResultColor({ net: 100, label: "Jackpot", tone: "jackpot" })).toBe("text-amber-400");
-  });
-
-  it("returns emerald for positive net", () => {
-    expect(getRocketResultColor({ net: 50, label: "Win", tone: "win" })).toBe("text-emerald-400");
-  });
-
-  it("returns red for negative net", () => {
-    expect(getRocketResultColor({ net: -10, label: "Lose", tone: "lose" })).toBe("text-red-400");
-  });
-
-  it("returns muted for zero net", () => {
-    expect(getRocketResultColor({ net: 0, label: "Push", tone: "" })).toBe("text-muted");
   });
 });
 

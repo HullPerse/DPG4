@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { Input } from "@/components/ui/input.component";
-import { useDebounce } from "@/hooks/debounce.hook";
+import { useDebounce } from "@uidotdev/usehooks";
 import { Button } from "@/components/ui/button.component";
 import { Battery, Calendar, ChevronDown, ChevronLeft, Hash, Section } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";

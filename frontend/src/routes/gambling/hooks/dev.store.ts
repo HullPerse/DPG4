@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
-export interface DiceDevState {
+interface DiceDevState {
   enabled: boolean;
   devForceBreak: boolean;
   devForceBreakDieIndex: number;
@@ -9,7 +9,7 @@ export interface DiceDevState {
   devForcePlayerValues: [number, number, number] | null;
 }
 
-export interface BlackjackDevState {
+interface BlackjackDevState {
   enabled: boolean;
   devForceDealerCards: string | null;
   devForcePlayerCards: string | null;
@@ -17,25 +17,25 @@ export interface BlackjackDevState {
   devPeekHole: boolean;
 }
 
-export interface RocketDevState {
+interface RocketDevState {
   enabled: boolean;
   devForceCrashPoint: number | null;
   devShowCrashPoint: boolean;
 }
 
-export interface PachinkoDevState {
+interface PachinkoDevState {
   enabled: boolean;
   devForceSlots: string | null;
   devShowMultipliers: boolean;
 }
 
-export interface MinesDevState {
+interface MinesDevState {
   enabled: boolean;
   devShowMines: boolean;
   devForceAllSafe: boolean;
 }
 
-export interface JackpotDevState {
+interface JackpotDevState {
   enabled: boolean;
   devForceWin: boolean;
   devShowWinningNumber: boolean;

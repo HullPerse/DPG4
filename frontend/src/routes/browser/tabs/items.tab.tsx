@@ -37,7 +37,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Item | null>(null);
   const [itemData, setItemData] = useState<Item | null>(null);
   const [selected, setSelected] = useState<User | null>(user ? user : null);
@@ -98,7 +98,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const visibleItems = data.items.filter((item) => !hiddenItems.includes(String(item.id)));
+  const visibleItems = data.items.filter((item) => !hiddenItems.has(String(item.id)));
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -190,7 +190,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
+          key={[...hiddenItems].join(",")}
           list={visibleItems.map((item) => ({
             id: String(item.id),
             label: item.label,
@@ -269,7 +269,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 className="absolute top-0 left-0 flex flex-row w-full h-32 max-h-32 min-h-32 p-2 border-2 border-highlight-high items-center bg-card"
                 style={{
                   transform: `translateY(${virtualItem.start}px)`,
-                  opacity: hiddenItems.includes(String(item.id)) ? "50%" : undefined,
+                  opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
                 }}
               >
                 <div className="flex flex-col gap-1">
@@ -301,15 +301,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   <Button
                     size="icon"
                     onClick={() => {
-                      const existingGame =
-                        hiddenItems.filter((h) => h === String(item.id)).length > 0;
-
-                      if (!existingGame) return setHiddenItems([...hiddenItems, String(item.id)]);
-
-                      return setHiddenItems(hiddenItems.filter((h) => h !== String(item.id)));
+                      const next = new Set(hiddenItems);
+                      const id = String(item.id);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      setHiddenItems(next);
                     }}
                   >
-                    {hiddenItems.includes(String(item.id)) ? (
+                    {hiddenItems.has(String(item.id)) ? (
                       <EyeIcon size={20} />
                     ) : (
                       <EyeOffIcon size={20} />

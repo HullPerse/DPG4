@@ -1,5 +1,3 @@
-import type { RiskGateChoice } from "@/types/gamble";
-
 export const PACHINKO_SLOT_MULTIPLIERS = [
   5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5,
 ] as const;
@@ -55,44 +53,18 @@ export function slotColor(mult: number): string {
   return "#eb6f92";
 }
 
-export function slotIndexColor(i: number): string {
-  return slotColor(PACHINKO_SLOT_MULTIPLIERS[i]);
-}
-
 export type PachinkoUiResult = {
   net: number;
   label: string;
   tone: "jackpot" | "win" | "lose" | "chance";
 };
 
-export function formatPachinkoResultLabel(label: string, _net: number): string {
-  return _net >= 0 ? label : label;
-}
-
 export function randomDropOffsetX(): number {
   return (Math.random() - 0.5) * 0.75;
 }
 
-export function getSideMultiplier(_bid: number, side: "left" | "right" | null, choice: RiskGateChoice): number[] {
-  if (!side || !choice) return [...PACHINKO_SLOT_MULTIPLIERS] as unknown as number[];
-  const boosted = [...PACHINKO_SLOT_MULTIPLIERS] as number[];
-  const sideIndex = side === "left" ? 0 : 1;
-  const isChosen = (side === "left" && choice === "left") || (side === "right" && choice === "right");
-
-  if (isChosen) {
-    for (let i = 0; i < boosted.length; i++) {
-      boosted[i] = Math.round((boosted[i] + 1) * 10) / 10;
-    }
-  } else {
-    const trapIdx = sideIndex === 0 ? 0 : boosted.length - 1;
-    boosted[trapIdx] = 0;
-  }
-  return boosted;
-}
-
 export const RISK_GATE_THRESHOLD = 3;
 
-export let zaText = "";
 let zaInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startZawa(callback: (text: string) => void) {

@@ -79,7 +79,7 @@ export default function Controls({
 
   const cellId = () => {
     if (!cell) return "Действия";
-    if (["start", "finish"].includes(String(data?.cell.type)))
+    if (data?.cell.type === "start" || data?.cell.type === "finish")
       return translateCell(String(data?.cell.type));
     return `Клетка: ${data?.cell.number}`;
   };

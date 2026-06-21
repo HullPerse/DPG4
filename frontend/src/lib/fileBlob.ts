@@ -1,4 +1,4 @@
-export async function fileToBase64(
+async function fileToBase64(
   file: File,
 ): Promise<{ base64: string; mime: string }> {
   const buffer = await file.arrayBuffer();

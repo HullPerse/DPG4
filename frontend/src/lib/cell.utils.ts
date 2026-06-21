@@ -5,11 +5,13 @@ export function getCellClass() {
   return cellClass;
 }
 
+const START_FINISH = new Set(["start", "finish"]);
+
 export function translateCell(
   type: "start" | "finish" | string,
   number?: number,
 ) {
-  if (!["start", "finish"].includes(type)) return number;
+  if (!START_FINISH.has(type)) return number;
 
   const cellMap = {
     start: "СТАРТ",
@@ -29,7 +31,7 @@ export interface Point {
   y: number;
 }
 
-export function getGridPosition(cellNumber: number): {
+function getGridPosition(cellNumber: number): {
   row: number;
   col: number;
 } {

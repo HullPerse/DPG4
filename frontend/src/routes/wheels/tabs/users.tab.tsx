@@ -14,7 +14,7 @@ const userApi = new UserApi();
 function UsersWheel() {
   const queryClient = useQueryClient();
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["usersWheel"],
@@ -50,14 +50,14 @@ function UsersWheel() {
     );
 
   const visibleItems =
-    data?.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+    data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
+          key={[...hiddenItems].join(",")}
           list={visibleItems.map((user) => ({
             id: String(user.id),
             label: user.username,
@@ -75,7 +75,7 @@ function UsersWheel() {
             key={user.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity: hiddenItems.find((h) => h === String(user.id)) && "50%",
+              opacity: hiddenItems.has(String(user.id)) ? "50%" : undefined,
             }}
           >
             <span className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background ">
@@ -89,18 +89,14 @@ function UsersWheel() {
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(user.id)).length > 0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(user.id)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(user.id)),
-                  );
+                  const next = new Set(hiddenItems);
+                  const id = String(user.id);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(user.id)) ? (
+                {hiddenItems.has(String(user.id)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

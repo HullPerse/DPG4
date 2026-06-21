@@ -47,7 +47,7 @@ function WordleTab() {
     enabled: !!user?.id,
   });
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Set<string>>(new Set());
   const [letters, setLetters] = useState<Set<string>>(new Set([" ", "-"]));
   const [status, setStatus] = useState<"playing" | "won" | "lost">("playing");
 
@@ -60,9 +60,8 @@ function WordleTab() {
   const maxErrors = 6 + Math.max(0, Math.ceil((word.length - 6) / 2));
 
   const guessedRef = useRef(letters);
-  const wrongRef = useRef(errors);
+  const wrongRef = useRef<string[]>([]);
   guessedRef.current = letters;
-  wrongRef.current = errors;
 
   useEffect(() => {
     if (!data?.word) return;
@@ -74,14 +73,14 @@ function WordleTab() {
     if (!data?.word) return;
     if (data?.word.guessedLetters?.length || data?.word.wrongLetters?.length) {
       setLetters(new Set([" ", "-", ...(data?.word.guessedLetters ?? [])]));
-      setErrors(data?.word.wrongLetters);
+      setErrors(new Set(data?.word.wrongLetters ?? []));
     }
   }, [data?.word]);
 
   useEffect(() => {
     return () => {
       if (status === "playing" && user?.id) {
-        saveHangmanState(user.id, [...guessedRef.current], wrongRef.current);
+        saveHangmanState(user.id, [...guessedRef.current], [...errors]);
       }
     };
   }, []);
@@ -103,7 +102,7 @@ function WordleTab() {
 
       if (!uid) return;
 
-      await playHangman(uid, won, [...guessedRef.current], wrongRef.current);
+      await playHangman(uid, won, [...guessedRef.current], [...wrongRef.current]);
       if (won) await userApi.scoreUser(uid, 5);
       await userApi.changeHangman(uid, true);
     },
@@ -121,7 +120,7 @@ function WordleTab() {
 
       if (
         guessedRef.current.has(upperCase) ||
-        wrongRef.current.includes(upperCase)
+        errors.has(upperCase)
       )
         return;
 
@@ -146,19 +145,19 @@ function WordleTab() {
           playMutation.mutate({ won: true });
         }
       } else {
-        const next = [...wrongRef.current, upperCase];
-
-        wrongRef.current = next;
+        const next = new Set(errors);
+        next.add(upperCase);
+        wrongRef.current = [...next];
         setErrors(next);
 
         const updated = await saveHangmanState(
           user!.id,
           [...guessedRef.current],
-          next,
+          [...next],
         );
         queryClient.setQueryData(["hangman", user!.id], updated);
 
-        if (next.length >= maxErrors) {
+        if (next.size >= maxErrors) {
           setStatus("lost");
           playMutation.mutate({ won: false });
         }
@@ -223,12 +222,12 @@ function WordleTab() {
       <section className="flex flex-row items-center justify-between p-1 text-sm text-muted">
         <span>Побед: {isNaN(streak) ? 0 : streak}</span>
         <span>
-          Ошибок: {errors.length}/{maxErrors}
+          Ошибок: {errors.size}/{maxErrors}
         </span>
       </section>
       {/* HANGMAN */}
       <section className="flex flex-1 items-center justify-center bg-background border-2 border-highlight-high">
-        <HangMan wrongLetters={errors} />
+        <HangMan wrongLetters={[...errors]} />
       </section>
       {/* WORD */}
       <section className="text-center text-2xl font-bold tracking-widest">
@@ -243,7 +242,7 @@ function WordleTab() {
             <div className="flex flex-row gap-2">
               {lettersWithDigits().digits.map((digit) => {
                 const isCorrect = letters.has(digit);
-                const isWrong = errors.includes(digit);
+                const isWrong = errors.has(digit);
                 const isUsed = isCorrect || isWrong;
                 return (
                   <Button
@@ -264,7 +263,7 @@ function WordleTab() {
               {lettersWithDigits().letters.map((letter) => {
                 const upper = letter.toUpperCase();
                 const isCorrect = letters.has(upper);
-                const isWrong = errors.includes(upper);
+                const isWrong = errors.has(upper);
                 const isUsed = isCorrect || isWrong;
                 return (
                   <Button

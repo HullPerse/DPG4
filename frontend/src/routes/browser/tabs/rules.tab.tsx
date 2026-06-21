@@ -46,7 +46,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
 
   const categories = useMemo(() => {
     if (!data?.category) return [];
-    return data.category.filter((v, i, a) => a.indexOf(v) === i);
+    return [...new Set(data.category)];
   }, [data?.category]);
 
   if (isLoading) return <WindowLoader />;

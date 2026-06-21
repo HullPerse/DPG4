@@ -22,7 +22,7 @@ import { MINES_GRID } from "@/lib/gambling/gamble.constants";
 import {
   MINE_COUNT_OPTIONS,
   formatMultiplier,
-  computeMultiplier,
+  computeMinesMultiplier,
 } from "@/lib/gambling/mines.utils";
 import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
 import { BalanceDisplay } from "../components/balance.component";
@@ -184,7 +184,7 @@ function MinesTab() {
           >
             <span>{v}</span>
             <span className="text-[10px] opacity-60">
-              {formatMultiplier(computeMultiplier(v, 1))}
+              {formatMultiplier(computeMinesMultiplier(v, 1))}
             </span>
           </button>
         ))}
