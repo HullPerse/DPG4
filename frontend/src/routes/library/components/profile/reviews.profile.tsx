@@ -1,6 +1,6 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
@@ -31,7 +31,7 @@ export default function ReviewsProfile({ id }: { id: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
 
   if (isLoading || isFetching) return <WindowLoader />;
   if (isError)
@@ -48,9 +48,7 @@ export default function ReviewsProfile({ id }: { id: string }) {
     <main className="flex flex-col w-full overflow-y-auto p-4 gap-4 pb-15">
       {data?.games.map((game) => (
         <div key={game.id} className="flex flex-col">
-          <p className="font-bold text-xl">
-            {new Date(game.created).toLocaleDateString()}
-          </p>
+          <p className="font-bold text-xl">{new Date(game.created).toLocaleDateString()}</p>
           <ReviewComponent
             id={String(game.id)}
             title={game.data.name}

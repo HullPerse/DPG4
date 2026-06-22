@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import QuestsApi from "@/api/quests.api";
 import ItemsApi from "@/api/items.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
@@ -45,7 +45,7 @@ function QuestsTab() {
     },
   });
 
-  useSubscription("quests", "*", () => {
+  useSubscription("quests", () => {
     queryClient.invalidateQueries({ queryKey: ["quests"] });
   });
 

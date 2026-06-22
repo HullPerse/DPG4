@@ -1,21 +1,8 @@
 import { useUserStore } from "@/store/user.store";
 import { Button } from "@/components/ui/button.component";
-import {
-  useCallback,
-  useState,
-  useRef,
-  useEffect,
-  memo,
-  lazy,
-  Suspense,
-} from "react";
+import { useCallback, useState, useRef, useEffect, memo, lazy, Suspense } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  startMines,
-  revealMines,
-  cashoutMines,
-  abortMines,
-} from "@/api/gambling.api";
+import { startMines, revealMines, cashoutMines, abortMines } from "@/api/gambling.api";
 const MinesScene = lazy(() => import("../components/scenes/scene.mines"));
 import type { MinesState } from "@/types/gamble";
 import { MINES_GRID } from "@/lib/gambling/gamble.constants";
@@ -24,7 +11,7 @@ import {
   formatMultiplier,
   computeMinesMultiplier,
 } from "@/lib/gambling/mines.utils";
-import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { useBidOptions, useGamblingStore } from "@/hooks/index.hook";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
@@ -36,9 +23,7 @@ const IDLE_STATE: MinesState = {
   y: -1,
   isMine: false,
   currentMultiplier: 1,
-  revealed: Array.from({ length: MINES_GRID }, () =>
-    Array(MINES_GRID).fill(false),
-  ),
+  revealed: Array.from({ length: MINES_GRID }, () => Array(MINES_GRID).fill(false)),
   payout: 0,
   net: 0,
   label: "",
@@ -48,8 +33,7 @@ const IDLE_STATE: MinesState = {
 };
 
 function MinesTab() {
-  const { balance, ticketBalance, gamblingBanned, setGamblingBanned } =
-    useGamblingStore();
+  const { balance, ticketBalance, gamblingBanned, setGamblingBanned } = useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [gameState, setGameState] = useState<MinesState>(IDLE_STATE);
@@ -81,12 +65,13 @@ function MinesTab() {
   });
 
   const revealMutation = useMutation({
-    mutationFn: ({ x, y }: { x: number; y: number }) =>
-      revealMines(x, y, getOverrides("mines")),
+    mutationFn: ({ x, y }: { x: number; y: number }) => revealMines(x, y, getOverrides("mines")),
     onSuccess: (state) => {
       setGameState(state);
       if (state.phase === "lost") {
-        useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
+        useUserStore.setState({
+          user: { ...useUserStore.getState().user!, tickets: state.balance },
+        });
         setResult({ net: state.net, label: state.label, tone: state.tone });
       }
     },
@@ -145,9 +130,7 @@ function MinesTab() {
         <GameResult result={result} />
         {!gameStarted && !result && (
           <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-            <p className="text-muted text-sm font-mono tracking-widest">
-              Минное поле
-            </p>
+            <p className="text-muted text-sm font-mono tracking-widest">Минное поле</p>
           </div>
         )}
         {gameStarted && !gameOver && !cashoutMutation.isPending && (
@@ -159,12 +142,7 @@ function MinesTab() {
         )}
       </section>
 
-      <BidSelector
-        bidOptions={bidOptions}
-        bid={bid}
-        onBidChange={setBid}
-        disabled={gameStarted}
-      />
+      <BidSelector bidOptions={bidOptions} bid={bid} onBidChange={setBid} disabled={gameStarted} />
 
       <section className="flex w-xl items-center justify-center gap-1.5 border-2 border-highlight-high bg-background px-3 py-1.5">
         <span className="text-sm text-muted mr-1">Мин</span>

@@ -1,6 +1,6 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Game, GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Plus, Trash } from "lucide-react";
@@ -63,7 +63,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   const filteredGames = useMemo(() => {
     if (!data?.games) return [];
@@ -145,7 +145,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
 
   return (
     <main
-      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto"
+      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto pb-2"
       ref={listRef}
       style={{
         scrollBehavior: "smooth",

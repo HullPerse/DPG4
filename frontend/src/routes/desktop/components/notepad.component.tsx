@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button.component";
-import { useNotepad } from "@/hooks/notepad.hook";
+import { useNotepad } from "@/hooks/index.hook";
 import { X } from "lucide-react";
 
 export default function NotepadViewerDesktop({
@@ -15,15 +15,9 @@ export default function NotepadViewerDesktop({
       className="absolute right-12 bottom-2 z-50 flex flex-col border-2 border-highlight-high bg-card shadow-sharp w-80 h-72"
     >
       <section className="flex h-10 w-full flex-row items-center justify-between bg-background px-1 select-none border-b-2 border-highlight-high">
-        <span className=" flex item-center text-md font-bold line-clamp-1">
-          Блокнот
-        </span>
+        <span className=" flex item-center text-md font-bold line-clamp-1">Блокнот</span>
 
-        <Button
-          variant="ghost"
-          title="Закрыть"
-          onClick={() => setOpenNotepad(false)}
-        >
+        <Button variant="ghost" title="Закрыть" onClick={() => setOpenNotepad(false)}>
           <X />
         </Button>
       </section>

@@ -10,12 +10,10 @@ import {
   useMemo,
   ChangeEvent,
 } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Chat } from "@/types/chat";
 import ChatApi from "@/api/chat.api";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Send, X, Paperclip, Check } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
@@ -71,8 +69,8 @@ export default function ChatProfile({ id }: { id: string }) {
     });
   }, [queryClient, user?.id, id]);
 
-  useSubscription("users", "*", invalidateQuery);
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("users", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   useEffect(() => {
     if (!isLoading && !isFetching) {
@@ -121,8 +119,7 @@ export default function ChatProfile({ id }: { id: string }) {
   });
 
   const sendMutation = useMutation({
-    mutationFn: () =>
-      chatApi.sendMessage(String(user?.id), id, newMessage, image),
+    mutationFn: () => chatApi.sendMessage(String(user?.id), id, newMessage, image),
     onSuccess: () => {
       if (imageInputRef.current) imageInputRef.current.value = "";
       setNewMessage("");

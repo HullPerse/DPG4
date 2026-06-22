@@ -3,7 +3,7 @@ import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { useUserStore } from "@/store/user.store";
 import { Cell } from "@/types/cell";
 import { Inventory } from "@/types/items";
@@ -14,11 +14,7 @@ import { startTransition, useEffect, useCallback, useState } from "react";
 const cellApi = new CellApi();
 const itemsApi = new ItemsApi();
 
-export default function ShowCell({
-  setShowCell,
-}: {
-  setShowCell: (value: boolean) => void;
-}) {
+export default function ShowCell({ setShowCell }: { setShowCell: (value: boolean) => void }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
@@ -34,7 +30,10 @@ export default function ShowCell({
       if (!user?.position) return null;
       const cellData = await cellApi.getCellByNumber(Number(user?.position));
 
-      const inventoryData = await itemsApi.getInventories({ owner: String(user?.id), type: "roll" });
+      const inventoryData = await itemsApi.getInventories({
+        owner: String(user?.id),
+        type: "roll",
+      });
 
       return {
         cell: cellData,
@@ -60,8 +59,8 @@ export default function ShowCell({
     }
   }, [data?.inventory, currentItem]);
 
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("cells", "*", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("cells", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -110,10 +109,7 @@ export default function ShowCell({
             if (!value) return;
 
             return (
-              <div
-                key={key}
-                className="flex min-w-0 items-start justify-between gap-3"
-              >
+              <div key={key} className="flex min-w-0 items-start justify-between gap-3">
                 <span className="text-md shrink-0 font-mono">{key}:</span>
                 <span
                   className="text-md min-w-0 flex-1 text-right font-mono wrap-break-word text-muted"
@@ -131,8 +127,7 @@ export default function ShowCell({
             <>
               <div className="flex flex-row gap-1 border-b-2 border-highlight-high">
                 <span className="truncate h-fit">
-                  [{currentItem + 1}/{data.inventory.length}]{" "}
-                  {data.inventory[currentItem].label}
+                  [{currentItem + 1}/{data.inventory.length}] {data.inventory[currentItem].label}
                 </span>
                 <div className="flex flex-row ml-auto items-center">
                   <Button
@@ -163,9 +158,7 @@ export default function ShowCell({
               </span>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted">
-              Инвентарь пуст
-            </div>
+            <div className="flex items-center justify-center h-full text-muted">Инвентарь пуст</div>
           )}
         </section>
       )}

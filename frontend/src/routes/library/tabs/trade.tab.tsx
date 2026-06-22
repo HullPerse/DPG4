@@ -1,10 +1,8 @@
 import ItemsApi from "@/api/items.api";
 import UsersApi from "@/api/user.api";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { WindowLoader } from "@/components/shared/loader.component";
+import { useSubscription } from "@/hooks/index.hook";
 import { useUserStore } from "@/store/user.store";
 import { Inventory, Trade } from "@/types/items";
 import { User } from "@/types/user";
@@ -33,9 +31,7 @@ function TradeTab({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [currentUser, setCurrentUser] = useState<string>(
-    String(user?.username),
-  );
+  const [currentUser, setCurrentUser] = useState<string>(String(user?.username));
   const [selectedItems, setSelectedItems] = useState<{
     money: { owner: string; amount: number }[];
     items: { owner: string; items: string[] }[];
@@ -65,8 +61,8 @@ function TradeTab({ id }: { id: string }) {
     });
   }, [queryClient, id]);
 
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -85,22 +81,14 @@ function TradeTab({ id }: { id: string }) {
 
       const currentUser = {
         id: user?.id,
-        money:
-          selectedItems?.money?.find((m) => m.owner === user?.username)?.amount ??
-          0,
-        items:
-          selectedItems?.items?.find((i) => i.owner === user?.username)?.items ??
-          [],
+        money: selectedItems?.money?.find((m) => m.owner === user?.username)?.amount ?? 0,
+        items: selectedItems?.items?.find((i) => i.owner === user?.username)?.items ?? [],
       } as Trade;
 
       const otherUser = {
         id: data.user.id,
-        money:
-          selectedItems?.money?.find((m) => m.owner === data.user.username)
-            ?.amount ?? 0,
-        items:
-          selectedItems?.items?.find((i) => i.owner === data.user.username)
-            ?.items ?? [],
+        money: selectedItems?.money?.find((m) => m.owner === data.user.username)?.amount ?? 0,
+        items: selectedItems?.items?.find((i) => i.owner === data.user.username)?.items ?? [],
       } as Trade;
 
       return itemsApi.tradeInventory(currentUser, otherUser);
@@ -118,23 +106,15 @@ function TradeTab({ id }: { id: string }) {
         onClick={() => {
           if (!item) return;
 
-          const itemsOwner = (selectedItems?.items || []).find(
-            (i) => i.owner === currentUser,
-          );
+          const itemsOwner = (selectedItems?.items || []).find((i) => i.owner === currentUser);
 
           const existingItem = itemsOwner?.items.find((i) => i === item.id);
 
           if (existingItem) {
-            const filteredOwners = (selectedItems?.items || []).flatMap(
-              (ownerGroup) => {
-                const filteredItems = ownerGroup.items.filter(
-                  (it) => it !== item.id,
-                );
-                return filteredItems.length > 0
-                  ? [{ ...ownerGroup, items: filteredItems }]
-                  : [];
-              },
-            );
+            const filteredOwners = (selectedItems?.items || []).flatMap((ownerGroup) => {
+              const filteredItems = ownerGroup.items.filter((it) => it !== item.id);
+              return filteredItems.length > 0 ? [{ ...ownerGroup, items: filteredItems }] : [];
+            });
             const newValues = {
               ...selectedItems,
               items: filteredOwners,
@@ -145,9 +125,7 @@ function TradeTab({ id }: { id: string }) {
           const newValues = {
             ...selectedItems,
             items: [
-              ...(selectedItems?.items || []).filter(
-                (i) => i.owner !== currentUser,
-              ),
+              ...(selectedItems?.items || []).filter((i) => i.owner !== currentUser),
               {
                 owner: currentUser,
                 items: [...(itemsOwner?.items || []), item.id],
@@ -175,30 +153,21 @@ function TradeTab({ id }: { id: string }) {
           {item.charge}
         </span>
 
-        <span className="line-clamp-4 text-xs leading-tight">
-          {item.description}
-        </span>
+        <span className="line-clamp-4 text-xs leading-tight">{item.description}</span>
       </div>
     );
   };
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
-      <Select
-        value={currentUser}
-        onValueChange={(e) => setCurrentUser(e as string)}
-      >
+      <Select value={currentUser} onValueChange={(e) => setCurrentUser(e as string)}>
         <SelectTrigger className="w-full py-5">
           <SelectValue placeholder="Инвентарь" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             {[user, data?.user].map((user) => (
-              <SelectItem
-                key={user?.id}
-                value={user?.username}
-                style={{ color: user?.color }}
-              >
+              <SelectItem key={user?.id} value={user?.username} style={{ color: user?.color }}>
                 Инвентарь {user?.username}
               </SelectItem>
             ))}
@@ -210,9 +179,7 @@ function TradeTab({ id }: { id: string }) {
       <section
         className="flex flex-row w-full"
         hidden={
-          currentUser === user?.username
-            ? user?.money <= 0
-            : (data?.user.money as number) <= 0
+          currentUser === user?.username ? user?.money <= 0 : (data?.user.money as number) <= 0
         }
       >
         <Input
@@ -221,17 +188,12 @@ function TradeTab({ id }: { id: string }) {
           min={0}
           max={user?.username === currentUser ? user.money : data?.user.money}
           placeholder="Чубрики"
-          value={
-            selectedItems?.money?.find((m) => m.owner === currentUser)
-              ?.amount ?? ""
-          }
+          value={selectedItems?.money?.find((m) => m.owner === currentUser)?.amount ?? ""}
           onChange={(e) => {
             const newValues = {
               ...selectedItems,
               money: [
-                ...(selectedItems?.money || []).filter(
-                  (m) => m.owner !== currentUser,
-                ),
+                ...(selectedItems?.money || []).filter((m) => m.owner !== currentUser),
                 { owner: currentUser, amount: Number(e.target.value) },
               ],
             };

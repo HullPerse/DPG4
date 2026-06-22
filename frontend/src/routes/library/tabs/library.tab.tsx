@@ -6,7 +6,7 @@ import { memo, startTransition, useCallback, useMemo, useState } from "react";
 
 import GameApi from "@/api/games.api";
 import { Input } from "@/components/ui/input.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Button } from "@/components/ui/button.component";
 import NewGameLibrary from "../components/library/newGame.library";
 import GameLibrary from "../components/library/game.library";
@@ -40,8 +40,8 @@ function LibraryTab() {
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   const getNextGame = () => {
     if (!data) return "newGame";

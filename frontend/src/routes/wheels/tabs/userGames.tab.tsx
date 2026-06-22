@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import UserApi from "@/api/user.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
@@ -64,8 +64,7 @@ function UserGames({
         setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
       }
 
-      const status =
-        selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
+      const status = selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
 
       if (selected !== 0) {
         const user = users.find((u) => u.username === values[selected]);
@@ -99,8 +98,8 @@ function UserGames({
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -137,8 +136,7 @@ function UserGames({
     });
   };
 
-  const visibleItems =
-    data?.games.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
+  const visibleItems = data?.games.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -154,9 +152,7 @@ function UserGames({
           }))}
           onResult={(item) => {
             return setResult(
-              data?.games.find(
-                (game) => String(game.id) === String(item?.id),
-              ) as Game,
+              data?.games.find((game) => String(game.id) === String(item?.id)) as Game,
             );
           }}
           free
@@ -186,9 +182,7 @@ function UserGames({
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
-                onClick={() =>
-                  handleAddGame(String(result.id)).then(() => setResult(null))
-                }
+                onClick={() => handleAddGame(String(result.id)).then(() => setResult(null))}
               >
                 <Plus />
               </Button>

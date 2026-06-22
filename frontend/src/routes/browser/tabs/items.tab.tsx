@@ -2,7 +2,7 @@ import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { useUserStore } from "@/store/user.store";
 import { Item } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -70,9 +70,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("items", "*", invalidateQuery);
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("items", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   const listRef = useRef<HTMLDivElement>(null);
 

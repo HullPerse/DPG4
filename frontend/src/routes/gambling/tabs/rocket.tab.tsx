@@ -22,7 +22,7 @@ import {
   formatRocketResultLabel,
   type RocketUiResult,
 } from "@/lib/gambling/rocket.utils";
-import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { useBidOptions, useGamblingStore } from "@/hooks/index.hook";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";

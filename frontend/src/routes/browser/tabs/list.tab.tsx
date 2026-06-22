@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
@@ -84,8 +84,8 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
     });
   }, [queryClient, searchTerms, sortMethod, sortDirection]);
 
-  useSubscription("items", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("items", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   const filteredItems = data?.items ?? [];
 

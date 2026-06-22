@@ -3,24 +3,16 @@ import { Button } from "@/components/ui/button.component";
 import { useRef, useCallback, useState, memo, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
-import {
-  rollDiceDealer,
-  rerollDiceDealer,
-  rollDicePlayer,
-  abortDice,
-} from "@/api/gambling.api";
+import { rollDiceDealer, rerollDiceDealer, rollDicePlayer, abortDice } from "@/api/gambling.api";
 import DiceScene from "../components/scenes/scene.dice";
 import {
   DICE_SETTLE_HOLD_MS,
   DICE_REROLL_PAUSE_MS,
   DICE_PLAYER_AUTO_MS,
 } from "@/lib/gambling/dice.utils";
-import {
-  DiceRollCoordinator,
-  DiceRow,
-} from "@/lib/gambling/diceRollCoordinator";
+import { DiceRollCoordinator, DiceRow } from "@/lib/gambling/diceRollCoordinator";
 import { DiceDealerResult, DiceGameResult, DiceResult } from "@/types/gamble";
-import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { useBidOptions, useGamblingStore } from "@/hooks/index.hook";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
@@ -31,22 +23,15 @@ function pause(ms: number) {
 }
 
 function DiceTab() {
-  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
-    useGamblingStore();
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } = useGamblingStore();
   const bidOptions = useBidOptions();
 
   const [bid, setBid] = useState(3);
 
-  const [, setGamePhase] = useState<"idle" | "dealer" | "player" | "result">(
-    "idle",
-  );
+  const [, setGamePhase] = useState<"idle" | "dealer" | "player" | "result">("idle");
 
-  const [dealerValues, setDealerValues] = useState<
-    [number, number, number] | null
-  >(null);
-  const [playerValues, setPlayerValues] = useState<
-    [number, number, number] | null
-  >(null);
+  const [dealerValues, setDealerValues] = useState<[number, number, number] | null>(null);
+  const [playerValues, setPlayerValues] = useState<[number, number, number] | null>(null);
   const [result, setResult] = useState<DiceResult>(null);
 
   const [dealerThrowKey, setDealerThrowKey] = useState(0);
@@ -55,13 +40,9 @@ function DiceTab() {
   const [displayBalance, setDisplayBalance] = useState(user?.tickets ?? 0);
 
   const [dealerBroken, setDealerBroken] = useState(false);
-  const [dealerBrokenDieIndex, setDealerBrokenDieIndex] = useState<
-    number | undefined
-  >();
+  const [dealerBrokenDieIndex, setDealerBrokenDieIndex] = useState<number | undefined>();
   const [playerBroken, setPlayerBroken] = useState(false);
-  const [playerBrokenDieIndex, setPlayerBrokenDieIndex] = useState<
-    number | undefined
-  >();
+  const [playerBrokenDieIndex, setPlayerBrokenDieIndex] = useState<number | undefined>();
   const [brokenFlash, setBrokenFlash] = useState(false);
 
   const rollCoordinatorRef = useRef(new DiceRollCoordinator());
@@ -101,8 +82,7 @@ function DiceTab() {
     row: DiceRow,
     brokenInfo?: { broken?: boolean; brokenDieIndex?: number },
   ) => {
-    const nextKey =
-      row === "dealer" ? dealerKeyRef.current + 1 : playerKeyRef.current + 1;
+    const nextKey = row === "dealer" ? dealerKeyRef.current + 1 : playerKeyRef.current + 1;
 
     const settledPromise = rollCoordinatorRef.current.waitFor(row, nextKey);
 
@@ -219,8 +199,7 @@ function DiceTab() {
 
   const gameMutation = useMutation({
     mutationFn: async () => {
-      if (!user || (!isDiceDev && ticketBalance < bid) || gamblingBanned)
-        return;
+      if (!user || (!isDiceDev && ticketBalance < bid) || gamblingBanned) return;
 
       const round = ++roundIdRef.current;
       const overrides = getOverrides("dice");
@@ -260,7 +239,10 @@ function DiceTab() {
   return (
     <main className="flex h-full w-full flex-col items-center gap-2 p-2">
       {brokenFlash && (
-        <div className="fixed inset-0 z-40 pointer-events-none" style={{ background: 'rgba(255, 120, 0, 0.08)', transition: 'opacity 0.3s' }} />
+        <div
+          className="fixed inset-0 z-40 pointer-events-none"
+          style={{ background: "rgba(255, 120, 0, 0.08)", transition: "opacity 0.3s" }}
+        />
       )}
 
       <BalanceDisplay balance={balance} ticketBalance={displayBalance} />
@@ -306,19 +288,15 @@ function DiceTab() {
         </Button>
 
         <details className="w-xl border-2 border-highlight-high bg-background px-2 text-sm">
-          <summary className="cursor-pointer font-semibold text-muted select-none">
-            Правила
-          </summary>
+          <summary className="cursor-pointer font-semibold text-muted select-none">Правила</summary>
           <div className="mt-2 flex flex-col gap-2 pl-1">
             <p className="text-muted text-xs">
-              Игрок и дилер кидают по три кубика. Чья комбинация сильнее - тот
-              побеждает и забирает ставку с множителем. Если нет комбинации (3
-              разных числа, не 1·2·3 и не 4·5·6) - до 2 перебросов
+              Игрок и дилер кидают по три кубика. Чья комбинация сильнее - тот побеждает и забирает
+              ставку с множителем. Если нет комбинации (3 разных числа, не 1·2·3 и не 4·5·6) - до 2
+              перебросов
             </p>
             <div>
-              <span className="font-semibold text-primary">
-                Комбинации (сильнее → слабее):
-              </span>
+              <span className="font-semibold text-primary">Комбинации (сильнее → слабее):</span>
               <ul className="flex flex-col gap-0.5 pl-2">
                 <li className="flex justify-between">
                   <span>1·1·1</span>
@@ -343,8 +321,8 @@ function DiceTab() {
               </ul>
             </div>
             <p className="text-muted text-xs">
-              При одинаковых комбинациях сравнивается число (у пары и тройки).
-              Если всё равно - ничья.
+              При одинаковых комбинациях сравнивается число (у пары и тройки). Если всё равно -
+              ничья.
             </p>
           </div>
         </details>

@@ -18,6 +18,7 @@ import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -54,6 +55,7 @@ export default function SteamLibrary({
 }) {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
+  const noAction = useDataStore((state) => state.noAction);
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [appId, setAppId] = useState(existingId ?? "");
@@ -97,7 +99,7 @@ export default function SteamLibrary({
       if (currentType === "library") {
         const res = await gameApi.addGame(gameData);
         setCurrentGame(String(res.id));
-        await userApi.changeUserAction(String(user.id), "GAMEFINISH");
+        await userApi.changeUserAction(String(user.id), "GAMEFINISH", noAction);
         return;
       }
 

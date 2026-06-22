@@ -1,12 +1,5 @@
 import { PaintType, ToolType } from "@/types/paint";
-import {
-  ReactNode,
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ReactNode, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import {
   Brush,
   ChevronLeft,
@@ -22,11 +15,9 @@ import {
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import PaintApi from "@/api/paint.api";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Input } from "@/components/ui/input.component";
 import {
@@ -40,9 +31,7 @@ import ImageComponent from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { lockCursor } from "@/lib/cursor.utils";
-import DrawingCanvas, {
-  type DrawingCanvasHandle,
-} from "@/components/shared/canvas.component";
+import DrawingCanvas, { type DrawingCanvasHandle } from "@/components/shared/canvas.component";
 
 const Tools: { value: ToolType; label: string; icon: ReactNode }[] = [
   { value: "brush", label: "Карандаш", icon: <Brush /> },
@@ -55,11 +44,7 @@ const Tools: { value: ToolType; label: string; icon: ReactNode }[] = [
 
 const paintApi = new PaintApi();
 
-function DrawPaint({
-  setTab,
-}: {
-  setTab: (value: "home" | "draw" | "list" | "profile") => void;
-}) {
+function DrawPaint({ setTab }: { setTab: (value: "home" | "draw" | "list" | "profile") => void }) {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
@@ -96,7 +81,7 @@ function DrawPaint({
     });
   }, [queryClient]);
 
-  useSubscription("drawings", "*", invalidateQuery);
+  useSubscription("drawings", invalidateQuery);
 
   const handleSelect = useCallback(
     async (drawingId: string | null) => {
@@ -104,9 +89,7 @@ function DrawPaint({
       const drawing = data?.find((d) => d.id === drawingId);
       if (!drawing) return;
       setSelectedId(drawingId);
-      await canvasRef.current?.loadImage(
-        `${getFileUrl(drawing)}`,
-      );
+      await canvasRef.current?.loadImage(`${getFileUrl(drawing)}`);
     },
     [data],
   );
@@ -171,8 +154,7 @@ function DrawPaint({
       setSize((s) => Math.max(1, Math.min(100, s - Math.sign(e.deltaY))));
     };
     globalThis.addEventListener("wheel", onWheel, { passive: false, capture: true });
-    return () =>
-      globalThis.removeEventListener("wheel", onWheel, { capture: true });
+    return () => globalThis.removeEventListener("wheel", onWheel, { capture: true });
   }, [hoveringCanvas]);
 
   const saveMutation = useMutation({
@@ -217,11 +199,7 @@ function DrawPaint({
         canvasRef.current?.undo();
         return;
       }
-      if (
-        mod &&
-        (e.key.toLowerCase() === "y" ||
-          (e.key.toLowerCase() === "z" && e.shiftKey))
-      ) {
+      if (mod && (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey))) {
         e.preventDefault();
         canvasRef.current?.redo();
         return;
@@ -296,9 +274,7 @@ function DrawPaint({
           />
         </div>
         <div className="flex flex-col gap-1 mt-2">
-          <label className="text-xs text-text/60 font-bold">
-            Размер: {size}px
-          </label>
+          <label className="text-xs text-text/60 font-bold">Размер: {size}px</label>
           <input
             type="range"
             min={1}
@@ -335,16 +311,8 @@ function DrawPaint({
             </SelectTrigger>
             <SelectContent>
               {data?.map((d) => (
-                <SelectItem
-                  key={d.id}
-                  value={d.id ?? ""}
-                  className="flex flex-row bg-background"
-                >
-                  <ImageComponent
-                    src={`${getFileUrl(d)}`}
-                    alt="Картинка ЛОЛ"
-                    className="w-6 h-4"
-                  />
+                <SelectItem key={d.id} value={d.id ?? ""} className="flex flex-row bg-background">
+                  <ImageComponent src={`${getFileUrl(d)}`} alt="Картинка ЛОЛ" className="w-6 h-4" />
                   <span>
                     {new Date(d.created ?? "").toLocaleDateString("ru-RU", {
                       day: "numeric",

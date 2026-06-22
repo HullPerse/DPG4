@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import UserApi from "@/api/user.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus, Send } from "lucide-react";
@@ -58,8 +58,8 @@ function UserItems({
     });
   }, [queryClient]);
 
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -79,8 +79,7 @@ function UserItems({
     return await itemApi.sendInventory(String(item.id), String(user?.id));
   };
 
-  const visibleItems =
-    data?.items.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
+  const visibleItems = data?.items.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
@@ -91,8 +90,7 @@ function UserItems({
             .filter((item) =>
               selected === 0
                 ? item
-                : data?.users.find((u) => u.id === item.owner)?.username ===
-                  values[selected],
+                : data?.users.find((u) => u.id === item.owner)?.username === values[selected],
             )
 
             .map((item) => ({
@@ -103,9 +101,7 @@ function UserItems({
             }))}
           onResult={(it) => {
             return setResult(
-              data?.items.find(
-                (item) => String(item.id) === String(it?.id),
-              ) as Inventory,
+              data?.items.find((item) => String(item.id) === String(it?.id)) as Inventory,
             );
           }}
           free
@@ -145,16 +141,14 @@ function UserItems({
           .filter((item) =>
             selected === 0
               ? item
-              : data?.users.find((u) => u.id === item.owner)?.username ===
-                values[selected],
+              : data?.users.find((u) => u.id === item.owner)?.username === values[selected],
           )
           .map((item) => (
             <section
               key={item.id}
               className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
               style={{
-                opacity:
-                  hiddenItems.has(String(item.id)) ? "50%" : undefined,
+                opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
               }}
             >
               <ImageComponent

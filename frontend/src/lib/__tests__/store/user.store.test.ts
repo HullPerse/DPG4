@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { useUserStore } from "../user.store";
+import { useUserStore } from "@/store/user.store";
 
 describe("UserStore", () => {
   it("starts with unauthenticated state", () => {

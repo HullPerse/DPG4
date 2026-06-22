@@ -2,7 +2,7 @@ import { Ads } from "@/types/ads";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startTransition, useCallback, useRef, useEffect, useMemo, useState } from "react";
 import AdsApi, { SUBSCRIPTION_CONTINUE, SUBSCRIPTION_COST } from "@/api/ads.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
@@ -51,7 +51,7 @@ function AdvertisementApp() {
     });
   }, [queryClient]);
 
-  useSubscription("ads", "*", invalidateQuery);
+  useSubscription("ads", invalidateQuery);
 
   useEffect(() => {
     const interval = setInterval(() => {

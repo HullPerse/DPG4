@@ -2,7 +2,7 @@ import { memo, startTransition, useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
@@ -59,9 +59,9 @@ function FriendsTab() {
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   if (isLoading || isFetching) return <WindowLoader />;
   if (isError)

@@ -1,7 +1,7 @@
 import ActivityApi from "@/api/activity.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Activity } from "@/types/activity";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -34,7 +34,7 @@ function CommunityTab() {
     });
   }, [queryClient]);
 
-  useSubscription("activity", "*", invalidateQuery);
+  useSubscription("activity", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)

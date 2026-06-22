@@ -9,7 +9,7 @@ import {
   useMemo,
   ChangeEvent,
 } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Chat } from "@/types/chat";
 import ChatApi from "@/api/chat.api";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -60,7 +60,7 @@ export default function GlobalChatApp() {
     });
   }, [queryClient]);
 
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   useEffect(() => {
     if (!isLoading && !isFetching) {
@@ -103,8 +103,7 @@ export default function GlobalChatApp() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: () =>
-      chatApi.sendMessage(String(user?.id), GLOBAL_CHAT_ID, newMessage, image),
+    mutationFn: () => chatApi.sendMessage(String(user?.id), GLOBAL_CHAT_ID, newMessage, image),
     onSuccess: () => {
       if (imageInputRef.current) imageInputRef.current.value = "";
       setNewMessage("");
@@ -166,11 +165,7 @@ export default function GlobalChatApp() {
             }}
             autoFocus
           />
-          <Button
-            variant="success"
-            size="icon"
-            onClick={() => editMutation.mutate()}
-          >
+          <Button variant="success" size="icon" onClick={() => editMutation.mutate()}>
             <Send className="size-4" />
           </Button>
           <Button

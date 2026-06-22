@@ -5,7 +5,7 @@ import { buyMarketTicket, removeMarketTicket } from "@/api/tickets.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user.store";
 import { Market } from "@/types/items";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Check, NetworkIcon, Trash, Ticket } from "lucide-react";
@@ -40,7 +40,7 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("market", "*", invalidateQuery);
+  useSubscription("market", invalidateQuery);
 
   const marketMutation = useMutation({
     mutationFn: async ({

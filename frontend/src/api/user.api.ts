@@ -1,8 +1,9 @@
 import { User } from "@/types/user";
 import { apiFetch } from "./client.api";
-import { useDataStore } from "@/store/data.store";
+// import { useDataStore } from "@/store/data.store";
 import CellApi from "./cell.api";
 import { usableCell } from "@/lib/cell.effects";
+import { useDataStore } from "@/store/data.store";
 
 const cellApi = new CellApi();
 
@@ -57,9 +58,7 @@ export default class UserApi {
   };
 
   getUserPositions = async (): Promise<User[]> => {
-    return apiFetch<User[]>(
-      "/users?fields=id,position,username,avatar,color,place,status",
-    );
+    return apiFetch<User[]>("/users?fields=id,position,username,avatar,color,place,status");
   };
 
   getUserById = async (userId: string): Promise<User> => {
@@ -72,11 +71,7 @@ export default class UserApi {
     )) as User;
   };
 
-  changeUserStatus = async (
-    userId: string,
-    status: string,
-    type: "add" | "remove",
-  ) => {
+  changeUserStatus = async (userId: string, status: string, type: "add" | "remove") => {
     return apiFetch(`/users/${userId}/status`, {
       method: "POST",
       body: { status, type },
@@ -86,9 +81,10 @@ export default class UserApi {
   changeUserAction = async (
     userId: string,
     action: "MOVE_POSITIVE" | "MOVE_NEGATIVE" | "GAMEADD" | "GAMEFINISH",
+    noAction: boolean,
   ) => {
-    const { noAction } = useDataStore.getState();
     if (noAction) return;
+
     return apiFetch(`/users/${userId}`, {
       method: "PATCH",
       body: { currentAction: action },
@@ -133,7 +129,7 @@ export default class UserApi {
     const cells = await cellApi.getCells();
     const targetCell = cells.find((c) => c.number === finalPosition);
     if (targetCell) await usableCell(targetCell, userId);
-    await this.changeUserAction(userId, "GAMEADD");
+    await this.changeUserAction(userId, "GAMEADD", useDataStore.getState().noAction);
   };
 
   getUserScore = async (userId: string): Promise<number> => {

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback, startTransition } from "react";
 import { Mail } from "lucide-react";
 import ChatApi from "@/api/chat.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowProps } from "@/types/window";
 import { createWindow } from "@/lib/window.utils";
 import { getWindowMeta } from "@/lib/window.utils";
@@ -43,7 +43,7 @@ export default function MessagesDesktop({
     });
   }, [queryClient, user?.id]);
 
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   if (isLoading) return <SmallLoader className="size-4" />;
 
@@ -83,11 +83,7 @@ export default function MessagesDesktop({
                   });
 
                   setActiveApps((prev) =>
-                    createWindow(
-                      prev,
-                      getWindowMeta(app.name) as WindowProps,
-                      app.component,
-                    ),
+                    createWindow(prev, getWindowMeta(app.name) as WindowProps, app.component),
                   );
                 }}
               >
@@ -101,9 +97,7 @@ export default function MessagesDesktop({
                 </div>
                 <div className="flex flex-1 flex-col overflow-hidden">
                   <div className="flex items-center justify-between">
-                    <span className="truncate font-bold">
-                      {item.sender.username}
-                    </span>
+                    <span className="truncate font-bold">{item.sender.username}</span>
                     <span className="flex size-5 min-w-5 items-center justify-center rounded-full bg-iris text-xs text-white">
                       {item.unreadCount}
                     </span>

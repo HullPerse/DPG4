@@ -16,6 +16,7 @@ import UserApi from "@/api/user.api";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -50,6 +51,8 @@ export default function CustomLibrary({
 }) {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
+
+  const noAction = useDataStore((state) => state.noAction);
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [name, setName] = useState("");
@@ -88,10 +91,10 @@ export default function CustomLibrary({
       } as Game;
 
       if (currentType === "library") {
-        await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
-        const res = await gameApi.addGame(gameData as any);
+        await userApi.changeUserAction(String(user?.id), "GAMEFINISH", noAction);
+        const res = await gameApi.addGame(gameData);
         setCurrentGame?.(String(res.id));
-        await userApi.changeUserAction(String(user?.id), "GAMEFINISH");
+        await userApi.changeUserAction(String(user?.id), "GAMEFINISH", noAction);
         return;
       }
 

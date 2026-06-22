@@ -1,5 +1,5 @@
 import { Outlet } from "@tanstack/react-router";
-import { useAppUpdates } from "@/hooks/useAppUpdates";
+import { useAppUpdates } from "@/hooks/index.hook";
 
 export default function OutletComponent() {
   useAppUpdates();

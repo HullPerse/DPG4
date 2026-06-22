@@ -3,7 +3,7 @@ import { ImagePlus, Upload, X } from "lucide-react";
 import { cn } from "@/lib/index.utils";
 import { Button } from "../ui/button.component";
 import Image from "@/components/shared/image.component";
-import { useFileUpload } from "@/hooks/upload.hook";
+import { useFileUpload } from "@/hooks/index.hook";
 
 interface ImageUploaderProps {
   value: File | null;

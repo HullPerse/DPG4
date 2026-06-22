@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useMemo } from "react";
 import RulesApi from "@/api/rules.api";
 import { Rule, RuleCategory } from "@/types/rules";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
@@ -42,7 +42,7 @@ function RulesBrowser({ searchTerms }: { searchTerms: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("rules", "*", invalidateQuery);
+  useSubscription("rules", invalidateQuery);
 
   const categories = useMemo(() => {
     if (!data?.category) return [];

@@ -15,7 +15,7 @@ import {
 } from "./lib/window.utils";
 import Signpout from "./routes/auth/components/signout.component";
 import { selectionMouse } from "./lib/index.utils";
-import { wallpaperAssetUrl } from "./lib/tauri/wallpaper";
+import { wallpaperAssetUrl } from "./lib/tauri/wallpaper.utils";
 import Window from "./components/shared/window.component";
 import { WindowLoader } from "./components/shared/loader.component";
 import { PhoneCall } from "lucide-react";

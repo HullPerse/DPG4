@@ -18,7 +18,7 @@ import SteamSvg from "@/components/svg/steam.component";
 import { Button, buttonVariants } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { gameButtons } from "@/config/library.config";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { calculateScore, getStatusColor, openWindow } from "@/lib/index.utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useClickAway } from "@uidotdev/usehooks";
@@ -45,6 +45,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
   const setGamblingBanned = useDataStore((state) => state.setGamblingBanned);
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
+  const noAction = useDataStore((state) => state.noAction);
 
   const [content, setContent] = useState<"general" | "review">("general");
   const [time, setTime] = useState<string | null>(null);
@@ -84,7 +85,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
     });
   }, [queryClient, id]);
 
-  useSubscription("games", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
 
   useEffect(() => {
     if (id) {
@@ -145,13 +146,13 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       await gameApi.changeStatus(id, data.game, status, Number(time), Number(score));
 
       if (status === "DROPPED") {
-        await userApi.changeUserAction(String(data.game.user.id), "MOVE_NEGATIVE");
+        await userApi.changeUserAction(String(data.game.user.id), "MOVE_NEGATIVE", noAction);
         await userApi.changeUserDice(data.game.user.id, Number(time ?? 0), "MOVE_NEGATIVE");
       }
 
       if (status === "COMPLETED") {
         await userApi.scoreUser(String(data.game.user.id), Number(score));
-        await userApi.changeUserAction(String(data.game.user.id), "MOVE_POSITIVE");
+        await userApi.changeUserAction(String(data.game.user.id), "MOVE_POSITIVE", noAction);
         await userApi.changeUserDice(data.game.user.id, Number(time), "MOVE_POSITIVE");
         await cellApi.captureCell(
           String(data.game.user.id),

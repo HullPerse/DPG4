@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { useDataStore } from "../data.store";
+import { useDataStore } from "@/store/data.store";
 
 beforeEach(() => {
   useDataStore.setState({
@@ -41,9 +41,7 @@ describe("DataStore", () => {
   });
 
   it("setStoreItems updates the store items", () => {
-    const items = [
-      { item: { id: "1", label: "test" }, price: 5, bought: false },
-    ];
+    const items = [{ item: { id: "1", label: "test" }, price: 5, bought: false }];
     useDataStore.getState().setStoreItems(items as never[]);
     expect(useDataStore.getState().storeItems).toEqual(items);
   });

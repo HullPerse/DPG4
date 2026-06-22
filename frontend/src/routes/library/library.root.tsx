@@ -1,30 +1,17 @@
 import { Button } from "@/components/ui/button.component";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover.component";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
 import { libraryTabs } from "@/config/library.config";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { type LibraryTabs } from "@/types/library";
 import { ChevronDown, ChevronLeft, MailWarning, User } from "lucide-react";
-import {
-  startTransition,
-  Suspense,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { startTransition, Suspense, useCallback, useEffect, useState } from "react";
 import ProfileTab from "./tabs/profile.tab";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ChatApi from "@/api/chat.api";
 import { Chat } from "@/types/chat";
-import {
-  SmallLoader,
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { SmallLoader, WindowLoader } from "@/components/shared/loader.component";
 const chatApi = new ChatApi();
 
 export default function Library() {
@@ -52,7 +39,7 @@ export default function Library() {
     });
   }, [queryClient]);
 
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   //so it doesnt open specific user profile on load
   useEffect(() => {
@@ -95,11 +82,7 @@ export default function Library() {
         </div>
         <div className="flex flex-row gap-2">
           {userProfile && (
-            <Button
-              variant="error"
-              size="icon"
-              onClick={() => setUserProfile(null)}
-            >
+            <Button variant="error" size="icon" onClick={() => setUserProfile(null)}>
               <ChevronLeft className="size-4" />
             </Button>
           )}
@@ -158,9 +141,7 @@ export default function Library() {
               >
                 <div className="flex flex-row">
                   <span className="mr-1"> Друзья</span>
-                  <span className="animate-pulse text-primary">
-                    {unreadAmmount()}
-                  </span>
+                  <span className="animate-pulse text-primary">{unreadAmmount()}</span>
                 </div>
               </Button>
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { Music, X, Play, Pause, Volume2 } from "lucide-react";
 import { cn } from "@/lib/index.utils";
 import { Button } from "../ui/button.component";
-import { useFileUpload } from "@/hooks/upload.hook";
+import { useFileUpload } from "@/hooks/index.hook";
 
 interface AudioUploaderProps {
   value: File | null;

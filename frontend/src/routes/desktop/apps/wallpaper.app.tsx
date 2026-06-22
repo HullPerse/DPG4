@@ -1,6 +1,6 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
+import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper.utils";
 import { Button } from "@/components/ui/button.component";
 import { Slider } from "@/components/ui/slider.component";
 import { Switch } from "@/components/ui/switch.component";

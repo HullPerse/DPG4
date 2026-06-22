@@ -1,6 +1,6 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Game, GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
@@ -67,7 +67,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   const filteredGames = useMemo(() => {
     if (!data?.games) return [];

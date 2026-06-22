@@ -3,7 +3,7 @@ import type { ItemLabel } from "@/types/items";
 import type { ModalType } from "@/types/effect";
 import ItemFramework from "@/lib/items/item.framework";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Battery, Calendar, ChevronDown, Hash, NetworkIcon, Section } from "lucide-react";
@@ -195,8 +195,8 @@ function InventoryTab({ id }: { id?: string }) {
     return inventoryRefreshRef.current;
   }, [refreshInventory]);
 
-  useSubscription("inventory", "*", refreshInventoryCoalesced);
-  useSubscription("users", "*", refreshStatuses);
+  useSubscription("inventory", refreshInventoryCoalesced);
+  useSubscription("users", refreshStatuses);
 
   const modalItem = useMemo(() => {
     if (!modal) return null;

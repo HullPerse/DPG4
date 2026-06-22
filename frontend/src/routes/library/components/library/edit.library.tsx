@@ -6,7 +6,7 @@ import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import Rating from "@/components/shared/rating.component";
 import { getFileUrl } from "@/api/client.api";
 import { RichTextEditor } from "@/components/shared/editor.component";
@@ -60,7 +60,7 @@ function EditReview({
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
 
   useEffect(() => {
     const existingReview = data?.game.review;

@@ -2,7 +2,7 @@ import { User } from "@/types/user";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useState } from "react";
 import UserApi from "@/api/user.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon } from "lucide-react";
@@ -36,7 +36,7 @@ function UsersWheel() {
     });
   }, [queryClient]);
 
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -49,8 +49,7 @@ function UsersWheel() {
       />
     );
 
-  const visibleItems =
-    data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
+  const visibleItems = data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">

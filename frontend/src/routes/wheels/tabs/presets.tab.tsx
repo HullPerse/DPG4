@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useState } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon } from "lucide-react";
@@ -37,7 +37,7 @@ function PresetsWheel() {
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -50,8 +50,7 @@ function PresetsWheel() {
       />
     );
 
-  const visibleItems =
-    data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
+  const visibleItems = data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -63,9 +62,8 @@ function PresetsWheel() {
             id: String(preset.id),
             label: preset.label,
             image:
-              preset.games[
-                Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)
-              ].capsuleImage,
+              preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
+                .capsuleImage,
             type: "image",
           }))}
           onResult={() => {}}
@@ -79,19 +77,15 @@ function PresetsWheel() {
             key={preset.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity:
-                hiddenItems.has(String(preset.id)) ? "50%" : undefined,
+              opacity: hiddenItems.has(String(preset.id)) ? "50%" : undefined,
             }}
           >
             <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
               {preset.games?.length > 0 && (
                 <ImageComponent
                   src={
-                    preset.games[
-                      Math.floor(
-                        Math.random() * (preset.games?.length ?? 0) * 1,
-                      )
-                    ].capsuleImage
+                    preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
+                      .capsuleImage
                   }
                   alt={preset.label}
                 />

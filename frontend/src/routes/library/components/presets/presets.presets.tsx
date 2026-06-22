@@ -4,7 +4,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { GameData, type Preset } from "@/types/games";
 import PresetComponent from "@/components/shared/preset.component";
 import { useUserStore } from "@/store/user.store";
@@ -66,7 +66,7 @@ export default function PresetsList({
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   if (isLoading || isRefetching) return <WindowLoader />;
   if (isError)

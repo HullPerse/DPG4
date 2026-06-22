@@ -22,7 +22,7 @@ import {
   RISK_GATE_THRESHOLD,
   type PachinkoUiResult,
 } from "@/lib/gambling/pachinko.utils";
-import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import { useBidOptions, useGamblingStore } from "@/hooks/index.hook";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
