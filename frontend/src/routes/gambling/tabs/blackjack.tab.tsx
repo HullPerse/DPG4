@@ -11,12 +11,8 @@ import {
 } from "@/api/gambling.api";
 import BlackjackScene from "../components/scenes/scene.blackjack";
 import { animDelayMs, rules } from "@/lib/gambling/blackjack.utils";
-import type {
-  BlackjackState,
-  BlackjackUiResult,
-  PlayingCard,
-} from "@/types/gamble";
-import { useBidOptions, useGamblingStore } from "@/hooks/use-gambling";
+import type { BlackjackState, BlackjackUiResult, PlayingCard } from "@/types/gamble";
+import { useBidOptions, useGamblingStore } from "@/hooks/index.hook";
 import { BalanceDisplay } from "../components/balance.component";
 import { BidSelector } from "../components/bid.component";
 import { GameResult } from "../components/result.component";
@@ -33,8 +29,7 @@ function buildDealFlyingCards(state: BlackjackState): Set<string> {
 }
 
 function BlackjackTab() {
-  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } =
-    useGamblingStore();
+  const { user, balance, ticketBalance, gamblingBanned, setGamblingBanned } = useGamblingStore();
   const bidOptions = useBidOptions();
   const getOverrides = useDevModeStore((s) => s.getOverrides);
   const isBjDev = useDevModeStore((s) => s.isActive("blackjack"));
@@ -68,16 +63,13 @@ function BlackjackTab() {
   const applyState = useCallback(
     (state: BlackjackState) => {
       setGame(state);
-      if (user) {
-        useUserStore.setState({
-          user: { ...user, tickets: state.balance },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, tickets: state.balance } };
+      });
       if (state.result) {
-        const netLabel =
-          state.result.net >= 0
-            ? `${state.result.label}`
-            : `${state.result.label}`;
+        const netLabel = state.result.net >= 0 ? `${state.result.label}` : `${state.result.label}`;
         setUiResult({
           net: state.result.net,
           label: netLabel,
@@ -86,7 +78,7 @@ function BlackjackTab() {
         if (state.result.banned) setGamblingBanned(true);
       }
     },
-    [user, setGamblingBanned],
+    [setGamblingBanned],
   );
 
   const restoreGame = useCallback(
@@ -94,16 +86,13 @@ function BlackjackTab() {
       setGame(state);
       setBid(state.bid);
       setFlyingCards(new Set());
-      if (user) {
-        useUserStore.setState({
-          user: { ...user, tickets: state.balance },
-        });
-      }
+      useUserStore.setState((s) => {
+        const u = s.user;
+        if (!u) return {};
+        return { user: { ...u, tickets: state.balance } };
+      });
       if (state.result) {
-        const netLabel =
-          state.result.net >= 0
-            ? `${state.result.label}`
-            : `${state.result.label}`;
+        const netLabel = state.result.net >= 0 ? `${state.result.label}` : `${state.result.label}`;
         setUiResult({
           net: state.result.net,
           label: netLabel,
@@ -114,7 +103,7 @@ function BlackjackTab() {
         setUiResult(null);
       }
     },
-    [user, setGamblingBanned],
+    [setGamblingBanned],
   );
 
   useEffect(() => {
@@ -155,8 +144,8 @@ function BlackjackTab() {
       try {
         const existing = await syncBlackjack();
         if (existing) restoreGame(existing);
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.warn("Failed to sync blackjack:", e);
       }
     },
   });
@@ -202,15 +191,14 @@ function BlackjackTab() {
     },
   });
 
-  const loading =
-    dealMutation.isPending || hitMutation.isPending || standMutation.isPending;
+  const loading = dealMutation.isPending || hitMutation.isPending || standMutation.isPending;
 
   const newHand = async () => {
     if (user && game?.phase === "player") {
       try {
         await abandonBlackjack();
-      } catch {
-        /* server may already be clear */
+      } catch (e) {
+        console.warn("Failed to abandon blackjack:", e);
       }
     }
     if (flyClearRef.current) clearTimeout(flyClearRef.current);
@@ -224,8 +212,7 @@ function BlackjackTab() {
   const inRound = game !== null;
   const canPlay = game?.phase === "player";
 
-  const dealerVisible =
-    revealHole && game ? game.dealerHand.slice(0, 1) : (game?.dealerHand ?? []);
+  const dealerVisible = revealHole && game ? game.dealerHand.slice(0, 1) : (game?.dealerHand ?? []);
 
   const dealerHidden = Boolean(game?.dealerHoleHidden || revealHole);
 
@@ -299,22 +286,12 @@ function BlackjackTab() {
                 Хватит
               </Button>
             </div>
-            <Button
-              variant="error"
-              className="w-full"
-              loading={loading}
-              onClick={newHand}
-            >
+            <Button variant="error" className="w-full" loading={loading} onClick={newHand}>
               Сбросить руку
             </Button>
           </div>
         ) : (
-          <Button
-            variant="info"
-            className="w-full"
-            loading={loading}
-            onClick={newHand}
-          >
+          <Button variant="info" className="w-full" loading={loading} onClick={newHand}>
             Новая рука
           </Button>
         )}

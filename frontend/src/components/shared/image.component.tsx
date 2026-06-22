@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 
 interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -67,10 +67,7 @@ const Image = ({
 
   return (
     <div
-      className={cn(
-        "relative flex w-full items-center overflow-hidden",
-        className,
-      )}
+      className={cn("relative flex w-full items-center overflow-hidden", className)}
       style={{
         aspectRatio: width && height ? `${width}/${height}` : undefined,
       }}
@@ -97,7 +94,11 @@ const Image = ({
           />
         </picture>
       ) : (
-        <div className="flex h-full w-full items-center justify-center border border-primary/20 bg-background/40" role="presentation" aria-hidden="true">
+        <div
+          className="flex h-full w-full items-center justify-center border border-primary/20 bg-background/40"
+          role="presentation"
+          aria-hidden="true"
+        >
           <span className="text-muted-foreground text-xs">Изображение</span>
         </div>
       )}

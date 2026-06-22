@@ -1,7 +1,7 @@
 import ActivityApi from "@/api/activity.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Activity } from "@/types/activity";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -10,7 +10,7 @@ import { NetworkIcon } from "lucide-react";
 import { memo, startTransition, useCallback } from "react";
 import ImageComponent from "@/components/shared/image.component";
 import { useDataStore } from "@/store/data.store";
-import { openWindow } from "@/lib/utils";
+import { openWindow } from "@/lib/index.utils";
 
 const activityApi = new ActivityApi();
 
@@ -34,7 +34,7 @@ function CommunityTab() {
     });
   }, [queryClient]);
 
-  useSubscription("activity", "*", invalidateQuery);
+  useSubscription("activity", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -79,11 +79,7 @@ function CommunityTab() {
                   onClick={(e) => {
                     e.stopPropagation();
 
-                    openWindow(
-                      String(activityItem.id),
-                      String(activityItem.image),
-                      "Изображение",
-                    );
+                    openWindow(String(activityItem.id), String(activityItem.image), "Изображение");
                   }}
                 />
               ) : null
@@ -92,9 +88,7 @@ function CommunityTab() {
                 {activityItem.image}
               </span>
             )}
-            <p className="text-sm text-text font-bold line-clamp-3">
-              {activityItem.text}
-            </p>
+            <p className="text-sm text-text font-bold line-clamp-3">{activityItem.text}</p>
             <div className="absolute right-1 bottom-1 flex flex-col flex-1 min-w-0">
               <span className="text-xs text-muted">{timeAgo}</span>
             </div>

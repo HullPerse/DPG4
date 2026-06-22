@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { Bold, Italic, Underline, Strikethrough } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "../ui/button.component";
 
 type Command = {

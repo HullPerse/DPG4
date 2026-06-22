@@ -29,6 +29,9 @@ export type AdminFieldMeta = {
   reference?: { table: string; labelField: string };
 };
 
+export type AdminTableName = keyof typeof import("../lib/admin/tables.admin").ADMIN_TABLES;
+export type AdminTable = (typeof import("../lib/admin/tables.admin").ADMIN_TABLES)[AdminTableName];
+
 export type AdminTableMeta = {
   label: string;
   searchFields: string[];

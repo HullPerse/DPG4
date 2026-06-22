@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { useUserStore } from "@/store/user.store";
 import { invoke } from "@tauri-apps/api/core";
-import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
+import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper.utils";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TimeDisplay } from "../../desktop/components/timer.desktop";
@@ -56,7 +56,7 @@ export default function Signpout() {
     <main
       className="relative h-screen w-screen"
       onKeyDown={(e) => {
-          if (e.key === "Enter") {
+        if (e.key === "Enter") {
           return loginMutation.mutate();
         }
       }}
@@ -111,8 +111,7 @@ export default function Signpout() {
 
             document.cookie.split(";").forEach((c) => {
               document.cookie =
-                c.trim().split("=")[0] +
-                "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
             });
             clearData();
             clearUser();

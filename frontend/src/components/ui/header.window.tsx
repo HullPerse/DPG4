@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Button } from "./button.component";
 import { X } from "lucide-react";
 
@@ -11,13 +11,7 @@ interface WindowHeaderProps {
   children?: ReactNode;
 }
 
-export function WindowHeader({
-  title,
-  onClose,
-  actions,
-  className,
-  children,
-}: WindowHeaderProps) {
+export function WindowHeader({ title, onClose, actions, className, children }: WindowHeaderProps) {
   return (
     <section
       className={cn(

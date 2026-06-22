@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import UserApi from "@/api/user.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
@@ -51,7 +51,7 @@ function UserGames({
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Game | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -64,8 +64,7 @@ function UserGames({
         setFilters(["ВСЕ", ...STATUSES.map((s) => s.label)]);
       }
 
-      const status =
-        selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
+      const status = selectedFilter !== 0 ? STATUSES[selectedFilter - 1]?.name : undefined;
 
       if (selected !== 0) {
         const user = users.find((u) => u.username === values[selected]);
@@ -99,8 +98,8 @@ function UserGames({
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -137,15 +136,14 @@ function UserGames({
     });
   };
 
-  const visibleItems =
-    data?.games.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+  const visibleItems = data?.games.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${selected}-${selectedFilter}-${hiddenItems.join(",")}`}
+          key={`wheel-${selected}-${selectedFilter}-${[...hiddenItems].join(",")}`}
           list={visibleItems.map((item) => ({
             id: String(item.id),
             label: item.data.name,
@@ -154,9 +152,7 @@ function UserGames({
           }))}
           onResult={(item) => {
             return setResult(
-              data?.games.find(
-                (game) => String(game.id) === String(item?.id),
-              ) as Game,
+              data?.games.find((game) => String(game.id) === String(item?.id)) as Game,
             );
           }}
           free
@@ -186,9 +182,7 @@ function UserGames({
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
-                onClick={() =>
-                  handleAddGame(String(result.id)).then(() => setResult(null))
-                }
+                onClick={() => handleAddGame(String(result.id)).then(() => setResult(null))}
               >
                 <Plus />
               </Button>
@@ -203,7 +197,7 @@ function UserGames({
             key={item.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity: hiddenItems.find((h) => h === String(item.id)) && "50%",
+              opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
             }}
           >
             <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
@@ -220,18 +214,14 @@ function UserGames({
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(item.id)).length > 0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(item.id)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(item.id)),
-                  );
+                  const next = new Set(hiddenItems);
+                  const id = String(item.id);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(item.id)) ? (
+                {hiddenItems.has(String(item.id)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

@@ -8,7 +8,7 @@ export interface UserStore {
   user: User | null;
   token: string | null;
 
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   clear: () => void;
@@ -74,9 +74,7 @@ export interface DataStore {
   setEditing: (isEditing: boolean) => void;
   setNegativeScoreModal: (negativeScoreModal: boolean) => void;
   setGamblingBanned: (gamblingBanned: boolean) => void;
-  setArrowType: (
-    arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes",
-  ) => void;
+  setArrowType: (arrowType: "all" | "none" | "arrows" | "icons" | "ladders" | "snakes") => void;
   setUserProfile: (
     userProfile: {
       type: "chat" | "profile";

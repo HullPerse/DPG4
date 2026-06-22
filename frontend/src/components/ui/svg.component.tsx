@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import type { ReactNode, SVGProps } from "react";
 
 interface SvgWrapperProps extends SVGProps<SVGSVGElement> {

@@ -2,7 +2,7 @@ import { getFileUrl } from "@/api/client.api";
 import ItemsApi from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { useUserStore } from "@/store/user.store";
 import { Item } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import { memo, startTransition, useCallback, useRef, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText, translateItemType } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/index.utils";
 import ImageViewer from "@/components/shared/viewer.component";
 import { CreateModal } from "@/components/shared/items.modal";
 import {
@@ -37,7 +37,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Item | null>(null);
   const [itemData, setItemData] = useState<Item | null>(null);
   const [selected, setSelected] = useState<User | null>(user ? user : null);
@@ -70,9 +70,9 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("items", "*", invalidateQuery);
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("items", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -98,9 +98,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const visibleItems = data.items.filter(
-    (item) => !hiddenItems.includes(String(item.id)),
-  );
+  const visibleItems = data.items.filter((item) => !hiddenItems.has(String(item.id)));
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -120,21 +118,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue
-                      placeholder="Игрок"
-                      style={{ color: selected?.color }}
-                    >
+                    <SelectValue placeholder="Игрок" style={{ color: selected?.color }}>
                       {selected?.username}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.users?.map((item, index) => (
-                        <SelectItem
-                          key={item.id}
-                          value={item.id!}
-                          style={{ color: item.color }}
-                        >
+                        <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}
                         </SelectItem>
@@ -161,10 +152,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   onClick={async () => {
                     if (!selected || !itemData) return;
 
-                    await itemsApi.addInventory(
-                      String(selected?.id),
-                      String(itemData.id),
-                    );
+                    await itemsApi.addInventory(String(selected?.id), String(itemData.id));
 
                     queryClient.invalidateQueries({
                       queryKey: ["inventoryTab", selected.id],
@@ -202,7 +190,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
+          key={[...hiddenItems].join(",")}
           list={visibleItems.map((item) => ({
             id: String(item.id),
             label: item.label,
@@ -211,9 +199,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
           }))}
           onResult={(it) => {
             return setResult(
-              data?.items.find(
-                (item) => String(item.id) === String(it?.id),
-              ) as Item,
+              data?.items.find((item) => String(item.id) === String(it?.id)) as Item,
             );
           }}
           free={false}
@@ -272,10 +258,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
         className="relative flex h-full w-full overflow-y-auto p-2 border-t-2 border-highlight-high"
         style={{ contain: "strict" }}
       >
-        <div
-          className="relative w-full"
-          style={{ height: `${virtualizer.getTotalSize()}px` }}
-        >
+        <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualItem) => {
             const item = data.items[virtualItem.index];
             if (!item) return null;
@@ -286,9 +269,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                 className="absolute top-0 left-0 flex flex-row w-full h-32 max-h-32 min-h-32 p-2 border-2 border-highlight-high items-center bg-card"
                 style={{
                   transform: `translateY(${virtualItem.start}px)`,
-                  opacity: hiddenItems.includes(String(item.id))
-                    ? "50%"
-                    : undefined,
+                  opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
                 }}
               >
                 <div className="flex flex-col gap-1">
@@ -320,22 +301,14 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   <Button
                     size="icon"
                     onClick={() => {
-                      const existingGame =
-                        hiddenItems.filter((h) => h === String(item.id))
-                          .length > 0;
-
-                      if (!existingGame)
-                        return setHiddenItems([
-                          ...hiddenItems,
-                          String(item.id),
-                        ]);
-
-                      return setHiddenItems(
-                        hiddenItems.filter((h) => h !== String(item.id)),
-                      );
+                      const next = new Set(hiddenItems);
+                      const id = String(item.id);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      setHiddenItems(next);
                     }}
                   >
-                    {hiddenItems.includes(String(item.id)) ? (
+                    {hiddenItems.has(String(item.id)) ? (
                       <EyeIcon size={20} />
                     ) : (
                       <EyeOffIcon size={20} />

@@ -1,11 +1,13 @@
 import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { withRecordMeta } from "../lib/record";
-import { logger } from "../lib/logger";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
-import { RAT_IDS } from "../items/constants";
+import * as schema from "@/db/schema.db";
+import { withRecordMeta, getUser } from "@/lib/index.utils";
+import Logger from "@/lib/logger.utils";
+import { databasePlugin } from "@/plugins/index.plugin";
+import servicesPlugin from "@/services.server";
+import { RAT_IDS } from "@/lib/items/constants";
+
+const logger = new Logger("RAT_STORE");
 
 const exchangeColumns = {
   id: schema.items.id,
@@ -20,16 +22,13 @@ const exchangeColumns = {
   updated: schema.items.updated,
 };
 
-export const ratStoreRoute = new Elysia({ prefix: "/rat-store" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/rat-store" })
+  .use(databasePlugin)
   .use(servicesPlugin)
 
-  .get(
-    "/rat-labels",
-    () => {
-      return { labels: RAT_IDS };
-    },
-  )
+  .get("/rat-labels", () => {
+    return { labels: RAT_IDS };
+  })
 
   .post(
     "/exchange",
@@ -53,25 +52,21 @@ export const ratStoreRoute = new Elysia({ prefix: "/rat-store" })
 
       await economyService.removeInventoryById(inventoryId);
 
-      const allItems = await db
-        .select(exchangeColumns)
-        .from(schema.items);
+      const allItems = await db.select(exchangeColumns).from(schema.items);
 
       if (allItems.length === 0) {
         set.status = 500;
         return { error: "Нет доступных предметов" };
       }
 
-      const randomItem =
-        allItems[Math.floor(Math.random() * allItems.length)];
+      const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
 
       await economyService.addInventory(userId, randomItem.id);
 
-      logger.info(
-        null,
-        "rat-store exchange",
-        `${userId} traded ${invItem.label} \u2192 ${randomItem.label}`,
-      );
+      const exchangeUser = await getUser(db, userId);
+      logger
+        .setAuthor(exchangeUser?.username ?? "SYSTEM")
+        .info(`traded ${invItem.label} → ${randomItem.label}`);
 
       return withRecordMeta(randomItem, "items");
     },

@@ -1,6 +1,6 @@
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
-import { formatBytesToMB } from "@/lib/utils";
+import { formatBytesToMB } from "@/lib/index.utils";
 import { WallpaperProps } from "@/types/desktop";
 import { Trash } from "lucide-react";
 import { useState } from "react";
@@ -18,20 +18,11 @@ function Wallpaper({
   wallUrls: { [key: string]: string };
   deleting: boolean;
   setData: (name: string) => void;
-  handleDelete: ({
-    wallpaper,
-    e,
-  }: {
-    wallpaper: WallpaperProps;
-    e: React.MouseEvent;
-  }) => void;
+  handleDelete: ({ wallpaper, e }: { wallpaper: WallpaperProps; e: React.MouseEvent }) => void;
 }) {
   const [isHovering, setIsHovering] = useState(false);
   const sizeMb = formatBytesToMB(wallpaper.size);
-  const sizeTitle =
-    wallpaper.size && wallpaper.size > 0
-      ? `${sizeMb} МБ`
-      : undefined;
+  const sizeTitle = wallpaper.size && wallpaper.size > 0 ? `${sizeMb} МБ` : undefined;
 
   return (
     <div

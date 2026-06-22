@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import { Bold, Italic, Underline, Strikethrough } from "lucide-react";
-import { useNotepad } from "@/hooks/notepad.hook";
+import { useNotepad } from "@/hooks/index.hook";
 import { Button } from "@/components/ui/button.component";
 
 function Notebook() {
@@ -27,11 +27,7 @@ function Notebook() {
 
       const { prefix, suffix } = formatMap[format];
       const newText =
-        text.substring(0, start) +
-        prefix +
-        selectedText +
-        suffix +
-        text.substring(end);
+        text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
 
       selectionRef.current = {
         start: start + prefix.length,
@@ -46,10 +42,7 @@ function Notebook() {
   useEffect(() => {
     if (selectionRef.current && textareaRef.current) {
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(
-        selectionRef.current.start,
-        selectionRef.current.end,
-      );
+      textareaRef.current.setSelectionRange(selectionRef.current.start, selectionRef.current.end);
       selectionRef.current = null;
     }
   }, [text]);

@@ -1,6 +1,6 @@
 import { Cell } from "@/types/cell";
 import CellApi from "@/api/cell.api";
-import { removeFirst } from "./utils";
+import { removeFirst } from "./index.utils";
 import UserApi from "@/api/user.api";
 
 let cellApiInstance: InstanceType<typeof CellApi> | null = null;
@@ -43,10 +43,7 @@ export async function usableCell(cell: Cell, userId: string) {
     audio.volume = 0.1;
     audio.play();
 
-    await cellApi.changeStatus(
-      cell.id,
-      removeFirst(cell.status ?? [], "chair"),
-    );
+    await cellApi.changeStatus(cell.id, removeFirst(cell.status ?? [], "chair"));
   }
 
   //POOP

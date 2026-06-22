@@ -3,7 +3,7 @@ import PaintApi from "@/api/paint.api";
 import ImageComponent from "@/components/shared/image.component";
 import ImageViewer from "@/components/shared/viewer.component";
 import { Button } from "@/components/ui/button.component";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { useUserStore } from "@/store/user.store";
 import { PaintType } from "@/types/paint";
 import { Trash, ZoomIn } from "lucide-react";
@@ -50,23 +50,14 @@ function ImagePaint({
           zoomable
           draggable
           trigger={
-            <Button
-              size="icon"
-              variant="ghost"
-              title="Увеличить"
-              className="ml-auto"
-            >
+            <Button size="icon" variant="ghost" title="Увеличить" className="ml-auto">
               <ZoomIn />
             </Button>
           }
         />
       </section>
       <section className="relative flex-1 bg-card w-60 h-45">
-        <ImageComponent
-          src={`${getFileUrl(item)}`}
-          alt="Картинка ЛОЛ"
-          className="w-60 h-46"
-        />
+        <ImageComponent src={`${getFileUrl(item)}`} alt="Картинка ЛОЛ" className="w-60 h-46" />
 
         {item.author.id === user?.id && (
           <Button

@@ -4,7 +4,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { GameData, type Preset } from "@/types/games";
 import PresetComponent from "@/components/shared/preset.component";
 import { useUserStore } from "@/store/user.store";
@@ -20,9 +20,7 @@ export default function PresetsList({
 }: {
   searchTerms: string;
   setCurrentPreset: (preset: { id: string; label: string }) => void;
-  setCurrentTab: (
-    tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame",
-  ) => void;
+  setCurrentTab: (tab: "presetAll" | "presetWheel" | "presetList" | "addPresetGame") => void;
   refetchPresetsRef?: React.RefObject<(() => void) | null>;
 }) {
   const queryClient = useQueryClient();
@@ -35,7 +33,7 @@ export default function PresetsList({
       presets: Preset[];
       steamLibrary: Preset;
     }> => {
-      const presets = await gameApi.getPresets(searchTerms || undefined);
+      const presets = await gameApi.getPresets();
 
       const steamId = await gameApi.resolveVanityUrl(String(user?.steam));
 
@@ -68,7 +66,7 @@ export default function PresetsList({
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   if (isLoading || isRefetching) return <WindowLoader />;
   if (isError)

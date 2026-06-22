@@ -2,16 +2,9 @@ import { apiFetch } from "@/api/client.api";
 import { useToastStore } from "@/store/toast.store";
 import { useUserStore } from "@/store/user.store";
 import type { Activity } from "@/types/activity";
-import {
-  subscribeWsChannel,
-  ensureWsConnected,
-  closeWs,
-} from "@/lib/ws.client";
-import {
-  cleanupAdminReloadListener,
-  initAdminReloadListener,
-} from "@/lib/reload.utils";
-import { notifyPrivateMessage } from "@/lib/notifications";
+import { subscribeWsChannel, ensureWsConnected, closeWs } from "@/lib/ws.client";
+import { cleanupAdminReloadListener, initAdminReloadListener } from "@/lib/reload.utils";
+import { notifyPrivateMessage } from "@/lib/notifications.utils";
 import { initCursors } from "@/lib/cursor.utils";
 
 let activityUnsub: (() => void) | null = null;
@@ -32,7 +25,7 @@ function showActivityToast(activity: Activity) {
   useToastStore.getState().addToast(activity);
 }
 
-export async function initActivitySubscription() {
+async function initActivitySubscription() {
   if (activityUnsub) return;
 
   try {
@@ -49,16 +42,16 @@ export async function initActivitySubscription() {
 
     void apiFetch<Activity>(`/activity/${data.id}`)
       .then(showActivityToast)
-      .catch(() => {});
+      .catch((e) => console.warn("Failed to fetch activity toast:", e));
   });
 }
 
-export function cleanupActivitySubscription() {
+function cleanupActivitySubscription() {
   activityUnsub?.();
   activityUnsub = null;
 }
 
-export async function initChatSubscription() {
+async function initChatSubscription() {
   if (chatUnsub) return;
 
   chatUnsub = subscribeWsChannel("chats", (data) => {
@@ -72,7 +65,10 @@ export async function initChatSubscription() {
           sender?: { username?: string; avatar?: string };
           receiver?: { id?: string };
         };
-      }>(`/chats/${data.id}`).catch(() => null);
+      }>(`/chats/${data.id}`).catch((e) => {
+        console.warn("Failed to fetch chat message:", e);
+        return null;
+      });
 
       const currentUser = useUserStore.getState().user;
       if (!latest || !currentUser?.id) return;
@@ -98,7 +94,7 @@ export async function initChatSubscription() {
   });
 }
 
-export function cleanupChatSubscription() {
+function cleanupChatSubscription() {
   chatUnsub?.();
   chatUnsub = null;
 }

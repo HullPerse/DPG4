@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Spinner } from "@/components/ui/spinner.component";
 
 export function BigLoader() {
@@ -22,12 +22,6 @@ export function WindowLoader({ className }: { className?: string }) {
   );
 }
 
-export function SmallLoader({
-  size,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function SmallLoader({ size, className }: { size?: number; className?: string }) {
   return <Spinner size={size} className={className} />;
 }

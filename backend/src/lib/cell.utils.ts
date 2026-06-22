@@ -1,17 +1,16 @@
-export const GRID_COLS = 10;
+const GRID_COLS = 10;
 
-export function getGridPosition(cellNumber: number): { row: number; col: number } {
-  if (cellNumber < 1 || cellNumber > 100) {
-    return { row: -1, col: -1 };
-  }
-
+export function getGridPosition(cellNumber: number): {
+  row: number;
+  col: number;
+} {
+  if (cellNumber < 1 || cellNumber > 100) return { row: -1, col: -1 };
   const zeroBasedIndex = cellNumber - 1;
   const row = Math.floor(zeroBasedIndex / GRID_COLS);
   const isOddRow = row % 2 === 1;
   const col = isOddRow
     ? GRID_COLS - 1 - (zeroBasedIndex % GRID_COLS)
     : zeroBasedIndex % GRID_COLS;
-
   return { row, col };
 }
 
@@ -24,7 +23,7 @@ export function getFirstCellInNextRow(currentRow: number): number {
   return nextRow * 10 + (nextRow % 2 === 0 ? 1 : 10);
 }
 
-import type { CellPath } from "../types/cell";
+import type { CellPath } from "@/types/gambling";
 
 export function calculateMovePath(
   startingPosition: number,
@@ -40,7 +39,6 @@ export function calculateMovePath(
     path.push(101);
     return { path, finalPosition: 101 };
   }
-
   if (startingPosition === 101 && diceRoll > 0) {
     return { path, finalPosition: 101 };
   }
@@ -54,15 +52,13 @@ export function calculateMovePath(
   }
 
   const cell = cells.find((c) => c.number === currentPosition);
-  if (!cell) {
+  if (!cell)
     return { path: [...path, currentPosition], finalPosition: currentPosition };
-  }
 
   if (diceRoll < 0) {
     if (cell.snakeTo && cell.snakeTo > 0) {
       currentPosition = cell.snakeTo;
       path.push(currentPosition);
-      return { path: [...path, currentPosition], finalPosition: currentPosition };
     }
     return { path, finalPosition: currentPosition };
   }

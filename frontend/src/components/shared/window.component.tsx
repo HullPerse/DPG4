@@ -18,7 +18,7 @@ import { WindowLoader } from "./loader.component";
 import React from "react";
 import { WindowError } from "./error.component";
 import { useDataStore } from "@/store/data.store";
-import { useWindowResize } from "@/hooks/resize.hook";
+import { useWindowResize } from "@/hooks/index.hook";
 import { useClickAway } from "@uidotdev/usehooks";
 import { lockCursor } from "@/lib/cursor.utils";
 
@@ -68,19 +68,18 @@ const Window = memo(function Window(props: WindowProps) {
     }
   });
 
-  const { handleResizeStart, handleResizeMove, resizeHandles } =
-    useWindowResize({
-      windowSize,
-      position,
-      isResizing,
-      minWidth: props.size.minWidth,
-      minHeight: props.size.minHeight,
-      onActive: props.onActive,
-      windowRef,
-      setIsResizing,
-      setPosition,
-      setWindowSize,
-    });
+  const { handleResizeStart, handleResizeMove, resizeHandles } = useWindowResize({
+    windowSize,
+    position,
+    isResizing,
+    minWidth: props.size.minWidth,
+    minHeight: props.size.minHeight,
+    onActive: props.onActive,
+    windowRef,
+    setIsResizing,
+    setPosition,
+    setWindowSize,
+  });
 
   //handle mount centering and maximizing
   useEffect(() => {
@@ -114,10 +113,7 @@ const Window = memo(function Window(props: WindowProps) {
         const clampedWidth = Math.min(prevSize.width, window.innerWidth);
         const clampedHeight = Math.min(prevSize.height, window.innerHeight);
 
-        if (
-          clampedWidth !== prevSize.width ||
-          clampedHeight !== prevSize.height
-        ) {
+        if (clampedWidth !== prevSize.width || clampedHeight !== prevSize.height) {
           return { width: clampedWidth, height: clampedHeight };
         }
         return prevSize;
@@ -183,19 +179,13 @@ const Window = memo(function Window(props: WindowProps) {
 
   const handleMaximize = () => {
     const fullScreen =
-      windowSize.width === window.innerWidth &&
-      windowSize.height === window.innerHeight;
+      windowSize.width === window.innerWidth && windowSize.height === window.innerHeight;
 
     if (fullScreen) {
       const size = {
-        width:
-          oldData.size.width <= window.innerWidth
-            ? oldData.size.width
-            : window.innerWidth,
+        width: oldData.size.width <= window.innerWidth ? oldData.size.width : window.innerWidth,
         height:
-          oldData.size.height <= window.innerHeight
-            ? oldData.size.height
-            : window.innerHeight,
+          oldData.size.height <= window.innerHeight ? oldData.size.height : window.innerHeight,
       };
 
       setWindowSize(size);
@@ -222,7 +212,7 @@ const Window = memo(function Window(props: WindowProps) {
     windowStartPos.current = { ...position };
     props.onActive?.();
     e.preventDefault();
-    lockCursor('var(--cursor-grabbing, grabbing)');
+    lockCursor("var(--cursor-grabbing, grabbing)");
   };
 
   const getChildren = useCallback(() => {
@@ -249,8 +239,7 @@ const Window = memo(function Window(props: WindowProps) {
       width: `${windowSize.width}px`,
       height: `${windowSize.height}px`,
       zIndex: props.zIndex ?? (props.isPinned ? 999 : props.isActive ? 998 : 50),
-      boxShadow:
-        props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
+      boxShadow: props.isPinned || props.isActive ? "4px 4px 0 transparent" : "",
       cursor: isDragging ? "grabbing" : "default",
       border: "2px solid var(--color-highlight-high)",
     }),
@@ -283,9 +272,7 @@ const Window = memo(function Window(props: WindowProps) {
       hidden={props.isMinimized}
       onClick={(e) => {
         const target = e.target as HTMLElement;
-        if (
-          target.closest('button, a, input, select, textarea, [role="button"]')
-        ) {
+        if (target.closest('button, a, input, select, textarea, [role="button"]')) {
           return;
         }
         props.onActive?.();

@@ -1,60 +1,66 @@
-import { eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { removeFirst, getNextDice } from "../lib/game.utils";
-import { broadcast } from "../lib/ws";
-import { omitPassword, withRecordMeta } from "../lib/record";
-import { nowIso } from "../lib/dates";
-import { Db } from "@/types";
-import { ActivityService } from "./activity.service";
+import type { Db } from "@/types/server";
+import ActivityService from "./activity.service";
+import { BaseService } from "./index.service";
+import * as schema from "@/db/schema.db";
+import {
+  ACTIVITY_TYPES,
+  omitPassword,
+  STATUS_EFFECTS,
+  USER_ACTIONS,
+  withRecordMeta,
+} from "@/lib/index.utils";
+import { getNextDice, removeFirst } from "@/lib/game.utils";
 
-export class UserService {
+export default class UserService extends BaseService {
   constructor(
-    private db: Db,
+    db: Db,
     private activityService: ActivityService,
-  ) {}
+  ) {
+    super(db);
+  }
 
   async getById(userId: string) {
-    const [row] = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId));
+    const row = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!row) return null;
     return withRecordMeta(omitPassword(row), "users");
   }
 
   async changeStatus(userId: string, status: string, type: "add" | "remove") {
-    const user = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .then((res) => res[0]);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const current = user.status ?? [];
     const newStatuses =
       type === "remove" ? removeFirst(current, status) : [...current, status];
 
-    await this.db
-      .update(schema.users)
-      .set({ status: newStatuses, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
-
-    broadcast("users", "update", userId);
+    await this.updateOne(
+      schema.users,
+      userId,
+      { status: newStatuses },
+      "users",
+    );
     return this.getById(userId);
   }
 
   async score(userId: string, score: number, trade?: boolean) {
-    const user = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .then((r) => r[0]);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const userStatuses = user.status ?? [];
-    const ephemerality = userStatuses.some((s) => s === "Эфемерность");
+    const ephemerality = userStatuses.some(
+      (s) => s === STATUS_EFFECTS.EPHEMERALITY,
+    );
     const blessings = userStatuses.filter(
-      (s) => s === "Благословление цыганского барона",
+      (s) => s === STATUS_EFFECTS.GYPSY_BARON_BLESSING,
     );
 
     let finalScore = user.money + score;
@@ -63,28 +69,22 @@ export class UserService {
       finalScore = user.money + score * Math.pow(2, blessings.length);
       await this.changeStatus(
         userId,
-        "Благословление цыганского барона",
+        STATUS_EFFECTS.GYPSY_BARON_BLESSING,
         "remove",
       );
     }
 
     if (!trade && score > 0 && ephemerality && Math.random() >= 0.5) {
-      await this.changeStatus(userId, "Эфемерность", "remove");
+      await this.changeStatus(userId, STATUS_EFFECTS.EPHEMERALITY, "remove");
       await this.activityService.create({
         image: user.username,
-        type: "emoji",
+        type: ACTIVITY_TYPES.EMOJI,
         text: `${user.username} не смог получить ${score}`,
       });
-      broadcast("users", "update", userId);
       return this.getById(userId);
     }
 
-    await this.db
-      .update(schema.users)
-      .set({ money: finalScore, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
-
-    broadcast("users", "update", userId);
+    await this.updateOne(schema.users, userId, { money: finalScore }, "users");
     return this.getById(userId);
   }
 
@@ -103,57 +103,46 @@ export class UserService {
 
     const finalPlace = () => {
       if (!existingPlaces.includes("1")) return "1";
-
       if (!existingPlaces.includes("2")) return "2";
-      else return "3";
+      return "3";
     };
 
     const finalValue = finalPlace();
 
-    const user = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .then((r) => r[0]);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     await this.activityService.create({
       author: userId,
       image: user.avatar,
-      type: "emoji",
+      type: ACTIVITY_TYPES.EMOJI,
       text: `${user.username} занял ${finalValue} позицию`,
     });
 
-    await this.db
-      .update(schema.users)
-      .set({ place: finalValue, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
-
-    broadcast("users", "update", userId);
+    await this.updateOne(schema.users, userId, { place: finalValue }, "users");
     return this.getById(userId);
   }
 
   async changeDice(
     userId: string,
     realTime: number,
-    action: "MOVE_POSITIVE" | "MOVE_NEGATIVE",
+    action:
+      | typeof USER_ACTIONS.MOVE_POSITIVE
+      | typeof USER_ACTIONS.MOVE_NEGATIVE,
   ) {
-    const user = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .then((r) => r[0]);
+    const user = await this.findById<typeof schema.users.$inferSelect>(
+      schema.users,
+      userId,
+    );
     if (!user) return null;
 
     const currentCell = user.position;
     const dice = getNextDice(realTime, currentCell ?? 0, action);
 
-    await this.db
-      .update(schema.users)
-      .set({ currentDice: dice, updated: nowIso() })
-      .where(eq(schema.users.id, userId));
-
-    broadcast("users", "update", userId);
+    await this.updateOne(schema.users, userId, { currentDice: dice }, "users");
     return this.getById(userId);
   }
 }

@@ -6,7 +6,7 @@ import { CircleX, Globe, Menu, ToolCase } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { startTransition, useCallback, useState } from "react";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
@@ -84,8 +84,8 @@ export default function Tabletop() {
     });
   }, [queryClient]);
 
-  useSubscription("cells", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("cells", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -102,17 +102,11 @@ export default function Tabletop() {
     <main className="relative flex h-full w-full items-center justify-center overflow-clip">
       {/* ADMIN TABLETOP TOOLS */}
       {showTools && (
-        <ToolsTaletop
-          setShowTools={setShowTools}
-          isEditing={isEditing}
-          setEditing={setEditing}
-        />
+        <ToolsTaletop setShowTools={setShowTools} isEditing={isEditing} setEditing={setEditing} />
       )}
 
       {/* CONTROLS */}
-      {control && (
-        <Controls setControls={setControl} cell={cell} setCell={setCell} />
-      )}
+      {control && <Controls setControls={setControl} cell={cell} setCell={setCell} />}
 
       {/* CELL */}
       {showCell && <ShowCell setShowCell={setShowCell} />}
@@ -166,9 +160,7 @@ export default function Tabletop() {
           wrapperStyle={{ width: "100%", height: "100%" }}
         >
           <GameArea
-            cells={
-              data?.cells || { start: undefined, final: undefined, grid: [] }
-            }
+            cells={data?.cells || { start: undefined, final: undefined, grid: [] }}
             users={data?.users || []}
             setCell={setCell}
             setControl={setControl}

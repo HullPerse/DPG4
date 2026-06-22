@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Star } from "lucide-react";
 import { useState } from "react";
 
@@ -17,8 +17,7 @@ export default function Rating({
 }) {
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
 
-  const displayValue =
-    hoveredValue !== null && hoveredValue < value ? hoveredValue : value;
+  const displayValue = hoveredValue !== null && hoveredValue < value ? hoveredValue : value;
 
   const handleClick = (starValue: number) => {
     if (readOnly) return;

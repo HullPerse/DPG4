@@ -14,7 +14,7 @@ export const DICE_REROLL_PAUSE_MS = 600;
 export const DICE_PLAYER_AUTO_MS = 1500;
 export const BROKEN_SPLIT_DELAY = 0.4;
 export const BROKEN_SPLIT_DURATION = 0.9;
-export const BROKEN_HALF_OFFSET = 0.9;
+export const BROKEN_HALF_OFFSET = 1.2;
 
 export const FACE_VALUES = [4, 3, 1, 6, 2, 5] as const;
 
@@ -26,24 +26,6 @@ export const TARGET_ROTATION: Record<number, [number, number, number]> = {
   5: [Math.PI / 2, 0, 0],
   6: [Math.PI, 0, 0],
 };
-
-export const JACKPOT_YEARS = 5;
-export const THREE_OF_KIND_MULT = 3;
-export const STRAIGHT_MULT = 2;
-export const PAIR_MULT = 1;
-export const PINCH_MULT = 2;
-
-export const HAND_JP: Record<string, string> = {
-  "1·1·1 - джекпот": "ピンゾロ",
-  "Нет комбинации - переброс": "役無し",
-  "Нет комбинации": "役無し",
-  "4·5·6": "シゴロ",
-  "1·2·3": "ピンチ",
-};
-
-export function getHandJp(label: string): string {
-  return HAND_JP[label] ?? "";
-}
 
 export function createInnerFaceTexture(): CanvasTexture {
   const canvas = document.createElement("canvas");

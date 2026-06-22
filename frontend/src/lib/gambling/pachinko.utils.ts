@@ -1,15 +1,11 @@
-/** Mirrors backend pachinko.service.ts - left → right */
 export const PACHINKO_SLOT_MULTIPLIERS = [
   5, 3, 2, 1.5, 1, 0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5,
 ] as const;
 
 export const PACHINKO_SLOT_COUNT = PACHINKO_SLOT_MULTIPLIERS.length;
 
-export const BOARD_WIDTH = 13;
+export const BOARD_WIDTH = 17;
 
-/** Bid-dependent slot widths: higher bid → wider bad slots, narrower good slots.
- *  sqrt(1/m) base weighted by (1 + (bid-1)*0.001*(2-m)) so m=2 is pivot.
- *  Factor is floored at 0.5 to keep all slots physically passable (ball radius 0.2). */
 const AVG_M = 2;
 const BID_SLOPE = 0.0007;
 
@@ -63,10 +59,30 @@ export type PachinkoUiResult = {
   tone: "jackpot" | "win" | "lose" | "chance";
 };
 
-export function formatPachinkoResultLabel(label: string, net: number): string {
-  return net >= 0 ? `${label}` : `${label}`;
-}
-
 export function randomDropOffsetX(): number {
   return (Math.random() - 0.5) * 0.75;
+}
+
+export const RISK_GATE_THRESHOLD = 3;
+
+let zaInterval: ReturnType<typeof setInterval> | null = null;
+
+export function startZawa(callback: (text: string) => void) {
+  const chars = ["ザ", "ワ", "ゾ", "ズ", "ド", "バ", "ギ"];
+  stopZawa();
+  zaInterval = setInterval(() => {
+    const len = 4 + Math.floor(Math.random() * 6);
+    let t = "";
+    for (let i = 0; i < len; i++) {
+      t += chars[Math.floor(Math.random() * chars.length)];
+    }
+    callback(t);
+  }, 120);
+}
+
+export function stopZawa() {
+  if (zaInterval) {
+    clearInterval(zaInterval);
+    zaInterval = null;
+  }
 }

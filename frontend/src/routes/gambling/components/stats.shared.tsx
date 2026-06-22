@@ -1,4 +1,4 @@
-import { cn, BORDER_WINDOW } from "@/lib/utils";
+import { cn, BORDER_WINDOW } from "@/lib/index.utils";
 import { netColorClass } from "@/lib/gambling/stats.constants";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
@@ -44,13 +44,7 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section
-      className={cn(
-        BORDER_WINDOW,
-        "flex flex-col gap-2 bg-card/40 p-3",
-        className,
-      )}
-    >
+    <section className={cn(BORDER_WINDOW, "flex flex-col gap-2 bg-card/40 p-3", className)}>
       <header className="flex items-center gap-2 text-sm font-bold text-muted">
         {Icon && <Icon className="size-4 text-iris" />}
         {title}
@@ -77,22 +71,12 @@ export function StatCard({
         {Icon && <Icon className="size-3.5 shrink-0" />}
         <span>{label}</span>
       </div>
-      <span
-        className={cn("text-xl font-bold tabular-nums", color ?? "text-text")}
-      >
-        {value}
-      </span>
+      <span className={cn("text-xl font-bold tabular-nums", color ?? "text-text")}>{value}</span>
     </div>
   );
 }
 
-export function EmptyState({
-  icon: Icon,
-  message,
-}: {
-  icon: LucideIcon | null;
-  message: string;
-}) {
+export function EmptyState({ icon: Icon, message }: { icon: LucideIcon | null; message: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted">
       {Icon && <Icon className="size-12 opacity-40" />}
@@ -101,17 +85,9 @@ export function EmptyState({
   );
 }
 
-export function NetValue({
-  value,
-  className,
-}: {
-  value: number;
-  className?: string;
-}) {
+export function NetValue({ value, className }: { value: number; className?: string }) {
   return (
-    <span
-      className={cn("font-bold tabular-nums", netColorClass(value), className)}
-    >
+    <span className={cn("font-bold tabular-nums", netColorClass(value), className)}>
       {value >= 0 ? "+" : ""}
       {value}
     </span>

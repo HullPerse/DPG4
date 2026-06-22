@@ -19,7 +19,7 @@ export function duplicateItemsToMinimum(
   return duplicated.slice(0, minCount);
 }
 
-export function easeOutCubic(t: number): number {
+function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
@@ -41,7 +41,7 @@ export function getCenteredItem(
   return clampedIndex;
 }
 
-export function calculateTargetScroll(
+function calculateTargetScroll(
   winnerIndex: number,
   containerWidth: number,
   itemWidth: number = ITEM_WIDTH,

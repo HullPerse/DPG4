@@ -6,13 +6,13 @@ import { memo, startTransition, useCallback, useMemo, useState } from "react";
 
 import GameApi from "@/api/games.api";
 import { Input } from "@/components/ui/input.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Button } from "@/components/ui/button.component";
 import NewGameLibrary from "../components/library/newGame.library";
 import GameLibrary from "../components/library/game.library";
 import HomeLibrary from "../components/library/home.library";
 import { useUserStore } from "@/store/user.store";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor } from "@/lib/index.utils";
 
 const gameApi = new GameApi();
 
@@ -40,8 +40,8 @@ function LibraryTab() {
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   const getNextGame = () => {
     if (!data) return "newGame";
@@ -69,10 +69,7 @@ function LibraryTab() {
       );
 
     return (
-      <GameLibrary
-        id={currentGame}
-        switchGame={() => setCurrentGame(getNextGame() as string)}
-      />
+      <GameLibrary id={currentGame} switchGame={() => setCurrentGame(getNextGame() as string)} />
     );
   }, [currentGame, data]);
 
@@ -120,11 +117,7 @@ function LibraryTab() {
         <div className="flex h-full flex-col gap-1 overflow-y-auto">
           {data?.length && data?.length > 0
             ? data
-                ?.filter((game) =>
-                  game.data.name
-                    .toUpperCase()
-                    .includes(searchTerm.toUpperCase()),
-                )
+                ?.filter((game) => game.data.name.toUpperCase().includes(searchTerm.toUpperCase()))
                 .sort((a, b) => (a.created > b.created ? 1 : -1))
                 .reverse()
                 .map((game) => (
@@ -139,9 +132,7 @@ function LibraryTab() {
                       className="absolute top-1/2 left-2 ml-3 flex h-2 w-2 -translate-y-1/2 items-center justify-center rounded-full"
                       style={{ backgroundColor: getStatusColor(game.status) }}
                     >
-                      {currentGame === game.id && (
-                        <ChevronRight className="mr-8" />
-                      )}
+                      {currentGame === game.id && <ChevronRight className="mr-8" />}
                     </span>
 
                     <span className="overflow-hidden text-ellipsis whitespace-nowrap ml-4">

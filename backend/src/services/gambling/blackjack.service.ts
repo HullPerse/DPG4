@@ -1,10 +1,12 @@
 import { eq } from "drizzle-orm";
-import * as schema from "../../db/schema";
-import { logger } from "../../lib/logger";
-import { nowIso } from "../../lib/dates";
-import { newId } from "../../lib/ids";
-import { Db } from "@/types";
-import { BlackjackResult, BlackjackState, Card } from "@/types/gambling";
+import * as schema from "@/db/schema.db";
+import { nowIso, newId } from "@/lib/index.utils";
+import type {
+  BlackjackResult,
+  BlackjackState,
+  BlackjackDevOverrides,
+  ActiveGame,
+} from "@/types/gambling";
 import {
   createShoe,
   draw,
@@ -14,39 +16,26 @@ import {
   computeOutcome,
   resolveLabels,
   dealerPlay,
-} from "../../lib/blackjack.utils";
-import { UserService } from "@/services/user.service";
+} from "@/lib/blackjack.utils";
+import type { Db } from "@/types/server";
+import UserService from "@/services/user.service";
+import EconomyService from "@/services/economy.service";
 import {
   GAMBLING_BAN_THRESHOLD,
   GAMBLING_MIN_BET,
   GAMBLING_MAX_BET,
-} from "../../lib/gambling.constants";
-import { deductTickets, addTickets } from "../../lib/ticket.helpers";
-import type { Card as PlayingCard } from "@/types/gambling";
+} from "@/lib/gambling.constants";
+import Logger from "@/lib/logger.utils";
 
-export interface BlackjackDevOverrides {
-  devForceDealerCards?: PlayingCard[];
-  devForcePlayerCards?: PlayingCard[];
-  devForceHitCard?: PlayingCard;
-  devPeekHole?: boolean;
-}
+export default class BlackjackService {
+  private games = new Map<string, ActiveGame>();
+  private logger = new Logger("BLACKJACK");
 
-interface ActiveGame {
-  userId: string;
-  bid: number;
-  deck: Card[];
-  playerHand: Card[];
-  dealerHand: Card[];
-  phase: "player" | "ended";
-}
-
-export class BlackjackService {
   constructor(
     private db: Db,
     private userService: UserService,
+    private economyService: EconomyService,
   ) {}
-
-  private games = new Map<string, ActiveGame>();
 
   private async applyGamblingPayout(
     userId: string,
@@ -56,30 +45,21 @@ export class BlackjackService {
   ): Promise<{ banned: boolean; balance: number }> {
     const user = devMode ? null : await this.userService.getById(userId);
     if (!devMode && !user) throw new Error("User not found");
-
     let gamblingWinnings = user?.gamblingWinnings ?? 0;
     let gamblingBanned = user?.gamblingBanned ?? false;
-
     if (!devMode && payout > 0) {
       const profit = Math.max(0, payout - bid);
       gamblingWinnings += profit;
-      if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) {
+      if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned)
         gamblingBanned = true;
-      }
-      await addTickets(this.db, userId, payout);
+      await this.economyService.addTickets(userId, payout);
     }
-
     if (!devMode) {
       await this.db
         .update(schema.users)
-        .set({
-          gamblingWinnings,
-          gamblingBanned,
-          updated: nowIso(),
-        })
+        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
         .where(eq(schema.users.id, userId));
     }
-
     const updated = devMode ? null : await this.userService.getById(userId);
     return { banned: gamblingBanned, balance: updated?.tickets ?? 0 };
   }
@@ -89,7 +69,6 @@ export class BlackjackService {
     devMode?: boolean,
   ): Promise<BlackjackState> {
     game.phase = "ended";
-
     const { payout, outcome } = computeOutcome(
       game.playerHand,
       game.dealerHand,
@@ -98,14 +77,12 @@ export class BlackjackService {
     const pv = handValue(game.playerHand);
     const dv = handValue(game.dealerHand);
     const { label, tone } = resolveLabels(outcome, pv, dv);
-
     const { banned, balance } = await this.applyGamblingPayout(
       game.userId,
       game.bid,
       payout,
       devMode,
     );
-
     this.games.delete(game.userId);
 
     if (!devMode) {
@@ -131,14 +108,8 @@ export class BlackjackService {
           created: nowIso(),
         });
       }
-      logger.info(
-        user?.username,
-        "blackjack",
-        outcome,
-        `net:${-game.bid + payout}`,
-      );
+      this.logger.info(`blackjack ${outcome} net:${-game.bid + payout}`);
     }
-
     return this.toState(game, balance, {
       outcome,
       payout,
@@ -171,15 +142,10 @@ export class BlackjackService {
   private async maybeResolveAfterDeal(
     game: ActiveGame,
   ): Promise<BlackjackState | null> {
-    if (isBlackjack(game.playerHand)) {
-      return this.finishGame(game);
-    }
-
+    if (isBlackjack(game.playerHand)) return this.finishGame(game);
     const dealerUp = game.dealerHand[0];
-    if (isPeekCard(dealerUp) && isBlackjack(game.dealerHand)) {
+    if (isPeekCard(dealerUp) && isBlackjack(game.dealerHand))
       return this.finishGame(game);
-    }
-
     return null;
   }
 
@@ -194,17 +160,14 @@ export class BlackjackService {
         bid < GAMBLING_MIN_BET ||
         bid > GAMBLING_MAX_BET ||
         !Number.isInteger(bid)
-      ) {
+      )
         throw new Error("Invalid bid");
-      }
-
       const user = await this.userService.getById(userId);
       if (!user) throw new Error("User not found");
       if (user.tickets < bid) throw new Error("Insufficient balance");
       if (user.gamblingBanned) throw new Error("Banned from gambling");
       if (this.games.has(userId)) throw new Error("Game already in progress");
-
-      await deductTickets(this.db, userId, bid);
+      await this.economyService.deductTickets(userId, bid);
     }
 
     const game: ActiveGame = {
@@ -216,14 +179,20 @@ export class BlackjackService {
       phase: "player",
     };
 
-    if (devOverrides?.devForcePlayerCards && devOverrides.devForcePlayerCards.length >= 2) {
+    if (
+      devOverrides?.devForcePlayerCards &&
+      devOverrides.devForcePlayerCards.length >= 2
+    ) {
       game.playerHand = devOverrides.devForcePlayerCards.slice(0, 2);
     } else {
       game.playerHand.push(draw(game.deck));
       game.playerHand.push(draw(game.deck));
     }
 
-    if (devOverrides?.devForceDealerCards && devOverrides.devForceDealerCards.length >= 2) {
+    if (
+      devOverrides?.devForceDealerCards &&
+      devOverrides.devForceDealerCards.length >= 2
+    ) {
       game.dealerHand = devOverrides.devForceDealerCards.slice(0, 2);
     } else {
       game.dealerHand.push(draw(game.deck));
@@ -231,17 +200,12 @@ export class BlackjackService {
     }
 
     this.games.set(userId, game);
-
     const updated = devMode ? null : await this.userService.getById(userId);
     const balance = updated?.tickets ?? 0;
 
     const instant = await this.maybeResolveAfterDeal(game);
     if (instant) return instant;
-
-    if (handValue(game.playerHand) >= 21) {
-      return this.finishGame(game, devMode);
-    }
-
+    if (handValue(game.playerHand) >= 21) return this.finishGame(game, devMode);
     return this.toState(game, balance);
   }
 
@@ -251,37 +215,24 @@ export class BlackjackService {
     devOverrides?: BlackjackDevOverrides,
   ): Promise<BlackjackState> {
     const game = this.games.get(userId);
-    if (!game || game.phase !== "player") {
-      throw new Error("No active game");
-    }
-
-    const card = devOverrides?.devForceHitCard ?? draw(game.deck);
+    if (!game || game.phase !== "player") throw new Error("No active game");
+    const card = devOverrides?.devForceHitCard
+      ? devOverrides.devForceHitCard[0]
+      : draw(game.deck);
     game.playerHand.push(card);
-
     const updated = devMode ? null : await this.userService.getById(userId);
     const balance = updated?.tickets ?? 0;
-
-    if (handValue(game.playerHand) > 21) {
-      return this.finishGame(game, devMode);
-    }
-
+    if (handValue(game.playerHand) > 21) return this.finishGame(game, devMode);
     if (handValue(game.playerHand) === 21) {
       dealerPlay(game.dealerHand, game.deck);
       return this.finishGame(game, devMode);
     }
-
     return this.toState(game, balance);
   }
 
-  async stand(
-    userId: string,
-    devMode?: boolean,
-  ): Promise<BlackjackState> {
+  async stand(userId: string, devMode?: boolean): Promise<BlackjackState> {
     const game = this.games.get(userId);
-    if (!game || game.phase !== "player") {
-      throw new Error("No active game");
-    }
-
+    if (!game || game.phase !== "player") throw new Error("No active game");
     dealerPlay(game.dealerHand, game.deck);
     return this.finishGame(game, devMode);
   }
@@ -289,7 +240,6 @@ export class BlackjackService {
   async getState(userId: string): Promise<BlackjackState | null> {
     const game = this.games.get(userId);
     if (!game || game.phase !== "player") return null;
-
     const user = await this.userService.getById(userId);
     return this.toState(game, user?.tickets ?? 0);
   }

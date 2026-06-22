@@ -3,17 +3,10 @@ import type { ItemLabel } from "@/types/items";
 import type { ModalType } from "@/types/effect";
 import ItemFramework from "@/lib/items/item.framework";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  Battery,
-  Calendar,
-  ChevronDown,
-  Hash,
-  NetworkIcon,
-  Section,
-} from "lucide-react";
+import { Battery, Calendar, ChevronDown, Hash, NetworkIcon, Section } from "lucide-react";
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
 import { Inventory, Item } from "@/types/items";
@@ -25,12 +18,8 @@ import { User } from "@/types/user";
 import { otherEffect } from "@/lib/items/other.items";
 import { CreateModal } from "@/components/shared/items.modal";
 import { itemEffect } from "@/lib/items/item.items";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover.component";
-import { SortDirection, SortMethod } from "@/routes/browser/browser.root";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
+import { SortDirection, SortMethod, sortMethodLabels, compareItems } from "@/lib/sorting.utils";
 import StatusInventory from "../components/inventory/status.inventory";
 import ItemInventory from "../components/inventory/item.inventory";
 import ActionInventory from "../components/inventory/action.inventory";
@@ -111,10 +100,8 @@ function InventoryTab({ id }: { id?: string }) {
       if (type === "use") return await itemsApi.useInventory(itemId);
       if (type === "delete") await itemsApi.removeInventory(itemId);
       if (type === "send") await itemsApi.sendInventory(itemId, userId!);
-      if (type === "sell")
-        await itemsApi.sellInventory(itemId, owner!, sellPrice!);
-      if (type === "charge")
-        await itemsApi.chargeInventory(itemId, oldCharge!, newCharge!);
+      if (type === "sell") await itemsApi.sellInventory(itemId, owner!, sellPrice!);
+      if (type === "charge") await itemsApi.chargeInventory(itemId, oldCharge!, newCharge!);
     },
     onSuccess: (_data, vars) => {
       setActive(null);
@@ -139,10 +126,7 @@ function InventoryTab({ id }: { id?: string }) {
           refreshInventoryCoalesced();
           break;
         case "send":
-          Promise.all([
-            refreshInventoryCoalesced(),
-            patchInventoryFor(vars.userId!),
-          ]);
+          Promise.all([refreshInventoryCoalesced(), patchInventoryFor(vars.userId!)]);
           break;
         case "sell":
           refreshInventoryCoalesced();
@@ -161,12 +145,10 @@ function InventoryTab({ id }: { id?: string }) {
   const patchInventoryFor = useCallback(
     async (userId: string) => {
       const inventory = await itemsApi.getInventory(userId);
-      const hadCache =
-        queryClient.getQueryData(["inventoryTab", userId]) != null;
+      const hadCache = queryClient.getQueryData(["inventoryTab", userId]) != null;
 
-      queryClient.setQueryData<InventoryTabData>(
-        ["inventoryTab", userId],
-        (prev) => (prev ? { ...prev, inventory } : prev),
+      queryClient.setQueryData<InventoryTabData>(["inventoryTab", userId], (prev) =>
+        prev ? { ...prev, inventory } : prev,
       );
 
       if (!hadCache) {
@@ -192,16 +174,14 @@ function InventoryTab({ id }: { id?: string }) {
       ? await itemsApi.getItemsByLabels(allStatuses)
       : [];
 
-    queryClient.setQueryData<InventoryTabData>(
-      ["inventoryTab", currentId],
-      (prev) =>
-        prev
-          ? {
-              ...prev,
-              users: users.filter((item) => item.id !== currentId),
-              statuses: finalStatuses,
-            }
-          : prev,
+    queryClient.setQueryData<InventoryTabData>(["inventoryTab", currentId], (prev) =>
+      prev
+        ? {
+            ...prev,
+            users: users.filter((item) => item.id !== currentId),
+            statuses: finalStatuses,
+          }
+        : prev,
     );
   }, [queryClient, currentId]);
 
@@ -215,14 +195,12 @@ function InventoryTab({ id }: { id?: string }) {
     return inventoryRefreshRef.current;
   }, [refreshInventory]);
 
-  useSubscription("inventory", "*", refreshInventoryCoalesced);
-  useSubscription("users", "*", refreshStatuses);
+  useSubscription("inventory", refreshInventoryCoalesced);
+  useSubscription("users", refreshStatuses);
 
   const modalItem = useMemo(() => {
     if (!modal) return null;
-    return (
-      [...otherEffect, ...itemEffect].find((e) => e.label === modal) ?? null
-    );
+    return [...otherEffect, ...itemEffect].find((e) => e.label === modal) ?? null;
   }, [modal]);
 
   const modalConsume = useMemo((): ModalType["consume"] | undefined => {
@@ -265,32 +243,7 @@ function InventoryTab({ id }: { id?: string }) {
     type: Section,
   };
 
-  const sortMethodLabels = {
-    name: "По имени",
-    date: "По дате",
-    charges: "По зарядам",
-    type: "По типу",
-  };
-
   const SortMethodIcon = sortMethodIcons[sortMethod];
-
-  const sortFunction = (a: Inventory, b: Inventory) => {
-    let result = 0;
-
-    if (sortMethod === "name") {
-      result = a.label.localeCompare(b.label);
-    } else if (sortMethod === "charges") {
-      result = a.charge - b.charge;
-    } else if (sortMethod === "date") {
-      result = new Date(a.created).getTime() - new Date(b.created).getTime();
-    } else if (sortMethod === "type") {
-      result = a.type.localeCompare(b.type);
-    } else {
-      result = new Date(a.created).getTime() - new Date(b.created).getTime();
-    }
-
-    return sortDirection === "asc" ? result : -result;
-  };
 
   return (
     <main className="p-2 flex flex-col w-full h-full gap-2">
@@ -344,9 +297,7 @@ function InventoryTab({ id }: { id?: string }) {
               >
                 {label}
                 {sortMethod === method && (
-                  <span className="ml-1">
-                    {sortDirection === "asc" ? "↑" : "↓"}
-                  </span>
+                  <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
                 )}
               </Button>
             ))}
@@ -368,13 +319,11 @@ function InventoryTab({ id }: { id?: string }) {
 
       <section className="flex flex-wrap justify-start gap-2 overflow-y-auto w-full pb-5">
         {data?.inventory
-          .sort((a, b) => sortFunction(a, b))
+          .sort((a, b) => compareItems(a, b, sortMethod, sortDirection))
           .filter(
             (item) =>
               item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
-              item.description
-                .toUpperCase()
-                .includes(searchTerms.toUpperCase()),
+              item.description.toUpperCase().includes(searchTerms.toUpperCase()),
           )
           .map((item, index) =>
             active === index ? (

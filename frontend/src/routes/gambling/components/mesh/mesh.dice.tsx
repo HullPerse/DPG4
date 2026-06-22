@@ -29,11 +29,11 @@ import { useFrame } from "@react-three/fiber";
 
 function DiceHalf({
   value,
-  isLeft,
+  isTop,
   innerTexture,
 }: {
   value: number;
-  isLeft: boolean;
+  isTop: boolean;
   innerTexture: CanvasTexture;
 }) {
   const materials = useMemo(() => {
@@ -50,17 +50,17 @@ function DiceHalf({
       roughness: 1.0,
       metalness: 0.0,
     });
-    if (isLeft) {
-      normalMats[0] = innerMat;
+    if (isTop) {
+      normalMats[5] = innerMat;
     } else {
-      normalMats[1] = innerMat;
+      normalMats[4] = innerMat;
     }
     return normalMats;
-  }, [value, isLeft, innerTexture]);
+  }, [value, isTop, innerTexture]);
 
   return (
     <mesh castShadow receiveShadow>
-      <boxGeometry args={[1.6, 0.8, 1.6]} />
+      <boxGeometry args={[1.6, 1.6, 1.6]} />
       {materials.map((mat, i) => (
         <primitive key={i} object={mat} attach={`material-${i}`} />
       ))}
@@ -89,8 +89,8 @@ function DiceMesh({
 }) {
   const groupRef = useRef<Group>(null);
   const fullCubeRef = useRef<Mesh>(null);
-  const leftHalfRef = useRef<Group>(null);
-  const rightHalfRef = useRef<Group>(null);
+  const topHalfRef = useRef<Group>(null);
+  const bottomHalfRef = useRef<Group>(null);
   const simRef = useRef<DiceSim>(createIdleSim(index, rowZ));
   const settledRef = useRef(false);
   const lastThrowKey = useRef(0);
@@ -140,8 +140,8 @@ function DiceMesh({
         );
       }
       if (fullCubeRef.current) fullCubeRef.current.visible = true;
-      if (leftHalfRef.current) leftHalfRef.current.visible = false;
-      if (rightHalfRef.current) rightHalfRef.current.visible = false;
+      if (topHalfRef.current) topHalfRef.current.visible = false;
+      if (bottomHalfRef.current) bottomHalfRef.current.visible = false;
       return;
     }
 
@@ -153,8 +153,8 @@ function DiceMesh({
       halfOffset.current = 0;
 
       if (fullCubeRef.current) fullCubeRef.current.visible = true;
-      if (leftHalfRef.current) leftHalfRef.current.visible = false;
-      if (rightHalfRef.current) rightHalfRef.current.visible = false;
+      if (topHalfRef.current) topHalfRef.current.visible = false;
+      if (bottomHalfRef.current) bottomHalfRef.current.visible = false;
 
       simRef.current = isBrokenDie
         ? createBrokenThrowSim(index, now, homeZRef.current)
@@ -301,8 +301,8 @@ function DiceMesh({
 
         if (elapsed < BROKEN_SPLIT_DELAY) {
           if (fullCubeRef.current) fullCubeRef.current.visible = true;
-          if (leftHalfRef.current) leftHalfRef.current.visible = false;
-          if (rightHalfRef.current) rightHalfRef.current.visible = false;
+          if (topHalfRef.current) topHalfRef.current.visible = false;
+          if (bottomHalfRef.current) bottomHalfRef.current.visible = false;
           const [ftx, fty, ftz] = TARGET_ROTATION[targetValue];
           group.position.set(sim.homeX, REST_Y, sim.homeZ);
           group.rotation.set(ftx, fty, ftz);
@@ -312,31 +312,30 @@ function DiceMesh({
         if (!freezeDoneRef.current) {
           freezeDoneRef.current = true;
           if (fullCubeRef.current) fullCubeRef.current.visible = false;
-          if (leftHalfRef.current) leftHalfRef.current.visible = true;
-          if (rightHalfRef.current) rightHalfRef.current.visible = true;
+          if (topHalfRef.current) topHalfRef.current.visible = true;
+          if (bottomHalfRef.current) bottomHalfRef.current.visible = true;
         }
 
         const splitElapsed = elapsed - BROKEN_SPLIT_DELAY;
         const s = Math.min(splitElapsed / BROKEN_SPLIT_DURATION, 1);
         const ease = 1 - Math.pow(1 - s, 3);
-        const MIN_SPREAD = 0.3;
+        const MIN_SPREAD = 0.8;
         halfOffset.current = MIN_SPREAD + (BROKEN_HALF_OFFSET - MIN_SPREAD) * ease;
 
-        const [ltx, lty, ltz] = TARGET_ROTATION[targetValue];
-        const [rtx, rty, rtz] = TARGET_ROTATION[7 - targetValue];
+        const [ttx, tty, ttz] = TARGET_ROTATION[targetValue];
+        const [btx, bty, btz] = TARGET_ROTATION[7 - targetValue];
 
-        if (leftHalfRef.current) {
-          leftHalfRef.current.position.set(-halfOffset.current - 0.8, 0, 0);
-          leftHalfRef.current.rotation.set(ltx, lty, ltz);
+        if (topHalfRef.current) {
+          topHalfRef.current.position.set(0, 0, halfOffset.current);
+          topHalfRef.current.rotation.set(ttx, tty, ttz);
         }
-        if (rightHalfRef.current) {
-          rightHalfRef.current.position.set(halfOffset.current - 0.8, 0, 0);
-          rightHalfRef.current.rotation.set(rtx, rty, rtz);
+        if (bottomHalfRef.current) {
+          bottomHalfRef.current.position.set(0, 0, -halfOffset.current);
+          bottomHalfRef.current.rotation.set(btx, bty, btz);
         }
 
-        const [ftx, fty, ftz] = TARGET_ROTATION[targetValue];
         group.position.set(sim.homeX, REST_Y, sim.homeZ);
-        group.rotation.set(ftx, fty, ftz);
+        group.rotation.set(0, 0, 0);
       } else {
         const [tx, ty, tz] = TARGET_ROTATION[targetValue];
         group.position.set(sim.homeX, REST_Y, sim.homeZ);
@@ -354,18 +353,18 @@ function DiceMesh({
         ))}
       </mesh>
 
-      <group ref={leftHalfRef} visible={false}>
+      <group ref={topHalfRef} visible={false}>
         <DiceHalf
           value={targetValue}
-          isLeft={true}
+          isTop={true}
           innerTexture={innerTexture}
         />
       </group>
 
-      <group ref={rightHalfRef} visible={false}>
+      <group ref={bottomHalfRef} visible={false}>
         <DiceHalf
           value={7 - targetValue}
-          isLeft={false}
+          isTop={false}
           innerTexture={innerTexture}
         />
       </group>

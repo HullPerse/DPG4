@@ -1,11 +1,14 @@
 import { WS_URL } from "@/api/client.api";
+import { z } from "zod";
 
-type WsMessage = {
-  channel: string;
-  action: string;
-  id?: string;
-  channels?: string[];
-};
+const wsMessageSchema = z.object({
+  channel: z.string().min(1),
+  action: z.string().min(1),
+  id: z.string().optional(),
+  channels: z.array(z.string()).optional(),
+});
+
+type WsMessage = z.infer<typeof wsMessageSchema>;
 
 type Listener = (data: WsMessage) => void;
 
@@ -25,9 +28,15 @@ function connect() {
 
   socket.onmessage = (event) => {
     try {
-      dispatch(JSON.parse(String(event.data)) as WsMessage);
+      const raw = JSON.parse(String(event.data));
+      const parsed = wsMessageSchema.safeParse(raw);
+      if (!parsed.success) {
+        console.warn("Invalid WS message:", parsed.error.issues);
+        return;
+      }
+      dispatch(parsed.data);
     } catch {
-      /* ignore */
+      console.warn("Failed to parse WS message");
     }
   };
 

@@ -1,15 +1,15 @@
 import { Elysia, t } from "elysia";
-import { eq, sql, desc, and } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { resolveUsername } from "../lib/users";
-import { dbPlugin } from "../plugins/db.plugin";
+import { eq, sql, and } from "drizzle-orm";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso, getUser } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import { databasePlugin } from "@/plugins/index.plugin";
 
-export const hangmanRoute = new Elysia({ prefix: "/hangman" })
-  .use(dbPlugin)
+const logger = new Logger("HANGMAN");
+
+export default new Elysia({ prefix: "/hangman" })
+  .use(databasePlugin)
 
   .get(
     "/:userId",
@@ -18,13 +18,12 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
-        .orderBy(desc(schema.hangman.created))
+        .orderBy(sql`${schema.hangman.created} DESC`)
         .get();
       return record ?? null;
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get user's latest hangman record" },
     },
   )
 
@@ -35,7 +34,7 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
-        .orderBy(desc(schema.hangman.created));
+        .orderBy(sql`${schema.hangman.created} DESC`);
       let streak = 0;
       for (const row of rows) {
         if (row.state === "won") streak++;
@@ -45,7 +44,6 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get win streak" },
     },
   )
 
@@ -92,7 +90,6 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["hangman"], summary: "Get latest or create first hangman record" },
     },
   )
 
@@ -133,7 +130,6 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         guessedLetters: t.Array(t.String()),
         wrongLetters: t.Array(t.String()),
       }),
-      detail: { tags: ["hangman"], summary: "Save mid-game state" },
     },
   )
 
@@ -165,7 +161,10 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         .where(eq(schema.hangman.id, record.id));
 
       broadcast("hangman", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "user played", body.won);
+      const hUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(hUser?.username ?? "SYSTEM")
+        .info(`user played ${body.won}`);
 
       return await db
         .select()
@@ -180,6 +179,5 @@ export const hangmanRoute = new Elysia({ prefix: "/hangman" })
         guessedLetters: t.Array(t.String()),
         wrongLetters: t.Array(t.String()),
       }),
-      detail: { tags: ["hangman"], summary: "Mark current round as played" },
     },
   );

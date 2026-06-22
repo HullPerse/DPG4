@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { openWindow } from "@/lib/utils";
+import { openWindow } from "@/lib/index.utils";
 import { EyeIcon, EyeOffIcon, ExternalLink } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
 import { Button } from "@/components/ui/button.component";
@@ -15,7 +15,7 @@ function LogicalWheel({
   values: string[];
   setValues: (values: string[]) => void;
 }) {
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<{
     description: string;
     link: string;
@@ -42,9 +42,7 @@ function LogicalWheel({
   }, []);
 
   const currentArray = arrays[selected]?.data ?? browserGames;
-  const visibleItems = currentArray.filter(
-    (item) => !hiddenItems.includes(item.link),
-  );
+  const visibleItems = currentArray.filter((item) => !hiddenItems.has(item.link));
 
   useEffect(() => {
     if (values.length === 0) {
@@ -57,7 +55,7 @@ function LogicalWheel({
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${selected}-${hiddenItems.join(",")}`}
+          key={`wheel-${selected}-${[...hiddenItems].join(",")}`}
           list={visibleItems.map((item, idx) => ({
             id: item.link,
             label: `Предмет ${idx + 1}`,
@@ -109,7 +107,7 @@ function LogicalWheel({
             key={item.link + index}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity: hiddenItems.includes(item.link) ? "50%" : "100%",
+              opacity: hiddenItems.has(item.link) ? "50%" : "100%",
             }}
           >
             <div className="flex flex-col ml-2">
@@ -122,19 +120,13 @@ function LogicalWheel({
               <Button
                 size="icon"
                 onClick={() => {
-                  const existing = hiddenItems.includes(item.link);
-                  if (!existing)
-                    return setHiddenItems([...hiddenItems, item.link]);
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== item.link),
-                  );
+                  const next = new Set(hiddenItems);
+                  if (next.has(item.link)) next.delete(item.link);
+                  else next.add(item.link);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.includes(item.link) ? (
-                  <EyeOffIcon size={20} />
-                ) : (
-                  <EyeIcon size={20} />
-                )}
+                {hiddenItems.has(item.link) ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
               </Button>
               <Button
                 variant="info"

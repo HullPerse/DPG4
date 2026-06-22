@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { useEffect, useState, memo, useCallback } from "react";
 
 export const TimeDisplay = memo(function TimeDisplay({ time }: { time: Date }) {
@@ -24,13 +24,7 @@ export const TimeDisplay = memo(function TimeDisplay({ time }: { time: Date }) {
   );
 });
 
-export default function Timer({
-  onClick,
-  className,
-}: {
-  onClick: () => void;
-  className?: string;
-}) {
+export default function Timer({ onClick, className }: { onClick: () => void; className?: string }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {

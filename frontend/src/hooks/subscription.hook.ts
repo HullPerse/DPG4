@@ -1,18 +1,37 @@
-import { useRealtime } from "./realtime.hook";
+import { useCallback, useEffect, useRef } from "react";
+import { subscribeWsChannel } from "@/lib/ws.client";
 
 export function useSubscription(
   collection: string,
-  _filter: string,
   callback: () => void,
-  options?: {
-    maxRetries?: number;
-    retryDelay?: number;
+  options: {
     debounceMs?: number;
     enabled?: boolean;
-  },
+  } = {},
 ) {
-  return useRealtime(collection, callback, {
-    debounceMs: options?.debounceMs,
-    enabled: options?.enabled,
-  });
+  const { debounceMs = 0, enabled = true } = options;
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const trigger = useCallback(() => {
+    if (debounceMs > 0) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => callbackRef.current(), debounceMs);
+    } else {
+      callbackRef.current();
+    }
+  }, [debounceMs]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const unsubscribe = subscribeWsChannel(collection, () => trigger());
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      unsubscribe();
+    };
+  }, [collection, enabled, trigger]);
 }

@@ -1,11 +1,4 @@
-import {
-  Preset,
-  Game,
-  GameReview,
-  GameStatus,
-  GameData,
-  FamilyGame,
-} from "@/types/games";
+import { Preset, Game, GameReview, GameStatus, GameData, FamilyGame } from "@/types/games";
 import { apiFetch } from "./client.api";
 import ItemsApi from "./items.api";
 import { User } from "@/types/user";
@@ -25,10 +18,7 @@ export default class GameApi {
   getSteamLibrary = async (steamId: string): Promise<GameData[]> =>
     apiFetch<GameData[]>(`/steam/library/${steamId}`);
 
-  getSteamFamily = async (
-    steamId: string,
-    accessToken: string,
-  ): Promise<GameData[]> => {
+  getSteamFamily = async (steamId: string, accessToken: string): Promise<GameData[]> => {
     const data = await apiFetch<{ response: { apps: FamilyGame[] } }>(
       `/steam/family?accessToken=${encodeURIComponent(accessToken)}&steamId=${encodeURIComponent(steamId)}`,
     );
@@ -93,21 +83,20 @@ export default class GameApi {
     return lastGamePerPlayer;
   };
 
+  getCompletedGames = async (userId: string) => {
+    const games = await this.getGames(userId);
+    if (!games) return [];
+    else return games.filter((g) => g.status === "COMPLETED") ?? [];
+  };
+
   getAllUserGames = async (userId: string): Promise<Game[]> =>
     apiFetch<Game[]>(`/games?userId=${userId}`);
 
-  getGameInfo = async (id: string): Promise<Game> =>
-    apiFetch<Game>(`/games/${id}`);
+  getGameInfo = async (id: string): Promise<Game> => apiFetch<Game>(`/games/${id}`);
 
-  getReview = async (id: string): Promise<Game> =>
-    apiFetch<Game>(`/games/${id}`);
+  getReview = async (id: string): Promise<Game> => apiFetch<Game>(`/games/${id}`);
 
-  saveReview = async (
-    userId: string,
-    id: string,
-    review: GameReview,
-    image?: File | null,
-  ) => {
+  saveReview = async (userId: string, id: string, review: GameReview, image?: File | null) => {
     const currentGame = await apiFetch<Game>(`/games/${id}`);
     const inventory = await itemsApi.getInventory(userId);
     const hasPoopReview = inventory.find((i) => i.label === "Хуишка");
@@ -117,8 +106,7 @@ export default class GameApi {
       votes: [],
     };
 
-    const imagePayload =
-      image instanceof File ? await filePayload(image) : undefined;
+    const imagePayload = image instanceof File ? await filePayload(image) : undefined;
 
     await apiFetch(`/games/${id}`, {
       method: "PATCH",
@@ -133,28 +121,18 @@ export default class GameApi {
     });
 
     if (hasPoopReview) {
-      await itemsApi.chargeInventory(
-        String(hasPoopReview.id),
-        hasPoopReview.charge,
-        -1,
-      );
+      await itemsApi.chargeInventory(String(hasPoopReview.id), hasPoopReview.charge, -1);
     }
   };
 
-  voteReview = async (
-    gameId: string,
-    user: { id: string; username: string },
-    score: number,
-  ) => {
+  voteReview = async (gameId: string, user: { id: string; username: string }, score: number) => {
     return apiFetch(`/games/${gameId}/vote`, {
       method: "POST",
       body: { userId: user.id, score },
     });
   };
 
-  getAllReviews = async (
-    userId: string,
-  ): Promise<{ user: User | null; games: Game[] }> => {
+  getAllReviews = async (userId: string): Promise<{ user: User | null; games: Game[] }> => {
     const allGames = await this.getGamesFiltered({ userId, hasReview: true });
     const user = await apiFetch<User>(`/users/${userId}`);
     return { user, games: allGames };
@@ -193,14 +171,11 @@ export default class GameApi {
     return apiFetch<Preset[]>(`/presets${qs}`);
   };
 
-  getPresetById = async (id: string): Promise<Preset> =>
-    apiFetch<Preset>(`/presets/${id}`);
+  getPresetById = async (id: string): Promise<Preset> => apiFetch<Preset>(`/presets/${id}`);
 
-  addPreset = async (label: string) =>
-    apiFetch("/presets", { method: "POST", body: { label } });
+  addPreset = async (label: string) => apiFetch("/presets", { method: "POST", body: { label } });
 
-  removePreset = async (id: string) =>
-    apiFetch(`/presets/${id}`, { method: "DELETE" });
+  removePreset = async (id: string) => apiFetch(`/presets/${id}`, { method: "DELETE" });
 
   addPresetGame = async (id: string, game: Game): Promise<Preset> => {
     const preset = await this.getPresetById(id);
@@ -211,10 +186,7 @@ export default class GameApi {
     });
   };
 
-  removePresetGame = async (
-    presetId: string,
-    gameId: number,
-  ): Promise<Preset> => {
+  removePresetGame = async (presetId: string, gameId: number): Promise<Preset> => {
     const preset = await this.getPresetById(presetId);
     const filteredGames = preset.games.filter((game) => game.id !== gameId);
     return apiFetch<Preset>(`/presets/${presetId}`, {

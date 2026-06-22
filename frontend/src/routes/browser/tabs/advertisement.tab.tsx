@@ -3,16 +3,10 @@ import AdsApi from "@/api/ads.api";
 import { Ads } from "@/types/ads.d";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  NetworkIcon,
-  Plus,
-  Image as ImageIcon,
-  Trash,
-  Play,
-} from "lucide-react";
+import { NetworkIcon, Plus, Image as ImageIcon, Trash, Play } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import {
   Dialog,
@@ -39,9 +33,7 @@ function AdTab() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioVolume, setAudioVolume] = useState<number>(1);
-  const [compressedAudioSize, setCompressedAudioSize] = useState<number | null>(
-    null,
-  );
+  const [compressedAudioSize, setCompressedAudioSize] = useState<number | null>(null);
   const [text, setText] = useState<string>("");
   const [audioLoad, setAudioLoad] = useState<boolean>(false);
 
@@ -73,7 +65,7 @@ function AdTab() {
     setIsOpen(open);
   };
 
-  useSubscription("ads", "*", invalidateQuery);
+  useSubscription("ads", invalidateQuery);
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => adsApi.removeAd(id),
@@ -81,9 +73,7 @@ function AdTab() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const compressedAudio = audioFile
-        ? await compressAudio(audioFile)
-        : undefined;
+      const compressedAudio = audioFile ? await compressAudio(audioFile) : undefined;
 
       const adData = {
         owner: {
@@ -135,9 +125,7 @@ function AdTab() {
     const offlineContext = new OfflineAudioContext(
       bufferToProcess.numberOfChannels,
       bufferToProcess.length,
-      needsCompression
-        ? bufferToProcess.sampleRate / 2
-        : bufferToProcess.sampleRate,
+      needsCompression ? bufferToProcess.sampleRate / 2 : bufferToProcess.sampleRate,
     );
 
     const source = offlineContext.createBufferSource();
@@ -153,10 +141,7 @@ function AdTab() {
     return resultFile;
   };
 
-  const applyVolume = (
-    audioBuffer: AudioBuffer,
-    volume: number,
-  ): AudioBuffer => {
+  const applyVolume = (audioBuffer: AudioBuffer, volume: number): AudioBuffer => {
     const newBuffer = new AudioBuffer({
       length: audioBuffer.length,
       numberOfChannels: audioBuffer.numberOfChannels,
@@ -197,15 +182,8 @@ function AdTab() {
     let offset = 44;
     for (let i = 0; i < buffer.length; i++) {
       for (let channel = 0; channel < numChannels; channel++) {
-        const sample = Math.max(
-          -1,
-          Math.min(1, buffer.getChannelData(channel)[i]),
-        );
-        view.setInt16(
-          offset,
-          sample < 0 ? sample * 0x8000 : sample * 0x7fff,
-          true,
-        );
+        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
         offset += 2;
       }
     }
@@ -294,17 +272,11 @@ function AdTab() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Создать рекламу</DialogTitle>
-            <DialogDescription>
-              Загрузите изображение и добавьте текст рекламы
-            </DialogDescription>
+            <DialogDescription>Загрузите изображение и добавьте текст рекламы</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">
-            <ImageUploader
-              value={imageFile}
-              onChange={setImageFile}
-              className="w-full"
-            />
+            <ImageUploader value={imageFile} onChange={setImageFile} className="w-full" />
 
             <AudioUploader
               value={audioFile}

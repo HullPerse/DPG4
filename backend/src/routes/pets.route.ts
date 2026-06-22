@@ -1,93 +1,33 @@
 import { Elysia, t } from "elysia";
-import { and, eq, sql } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { resolveUsername } from "../lib/users";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
-import { ITEM_DB_IDS, RAT_IDS } from "../items/constants";
-import { db } from "../db";
+import { and, eq } from "drizzle-orm";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso, getUser } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import servicesPlugin from "@/services.server";
+import { ITEM_DB_IDS, RAT_IDS } from "@/lib/items/constants";
+import { databasePlugin } from "@/plugins/index.plugin";
+import PetService, {
+  calcDecayed,
+  DECAY_PER_HOUR,
+} from "@/services/pet.service";
 
+const logger = new Logger("PETS");
 const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
-
-const DECAY_PER_HOUR = { hunger: 5, happiness: 3, energy: 4 };
 const MAX_STAT = 100;
-const MIN_STAT = 0;
 const REWARD_THRESHOLD = 80;
-const GOOD_STAT_MIN = 1;
-const DECAY_INTERVAL_MS = 30_000;
 
-function calcDecayed(
-  stat: number,
-  elapsedHours: number,
-  decay: number,
-): number {
-  return Math.max(MIN_STAT, Math.round(stat - elapsedHours * decay));
-}
+const petService = new PetService();
+petService.startDecayLoop();
 
-export function startPetDecayLoop() {
-  setInterval(async () => {
-    try {
-      const now = nowIso();
-      const pets = await db
-        .select()
-        .from(schema.pets)
-        .where(eq(schema.pets.isAlive, true));
-
-      for (const pet of pets) {
-        const elapsedMs =
-          new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
-        if (elapsedMs < DECAY_INTERVAL_MS) continue;
-
-        const elapsedHours = elapsedMs / (1000 * 60 * 60);
-        const hunger = calcDecayed(
-          pet.hunger,
-          elapsedHours,
-          DECAY_PER_HOUR.hunger,
-        );
-        const happiness = calcDecayed(
-          pet.happiness,
-          elapsedHours,
-          DECAY_PER_HOUR.happiness,
-        );
-        const energy = calcDecayed(
-          pet.energy,
-          elapsedHours,
-          DECAY_PER_HOUR.energy,
-        );
-
-        if (
-          hunger === pet.hunger &&
-          happiness === pet.happiness &&
-          energy === pet.energy
-        )
-          continue;
-
-        await db
-          .update(schema.pets)
-          .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
-          .where(eq(schema.pets.id, pet.id));
-
-        broadcast("pets", "update", pet.userId);
-      }
-    } catch (err) {
-      logger.error(null, "decay loop error", err);
-    }
-  }, DECAY_INTERVAL_MS);
-
-  logger.info("SYSTEM", "Pet decay loop started (interval 30s)");
-}
-
-export const petsRoute = new Elysia({ prefix: "/pets" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/pets" })
+  .use(databasePlugin)
+  .use(servicesPlugin)
 
   .get(
     "/:userId",
     async ({ params, db }) => {
-      let pet = await db
+      let pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -109,11 +49,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
           updated: now,
         });
 
-        pet = await db
-          .select()
-          .from(schema.pets)
-          .where(eq(schema.pets.id, id))
-          .get();
+        pet = db.select().from(schema.pets).where(eq(schema.pets.id, id)).get();
       } else {
         const elapsedMs =
           new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
@@ -137,16 +73,10 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
 
         await db
           .update(schema.pets)
-          .set({
-            hunger,
-            happiness,
-            energy,
-            lastUpdated: now,
-            updated: now,
-          })
+          .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
           .where(eq(schema.pets.id, pet.id));
 
-        pet = await db
+        pet = db
           .select()
           .from(schema.pets)
           .where(eq(schema.pets.id, pet.id))
@@ -157,7 +87,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Get or create pet" },
     },
   )
 
@@ -165,7 +94,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     "/:userId/feed",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -179,9 +108,10 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "user fed pet");
+      const feedUser = await getUser(db, params.userId);
+      logger.setAuthor(feedUser?.username ?? "SYSTEM").info("fed pet");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -189,7 +119,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Feed the pet" },
     },
   )
 
@@ -197,7 +126,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     "/:userId/pet",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -211,9 +140,10 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "user petted pet");
+      const petUser = await getUser(db, params.userId);
+      logger.setAuthor(petUser?.username ?? "SYSTEM").info("petted pet");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -221,7 +151,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Pet the pet" },
     },
   )
 
@@ -229,7 +158,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     "/:userId/sleep",
     async ({ params, db }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -243,9 +172,12 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "user put pet to sleep");
+      const sleepUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(sleepUser?.username ?? "SYSTEM")
+        .info("put pet to sleep");
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -253,18 +185,16 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Put the pet to sleep" },
     },
   )
 
-  .use(servicesPlugin)
   .post(
     "/:userId/daily-reward",
     async ({ params, db, economyService, userService }) => {
       const now = nowIso();
       const today = now.slice(0, 10);
 
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -315,10 +245,14 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       let itemLabel = "";
       let itemId = "";
 
+      const rewardUser = await getUser(db, params.userId);
+
       if (isMoney) {
         moneyAmount = Math.floor(Math.random() * 8) + 1;
         await userService.score(params.userId, moneyAmount);
-        logger.info(await resolveUsername(params.userId) ?? params.userId, "daily reward money", moneyAmount);
+        logger
+          .setAuthor(rewardUser?.username ?? "SYSTEM")
+          .info(`daily reward money ${moneyAmount}`);
       } else {
         const randomLabel = RAT_IDS[Math.floor(Math.random() * RAT_IDS.length)];
         const [item] = await db
@@ -335,7 +269,9 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         itemLabel = item.label;
         itemId = item.id;
         broadcast("pets", "update", params.userId);
-        logger.info(await resolveUsername(params.userId) ?? params.userId, "daily reward item", item.label);
+        logger
+          .setAuthor(rewardUser?.username ?? "SYSTEM")
+          .info(`daily reward item ${item.label}`);
       }
 
       const updateData: Record<string, unknown> = {
@@ -368,10 +304,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: {
-        tags: ["pets"],
-        summary: "Claim daily reward if pet is well cared for",
-      },
     },
   )
 
@@ -379,7 +311,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     "/:userId/resurrect",
     async ({ params, db, economyService }) => {
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -412,9 +344,12 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "resurrected pet");
+      const resurrectUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(resurrectUser?.username ?? "SYSTEM")
+        .info("resurrected pet");
 
-      const updated = await db
+      const updated = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -424,7 +359,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Resurrect pet with a Крыса item" },
     },
   )
 
@@ -433,7 +367,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     async ({ params, db, economyService }) => {
       const now = nowIso();
       const today = now.slice(0, 10);
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -464,13 +398,15 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "searched dead pet");
+      const searchUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(searchUser?.username ?? "SYSTEM")
+        .info("searched dead pet");
 
       return { ok: true, itemLabel: anusItem.label, itemId: anusItem.id };
     },
     {
       params: t.Object({ userId: t.String() }),
-      detail: { tags: ["pets"], summary: "Search the dead pet for loot" },
     },
   )
 
@@ -484,7 +420,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       }
 
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -498,9 +434,12 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "changed pet color", body.color);
+      const colorUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(colorUser?.username ?? "SYSTEM")
+        .info(`changed pet color ${body.color}`);
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -509,7 +448,6 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     {
       params: t.Object({ userId: t.String() }),
       body: t.Object({ color: t.String() }),
-      detail: { tags: ["pets"], summary: "Change pet color" },
     },
   )
 
@@ -522,7 +460,7 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
       }
 
       const now = nowIso();
-      const pet = await db
+      const pet = db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.userId, params.userId))
@@ -536,9 +474,12 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
         .where(eq(schema.pets.id, pet.id));
 
       broadcast("pets", "update", params.userId);
-      logger.info(await resolveUsername(params.userId) ?? params.userId, "changed pet model", body.model);
+      const modelUser = await getUser(db, params.userId);
+      logger
+        .setAuthor(modelUser?.username ?? "SYSTEM")
+        .info(`changed pet model ${body.model}`);
 
-      return await db
+      return db
         .select()
         .from(schema.pets)
         .where(eq(schema.pets.id, pet.id))
@@ -547,6 +488,5 @@ export const petsRoute = new Elysia({ prefix: "/pets" })
     {
       params: t.Object({ userId: t.String() }),
       body: t.Object({ model: t.String() }),
-      detail: { tags: ["pets"], summary: "Change pet 3D model" },
     },
   );

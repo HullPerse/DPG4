@@ -1,16 +1,16 @@
 import { Elysia, t } from "elysia";
 import { and, asc, desc, eq, inArray, not, sql, type SQL } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { parseFileInput } from "../lib/files";
-import { compressSquare, isImageMime } from "../lib/images";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { authPlugin } from "../plugins/auth.plugin";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso, withRecordMeta } from "@/lib/index.utils";
+import { parseFileInput } from "@/lib/files.utils";
+import { compressSquare, isImageMime } from "@/lib/images.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
+import Logger from "@/lib/logger.utils";
+import databasePlugin from "@/plugins/database.plugin";
+import type { Db, DbTimestamps } from "@/types/server";
+
+const logger = new Logger("ITEMS");
 
 const itemListColumns = {
   id: schema.items.id,
@@ -25,12 +25,95 @@ const itemListColumns = {
   updated: schema.items.updated,
 };
 
+type ItemListRow = {
+  id: string;
+  type: string;
+  label: string;
+  description: string;
+  charge: number;
+  rollable: boolean;
+  status: string | null;
+  hasImage: boolean;
+  created: string;
+  updated: string;
+};
+
 function mapItem(row: typeof schema.items.$inferSelect) {
   return withRecordMeta(row, "items");
 }
 
-export const itemsRoute = new Elysia({ prefix: "/items" })
-  .use(dbPlugin)
+function buildItemConditions(query: Record<string, string | undefined>): SQL[] {
+  const conditions: SQL[] = [];
+
+  if (query.labels) {
+    const labels = query.labels
+      .split(",")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (labels.length > 0) {
+      conditions.push(inArray(schema.items.label, labels));
+    }
+  }
+
+  if (query.type) {
+    conditions.push(eq(schema.items.type, query.type));
+  }
+
+  if (query.rollable !== undefined) {
+    conditions.push(eq(schema.items.rollable, query.rollable === "true"));
+  }
+
+  if (query.excludeLabel) {
+    conditions.push(not(eq(schema.items.label, query.excludeLabel)));
+  }
+
+  if (query.search) {
+    conditions.push(eq(schema.items.label, query.search));
+  }
+
+  return conditions;
+}
+
+function queryItems(db: Db, query: Record<string, string | undefined>) {
+  const conditions = buildItemConditions(query);
+
+  let q =
+    conditions.length > 0
+      ? db
+          .select(itemListColumns)
+          .from(schema.items)
+          .where(and(...conditions))
+      : db.select(itemListColumns).from(schema.items);
+
+  if (query.sort === "label") {
+    q = q.orderBy(
+      query.order === "desc"
+        ? desc(schema.items.label)
+        : asc(schema.items.label),
+    ) as typeof q;
+  } else if (query.sort === "created") {
+    q = q.orderBy(
+      query.order === "desc"
+        ? desc(schema.items.created)
+        : asc(schema.items.created),
+    ) as typeof q;
+  } else if (query.sort === "charge") {
+    q = q.orderBy(
+      query.order === "desc"
+        ? desc(schema.items.charge)
+        : asc(schema.items.charge),
+    ) as typeof q;
+  } else if (query.sort === "type") {
+    q = q.orderBy(
+      query.order === "desc" ? desc(schema.items.type) : asc(schema.items.type),
+    ) as typeof q;
+  }
+
+  return q;
+}
+
+export default new Elysia({ prefix: "/items" })
+  .use(databasePlugin)
   .get(
     "/",
     async ({ db, query, set }) => {
@@ -38,82 +121,48 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         ? Math.min(Number(query.limit), 500)
         : undefined;
       const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select(itemListColumns).from(schema.items);
-      const conditions: SQL[] = [];
-
-      if (query.labels) {
-        const labels = query.labels
-          .split(",")
-          .map((l) => l.trim())
-          .filter(Boolean);
-        if (labels.length > 0) {
-          conditions.push(inArray(schema.items.label, labels));
-        }
-      }
-
-      if (query.type) {
-        conditions.push(eq(schema.items.type, query.type));
-      }
-
-      if (query.rollable !== undefined) {
-        conditions.push(eq(schema.items.rollable, query.rollable === "true"));
-      }
-
-      if (query.excludeLabel) {
-        conditions.push(not(eq(schema.items.label, query.excludeLabel)));
-      }
-
-      if (conditions.length > 0) {
-        q = q.where(and(...conditions)) as typeof q;
-      }
-
-      if (query.sort === "label") {
-        q = q.orderBy(
-          query.order === "desc"
-            ? desc(schema.items.label)
-            : asc(schema.items.label),
-        ) as typeof q;
-      } else if (query.sort === "created") {
-        q = q.orderBy(
-          query.order === "desc"
-            ? desc(schema.items.created)
-            : asc(schema.items.created),
-        ) as typeof q;
-      } else if (query.sort === "charge") {
-        q = q.orderBy(
-          query.order === "desc"
-            ? desc(schema.items.charge)
-            : asc(schema.items.charge),
-        ) as typeof q;
-      } else if (query.sort === "type") {
-        q = q.orderBy(
-          query.order === "desc"
-            ? desc(schema.items.type)
-            : asc(schema.items.type),
-        ) as typeof q;
-      }
-
-      const searchLower = query.search?.toLowerCase();
-      const all = await q;
-
-      const matched = searchLower
-        ? all.filter(
-            (r) =>
-              r.label?.toLowerCase().includes(searchLower) ||
-              r.description?.toLowerCase().includes(searchLower),
-          )
-        : all;
 
       if (query.random) {
+        const conditions = buildItemConditions(query);
+        let q =
+          conditions.length > 0
+            ? db
+                .select(itemListColumns)
+                .from(schema.items)
+                .where(and(...conditions))
+            : db.select(itemListColumns).from(schema.items);
+        const all = await q;
         const count = Math.min(Number(query.random), 100);
-        const shuffled = [...matched].sort(() => Math.random() - 0.5);
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
         set.headers["Cache-Control"] = "no-store";
         return shuffled.slice(0, count).map((r) => withRecordMeta(r, "items"));
       }
 
-      const rows = matched.slice(offset, offset + (limit ?? matched.length));
+      if (
+        query.sort ||
+        query.labels ||
+        query.type ||
+        query.search ||
+        query.rollable !== undefined ||
+        query.excludeLabel
+      ) {
+        const all = await queryItems(db, query);
+        const rows = all.slice(offset, offset + (limit ?? all.length));
+        set.headers["Cache-Control"] = "no-store";
+        return rows.map((r) => withRecordMeta(r, "items"));
+      }
+
+      let rows = await cacheGet<ItemListRow[]>("items:list");
+
+      if (!rows) {
+        rows = await db.select(itemListColumns).from(schema.items) as unknown as ItemListRow[];
+        await cacheSet("items:list", rows, 30_000);
+      }
+
       set.headers["Cache-Control"] = "no-store";
-      return rows.map((r) => withRecordMeta(r, "items"));
+      return rows!
+        .slice(offset, offset + (limit ?? rows!.length))
+        .map((r) => withRecordMeta(r as DbTimestamps, "items"));
     },
     {
       query: t.Optional(
@@ -150,7 +199,6 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
   .post(
     "/",
     async ({ body, db }) => {
-      const id = newId();
       const ts = nowIso();
       let imageFile = parseFileInput(body.image);
       if (imageFile && isImageMime(imageFile.mime)) {
@@ -159,8 +207,7 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
           mime: "image/webp",
         };
       }
-      await db.insert(schema.items).values({
-        id,
+      const row = {
         type: body.type,
         label: body.label,
         description: body.description ?? "",
@@ -171,14 +218,13 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         imageMime: imageFile?.mime ?? null,
         created: ts,
         updated: ts,
-      });
+      };
+      const id = newId();
+      await db.insert(schema.items).values({ ...row, id });
+      cacheDel("items:list");
       broadcast("items", "create", id);
-      logger.info(null, "created item", body.label, `(${body.type})`);
-      return mapItem(
-        (
-          await db.select().from(schema.items).where(eq(schema.items.id, id))
-        )[0]!,
-      );
+      logger.info(`created item ${body.label} (${body.type})`);
+      return mapItem({ id, ...row } as typeof schema.items.$inferSelect);
     },
     {
       body: t.Object({
@@ -219,12 +265,13 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
         .update(schema.items)
         .set(patch)
         .where(eq(schema.items.id, params.id));
+      cacheDel("items:list");
       broadcast("items", "update", params.id);
       const [row] = await db
         .select()
         .from(schema.items)
         .where(eq(schema.items.id, params.id));
-      logger.info(null, "updated item", row?.label ?? params.id);
+      logger.info(`updated item ${row?.label ?? params.id}`);
       return mapItem(row!);
     },
     {
@@ -243,419 +290,10 @@ export const itemsRoute = new Elysia({ prefix: "/items" })
     "/:id",
     async ({ params, db }) => {
       await db.delete(schema.items).where(eq(schema.items.id, params.id));
+      cacheDel("items:list");
       broadcast("items", "delete", params.id);
-      logger.info(null, "deleted item", params.id);
+      logger.info(`deleted item ${params.id}`);
       return { ok: true };
     },
     { params: t.Object({ id: t.String() }) },
-  );
-
-export const inventoryRoute = new Elysia({ prefix: "/inventory" })
-  .use(dbPlugin)
-  .use(servicesPlugin)
-  .use(authPlugin)
-  .get(
-    "/history/:userId",
-    async ({ params, db }) => {
-      const rows = await db
-        .select()
-        .from(schema.inventoryLog)
-        .where(eq(schema.inventoryLog.owner, params.userId))
-        .orderBy(desc(schema.inventoryLog.created))
-        .limit(1000);
-      return rows;
-    },
-    { params: t.Object({ userId: t.String() }) },
-  )
-  .get(
-    "/",
-    async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
-      const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select().from(schema.inventory);
-      const conditions: SQL[] = [];
-
-      if (query.owner) {
-        conditions.push(eq(schema.inventory.owner, query.owner));
-      }
-
-      if (query.excludeOwner) {
-        conditions.push(not(eq(schema.inventory.owner, query.excludeOwner)));
-      }
-
-      if (query.type) {
-        conditions.push(eq(schema.inventory.type, query.type));
-      }
-
-      if (conditions.length > 0) {
-        q = q.where(and(...conditions)) as typeof q;
-      }
-
-      const all = await q;
-      const searchLower = query.search?.toLowerCase();
-      const matched = searchLower
-        ? all.filter(
-            (r) =>
-              r.label?.toLowerCase().includes(searchLower) ||
-              r.description?.toLowerCase().includes(searchLower),
-          )
-        : all;
-      const rows = matched.slice(offset, offset + limit);
-      return rows.map((r) => withRecordMeta(r, "inventory"));
-    },
-    {
-      query: t.Optional(
-        t.Object({
-          owner: t.Optional(t.String()),
-          excludeOwner: t.Optional(t.String()),
-          type: t.Optional(t.String()),
-          search: t.Optional(t.String()),
-          limit: t.Optional(t.String()),
-          offset: t.Optional(t.String()),
-        }),
-      ),
-    },
-  )
-  .get(
-    "/:id",
-    async ({ params, db, set }) => {
-      const [row] = await db
-        .select()
-        .from(schema.inventory)
-        .where(eq(schema.inventory.id, params.id));
-      if (!row) {
-        set.status = 404;
-        return { error: "Not found" };
-      }
-      return withRecordMeta(row, "inventory");
-    },
-    { params: t.Object({ id: t.String() }) },
-  )
-  .post(
-    "/add",
-    async ({ body, user, economyService }) => {
-      const result = await economyService.addInventory(
-        body.userId,
-        body.itemId,
-      );
-      logger.info(
-        user?.username,
-        "added item to inventory",
-        `user:${body.userId}`,
-        `item:${body.itemId}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        userId: t.String(),
-        itemId: t.String(),
-      }),
-    },
-  )
-  .post(
-    "/:id/transfer",
-    async ({ params, body, db, user }) => {
-      await db
-        .update(schema.inventory)
-        .set({ owner: body.newOwner, updated: nowIso() })
-        .where(eq(schema.inventory.id, params.id));
-      broadcast("inventory", "update", params.id);
-      logger.info(
-        user?.username,
-        "transferred inventory item",
-        params.id,
-        `to:${body.newOwner}`,
-      );
-      return { ok: true };
-    },
-    {
-      body: t.Object({
-        newOwner: t.String(),
-      }),
-    },
-  )
-  .post(
-    "/:id/use",
-    async ({ params, user, set, effectService }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      const result = await effectService.executeUse(user.sub, params.id);
-      logger.info(user.username, "used inventory item", params.id);
-      return result;
-    },
-    {
-      detail: {
-        tags: ["items"],
-        summary: "Use inventory item (server effects)",
-      },
-    },
-  )
-  .post(
-    "/:id/charge",
-    async ({ params, body, user, economyService }) => {
-      const result = await economyService.chargeInventory(
-        params.id,
-        body.oldCharge,
-        body.newCharge,
-      );
-      logger.info(
-        user?.username,
-        "charged inventory item",
-        params.id,
-        `${body.oldCharge}→${body.newCharge}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        oldCharge: t.Number(),
-        newCharge: t.Number(),
-      }),
-    },
-  )
-  .post(
-    "/:id/consume",
-    async ({
-      params,
-      body,
-      db,
-      user,
-      set,
-      economyService,
-      userService,
-      activityService,
-      inventoryLogService,
-    }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      const [inv] = await db
-        .select()
-        .from(schema.inventory)
-        .where(eq(schema.inventory.id, params.id));
-      if (!inv) {
-        set.status = 404;
-        return { error: "Предмет не найден" };
-      }
-      if (inv.owner !== user.sub) {
-        set.status = 403;
-        return { error: "Не ваш предмет" };
-      }
-      await economyService.chargeInventory(params.id, inv.charge, -1);
-      const userData = await userService.getById(user.sub);
-      await inventoryLogService.log("use", params.id, user.sub, user.sub, { consume: true });
-      await activityService.create({
-        author: user.sub,
-        image: userData?.avatar ?? "",
-        text: body.activityText,
-      });
-      logger.info(user.username, "consumed inventory item", params.id);
-      return { ok: true };
-    },
-    {
-      body: t.Object({
-        activityText: t.String(),
-      }),
-      detail: {
-        tags: ["items"],
-        summary:
-          "Consume inventory item - charge and create activity in one call",
-      },
-    },
-  )
-  .delete(
-    "/:id",
-    async ({ params, db, user, inventoryLogService }) => {
-      const [inv] = await db
-        .select()
-        .from(schema.inventory)
-        .where(eq(schema.inventory.id, params.id));
-      await db.delete(schema.inventory).where(eq(schema.inventory.id, params.id));
-      if (inv) {
-        await inventoryLogService.logFromData(
-          "delete", inv.id, inv.label, inv.type, inv.owner, user?.sub,
-          { deletedBy: "user" },
-        );
-      }
-      broadcast("inventory", "delete", params.id);
-      logger.info(user?.username, "deleted inventory item", params.id);
-      return { ok: true };
-    },
-    { params: t.Object({ id: t.String() }) },
-  );
-
-export const marketRoute = new Elysia({ prefix: "/market" })
-  .use(dbPlugin)
-  .use(servicesPlugin)
-  .get(
-    "/",
-    async ({ db, query }) => {
-      const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
-      const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select().from(schema.market);
-
-      const all = await q.orderBy(desc(schema.market.created));
-      const searchLower = query.search?.toLowerCase();
-      const matched = searchLower
-        ? all.filter((r) => {
-            const ownerText =
-              r.owner && typeof r.owner === "object"
-                ? JSON.stringify(r.owner).toLowerCase()
-                : "";
-            return (
-              r.label?.toLowerCase().includes(searchLower) ||
-              ownerText.includes(searchLower)
-            );
-          })
-        : all;
-      const rows = matched.slice(offset, offset + limit);
-      return rows.map((r) => withRecordMeta(r, "market"));
-    },
-    {
-      query: t.Optional(
-        t.Object({
-          search: t.Optional(t.String()),
-          limit: t.Optional(t.String()),
-          offset: t.Optional(t.String()),
-        }),
-      ),
-    },
-  )
-  .get(
-    "/:id",
-    async ({ params, db, set }) => {
-      const [row] = await db
-        .select()
-        .from(schema.market)
-        .where(eq(schema.market.id, params.id));
-      if (!row) {
-        set.status = 404;
-        return { error: "Not found" };
-      }
-      return withRecordMeta(row, "market");
-    },
-    { params: t.Object({ id: t.String() }) },
-  )
-  .post(
-    "/sell",
-    async ({ body, economyService }) => {
-      const result = await economyService.sellInventory(
-        body.inventoryId,
-        body.ownerId,
-        body.price,
-      );
-      logger.info(
-        null,
-        "listed item on market",
-        `item:${body.inventoryId}`,
-        `price:${body.price}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        inventoryId: t.String(),
-        ownerId: t.String(),
-        price: t.Number(),
-      }),
-    },
-  )
-  .post(
-    "/:id/buy",
-    async ({ params, body, economyService }) => {
-      const result = await economyService.buyMarket(
-        params.id,
-        body.newOwnerId,
-        body.oldOwnerId,
-      );
-      logger.info(
-        null,
-        "bought market item",
-        params.id,
-        `buyer:${body.newOwnerId}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        newOwnerId: t.String(),
-        oldOwnerId: t.String(),
-      }),
-    },
-  )
-  .post("/:id/remove", async ({ params, economyService }) => {
-    const result = await economyService.removeMarketListing(params.id);
-    logger.info(null, "removed market listing", params.id);
-    return result;
-  })
-  .post(
-    "/:id/discount",
-    async ({ params, body, economyService }) => {
-      const result = await economyService.discountMarket(
-        params.id,
-        body.ownerId,
-        body.price,
-        body.discountPrice,
-      );
-      logger.info(
-        null,
-        "discounted market item",
-        params.id,
-        `${body.price}→${body.discountPrice}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        ownerId: t.String(),
-        price: t.Number(),
-        discountPrice: t.Number(),
-      }),
-    },
-  )
-  .delete(
-    "/:id",
-    async ({ params, db }) => {
-      await db.delete(schema.market).where(eq(schema.market.id, params.id));
-      broadcast("market", "delete", params.id);
-      logger.info(null, "deleted market listing", params.id);
-      return { ok: true };
-    },
-    { params: t.Object({ id: t.String() }) },
-  );
-
-export const tradeRoute = new Elysia({ prefix: "/trade" })
-  .use(servicesPlugin)
-  .post(
-    "/",
-    async ({ body, economyService }) => {
-      const result = await economyService.tradeInventory(
-        body.currentUser,
-        body.otherUser,
-      );
-      logger.info(
-        null,
-        "trade completed",
-        `${body.currentUser.id} ↔ ${body.otherUser.id}`,
-      );
-      return result;
-    },
-    {
-      body: t.Object({
-        currentUser: t.Object({
-          id: t.String(),
-          money: t.Number(),
-          items: t.Array(t.String()),
-        }),
-        otherUser: t.Object({
-          id: t.String(),
-          money: t.Number(),
-          items: t.Array(t.String()),
-        }),
-      }),
-    },
   );

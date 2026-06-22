@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { getResultColor, type GameResultData } from "@/lib/gambling/gambling.utils";
 
 interface GameResultProps {
@@ -11,7 +11,7 @@ export function GameResult({ result }: GameResultProps) {
   return (
     <span
       className={cn(
-        "absolute bottom-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black/80",
+        "absolute top-0 left-1/2 -translate-x-1/2 text-center text-lg font-bold w-full px-1 py-1 bg-black z-599",
         getResultColor(result),
       )}
     >

@@ -1,13 +1,7 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { Box } from "lucide-react";
 
-export function Spinner({
-  size,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function Spinner({ size, className }: { size?: number; className?: string }) {
   return (
     <Box
       className={cn("animate-spin shrink-0", className)}

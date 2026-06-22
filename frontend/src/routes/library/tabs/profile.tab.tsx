@@ -12,7 +12,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import UserApi from "@/api/user.api";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
@@ -67,8 +67,8 @@ function ProfileTab({ id }: { id?: string }) {
     });
   }, [queryClient, id]);
 
-  useSubscription("users", `*`, invalidateQuery);
-  useSubscription("games", `*`, invalidateQuery);
+  useSubscription("users", invalidateQuery);
+  useSubscription("games", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -82,13 +82,10 @@ function ProfileTab({ id }: { id?: string }) {
     );
 
   const getComponent = () => {
-    if (userProfile?.type === "chat")
-      return <ChatProfile id={String(data?.user.id)} />;
+    if (userProfile?.type === "chat") return <ChatProfile id={String(data?.user.id)} />;
 
     const tabMap = {
-      profile: (
-        <Profile user={data?.user as User} games={data?.games as Game[]} />
-      ),
+      profile: <Profile user={data?.user as User} games={data?.games as Game[]} />,
       library: <Games games={data?.games as Game[]} />,
       reviews: <ReviewsProfile id={String(data?.user.id)} />,
       chat: <ChatProfile id={String(data?.user.id)} />,
@@ -241,19 +238,11 @@ function ProfileTab({ id }: { id?: string }) {
             <span className="flex flex-row w-full">Ваши: {user?.money}</span>
           )}
 
-          <Button
-            variant="success"
-            className="w-full h-8"
-            onClick={() => setMoneyModal(true)}
-          >
+          <Button variant="success" className="w-full h-8" onClick={() => setMoneyModal(true)}>
             Изменить чубрики
           </Button>
 
-          <Button
-            variant="info"
-            className="w-full h-8"
-            onClick={() => setPositionModal(true)}
-          >
+          <Button variant="info" className="w-full h-8" onClick={() => setPositionModal(true)}>
             Передвинуть
           </Button>
         </div>

@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getLeaderboard } from "@/api/history.api";
-import {
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Ticket,
-} from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, DollarSign, Ticket } from "lucide-react";
 import { useState } from "react";
 import {
   GAMBLING_GAME_FILTERS,
@@ -14,13 +8,9 @@ import {
   PODIUM_COLORS,
 } from "@/lib/gambling/stats.constants";
 import { useUserStore } from "@/store/user.store";
-import { cn, BORDER_WINDOW } from "@/lib/utils";
+import { cn, BORDER_WINDOW } from "@/lib/index.utils";
 import { WindowLoader } from "@/components/shared/loader.component";
-import {
-  FilterChipGroup,
-  EmptyState,
-  NetValue,
-} from "../components/stats.shared";
+import { FilterChipGroup, EmptyState, NetValue } from "../components/stats.shared";
 import { LeaderboardNetChart } from "../components/charts.stats";
 import { LeaderboardEntry } from "@/types/history";
 
@@ -30,8 +20,7 @@ export default function LeaderboardTab() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["leaderboard", gameType, period],
-    queryFn: () =>
-      getLeaderboard({ gameType: gameType as any, period, limit: 50 }),
+    queryFn: () => getLeaderboard({ gameType: gameType as any, period, limit: 50 }),
   });
 
   const entries = data?.data ?? [];
@@ -48,16 +37,8 @@ export default function LeaderboardTab() {
       </header>
 
       <header className="flex flex-col gap-2">
-        <FilterChipGroup
-          options={GAMBLING_GAME_FILTERS}
-          value={gameType}
-          onChange={setGameType}
-        />
-        <FilterChipGroup
-          options={LEADERBOARD_PERIODS}
-          value={period}
-          onChange={setPeriod}
-        />
+        <FilterChipGroup options={GAMBLING_GAME_FILTERS} value={gameType} onChange={setGameType} />
+        <FilterChipGroup options={LEADERBOARD_PERIODS} value={period} onChange={setPeriod} />
       </header>
 
       {entries.length === 0 ? (
@@ -132,10 +113,7 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
                 backgroundColor: `${color}08`,
               }}
             >
-              <span
-                className="text-[10px] font-bold uppercase tracking-wider"
-                style={{ color }}
-              >
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
                 {PODIUM_MEDAL_LABELS[idx]}
               </span>
             </div>
@@ -146,13 +124,7 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
   );
 }
 
-function LeaderboardRow({
-  entry,
-  rank,
-}: {
-  entry: LeaderboardEntry;
-  rank: number;
-}) {
+function LeaderboardRow({ entry, rank }: { entry: LeaderboardEntry; rank: number }) {
   const currentUserId = useUserStore((s) => s.user?.id);
   const isMe = currentUserId === entry.userId;
 
@@ -174,11 +146,7 @@ function LeaderboardRow({
             <span className="font-bold truncate" style={{ color: entry.color }}>
               {entry.username}
             </span>
-            {isMe && (
-              <span className="text-[10px] font-bold text-iris uppercase">
-                ты
-              </span>
-            )}
+            {isMe && <span className="text-[10px] font-bold text-iris uppercase">ты</span>}
           </div>
           <div className="flex flex-row gap-3 text-[10px] text-muted">
             <span className="flex items-center gap-0.5">
@@ -220,10 +188,7 @@ function WinRateBar({ wins, total }: { wins: number; total: number }) {
   return (
     <div className="flex items-center gap-2 w-full">
       <div className="h-1.5 flex-1 bg-highlight-low border border-highlight-high overflow-hidden">
-        <div
-          className="h-full bg-emerald-400/80 transition-all"
-          style={{ width: `${rate}%` }}
-        />
+        <div className="h-full bg-emerald-400/80 transition-all" style={{ width: `${rate}%` }} />
       </div>
       <span className="text-[10px] text-muted tabular-nums w-7 text-right">
         {Math.round(rate)}%

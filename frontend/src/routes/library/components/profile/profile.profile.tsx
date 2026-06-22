@@ -1,7 +1,7 @@
 import { getFileUrl } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import ReviewComponent from "@/components/shared/review.component";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor } from "@/lib/index.utils";
 import { Game, GameReview, GameStatus } from "@/types/games";
 import { User } from "@/types/user";
 
@@ -24,17 +24,9 @@ const STATUSES = [
   },
 ];
 
-export default function Profile({
-  user,
-  games,
-}: {
-  user: User;
-  games: Game[];
-}) {
+export default function Profile({ user, games }: { user: User; games: Game[] }) {
   const getLastReview = (): Game => {
-    const onlyReviews = games?.filter((game) =>
-      game.review ? game.review !== undefined : false,
-    );
+    const onlyReviews = games?.filter((game) => (game.review ? game.review !== undefined : false));
     return onlyReviews[0];
   };
 
@@ -72,17 +64,15 @@ export default function Profile({
                 className="text-xl font-bold flex-col flex w-full gap-2"
                 style={{
                   color: getStatusColor(
-                    (STATUSES.find((s) => s.name === games[0].status)
-                      ?.name as GameStatus) ?? "PLAYING",
+                    (STATUSES.find((s) => s.name === games[0].status)?.name as GameStatus) ??
+                      "PLAYING",
                   ),
                 }}
               >
                 <div className="text-center">
                   {STATUSES.find((s) => s.name === games[0].status)?.label}
                 </div>
-                <div className="text-center">
-                  [{games[0]?.playtime.hltb} ч.]
-                </div>
+                <div className="text-center">[{games[0]?.playtime.hltb} ч.]</div>
               </span>
             </div>
           )}
@@ -110,11 +100,7 @@ export default function Profile({
             <section className="flex w-full h-10 bg-highlight-low border-x-2 border-t-2 border-highlight-high p-1 font-bold text-xl items-center justify-between">
               Последние игры:
               <span className="text-sm opacity-75">
-                {games.reduce(
-                  (acc, game) => acc + (game.playtime.user ?? 0),
-                  0,
-                )}{" "}
-                ч. всего
+                {games.reduce((acc, game) => acc + (game.playtime.user ?? 0), 0)} ч. всего
               </span>
             </section>
             <section className="flex flex-col border-2 border-highlight-high">
@@ -130,10 +116,7 @@ export default function Profile({
                     <section className="flex flex-row w-full h-full items-center gap-2">
                       <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
                         <ImageComponent
-                          src={
-                            game.data.capsuleImage ??
-                            "https://placehold.co/16x10"
-                          }
+                          src={game.data.capsuleImage ?? "https://placehold.co/16x10"}
                           alt={game.data.name}
                         />
                       </div>
@@ -145,13 +128,11 @@ export default function Profile({
                     {/* DATA */}
                     <section className="absolute flex flex-col right-1 bottom-1 items-end gap-1 ml-auto font-bold opacity-75">
                       <span style={{ color: getStatusColor(game.status) }}>
-                        {STATUSES.find((status) => status.name === game.status)
-                          ?.label ?? game.status}
+                        {STATUSES.find((status) => status.name === game.status)?.label ??
+                          game.status}
                       </span>
                       <span>{game.playtime.user ?? 0} ч. всего</span>
-                      <span>
-                        Добавлено {new Date(game.created).toLocaleDateString()}
-                      </span>
+                      <span>Добавлено {new Date(game.created).toLocaleDateString()}</span>
                     </section>
                   </div>
                 );

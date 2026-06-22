@@ -60,15 +60,7 @@ export function formatRocketResultLabel(label: string, net: number): string {
   return net >= 0 ? `${label}` : `${label}`;
 }
 
-export function getRocketResultColor(result: RocketUiResult | null): string {
-  if (!result) return "";
-  if (result.net > 0) {
-    if (result.tone === "jackpot") return "text-amber-400";
-    return "text-emerald-400";
-  }
-  if (result.net < 0) return "text-red-400";
-  return "text-muted";
-}
+
 
 export interface FlightPoint {
   t: number;

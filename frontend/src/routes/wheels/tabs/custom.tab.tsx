@@ -10,12 +10,12 @@ function CustomWheel() {
   const savedWheel = useDataStore((state) => state.savedWheel);
   const setSavedWheel = useDataStore((state) => state.setSavedWheel);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [custom, setCustom] = useState<string>("");
 
   const visibleItems = useMemo(() => {
     return (
-      savedWheel?.filter((item) => !hiddenItems.includes(String(item))) ?? []
+      savedWheel?.filter((item) => !hiddenItems.has(String(item))) ?? []
     );
   }, [savedWheel]);
 
@@ -24,7 +24,7 @@ function CustomWheel() {
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${savedWheel?.join("|")}-${hiddenItems.join(",")}`}
+          key={`wheel-${savedWheel?.join("|")}-${[...hiddenItems].join(",")}`}
           list={visibleItems.map((item, index) => ({
             id: String(index),
             label: item,
@@ -61,7 +61,7 @@ function CustomWheel() {
             key={index}
             className="relative p-2 flex flex-row w-full max-w-full min-h-16 h-16 border-2 border-highlight-high items-center"
             style={{
-              opacity: hiddenItems.find((h) => h === String(item)) && "50%",
+              opacity: hiddenItems.has(String(item)) ? "50%" : undefined,
             }}
           >
             <span className="w-80 truncate font-bold text-xl">{item}</span>
@@ -70,18 +70,13 @@ function CustomWheel() {
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(item)).length > 0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(item)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(item)),
-                  );
+                  const next = new Set(hiddenItems);
+                  if (next.has(String(item))) next.delete(String(item));
+                  else next.add(String(item));
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(item)) ? (
+                {hiddenItems.has(String(item)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

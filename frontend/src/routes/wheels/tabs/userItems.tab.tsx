@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import UserApi from "@/api/user.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus, Send } from "lucide-react";
@@ -29,7 +29,7 @@ function UserItems({
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Inventory | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -58,8 +58,8 @@ function UserItems({
     });
   }, [queryClient]);
 
-  useSubscription("inventory", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
+  useSubscription("inventory", invalidateQuery);
+  useSubscription("users", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -79,20 +79,18 @@ function UserItems({
     return await itemApi.sendInventory(String(item.id), String(user?.id));
   };
 
-  const visibleItems =
-    data?.items.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+  const visibleItems = data?.items.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={`wheel-${selected}-${hiddenItems.join(",")}`}
+          key={`wheel-${selected}-${[...hiddenItems].join(",")}`}
           list={visibleItems
             .filter((item) =>
               selected === 0
                 ? item
-                : data?.users.find((u) => u.id === item.owner)?.username ===
-                  values[selected],
+                : data?.users.find((u) => u.id === item.owner)?.username === values[selected],
             )
 
             .map((item) => ({
@@ -103,9 +101,7 @@ function UserItems({
             }))}
           onResult={(it) => {
             return setResult(
-              data?.items.find(
-                (item) => String(item.id) === String(it?.id),
-              ) as Inventory,
+              data?.items.find((item) => String(item.id) === String(it?.id)) as Inventory,
             );
           }}
           free
@@ -145,16 +141,14 @@ function UserItems({
           .filter((item) =>
             selected === 0
               ? item
-              : data?.users.find((u) => u.id === item.owner)?.username ===
-                values[selected],
+              : data?.users.find((u) => u.id === item.owner)?.username === values[selected],
           )
           .map((item) => (
             <section
               key={item.id}
               className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
               style={{
-                opacity:
-                  hiddenItems.find((h) => h === String(item.id)) && "50%",
+                opacity: hiddenItems.has(String(item.id)) ? "50%" : undefined,
               }}
             >
               <ImageComponent
@@ -171,19 +165,14 @@ function UserItems({
                 <Button
                   size="icon"
                   onClick={() => {
-                    const existingGame =
-                      hiddenItems.filter((h) => h === String(item.id)).length >
-                      0;
-
-                    if (!existingGame)
-                      return setHiddenItems([...hiddenItems, String(item.id)]);
-
-                    return setHiddenItems(
-                      hiddenItems.filter((h) => h !== String(item.id)),
-                    );
+                    const next = new Set(hiddenItems);
+                    const id = String(item.id);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    setHiddenItems(next);
                   }}
                 >
-                  {hiddenItems.find((h) => h === String(item.id)) ? (
+                  {hiddenItems.has(String(item.id)) ? (
                     <EyeIcon size={20} />
                   ) : (
                     <EyeOffIcon size={20} />

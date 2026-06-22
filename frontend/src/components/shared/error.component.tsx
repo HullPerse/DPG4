@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Button } from "../ui/button.component";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 
 export function BigError({
   error,
@@ -24,8 +24,7 @@ export function BigError({
           variant="default"
           className="w-md max-w-full"
           onClick={() => {
-            if (location.pathname === "/error")
-              return navigate({ to: "/", replace: true });
+            if (location.pathname === "/error") return navigate({ to: "/", replace: true });
             return window.location.reload();
           }}
         >

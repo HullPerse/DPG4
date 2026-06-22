@@ -1,17 +1,25 @@
 import { Elysia, t } from "elysia";
 import { eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { authPlugin, signToken } from "../plugins/auth.plugin";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { omitPassword, withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import * as schema from "@/db/schema.db";
+import { signToken } from "@/plugins/auth.plugin";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
+import {
+  newId,
+  nowIso,
+  omitPassword,
+  withRecordMeta,
+  USER_ACTIONS,
+  ACTIVITY_TYPES,
+} from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import servicesPlugin from "@/services.server";
+import type { DbTimestamps } from "@/types/server";
 
-export const authRoute = new Elysia({ prefix: "/auth" })
-  .use(dbPlugin)
+const logger = new Logger("AUTH");
+
+const authRoute = new Elysia({ prefix: "/auth" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
   .post(
@@ -42,7 +50,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         position: 0,
         money: 0,
         steam: "",
-        currentAction: "MOVE_POSITIVE",
+        currentAction: USER_ACTIONS.MOVE_POSITIVE,
         currentDice: 1,
         status: [],
         place: "0",
@@ -53,14 +61,14 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       await activityService.create({
         author: id,
         image: body.avatar ?? "",
-        type: "emoji",
+        type: ACTIVITY_TYPES.EMOJI,
         text: `${username} создал аккаунт`,
       });
 
       broadcast("users", "create", id);
 
       const token = await signToken(jwt, id, false);
-      const inserted: typeof schema.users.$inferSelect = {
+      const inserted = {
         id,
         username,
         passwordHash,
@@ -71,7 +79,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         position: 0,
         money: 0,
         steam: "",
-        currentAction: "MOVE_POSITIVE",
+        currentAction: USER_ACTIONS.MOVE_POSITIVE,
         currentDice: 1,
         status: [],
         place: "0",
@@ -82,7 +90,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       };
       const user = withRecordMeta(omitPassword(inserted), "users");
 
-      logger.info(null, "registered", username);
+      logger.setAuthor(username).info("registered");
       return { token, user };
     },
     {
@@ -92,7 +100,6 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         avatar: t.Optional(t.String()),
         color: t.Optional(t.String()),
       }),
-      detail: { tags: ["auth"], summary: "Register new user" },
     },
   )
   .post(
@@ -116,8 +123,8 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       }
 
       const token = await signToken(jwt, row.id, row.isAdmin);
-      const user = withRecordMeta(omitPassword(row), "users");
-      logger.info(row.username, "logged in");
+      const user = withRecordMeta(omitPassword(row) as DbTimestamps, "users");
+      logger.setAuthor(row.username).info("logged in");
       return { token, user };
     },
     {
@@ -125,49 +132,44 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         username: t.String(),
         password: t.String(),
       }),
-      detail: { tags: ["auth"], summary: "Login" },
     },
   )
-  .get(
-    "/me",
-    async ({ user, db, set }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      const [row] = await db
-        .select()
-        .from(schema.users)
-        .where(eq(schema.users.id, user.sub));
-      if (!row) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      return withRecordMeta(omitPassword(row), "users");
-    },
-    { detail: { tags: ["auth"], summary: "Current user" } },
-  )
-  .post(
-    "/refresh",
-    async ({ user, db, jwt, set }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      const [row] = await db
-        .select()
-        .from(schema.users)
-        .where(eq(schema.users.id, user.sub));
-      if (!row) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-      const token = await signToken(jwt, row.id, row.isAdmin);
-      logger.info(user.username, "refreshed session");
-      return {
-        token,
-        user: withRecordMeta(omitPassword(row), "users"),
-      };
-    },
-    { detail: { tags: ["auth"], summary: "Refresh session" } },
-  );
+  .get("/me", async ({ user, db, set }) => {
+    if (!user) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+    const [row] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, user.sub));
+
+    if (!row) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+    return withRecordMeta(omitPassword(row) as DbTimestamps, "users");
+  })
+  .post("/refresh", async ({ user, db, jwt, set }) => {
+    if (!user) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+    const [row] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, user.sub));
+
+    if (!row) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+    const token = await signToken(jwt, row.id, row.isAdmin);
+    logger.setAuthor(String(user.username)).info("refreshed session");
+    return {
+      token,
+      user: withRecordMeta(omitPassword(row) as DbTimestamps, "users"),
+    };
+  });
+
+export default authRoute;

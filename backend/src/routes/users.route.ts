@@ -1,16 +1,21 @@
 import { Elysia, t } from "elysia";
-import { and, eq, not, sql, type SQL } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { authPlugin } from "../plugins/auth.plugin";
-import { nowIso } from "../lib/dates";
-import { omitPassword, withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { logger } from "../lib/logger";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import { and, eq, like, not, sql } from "drizzle-orm";
+import * as schema from "@/db/schema.db";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
+import {
+  nowIso,
+  omitPassword,
+  withRecordMeta,
+  USER_ACTIONS,
+} from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
+import Logger from "@/lib/logger.utils";
+import servicesPlugin from "@/services.server";
 
-export const usersRoute = new Elysia({ prefix: "/users" })
-  .use(dbPlugin)
+const logger = new Logger("USERS");
+
+const usersRoute = new Elysia({ prefix: "/users" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
   .get(
@@ -18,8 +23,7 @@ export const usersRoute = new Elysia({ prefix: "/users" })
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
-      let q = db.select().from(schema.users);
-      const conditions: SQL[] = [];
+      const conditions = [];
 
       if (query.excludeUserId) {
         conditions.push(not(eq(schema.users.id, query.excludeUserId)));
@@ -31,19 +35,20 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         );
       }
 
-      if (conditions.length > 0) {
-        q = q.where(and(...conditions)) as typeof q;
-      }
-
-      const all = await q;
-      let list = all.map((r) => withRecordMeta(omitPassword(r), "users"));
-
       if (query.search) {
-        const s = query.search.toLowerCase();
-        list = list.filter((r) => r.username?.toLowerCase().includes(s));
+        conditions.push(like(schema.users.username, `%${query.search}%`));
       }
 
-      list = list.slice(offset, offset + limit);
+      const q =
+        conditions.length > 0
+          ? db
+              .select()
+              .from(schema.users)
+              .where(and(...conditions))
+          : db.select().from(schema.users);
+
+      const rows = await q.limit(limit).offset(offset);
+      let list = rows.map((row) => withRecordMeta(omitPassword(row), "users"));
 
       if (query.fields) {
         const fields = query.fields.split(",").map((f) => f.trim());
@@ -68,7 +73,6 @@ export const usersRoute = new Elysia({ prefix: "/users" })
           offset: t.Optional(t.String()),
         }),
       ),
-      detail: { tags: ["users"], summary: "List users" },
     },
   )
   .get(
@@ -83,7 +87,6 @@ export const usersRoute = new Elysia({ prefix: "/users" })
     },
     {
       params: t.Object({ id: t.String() }),
-      detail: { tags: ["users"], summary: "Get user by id" },
     },
   )
   .patch(
@@ -103,12 +106,13 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         >)
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
-      logger.info(user?.username, "updated profile", params.id);
+      logger
+        .setAuthor(String(user?.username))
+        .info(`updated profile ${params.id}`);
       return userService.getById(params.id);
     },
     {
       body: t.Record(t.String(), t.Any()),
-      detail: { tags: ["users"], summary: "Update user fields" },
     },
   )
   .post(
@@ -119,12 +123,9 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         body.status,
         body.type,
       );
-      logger.info(
-        user?.username,
-        "changed status",
-        params.id,
-        `${body.type}:${body.status}`,
-      );
+      logger
+        .setAuthor(String(user?.username))
+        .info(`changed status ${params.id} ${body.type}:${body.status}`);
       return result;
     },
     {
@@ -132,19 +133,17 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         status: t.String(),
         type: t.Union([t.Literal("add"), t.Literal("remove")]),
       }),
-      detail: { tags: ["users"], summary: "Add/remove status effect" },
     },
   )
   .post(
     "/:id/score",
     async ({ params, body, user, userService }) => {
       const result = await userService.score(params.id, body.score, body.trade);
-      logger.info(
-        user?.username,
-        "changed score",
-        params.id,
-        body.score > 0 ? `+${body.score}` : String(body.score),
-      );
+      logger
+        .setAuthor(String(user?.username))
+        .info(
+          `changed score ${params.id} ${body.score > 0 ? `+${body.score}` : String(body.score)}`,
+        );
       return result;
     },
     {
@@ -152,7 +151,6 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         score: t.Number(),
         trade: t.Optional(t.Boolean()),
       }),
-      detail: { tags: ["users"], summary: "Change user money (server rules)" },
     },
   )
   .post(
@@ -163,39 +161,36 @@ export const usersRoute = new Elysia({ prefix: "/users" })
         body.realTime,
         body.action,
       );
-      logger.info(user?.username, "changed dice", params.id, body.action);
+      logger
+        .setAuthor(String(user?.username))
+        .info(`changed dice ${params.id} ${body.action}`);
       return result;
     },
     {
       body: t.Object({
         realTime: t.Number(),
         action: t.Union([
-          t.Literal("MOVE_POSITIVE"),
-          t.Literal("MOVE_NEGATIVE"),
+          t.Literal(USER_ACTIONS.MOVE_POSITIVE),
+          t.Literal(USER_ACTIONS.MOVE_NEGATIVE),
         ]),
       }),
-      detail: { tags: ["users"], summary: "Update dice by playtime" },
     },
   )
-  .post(
-    "/:id/place",
-    async ({ params, user, userService }) => {
-      const result = await userService.updatePlace(params.id);
-      logger.info(user?.username, "assigned place", params.id);
-      return result;
-    },
-    { detail: { tags: ["users"], summary: "Assign podium place" } },
-  )
-  .delete(
-    "/:id/place",
-    async ({ params, db, user, userService }) => {
-      await db
-        .update(schema.users)
-        .set({ place: "0", updated: nowIso() })
-        .where(eq(schema.users.id, params.id));
-      broadcast("users", "update", params.id);
-      logger.info(user?.username, "cleared place", params.id);
-      return userService.getById(params.id);
-    },
-    { detail: { tags: ["users"], summary: "Clear podium place" } },
-  );
+  .post("/:id/place", async ({ params, user, userService }) => {
+    const result = await userService.updatePlace(params.id);
+    logger
+      .setAuthor(String(user?.username))
+      .info(`assigned place ${params.id}`);
+    return result;
+  })
+  .delete("/:id/place", async ({ params, db, user, userService }) => {
+    await db
+      .update(schema.users)
+      .set({ place: "0", updated: nowIso() })
+      .where(eq(schema.users.id, params.id));
+    broadcast("users", "update", params.id);
+    logger.setAuthor(String(user?.username)).info(`cleared place ${params.id}`);
+    return userService.getById(params.id);
+  });
+
+export default usersRoute;

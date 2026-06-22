@@ -6,16 +6,12 @@ import { PaintType } from "@/types/paint";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import ImagePaint from "../components/image.paint";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { startTransition, useCallback, useState } from "react";
 
 const paintApi = new PaintApi();
 
-function ListPaint({
-  setTab,
-}: {
-  setTab: (value: "home" | "draw" | "list" | "profile") => void;
-}) {
+function ListPaint({ setTab }: { setTab: (value: "home" | "draw" | "list" | "profile") => void }) {
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState<PaintType["author"] | null>(null);
@@ -38,7 +34,7 @@ function ListPaint({
     });
   }, [queryClient]);
 
-  useSubscription("drawings", "*", invalidateQuery);
+  useSubscription("drawings", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -64,11 +60,7 @@ function ListPaint({
         )}
 
         <section className="mt-auto flex flex-row gap-1">
-          <Button
-            variant="error"
-            onClick={() => setTab("home")}
-            className="w-full"
-          >
+          <Button variant="error" onClick={() => setTab("home")} className="w-full">
             <ChevronLeft />
           </Button>
         </section>
@@ -76,8 +68,8 @@ function ListPaint({
 
       <div className="flex flex-wrap gap-2 w-full h-fit overflow-y-auto p-2">
         {data?.map((item) => (
-            <ImagePaint key={item.id} item={item} onClick={setSelected} />
-          ))}
+          <ImagePaint key={item.id} item={item} onClick={setSelected} />
+        ))}
       </div>
     </main>
   );

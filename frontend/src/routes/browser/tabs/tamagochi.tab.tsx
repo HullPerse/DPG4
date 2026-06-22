@@ -1,13 +1,6 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -24,7 +17,7 @@ import {
 import { fetchModelConfigs } from "@/api/config.api";
 import ItemsApi from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { Button } from "@/components/ui/button.component";
@@ -63,12 +56,7 @@ const PALETTE = [
   "#A9A9A9",
 ];
 
-function getMood(
-  hunger: number,
-  happiness: number,
-  energy: number,
-  isAlive: boolean,
-): string {
+function getMood(hunger: number, happiness: number, energy: number, isAlive: boolean): string {
   if (!isAlive) return "Мертва";
   if (hunger < 30) return "Голоден";
   if (energy < 30) return "Хочет спать";
@@ -130,10 +118,7 @@ function RatModel({
       );
       cloned.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          (child.material as THREE.MeshStandardMaterial).color.lerp(
-            deadColor.current,
-            0.05,
-          );
+          (child.material as THREE.MeshStandardMaterial).color.lerp(deadColor.current, 0.05);
         }
       });
       return;
@@ -141,10 +126,7 @@ function RatModel({
 
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        (child.material as THREE.MeshStandardMaterial).color.lerp(
-          targetColor.current,
-          0.08,
-        );
+        (child.material as THREE.MeshStandardMaterial).color.lerp(targetColor.current, 0.08);
       }
     });
 
@@ -173,15 +155,12 @@ function RatModel({
     const progress = Math.min(anim.elapsed / 0.8, 1);
 
     if (anim.type === "feed") {
-      const bounce =
-        1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
+      const bounce = 1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
       groupRef.current.scale.setScalar(cfgScale * bounce);
     } else if (anim.type === "pet") {
-      groupRef.current.rotation.z =
-        Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
+      groupRef.current.rotation.z = Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
     } else if (anim.type === "sleep") {
-      groupRef.current.position.y =
-        cfgPosY - Math.sin(progress * Math.PI) * 0.3;
+      groupRef.current.position.y = cfgPosY - Math.sin(progress * Math.PI) * 0.3;
     }
 
     if (progress >= 1) {
@@ -248,21 +227,9 @@ function SceneContent({
       <color attach="background" args={["#232136"]} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[5, 6, 4]} intensity={1.6} color="#f6c177" />
-      <directionalLight
-        position={[-4, 3, -3]}
-        intensity={0.6}
-        color="#c4a7e7"
-      />
-      <directionalLight
-        position={[-2, -1, 6]}
-        intensity={0.4}
-        color="#eb6f92"
-      />
-      <directionalLight
-        position={[0, -4, -4]}
-        intensity={0.25}
-        color="#31748f"
-      />
+      <directionalLight position={[-4, 3, -3]} intensity={0.6} color="#c4a7e7" />
+      <directionalLight position={[-2, -1, 6]} intensity={0.4} color="#eb6f92" />
+      <directionalLight position={[0, -4, -4]} intensity={0.25} color="#31748f" />
       <Suspense fallback={null}>
         <RatModel
           reaction={reaction}
@@ -328,7 +295,7 @@ function TamagotchiTab() {
     queryClient.invalidateQueries({ queryKey: ["pet", user?.id] });
   }, [queryClient, user?.id]);
 
-  useSubscription("pets", "*", refetchPet);
+  useSubscription("pets", refetchPet);
 
   const petIsDead = data && !data.isAlive;
   const brodeforActive = ratItems.some((i) => i.label === "Бродефор");
@@ -419,8 +386,7 @@ function TamagotchiTab() {
 
   const currentModel = data?.model ?? "rat";
   const currentColor = data?.color ?? "#8B7355";
-  const currentModelCfg =
-    modelConfigs.find((m) => m.id === currentModel) ?? modelConfigs[0];
+  const currentModelCfg = modelConfigs.find((m) => m.id === currentModel) ?? modelConfigs[0];
 
   const resurrectMutation = useMutation({
     mutationFn: () => resurrectPet(user!.id),
@@ -468,9 +434,7 @@ function TamagotchiTab() {
                   backgroundColor:
                     mood === "Счастлив"
                       ? "#50C878"
-                      : mood === "Голоден" ||
-                          mood === "Хочет спать" ||
-                          mood === "Грустный"
+                      : mood === "Голоден" || mood === "Хочет спать" || mood === "Грустный"
                         ? "#f6c177"
                         : "#555",
                 }}
@@ -498,30 +462,18 @@ function TamagotchiTab() {
           </Suspense>
         </Canvas>
 
-        {petIsDead && (
-          <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
-        )}
+        {petIsDead && <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />}
 
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-background/80 border-t border-highlight-med p-2.5 backdrop-blur-sm">
           <div className="flex flex-row gap-3">
-            <StatBar
-              label="Голод"
-              value={data?.hunger ?? 100}
-              color="#f6c177"
-              dead={petIsDead}
-            />
+            <StatBar label="Голод" value={data?.hunger ?? 100} color="#f6c177" dead={petIsDead} />
             <StatBar
               label="Счастье"
               value={data?.happiness ?? 100}
               color="#c4a7e7"
               dead={petIsDead}
             />
-            <StatBar
-              label="Энергия"
-              value={data?.energy ?? 100}
-              color="#9ccfd8"
-              dead={petIsDead}
-            />
+            <StatBar label="Энергия" value={data?.energy ?? 100} color="#9ccfd8" dead={petIsDead} />
           </div>
         </div>
       </section>
@@ -559,9 +511,7 @@ function TamagotchiTab() {
       )}
 
       <section className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg">
-        <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-          Модель
-        </span>
+        <span className="text-xs text-muted font-semibold uppercase tracking-wider">Модель</span>
         <div className="flex flex-row flex-wrap gap-1.5">
           {modelConfigs.map((m) => (
             <Button
@@ -577,9 +527,7 @@ function TamagotchiTab() {
 
       <section className="flex flex-row gap-3">
         <div className="flex flex-col gap-2 p-3 bg-background border-2 border-highlight-high rounded-lg flex-1">
-          <span className="text-xs text-muted font-semibold uppercase tracking-wider">
-            Цвет
-          </span>
+          <span className="text-xs text-muted font-semibold uppercase tracking-wider">Цвет</span>
           <div className="flex flex-row flex-wrap gap-1.5">
             {PALETTE.map((color) => (
               <Button
@@ -690,9 +638,7 @@ function TamagotchiTab() {
                 </span>
               )}
               {!hasKvas && !hasKvaS && !hasKirpich && !brodeforActive && (
-                <span className="text-xs text-muted/50 px-1">
-                  Нет предметов
-                </span>
+                <span className="text-xs text-muted/50 px-1">Нет предметов</span>
               )}
             </div>
           )}

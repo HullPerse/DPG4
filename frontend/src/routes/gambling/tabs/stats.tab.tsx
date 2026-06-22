@@ -13,12 +13,8 @@ import {
   Trophy,
   History,
 } from "lucide-react";
-import {
-  formatNet,
-  netColorClass,
-  GAME_TYPE_LABELS,
-} from "@/lib/gambling/stats.constants";
-import { cn, BORDER_WINDOW } from "@/lib/utils";
+import { formatNet, netColorClass, GAME_TYPE_LABELS } from "@/lib/gambling/stats.constants";
+import { cn, BORDER_WINDOW } from "@/lib/index.utils";
 import { StatCard, NetValue } from "../components/stats.shared";
 import { lazy, Suspense } from "react";
 import { HistoryRecord } from "@/types/history";
@@ -64,16 +60,8 @@ export default function StatsTab() {
           color={netColorClass(summary.totalNet)}
           icon={TrendingUp}
         />
-        <StatCard
-          label="Сыграно"
-          value={String(summary.totalPlayed)}
-          icon={Gamepad2}
-        />
-        <StatCard
-          label="Всего поставлено"
-          value={String(summary.totalWagered)}
-          icon={Coins}
-        />
+        <StatCard label="Сыграно" value={String(summary.totalPlayed)} icon={Gamepad2} />
+        <StatCard label="Всего поставлено" value={String(summary.totalWagered)} icon={Coins} />
         <StatCard
           label="Винрейт"
           value={`${summary.winRate}%`}
@@ -86,11 +74,7 @@ export default function StatsTab() {
           color="text-emerald-400"
           icon={Trophy}
         />
-        <StatCard
-          label="Средняя ставка"
-          value={String(summary.avgBet)}
-          icon={Coins}
-        />
+        <StatCard label="Средняя ставка" value={String(summary.avgBet)} icon={Coins} />
       </section>
 
       <Suspense fallback={null}>
@@ -101,18 +85,14 @@ export default function StatsTab() {
         />
       </Suspense>
 
-      {data.history.data.length > 0 && (
-        <RecentHistory records={data.history.data} />
-      )}
+      {data.history.data.length > 0 && <RecentHistory records={data.history.data} />}
     </main>
   );
 }
 
 function RecentHistory({ records }: { records: HistoryRecord[] }) {
   return (
-    <section
-      className={cn(BORDER_WINDOW, "flex flex-col gap-2 bg-card/40 p-3")}
-    >
+    <section className={cn(BORDER_WINDOW, "flex flex-col gap-2 bg-card/40 p-3")}>
       <header className="flex items-center gap-2 text-sm font-bold text-muted">
         <History className="size-4 text-iris" />
         Последние игры
@@ -128,9 +108,7 @@ function RecentHistory({ records }: { records: HistoryRecord[] }) {
               <span className="font-bold truncate">
                 {GAME_TYPE_LABELS[record.type] ?? record.label}
               </span>
-              <span className="text-[10px] text-muted tabular-nums">
-                ставка {record.bid}
-              </span>
+              <span className="text-[10px] text-muted tabular-nums">ставка {record.bid}</span>
             </div>
             <NetValue value={record.net} className="text-sm shrink-0" />
           </div>

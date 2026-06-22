@@ -1,10 +1,10 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import { desc, eq } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { dbPlugin } from "../plugins/db.plugin";
+import * as schema from "@/db/schema.db";
+import { databasePlugin } from "@/plugins/index.plugin";
 
-export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/stats/user" })
+  .use(databasePlugin)
   .get("/:userId", async ({ params: { userId }, db }) => {
     let inventoryLogs: (typeof schema.inventoryLog.$inferSelect)[] = [];
     try {
@@ -14,9 +14,7 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
         .where(eq(schema.inventoryLog.owner, userId))
         .orderBy(desc(schema.inventoryLog.created))
         .limit(5000);
-    } catch {
-      // table may not exist yet
-    }
+    } catch {}
 
     const [inventoryItems, userData, gamesData] = await Promise.all([
       db
@@ -28,13 +26,9 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
         .from(schema.users)
         .where(eq(schema.users.id, userId))
         .then((r) => r[0] ?? null),
-      db
-        .select()
-        .from(schema.games)
-        .where(eq(schema.games.userId, userId)),
+      db.select().from(schema.games).where(eq(schema.games.userId, userId)),
     ]);
 
-    // --- Profile ---
     const profile = {
       accountAge: userData
         ? Math.floor(
@@ -48,7 +42,6 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
       registeredDate: userData?.created ?? "",
     };
 
-    // --- Inventory stats (from history: receive/buy/trade_in/grant) ---
     const ACQUISITION = new Set(["receive", "buy", "trade_in", "grant"]);
     const itemsByType = new Map<string, number>();
     const labelCounts = new Map<string, number>();
@@ -75,7 +68,6 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
       uniqueLabels: labelCounts.size,
     };
 
-    // --- Inventory History ---
     const dailyActivityMap = new Map<
       string,
       {
@@ -181,7 +173,6 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
       tradesOut,
     };
 
-    // --- Gambling - use history table ---
     const historyRows = await db
       .select()
       .from(schema.history)
@@ -197,12 +188,12 @@ export const userStatsRoute = new Elysia({ prefix: "/stats/user" })
       totalPlayed,
       totalWagered,
       totalNet,
-      winRate: totalBidsNonZero > 0 ? Math.round((wins / totalBidsNonZero) * 100) : 0,
+      winRate:
+        totalBidsNonZero > 0 ? Math.round((wins / totalBidsNonZero) * 100) : 0,
       biggestWin: historyRows.reduce((m, h) => Math.max(m, h.payout), 0),
       avgBet: totalPlayed > 0 ? Math.round(totalWagered / totalPlayed) : 0,
     };
 
-    // --- Games ---
     const games = {
       total: gamesData.length,
       completed: gamesData.filter((g) => g.status === "COMPLETED").length,

@@ -55,7 +55,7 @@ export default function Gambling() {
       {tab !== "home" && (
         <section className="flex flex-row gap-1 items-center min-h-11 ml-auto">
           <Button
-            rendered={["home", "cassa", "stats", "leaderboard"].includes(tab)}
+            rendered={tab === "cassa" || tab === "stats" || tab === "leaderboard"}
             size="icon"
             className="h-10 w-10 p-5"
             onClick={() => setTab("leaderboard")}
@@ -65,7 +65,7 @@ export default function Gambling() {
             <Trophy />
           </Button>
           <Button
-            rendered={["home", "cassa", "stats", "leaderboard"].includes(tab)}
+            rendered={tab === "cassa" || tab === "stats" || tab === "leaderboard"}
             size="icon"
             className="h-10 w-10 p-5"
             onClick={() => setTab("stats")}

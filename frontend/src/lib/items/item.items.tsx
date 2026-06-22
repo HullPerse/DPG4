@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
@@ -10,7 +10,7 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
-import { openWindow, translateItemType } from "../utils";
+import { openWindow, translateItemType } from "../index.utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Select,
@@ -22,11 +22,7 @@ import {
 } from "@/components/ui/select.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover.component";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
 import ItemHelper from "@/components/shared/item.helper";
 import { getFileUrl } from "@/api/client.api";
 import WheelComponent from "@/components/shared/wheel.component";
@@ -47,7 +43,7 @@ const userApi = new UserApi();
 const gameApi = new GameApi();
 const itemsApi = new ItemsApi();
 
-const ratIds: string[] = [
+const ratIds = new Set([
   "Восьмибитная Крыса",
   "Добрая крыса",
   "Запаянный Крысиный Сундук",
@@ -80,9 +76,9 @@ const ratIds: string[] = [
   "Крысиный анус",
   "Квакающая Крыса",
   "Крысиный потоп",
-];
+]);
 
-const pigIds = [
+const pigIds = new Set([
   "Подброшенная свинья",
   "Хрюкающая свинья",
   "Ебануто живучая свинья",
@@ -95,9 +91,9 @@ const pigIds = [
   "СпецСвин",
   "Свинство",
   "Свинский Сектор Приз",
-];
+]);
 
-const gremlinIds = ["Гремлин", "Гремлинизатор", "Гремлинская залупа"];
+const gremlinIds = new Set(["Гремлин", "Гремлинизатор", "Гремлинская залупа"]);
 
 export const itemEffect: effectInterface[] = [
   //EFFECTS
@@ -107,18 +103,14 @@ export const itemEffect: effectInterface[] = [
     "Квакающая Крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allUsers = await userApi.getAllUsers();
 
             return allUsers.filter((u) => u.id !== ctx.user.id);
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
 
@@ -144,9 +136,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -170,11 +160,8 @@ export const itemEffect: effectInterface[] = [
 
                   const allItems = await itemsApi
                     .getInventory(ctx.user.id)
-                    .then((res) =>
-                      res.filter((i) => i.label !== "Квакающая крыса"),
-                    );
-                  const finalItem =
-                    allItems[Math.floor(Math.random() * allItems.length)];
+                    .then((res) => res.filter((i) => i.label !== "Квакающая крыса"));
+                  const finalItem = allItems[Math.floor(Math.random() * allItems.length)];
 
                   if (!finalItem) return ctx.close();
 
@@ -200,8 +187,8 @@ export const itemEffect: effectInterface[] = [
     "Мышь",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [items, users] = await Promise.all([
               itemsApi.getInventories({ excludeOwner: ctx.user.id }),
@@ -210,10 +197,6 @@ export const itemEffect: effectInterface[] = [
             return { items, users };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -240,16 +223,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.items
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -312,20 +291,14 @@ export const itemEffect: effectInterface[] = [
     "Картонная упаковка",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(String(ctx.user.id));
 
-            return allItems.filter(
-              (item) => item.label === "Салфетка" || item.label === "Ручка",
-            );
+            return allItems.filter((item) => item.label === "Салфетка" || item.label === "Ручка");
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [itemOne, setItemOne] = useState<Inventory | null>(null);
         const [itemTwo, setItemTwo] = useState<Inventory | null>(null);
@@ -352,9 +325,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Предмет">
-                    {itemOne?.label}
-                  </SelectValue>
+                  <SelectValue placeholder="Предмет">{itemOne?.label}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -381,9 +352,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Предмет">
-                    {itemTwo?.label}
-                  </SelectValue>
+                  <SelectValue placeholder="Предмет">{itemTwo?.label}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -406,14 +375,9 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!itemOne || !itemTwo) return;
 
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    "fbf923a7d2f84cb",
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), "fbf923a7d2f84cb");
 
-                  await ctx.consume(
-                    `${ctx.user.username} начал смотреть КАЙДЖИ`,
-                  );
+                  await ctx.consume(`${ctx.user.username} начал смотреть КАЙДЖИ`);
                   ctx.close();
                 }}
                 disabled={!itemOne || !itemTwo}
@@ -430,16 +394,12 @@ export const itemEffect: effectInterface[] = [
     "Кайджи",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
 
@@ -465,9 +425,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -497,8 +455,7 @@ export const itemEffect: effectInterface[] = [
 
                   const usersArray = [ctx.user, selected];
 
-                  const winner: User =
-                    usersArray[Math.floor(Math.random() * usersArray.length)];
+                  const winner: User = usersArray[Math.floor(Math.random() * usersArray.length)];
 
                   await userApi.scoreUser(String(winner.id), 50);
 
@@ -542,9 +499,7 @@ export const itemEffect: effectInterface[] = [
 
                   setLoading(true);
                   setTimeout(async () => {
-                    await ctx.consume(
-                      `${ctx.user.username} встретил ебанутого деда`,
-                    );
+                    await ctx.consume(`${ctx.user.username} встретил ебанутого деда`);
                     ctx.close();
                   }, 5000);
                 }}
@@ -572,13 +527,7 @@ export const itemEffect: effectInterface[] = [
                 e.preventDefault();
                 openUrl("https://randstuff.ru/question/");
               }}
-              onClick={() =>
-                openWindow(
-                  "Янетупой",
-                  "https://randstuff.ru/question/",
-                  "Я не тупой",
-                )
-              }
+              onClick={() => openWindow("Янетупой", "https://randstuff.ru/question/", "Я не тупой")}
             >
               Открыть сайт <MousePointerClick />
             </Button>
@@ -618,18 +567,13 @@ export const itemEffect: effectInterface[] = [
     "Алтарь жертвоприношения",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(String(ctx.user.id));
-            return allItems.filter(
-              (item) => item.label !== "Алтарь жертвоприношения",
-            );
+            return allItems.filter((item) => item.label !== "Алтарь жертвоприношения");
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -654,9 +598,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Предмет">
-                    {selected?.label}
-                  </SelectValue>
+                  <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -696,16 +638,13 @@ export const itemEffect: effectInterface[] = [
     "Подброшенная свинья",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allGames = await gameApi.getAllUserGames(String(ctx.user.id));
             return allGames.filter((g) => g.status === "COMPLETED");
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Game | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -730,9 +669,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игра">
-                    {selected?.data?.name}
-                  </SelectValue>
+                  <SelectValue placeholder="Игра">{selected?.data?.name}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -755,8 +692,7 @@ export const itemEffect: effectInterface[] = [
                   const allUsers = await userApi
                     .getAllUsers()
                     .then((r) => r.filter((u) => u.id !== ctx.user.id));
-                  const randomUser =
-                    allUsers[Math.floor(Math.random() * allUsers.length)];
+                  const randomUser = allUsers[Math.floor(Math.random() * allUsers.length)];
                   await gameApi.addGame({
                     user: { id: randomUser.id, username: randomUser.username },
                     data: selected.data,
@@ -783,8 +719,8 @@ export const itemEffect: effectInterface[] = [
     "Шляпа",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [inventory, users] = await Promise.all([
               itemsApi.getInventories({ excludeOwner: ctx.user.id }),
@@ -793,9 +729,6 @@ export const itemEffect: effectInterface[] = [
             return { inventory, users };
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -821,16 +754,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.inventory
-                        ?.sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        ?.sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -865,10 +794,7 @@ export const itemEffect: effectInterface[] = [
                 variant="success"
                 onClick={async () => {
                   if (!selected) return;
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    String(ctx.user.id),
-                  );
+                  await itemsApi.sendInventory(String(selected.id), String(ctx.user.id));
                   await ctx.consume(
                     `${ctx.user.username} украл ${selected.label} у ${data?.users.find((u) => u.id === selected.owner)?.username}`,
                   );
@@ -888,13 +814,10 @@ export const itemEffect: effectInterface[] = [
     "Кредитный чип Сбербанка",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: () => itemsApi.getItems(),
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Item | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -920,9 +843,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -960,10 +881,7 @@ export const itemEffect: effectInterface[] = [
                 variant="success"
                 onClick={async () => {
                   if (!selected) return;
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    String(selected.id),
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), String(selected.id));
                   await ctx.consume(
                     `${ctx.user.username} обменял кредитный чип на ${selected.label}`,
                   );
@@ -983,17 +901,14 @@ export const itemEffect: effectInterface[] = [
     "Танец Хомяка: Эпический Расколбас Восприятия",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
             return { inventory: allItems, users: allUsers };
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -1019,22 +934,17 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.inventory
                         .filter(
                           (item) =>
-                            item.label !==
-                              "Танец Хомяка: Эпический Расколбас Восприятия" &&
+                            item.label !== "Танец Хомяка: Эпический Расколбас Восприятия" &&
                             item.owner !== ctx.user.id,
                         )
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -1089,13 +999,10 @@ export const itemEffect: effectInterface[] = [
     "Хорадрический куб",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: () => itemsApi.getInventory(String(ctx.user.id)),
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory[]>([]);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -1126,20 +1033,14 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.[0]?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.[0]?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data
                         ?.filter((i) => i.id !== selected?.[1]?.id)
                         .map((item, index) => {
-                          if (
-                            selected?.[1] &&
-                            item.label !== selected?.[1]?.label
-                          )
-                            return;
+                          if (selected?.[1] && item.label !== selected?.[1]?.label) return;
                           return (
                             <SelectItem key={item.id} value={item.id!}>
                               {`${index + 1}: `}
@@ -1186,20 +1087,14 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.[1]?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.[1]?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data
                         ?.filter((i) => i.id !== selected?.[0]?.id)
                         .map((item, index) => {
-                          if (
-                            selected?.[0] &&
-                            item.label !== selected?.[0]?.label
-                          )
-                            return;
+                          if (selected?.[0] && item.label !== selected?.[0]?.label) return;
                           return (
                             <SelectItem key={item.id} value={item.id!}>
                               {`${index + 1}: `}
@@ -1230,11 +1125,7 @@ export const itemEffect: effectInterface[] = [
               </div>
             </label>
             <section className="flex flex-row items-center justify-between gap-2 p-1">
-              <Button
-                size="icon"
-                variant="error"
-                onClick={() => setSelected([])}
-              >
+              <Button size="icon" variant="error" onClick={() => setSelected([])}>
                 <RefreshCcw />
               </Button>
               <Button
@@ -1244,9 +1135,7 @@ export const itemEffect: effectInterface[] = [
                   if (!selected || selected.length < 2) return;
                   await itemsApi.removeInventory(String(selected[0].id));
                   await itemsApi.removeInventory(String(selected[1].id));
-                  await ctx.consume(
-                    `${ctx.user.username} удалил два ${selected[0].label}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} удалил два ${selected[0].label}`);
                   ctx.close();
                 }}
                 disabled={!selected}
@@ -1263,13 +1152,10 @@ export const itemEffect: effectInterface[] = [
     "Платная педалька",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: () => itemsApi.getItems(),
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [result, setResult] = useState<Item | null>(null);
         const [selected, setSelected] = useState<Item[]>([]);
 
@@ -1297,9 +1183,7 @@ export const itemEffect: effectInterface[] = [
                       })) as WheelItem[])
                     : []
                 }
-                onResult={(it) =>
-                  setResult(data?.find((item) => item.id === it?.id) as Item)
-                }
+                onResult={(it) => setResult(data?.find((item) => item.id === it?.id) as Item)}
               />
               {result && (
                 <section
@@ -1315,11 +1199,7 @@ export const itemEffect: effectInterface[] = [
                       alt={result.label}
                       className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                       onClick={() =>
-                        openWindow(
-                          String(result.id),
-                          getFileUrl(result)!,
-                          "Изображение",
-                        )
+                        openWindow(String(result.id), getFileUrl(result)!, "Изображение")
                       }
                     />
                   </div>
@@ -1348,9 +1228,7 @@ export const itemEffect: effectInterface[] = [
                     }}
                   >
                     <SelectTrigger className="w-full py-5">
-                      <SelectValue placeholder="Предмет">
-                        {selected?.[index]?.label}
-                      </SelectValue>
+                      <SelectValue placeholder="Предмет">{selected?.[index]?.label}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -1389,13 +1267,8 @@ export const itemEffect: effectInterface[] = [
                 variant="success"
                 onClick={async () => {
                   if (!result) return;
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    String(result.id),
-                  );
-                  await ctx.consume(
-                    `${ctx.user.username} случайно выбил ${result.label}`,
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), String(result.id));
+                  await ctx.consume(`${ctx.user.username} случайно выбил ${result.label}`);
                   ctx.close();
                 }}
                 disabled={!result}
@@ -1412,15 +1285,12 @@ export const itemEffect: effectInterface[] = [
     "Подмена за кулисами",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<User | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -1445,9 +1315,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -1471,12 +1339,8 @@ export const itemEffect: effectInterface[] = [
                     String(ctx.user.id),
                     String(selected.id),
                   ]);
-                  const currentUser = currentGame.find(
-                    (g) => g.user.id === ctx.user.id,
-                  );
-                  const targetUser = currentGame.find(
-                    (g) => g.user.id === selected.id,
-                  );
+                  const currentUser = currentGame.find((g) => g.user.id === ctx.user.id);
+                  const targetUser = currentGame.find((g) => g.user.id === selected.id);
                   if (!currentUser || !targetUser) return;
 
                   await gameApi.changeStatus(
@@ -1534,22 +1398,17 @@ export const itemEffect: effectInterface[] = [
     "Карта Джокер",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
             return {
-              items: allItems.filter((i) =>
-                i.label.toUpperCase().includes("КАРТА"),
-              ),
+              items: allItems.filter((i) => i.label.toUpperCase().includes("КАРТА")),
               users: allUsers,
             };
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -1574,16 +1433,12 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.label}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.label}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     {data?.items
-                      .sort((a, b) =>
-                        (a.owner ?? "").localeCompare(b.owner ?? ""),
-                      )
+                      .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                       .map((item, index) => (
                         <SelectItem key={item.id} value={item.id!}>
                           {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -1600,9 +1455,7 @@ export const itemEffect: effectInterface[] = [
                 variant="success"
                 onClick={async () => {
                   if (!selected) return;
-                  await ctx.consume(
-                    `${ctx.user.username} уничтожил ${selected.label}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} уничтожил ${selected.label}`);
                   ctx.close();
                 }}
                 disabled={!selected}
@@ -1619,8 +1472,8 @@ export const itemEffect: effectInterface[] = [
     "Ведьмин котел",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allUsers = await userApi.getAllUsers();
             const allItems = await itemsApi.getItems({
@@ -1629,16 +1482,11 @@ export const itemEffect: effectInterface[] = [
             const allInventories = await itemsApi.getInventories();
             return {
               items: allItems,
-              inventories: allInventories.filter(
-                (i) => i.label !== "Ведьмин котел",
-              ),
+              inventories: allInventories.filter((i) => i.label !== "Ведьмин котел"),
               users: allUsers,
             };
           },
         });
-        useEffect(() => {
-          refetch();
-        }, []);
         const [selected, setSelected] = useState<Inventory[] | null>(null);
         const [finalItem, setFinalItem] = useState<Item | null>(null);
 
@@ -1665,9 +1513,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {finalItem?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{finalItem?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -1717,16 +1563,13 @@ export const itemEffect: effectInterface[] = [
                     }}
                   >
                     <SelectTrigger className="w-full py-5">
-                      <SelectValue placeholder="Предмет">
-                        {selected?.[index]?.label}
-                      </SelectValue>
+                      <SelectValue placeholder="Предмет">{selected?.[index]?.label}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         {data?.inventories.map((item) => {
                           if (selected?.includes(item)) return;
-                          if (selected?.some((i) => i.owner === item.owner))
-                            return;
+                          if (selected?.some((i) => i.owner === item.owner)) return;
                           return (
                             <SelectItem key={item.id} value={item.id}>
                               {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -1766,10 +1609,7 @@ export const itemEffect: effectInterface[] = [
                   for (const item of selected) {
                     await itemsApi.removeInventory(String(item.id));
                   }
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    String(finalItem.id),
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), String(finalItem.id));
                   await ctx.consume(
                     `${ctx.user.username} уничтожил ${selected.map((i) => i.label).join(", ")} и получил ${finalItem.label}`,
                   );
@@ -1789,21 +1629,15 @@ export const itemEffect: effectInterface[] = [
     "Скальпель",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(ctx.user.id);
             return allItems.filter((i) => i.label !== "Скальпель");
           },
         });
 
-        useEffect(() => {
-          refetch();
-        }, []);
-
-        const [fromSelected, setFromSelected] = useState<Inventory | null>(
-          null,
-        );
+        const [fromSelected, setFromSelected] = useState<Inventory | null>(null);
         const [toSelected, setToSelected] = useState<Inventory | null>(null);
 
         if (isLoading || isRefetching) return <WindowLoader />;
@@ -1829,9 +1663,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {fromSelected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{fromSelected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -1878,9 +1710,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {toSelected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{toSelected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -1921,16 +1751,8 @@ export const itemEffect: effectInterface[] = [
 
                   if (fromSelected.charge <= 1) return;
 
-                  await itemsApi.chargeInventory(
-                    String(fromSelected.id),
-                    fromSelected.charge,
-                    -1,
-                  );
-                  await itemsApi.chargeInventory(
-                    String(toSelected.id),
-                    toSelected.charge,
-                    1,
-                  );
+                  await itemsApi.chargeInventory(String(fromSelected.id), fromSelected.charge, -1);
+                  await itemsApi.chargeInventory(String(toSelected.id), toSelected.charge, 1);
 
                   await ctx.consume(
                     `${ctx.user.username} убрал заряд у ${fromSelected.label} и добавил к ${toSelected.label}`,
@@ -1952,16 +1774,12 @@ export const itemEffect: effectInterface[] = [
     "Гидразинокарбонилметилбромфенилдигидробенздиазепин",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return await userApi.getAllUsers();
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
         const [input, setInput] = useState<string>("");
@@ -1988,9 +1806,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -2007,11 +1823,7 @@ export const itemEffect: effectInterface[] = [
 
             <label className="flex flex-col gap-1">
               <span className="font-bold">Название предмета</span>
-              <Input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
+              <Input type="text" value={input} onChange={(e) => setInput(e.target.value)} />
             </label>
             <section className="flex flex-row items-center justify-between gap-2 p-1">
               <Button
@@ -2022,21 +1834,12 @@ export const itemEffect: effectInterface[] = [
 
                   let finalMessage = "";
 
-                  if (
-                    input ===
-                    "Гидразинокарбонилметилбромфенилдигидробенздиазепин"
-                  ) {
-                    await userApi.moveUserAnimated(
-                      String(selected.id),
-                      selected.position - 5,
-                    );
+                  if (input === "Гидразинокарбонилметилбромфенилдигидробенздиазепин") {
+                    await userApi.moveUserAnimated(String(selected.id), selected.position - 5);
 
                     finalMessage = `передвинул ${selected.username} на 5 клеток назад`;
                   } else {
-                    await userApi.moveUserAnimated(
-                      String(ctx.user.id),
-                      ctx.user.position - 5,
-                    );
+                    await userApi.moveUserAnimated(String(ctx.user.id), ctx.user.position - 5);
 
                     finalMessage = `не смог передвинуть ${selected.username} на 5 клеток назад`;
                   }
@@ -2101,14 +1904,10 @@ export const itemEffect: effectInterface[] = [
                     "Рыбы",
                   ];
                   const zodiac12 = allSigns.filter((s) => s !== "Змееносец");
-                  const normalizedInput = input.map((s) =>
-                    s.trim().toLowerCase(),
-                  );
+                  const normalizedInput = input.map((s) => s.trim().toLowerCase());
                   const normalizedAll = allSigns.map((s) => s.toLowerCase());
                   const normalized12 = zodiac12.map((s) => s.toLowerCase());
-                  const hasAll12 = normalized12.every((sign) =>
-                    normalizedInput.includes(sign),
-                  );
+                  const hasAll12 = normalized12.every((sign) => normalizedInput.includes(sign));
                   if (!hasAll12) {
                     await userApi.scoreUser(String(ctx.user.id), -3);
                     await ctx.consume(
@@ -2119,9 +1918,7 @@ export const itemEffect: effectInterface[] = [
                   }
                   let score = 6;
                   const hasOphiuchus = normalizedInput.includes("змееносец");
-                  const details = hasOphiuchus
-                    ? "все 13 знаков зодиака"
-                    : "все 12 знаков зодиака";
+                  const details = hasOphiuchus ? "все 13 знаков зодиака" : "все 12 знаков зодиака";
                   if (hasOphiuchus) {
                     score += 2;
                     const correctOrder = normalizedInput.every(
@@ -2157,8 +1954,8 @@ export const itemEffect: effectInterface[] = [
     "Крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [items, users] = await Promise.all([
               itemsApi.getInventories({ excludeOwner: ctx.user.id }),
@@ -2167,10 +1964,6 @@ export const itemEffect: effectInterface[] = [
             return { items, users };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -2197,16 +1990,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.items
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -2243,10 +2032,7 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    ctx.user.id,
-                  );
+                  await itemsApi.sendInventory(String(selected.id), ctx.user.id);
 
                   await ctx.consume(
                     `${ctx.user.username} украл ${selected.label} у ${data?.users.find((u) => u.id === selected.owner)?.username}`,
@@ -2268,8 +2054,8 @@ export const itemEffect: effectInterface[] = [
     "3д крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [items, users] = await Promise.all([
               itemsApi.getInventories({ excludeOwner: ctx.user.id }),
@@ -2278,10 +2064,6 @@ export const itemEffect: effectInterface[] = [
             return { items, users };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -2308,16 +2090,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.items
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -2354,10 +2132,7 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    ctx.user.id,
-                  );
+                  await itemsApi.sendInventory(String(selected.id), ctx.user.id);
 
                   await ctx.consume(
                     `${ctx.user.username} украл ${selected.label} у ${data?.users.find((u) => u.id === selected.owner)?.username}`,
@@ -2379,17 +2154,13 @@ export const itemEffect: effectInterface[] = [
     "Крысиный алтарь",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(ctx.user.id);
             return allItems.filter((i) => i.label !== "Крысиный алтарь");
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -2416,9 +2187,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -2464,9 +2233,7 @@ export const itemEffect: effectInterface[] = [
 
                   await itemsApi.addInventory(String(ctx.user.id), ratId);
 
-                  await ctx.consume(
-                    `${ctx.user.username} принес в жертву ${selected.label}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} принес в жертву ${selected.label}`);
 
                   ctx.close();
                 }}
@@ -2484,16 +2251,12 @@ export const itemEffect: effectInterface[] = [
     "Крысиный отец",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
 
@@ -2519,9 +2282,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -2543,11 +2304,7 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  await userApi.changeUserStatus(
-                    String(selected.id),
-                    "Крысиный отец",
-                    "add",
-                  );
+                  await userApi.changeUserStatus(String(selected.id), "Крысиный отец", "add");
 
                   await ctx.consume(
                     `${ctx.user.username} подкинул Крысиного отца ${selected.username}`,
@@ -2569,8 +2326,8 @@ export const itemEffect: effectInterface[] = [
     "Восьмибитная Крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
@@ -2580,10 +2337,6 @@ export const itemEffect: effectInterface[] = [
             };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -2610,9 +2363,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Игрок">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Игрок">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -2656,14 +2407,9 @@ export const itemEffect: effectInterface[] = [
 
                   if (selected.label.replace(/\s/g, "").length > 8) return;
 
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    ctx.user.id,
-                  );
+                  await itemsApi.sendInventory(String(selected.id), ctx.user.id);
 
-                  await ctx.consume(
-                    `▓${ctx.user.username}▓▓ укр▓▓ал ${selected.label}▓`,
-                  );
+                  await ctx.consume(`▓${ctx.user.username}▓▓ укр▓▓ал ${selected.label}▓`);
 
                   ctx.close();
                 }}
@@ -2770,9 +2516,7 @@ export const itemEffect: effectInterface[] = [
                     await itemsApi.addInventory(ctx.user.id, id);
                   }
 
-                  await ctx.consume(
-                    `${ctx.user.username} выбил ${possibles[value - 1]} из яйца`,
-                  );
+                  await ctx.consume(`${ctx.user.username} выбил ${possibles[value - 1]} из яйца`);
 
                   ctx.close();
                 }}
@@ -2790,17 +2534,13 @@ export const itemEffect: effectInterface[] = [
     "Крысталлизатор",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventory(ctx.user.id);
             return allItems;
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -2827,9 +2567,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -2874,9 +2612,7 @@ export const itemEffect: effectInterface[] = [
                   //add rat
                   await itemsApi.addInventory(ctx.user.id, "a29c7tdphmwlrbc");
 
-                  await ctx.consume(
-                    `${ctx.user.username} превратил ${selected.label} в крысу`,
-                  );
+                  await ctx.consume(`${ctx.user.username} превратил ${selected.label} в крысу`);
 
                   ctx.close();
                 }}
@@ -2894,16 +2630,12 @@ export const itemEffect: effectInterface[] = [
     "Мечтательная крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return userApi.getUsers({ excludeUserId: ctx.user.id });
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
 
@@ -2929,9 +2661,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -2953,29 +2683,21 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  const allItems = await itemsApi.getInventory(
-                    String(selected.id),
-                  );
+                  const allItems = await itemsApi.getInventory(String(selected.id));
 
                   if (!allItems) return;
 
-                  const finalItem =
-                    allItems[Math.floor(Math.random() * allItems.length)];
+                  const finalItem = allItems[Math.floor(Math.random() * allItems.length)];
 
                   if (!finalItem) return;
 
                   const ratId = await itemsApi
                     .getInventory(ctx.user.id)
-                    .then((res) =>
-                      res.find((i) => i.label === "Мечтательная крыса"),
-                    );
+                    .then((res) => res.find((i) => i.label === "Мечтательная крыса"));
 
                   if (!ratId) return;
 
-                  await itemsApi.sendInventory(
-                    String(finalItem.id),
-                    ctx.user.id,
-                  );
+                  await itemsApi.sendInventory(String(finalItem.id), ctx.user.id);
                   await itemsApi.sendInventory(String(ratId), finalItem.owner);
 
                   await ctx.consume(
@@ -2998,22 +2720,16 @@ export const itemEffect: effectInterface[] = [
     "Крысиный лутбокс",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi
               .getAllItems()
-              .then((res) =>
-                res.filter((i) => ratIds.includes(String(i.label))),
-              );
+              .then((res) => res.filter((i) => ratIds.has(i.label)));
 
             return allItems;
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [result, setResult] = useState<Item | null>(null);
 
@@ -3039,9 +2755,7 @@ export const itemEffect: effectInterface[] = [
                     type: "image",
                   })) as WheelItem[]
                 }
-                onResult={(it) =>
-                  setResult(data?.find((item) => item.id === it?.id) as Item)
-                }
+                onResult={(it) => setResult(data?.find((item) => item.id === it?.id) as Item)}
               />
               {result && (
                 <section
@@ -3057,11 +2771,7 @@ export const itemEffect: effectInterface[] = [
                       alt={result.label}
                       className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                       onClick={() =>
-                        openWindow(
-                          String(result.id),
-                          getFileUrl(result)!,
-                          "Изображение",
-                        )
+                        openWindow(String(result.id), getFileUrl(result)!, "Изображение")
                       }
                     />
                   </div>
@@ -3080,14 +2790,9 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!result) return;
 
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    String(result.id),
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), String(result.id));
 
-                  await ctx.consume(
-                    `${ctx.user.username} выбил ${result.label}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} выбил ${result.label}`);
                   ctx.close();
                 }}
                 disabled={!result}
@@ -3104,8 +2809,8 @@ export const itemEffect: effectInterface[] = [
     "Белорусская Крыса",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             return userApi.getUsers({
               excludeUserId: ctx.user.id,
@@ -3113,10 +2818,6 @@ export const itemEffect: effectInterface[] = [
             });
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
 
@@ -3144,9 +2845,7 @@ export const itemEffect: effectInterface[] = [
                 }}
               >
                 <SelectTrigger className="w-full py-5">
-                  <SelectValue placeholder="Игрок">
-                    {selected?.username}
-                  </SelectValue>
+                  <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -3167,15 +2866,9 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  await userApi.changeUserStatus(
-                    String(selected.id),
-                    "Картошка",
-                    "remove",
-                  );
+                  await userApi.changeUserStatus(String(selected.id), "Картошка", "remove");
 
-                  await ctx.consume(
-                    `${ctx.user.username} украл Картошку у ${selected.username}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} украл Картошку у ${selected.username}`);
 
                   ctx.close();
                 }}
@@ -3193,8 +2886,8 @@ export const itemEffect: effectInterface[] = [
     "Волшебный Крысиный Дождь",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventories();
             const allUsers = await userApi.getAllUsers();
@@ -3204,18 +2897,14 @@ export const itemEffect: effectInterface[] = [
                 .filter((i) => i.label !== "Волшебный Крысиный Дождь")
                 .filter(
                   (i) =>
-                    ratIds.includes(i.label) ||
-                    pigIds.includes(i.label) ||
-                    gremlinIds.includes(i.label),
+                    ratIds.has(i.label) ||
+                    pigIds.has(i.label) ||
+                    gremlinIds.has(i.label),
                 ),
               users: allUsers,
             };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -3228,8 +2917,7 @@ export const itemEffect: effectInterface[] = [
             />
           );
 
-        if (!data || data.items.length === 0)
-          return <main>Не нашлось предметов</main>;
+        if (!data || data.items.length === 0) return <main>Не нашлось предметов</main>;
 
         return (
           <main className="flex flex-col gap-2">
@@ -3245,16 +2933,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.items
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={item.id} value={item.id!}>
                             {`${index + 1}) ${data.users.find((u) => u.id === item.owner)?.username}: `}
@@ -3291,10 +2975,7 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected) return;
 
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    ctx.user.id,
-                  );
+                  await itemsApi.sendInventory(String(selected.id), ctx.user.id);
 
                   await ctx.consume(
                     `${ctx.user.username} украл ${selected.label} у ${data.users.find((u) => u.id === selected.owner)?.username}`,
@@ -3320,9 +3001,7 @@ export const itemEffect: effectInterface[] = [
 
         return (
           <main className="flex flex-col gap-2">
-            <span>
-              Подсказка: крысиных предметов где-то между 0 и {ratIds.length}
-            </span>
+            <span>Подсказка: крысиных предметов где-то между 0 и {ratIds.size}</span>
 
             {input.map((val, index) => (
               <label key={index} className="flex flex-col gap-1">
@@ -3355,9 +3034,7 @@ export const itemEffect: effectInterface[] = [
                       size="icon"
                       variant="error"
                       className="h-11 w-11"
-                      onClick={() =>
-                        setInput((prev) => prev.filter((_, i) => i !== index))
-                      }
+                      onClick={() => setInput((prev) => prev.filter((_, i) => i !== index))}
                       disabled={index === input.length - 1}
                     >
                       <Minus />
@@ -3373,18 +3050,14 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!input || input.length < 13) return;
 
-                  const ratSuccess =
-                    input.filter((v) => ratIds.includes(v)).length ?? 0;
+                  const ratSuccess = input.filter((v) => ratIds.has(v)).length ?? 0;
 
                   await userApi.scoreUser(ctx.user.id, ratSuccess);
 
                   if (ratSuccess >= 3) {
                     await Promise.all(
                       Array.from({ length: 3 }, () =>
-                        itemsApi.addInventory(
-                          String(ctx.user.id),
-                          "dswpfvayiqxul1b",
-                        ),
+                        itemsApi.addInventory(String(ctx.user.id), "dswpfvayiqxul1b"),
                       ),
                     );
                   }
@@ -3407,8 +3080,8 @@ export const itemEffect: effectInterface[] = [
     "Свинья",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [me, users] = await Promise.all([
               userApi.getUserById(ctx.user.id),
@@ -3417,10 +3090,6 @@ export const itemEffect: effectInterface[] = [
             return { effects: me?.status, users };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<User | null>(null);
         const [effect, setEffect] = useState<string | null>(null);
@@ -3451,9 +3120,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Статус">
-                      {selected?.username}
-                    </SelectValue>
+                    <SelectValue placeholder="Статус">{selected?.username}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -3481,9 +3148,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Игрок">
-                      {selected?.username}
-                    </SelectValue>
+                    <SelectValue placeholder="Игрок">{selected?.username}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -3505,20 +3170,10 @@ export const itemEffect: effectInterface[] = [
                 onClick={async () => {
                   if (!selected || !effect) return;
 
-                  await userApi.changeUserStatus(
-                    String(selected.id),
-                    effect,
-                    "add",
-                  );
-                  await userApi.changeUserStatus(
-                    String(ctx.user.id),
-                    effect,
-                    "remove",
-                  );
+                  await userApi.changeUserStatus(String(selected.id), effect, "add");
+                  await userApi.changeUserStatus(String(ctx.user.id), effect, "remove");
 
-                  await ctx.consume(
-                    `${ctx.user.username} передал ${effect} ${selected.username}`,
-                  );
+                  await ctx.consume(`${ctx.user.username} передал ${effect} ${selected.username}`);
 
                   ctx.close();
                 }}
@@ -3536,8 +3191,8 @@ export const itemEffect: effectInterface[] = [
     "СпецСвин",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi
               .getInventory(ctx.user.id)
@@ -3552,10 +3207,6 @@ export const itemEffect: effectInterface[] = [
             };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
         const [result, setResult] = useState<Item | null>(null);
@@ -3584,9 +3235,7 @@ export const itemEffect: effectInterface[] = [
                     })) as WheelItem[]
                   }
                   onResult={(it) =>
-                    setResult(
-                      data?.rolls.find((item) => item.id === it?.id) as Item,
-                    )
+                    setResult(data?.rolls.find((item) => item.id === it?.id) as Item)
                   }
                 />
                 {result && (
@@ -3603,11 +3252,7 @@ export const itemEffect: effectInterface[] = [
                         alt={result.label}
                         className="min-w-20 min-h-20 w-20 h-20 flex items-center justify-center border-2 border-highlight-high bg-background hover:cursor-pointer"
                         onClick={() =>
-                          openWindow(
-                            String(result.id),
-                            getFileUrl(result)!,
-                            "Изображение",
-                          )
+                          openWindow(String(result.id), getFileUrl(result)!, "Изображение")
                         }
                       />
                     </div>
@@ -3629,15 +3274,11 @@ export const itemEffect: effectInterface[] = [
                     const allUsers = await userApi
                       .getAllUsers()
                       .then((res) => res.filter((u) => u.id !== ctx.user.id));
-                    const finalUser =
-                      allUsers[Math.floor(Math.random() * allUsers.length)];
+                    const finalUser = allUsers[Math.floor(Math.random() * allUsers.length)];
 
                     if (!finalUser) return;
 
-                    await itemsApi.addInventory(
-                      String(finalUser.id),
-                      String(result.id),
-                    );
+                    await itemsApi.addInventory(String(finalUser.id), String(result.id));
 
                     await ctx.consume(
                       `${ctx.user.username} передал ${result.label} ${finalUser.username}`,
@@ -3667,9 +3308,7 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -3712,15 +3351,11 @@ export const itemEffect: effectInterface[] = [
                   const allUsers = await userApi
                     .getAllUsers()
                     .then((res) => res.filter((u) => u.id !== ctx.user.id));
-                  const finalUser =
-                    allUsers[Math.floor(Math.random() * allUsers.length)];
+                  const finalUser = allUsers[Math.floor(Math.random() * allUsers.length)];
 
                   if (!finalUser) return;
 
-                  await itemsApi.sendInventory(
-                    String(selected.id),
-                    String(finalUser.id),
-                  );
+                  await itemsApi.sendInventory(String(selected.id), String(finalUser.id));
 
                   await ctx.consume(
                     `${ctx.user.username} передал ${selected.label} ${finalUser.username}`,
@@ -3771,13 +3406,9 @@ export const itemEffect: effectInterface[] = [
                   const text = ate
                     ? "покушал и потерял 5 чубриков"
                     : "не поел, но зато получил 5 чубриков";
-                  const textAdd = food
-                    ? "ОН ПОЕЛ ОЧЕНЬ КРУТУЮ ЕДУ и получил чубрик"
-                    : "";
+                  const textAdd = food ? "ОН ПОЕЛ ОЧЕНЬ КРУТУЮ ЕДУ и получил чубрик" : "";
 
-                  await ctx.consume(
-                    `${ctx.user.usernname} ${text}. ${textAdd}`,
-                  );
+                  await ctx.consume(`${ctx.user.usernname} ${text}. ${textAdd}`);
 
                   ctx.close();
                 }}
@@ -3804,25 +3435,21 @@ export const itemEffect: effectInterface[] = [
         return (
           <main className="flex flex-col gap-2">
             <section className=" overflow-y-auto h-70 min-h-70 max-h-70 border-2 border-iris p-1 text-xl leading-tight tracking-wide font-serif font-semilight">
-              В далёкой деревне, затерянной среди лесов, жила старая свинья по
-              кличке Мэгги. Её держал в загоне местный фермер, но никто из
-              деревни не подходил близко к её хлеву. Говорили, что Мэгги была не
-              совсем обычной свиньёй. Её глаза, тёмные и блестящие, словно
-              угольки, казалось, следили за каждым, кто проходил мимо. А по
-              ночам из хлева доносились странные звуки - не хрюканье, а что-то
-              похожее на шёпот. Однажды мальчик из деревни, любопытный и глупый,
-              решил подойти к хлеву. Он хотел посмотреть, что же там происходит.
-              Когда он заглянул внутрь, Мэгги стояла в углу, неподвижно,
-              уставившись на него. Её глаза светились в темноте, а изо рта
-              капала густая чёрная жидкость. Мальчик хотел убежать, но ноги
-              словно приросли к земле. Тогда Мэгги медленно подошла к нему, и её
-              шёпот стал громче: "Ты тоже станешь частью стада..."На следующее
-              утро мальчика нашли в хлеву. Он сидел в углу, неподвижно,
-              уставившись в пустоту. Его глаза были тёмными и блестящими, словно
-              угольки. А изо рта капала густая чёрная жидкость. С тех пор в
-              деревне больше никто не подходил к хлеву. Но по ночам из него до
-              сих пор доносится шёпот. И если вы окажетесь там, не смотрите в
-              глаза свинье. Иначе вы станете частью стада.
+              В далёкой деревне, затерянной среди лесов, жила старая свинья по кличке Мэгги. Её
+              держал в загоне местный фермер, но никто из деревни не подходил близко к её хлеву.
+              Говорили, что Мэгги была не совсем обычной свиньёй. Её глаза, тёмные и блестящие,
+              словно угольки, казалось, следили за каждым, кто проходил мимо. А по ночам из хлева
+              доносились странные звуки - не хрюканье, а что-то похожее на шёпот. Однажды мальчик из
+              деревни, любопытный и глупый, решил подойти к хлеву. Он хотел посмотреть, что же там
+              происходит. Когда он заглянул внутрь, Мэгги стояла в углу, неподвижно, уставившись на
+              него. Её глаза светились в темноте, а изо рта капала густая чёрная жидкость. Мальчик
+              хотел убежать, но ноги словно приросли к земле. Тогда Мэгги медленно подошла к нему, и
+              её шёпот стал громче: "Ты тоже станешь частью стада..."На следующее утро мальчика
+              нашли в хлеву. Он сидел в углу, неподвижно, уставившись в пустоту. Его глаза были
+              тёмными и блестящими, словно угольки. А изо рта капала густая чёрная жидкость. С тех
+              пор в деревне больше никто не подходил к хлеву. Но по ночам из него до сих пор
+              доносится шёпот. И если вы окажетесь там, не смотрите в глаза свинье. Иначе вы станете
+              частью стада.
             </section>
 
             <label className="flex flex-row gap-1">
@@ -3914,8 +3541,8 @@ export const itemEffect: effectInterface[] = [
     "Гремлин",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const [users, items] = await Promise.all([
               userApi.getAllUsers(),
@@ -3928,10 +3555,6 @@ export const itemEffect: effectInterface[] = [
             };
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -3958,16 +3581,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data?.items
-                        .sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        .sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={index} value={item.id}>
                             {`${index + 1}) ${data?.users.find((u) => u.id === item.owner)?.username}: `}
@@ -4028,8 +3647,8 @@ export const itemEffect: effectInterface[] = [
     "Гремлинизатор",
     () =>
       function (ctx: ModalType) {
-        const { data, isLoading, isError, refetch, isRefetching } = useQuery({
-          queryKey: ["modalData"],
+        const { data, isLoading, isError, isRefetching } = useQuery({
+          queryKey: ["modalData", ctx.user.id],
           queryFn: async () => {
             const allItems = await itemsApi.getInventories();
 
@@ -4038,10 +3657,6 @@ export const itemEffect: effectInterface[] = [
               .filter((i) => i.label !== "Гремлинизатор");
           },
         });
-
-        useEffect(() => {
-          refetch();
-        }, []);
 
         const [selected, setSelected] = useState<Inventory | null>(null);
 
@@ -4068,16 +3683,12 @@ export const itemEffect: effectInterface[] = [
                   }}
                 >
                   <SelectTrigger className="w-full py-5">
-                    <SelectValue placeholder="Предмет">
-                      {selected?.label}
-                    </SelectValue>
+                    <SelectValue placeholder="Предмет">{selected?.label}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
                       {data
-                        ?.sort((a, b) =>
-                          (a.owner ?? "").localeCompare(b.owner ?? ""),
-                        )
+                        ?.sort((a, b) => (a.owner ?? "").localeCompare(b.owner ?? ""))
                         .map((item, index) => (
                           <SelectItem key={index} value={item.id}>
                             {`${index + 1}: `}
@@ -4115,14 +3726,9 @@ export const itemEffect: effectInterface[] = [
                   if (!selected) return;
 
                   await itemsApi.removeInventory(String(selected.id));
-                  await itemsApi.addInventory(
-                    String(ctx.user.id),
-                    "evexf52un87e8ju",
-                  );
+                  await itemsApi.addInventory(String(ctx.user.id), "evexf52un87e8ju");
 
-                  await ctx.consume(
-                    `${ctx.user.username} превратил ${selected.label} в Гремлина`,
-                  );
+                  await ctx.consume(`${ctx.user.username} превратил ${selected.label} в Гремлина`);
 
                   ctx.close();
                 }}
@@ -4279,20 +3885,12 @@ export const itemEffect: effectInterface[] = [
                   if (value === 2) {
                     await userApi.scoreUser(String(ctx.user.id), 3);
                   } else if (value === 3) {
-                    await userApi.moveUser(
-                      String(ctx.user.id),
-                      ctx.user.position + 1,
-                    );
+                    await userApi.moveUser(String(ctx.user.id), ctx.user.position + 1);
                   } else if (value === 4) {
-                    await userApi.moveUser(
-                      String(ctx.user.id),
-                      ctx.user.position - 2,
-                    );
+                    await userApi.moveUser(String(ctx.user.id), ctx.user.position - 2);
                   }
 
-                  await ctx.consume(
-                    `${ctx.user.username} выбил ${possibles[value - 1]} из леща`,
-                  );
+                  await ctx.consume(`${ctx.user.username} выбил ${possibles[value - 1]} из леща`);
 
                   ctx.close();
                 }}

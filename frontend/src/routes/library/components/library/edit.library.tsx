@@ -1,14 +1,12 @@
 import { WindowError } from "@/components/shared/error.component";
-import {
-  WindowLoader,
-} from "@/components/shared/loader.component";
+import { WindowLoader } from "@/components/shared/loader.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Save, StepBack, X } from "lucide-react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import Rating from "@/components/shared/rating.component";
 import { getFileUrl } from "@/api/client.api";
 import { RichTextEditor } from "@/components/shared/editor.component";
@@ -18,7 +16,7 @@ import { GameReview } from "@/types/games";
 import PaintApi from "@/api/paint.api";
 import ImageComponent from "@/components/shared/image.component";
 import ImageViewer from "@/components/shared/viewer.component";
-import { fileFromUrl } from "@/lib/utils";
+import { fileFromUrl } from "@/lib/index.utils";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -38,12 +36,8 @@ function EditReview({
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [remove, setRemove] = useState(false);
-  const [selectedDrawingUrl, setSelectedDrawingUrl] = useState<string | null>(
-    null,
-  );
-  const [selectedDrawingFile, setSelectedDrawingFile] = useState<string | null>(
-    null,
-  );
+  const [selectedDrawingUrl, setSelectedDrawingUrl] = useState<string | null>(null);
+  const [selectedDrawingFile, setSelectedDrawingFile] = useState<string | null>(null);
   const [tab, setTab] = useState<"custom" | "paint">("custom");
 
   const { data, isLoading, isError } = useQuery({
@@ -66,7 +60,7 @@ function EditReview({
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
 
   useEffect(() => {
     const existingReview = data?.game.review;
@@ -122,11 +116,7 @@ function EditReview({
     <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-5">
       <section className="flex flex-col gap-2">
         <span className="text-lg font-bold text-text">Оценка</span>
-        <Rating
-          value={rating}
-          onChange={setRating}
-          className="[&>div]:cursor-pointer"
-        />
+        <Rating value={rating} onChange={setRating} className="[&>div]:cursor-pointer" />
       </section>
 
       <section className="flex flex-col gap-1">
@@ -155,11 +145,7 @@ function EditReview({
             <>
               <ImageUploader
                 value={imageFile}
-                existingImageUrl={
-                  data?.game.image
-                    ? `${getFileUrl(data.game)}`
-                    : ""
-                }
+                existingImageUrl={data?.game.image ? `${getFileUrl(data.game)}` : ""}
                 onChange={(file) => {
                   setImageFile(file);
                   setSelectedDrawingUrl(null);
@@ -227,12 +213,8 @@ function EditReview({
                       title="Добавить предмет в инвентарь"
                       className="w-28"
                       onClick={() => {
-                        setSelectedDrawingUrl(
-                          `${getFileUrl(item)}`,
-                        );
-                        setSelectedDrawingFile(
-                          `${getFileUrl(item)}`,
-                        );
+                        setSelectedDrawingUrl(`${getFileUrl(item)}`);
+                        setSelectedDrawingFile(`${getFileUrl(item)}`);
                         setImageFile(null);
                       }}
                     >

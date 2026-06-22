@@ -7,7 +7,7 @@ import {
   blackjackPayout,
   dealerPlay,
   createShoe,
-} from "../../lib/blackjack.utils";
+} from "@/lib/blackjack.utils";
 import type { Card } from "@/types/gambling";
 
 function card(rank: Card["rank"], suit: Card["suit"] = "hearts"): Card {
@@ -299,7 +299,6 @@ describe("BlackjackService", () => {
     if (state.phase === "player") {
       state = await services.blackjackService.stand(lowUser.id);
     }
-    // Payout must be >= 15 for profit of 5+ to push winnings from 95 to 100
     if (state.result!.payout >= 15) {
       const user = await getUser(db, lowUser.id);
       expect(user!.gamblingWinnings).toBeGreaterThanOrEqual(100);

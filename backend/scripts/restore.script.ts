@@ -4,7 +4,7 @@ import { join } from "node:path";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { config } from "../src/server.config";
-import { resolveBackendPath } from "../src/lib/paths";
+import { resolveBackendPath } from "../src/lib/path.utils";
 
 const backupName = process.argv[2];
 if (!backupName) {

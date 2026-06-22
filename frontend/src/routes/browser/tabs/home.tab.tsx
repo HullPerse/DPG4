@@ -8,6 +8,7 @@ import {
   Shuffle,
   WholeWord,
   Cat,
+  Gift,
 } from "lucide-react";
 import { memo } from "react";
 
@@ -18,6 +19,7 @@ const TABS = [
   "ratStore",
   "wordle",
   "tamagochi",
+  "questsTab",
   "list",
   "ads",
   "rules",
@@ -38,7 +40,8 @@ function HomeBrowser({
       | "randomStore"
       | "wordle"
       | "tamagochi"
-      | "ratStore",
+      | "ratStore"
+      | "questsTab",
   ) => void;
   searchTerms: string;
 }) {
@@ -52,7 +55,8 @@ function HomeBrowser({
       | "randomStore"
       | "wordle"
       | "tamagochi"
-      | "ratStore",
+      | "ratStore"
+      | "questsTab",
   ) => {
     const tabMap = {
       rules: {
@@ -108,6 +112,13 @@ function HomeBrowser({
         label: "КРЫСИНАЯ ЛАВКА",
         description: "Обменяй крысиный предмет на случайный",
         icon: <Shuffle className="size-10" />,
+      },
+      questsTab: {
+        value: "questsTab",
+        label: "ЗАДАНИЯ",
+        description:
+          "Получить чубрики или другие приколы за какие-то игровые события",
+        icon: <Gift className="size-10" />,
       },
     };
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Download } from "lucide-react";
-import { checkForUpdates, installUpdate } from "@/lib/utils";
+import { checkForUpdates, installUpdate } from "@/lib/index.utils";
 import { useToastStore } from "@/store/toast.store";
 import type { Activity, UpdateData } from "@/types/activity";
 

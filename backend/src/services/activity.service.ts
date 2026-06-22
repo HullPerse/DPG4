@@ -1,28 +1,25 @@
-import { eq, desc } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { withRecordMeta } from "../lib/record";
-import { broadcast } from "../lib/ws";
-import { Db } from "@/types";
+import { desc } from "drizzle-orm";
+import type { Db } from "@/types/server";
+import * as schema from "@/db/schema.db";
+import { BaseService } from "./index.service";
+import type { Activity } from "@/types/services";
+import { ACTIVITY_TYPES, withRecordMeta } from "@/lib/index.utils";
+import { broadcast } from "@/lib/websocket.utils";
 
-export class ActivityService {
-  constructor(private db: Db) {}
+export default class ActivityService extends BaseService {
+  constructor(db: Db) {
+    super(db);
+  }
 
-  async create(data: {
-    author?: string;
-    image?: string;
-    type?: string;
-    text: string;
-  }) {
-    const id = newId();
-    const created = nowIso();
+  async create(data: Activity) {
+    const id = this.newId();
+    const created = this.ts().created;
 
     await this.db.insert(schema.activity).values({
       id,
       author: data.author ?? null,
       image: data.image ?? null,
-      type: data.type ?? "emoji",
+      type: data.type ?? ACTIVITY_TYPES.EMOJI,
       text: data.text,
       created,
     });
@@ -34,7 +31,7 @@ export class ActivityService {
         id,
         author: data.author ?? null,
         image: data.image ?? null,
-        type: data.type ?? "emoji",
+        type: data.type ?? ACTIVITY_TYPES.EMOJI,
         text: data.text,
         created,
         updated: created,
@@ -69,10 +66,10 @@ export class ActivityService {
   }
 
   async getById(id: string) {
-    const [row] = await this.db
-      .select()
-      .from(schema.activity)
-      .where(eq(schema.activity.id, id));
+    const row = await this.findById<typeof schema.activity.$inferSelect>(
+      schema.activity,
+      id,
+    );
 
     return row
       ? withRecordMeta({ ...row, updated: row.created }, "activity")

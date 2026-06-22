@@ -8,7 +8,7 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import ImagePaint from "../components/image.paint";
 import { startTransition, useCallback } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 
 const paintApi = new PaintApi();
 
@@ -39,7 +39,7 @@ function ProfilePaint({
     });
   }, [queryClient]);
 
-  useSubscription("drawings", "*", invalidateQuery);
+  useSubscription("drawings", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -55,11 +55,7 @@ function ProfilePaint({
     <main className="flex flex-row w-full h-full">
       <div className="flex flex-col w-45 border-r-2 border-highlight-high p-2">
         <section className="mt-auto flex flex-row gap-1">
-          <Button
-            variant="error"
-            onClick={() => setTab("home")}
-            className="w-full"
-          >
+          <Button variant="error" onClick={() => setTab("home")} className="w-full">
             <ChevronLeft />
           </Button>
         </section>

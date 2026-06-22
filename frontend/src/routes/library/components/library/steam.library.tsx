@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.component";
-import { calculateScore, getStatusColor } from "@/lib/utils";
+import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
 import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -18,6 +18,7 @@ import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDataStore } from "@/store/data.store";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -54,6 +55,7 @@ export default function SteamLibrary({
 }) {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
+  const noAction = useDataStore((state) => state.noAction);
 
   const [status, setStatus] = useState("В ПРОЦЕССЕ");
   const [appId, setAppId] = useState(existingId ?? "");
@@ -97,7 +99,7 @@ export default function SteamLibrary({
       if (currentType === "library") {
         const res = await gameApi.addGame(gameData);
         setCurrentGame(String(res.id));
-        await userApi.changeUserAction(String(user.id), "GAMEFINISH");
+        await userApi.changeUserAction(String(user.id), "GAMEFINISH", noAction);
         return;
       }
 
@@ -166,10 +168,7 @@ export default function SteamLibrary({
         {currentType === "library" && (
           <div className="leading-tight">
             <span>Сложность</span>
-            <Select
-              value={status}
-              onValueChange={(e) => setStatus(e as GameStatus)}
-            >
+            <Select value={status} onValueChange={(e) => setStatus(e as GameStatus)}>
               <SelectTrigger className="w-full py-5">
                 <SelectValue placeholder="Сложность" />
               </SelectTrigger>
@@ -202,9 +201,7 @@ export default function SteamLibrary({
       <section className="flex h-full w-1/2 flex-col items-center rounded border-2 border-highlight-high p-2">
         {game && (
           <>
-            <span className="text-xl font-bold text-wrap">
-              {game?.game.name}
-            </span>
+            <span className="text-xl font-bold text-wrap">{game?.game.name}</span>
             <Image
               src={game?.game.header_image}
               alt="image"
@@ -215,18 +212,13 @@ export default function SteamLibrary({
               variant="link"
               className="mt-auto mb-1"
               onClick={() =>
-                openUrl(
-                  `https://store.steampowered.com/app/${game?.game.steam_appid}`,
-                )
+                openUrl(`https://store.steampowered.com/app/${game?.game.steam_appid}`)
               }
             >
               <span>Перейти на Steam</span>
             </Button>
             {game?.game.website && (
-              <Button
-                variant="link"
-                onClick={() => openUrl(game?.game.website)}
-              >
+              <Button variant="link" onClick={() => openUrl(game?.game.website)}>
                 <span>Перейти на сайт</span>
               </Button>
             )}

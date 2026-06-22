@@ -1,16 +1,10 @@
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import {
-  Braces,
-  CheckCheck,
-  ChevronLeft,
-  ExternalLink,
-  Plus,
-} from "lucide-react";
+import { Braces, CheckCheck, ChevronLeft, ExternalLink, Plus } from "lucide-react";
 import { memo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
-import { useDebounce } from "@/hooks/debounce.hook";
+import { useDebounce } from "@uidotdev/usehooks";
 import { useUserStore } from "@/store/user.store";
 
 import PresetsList from "../components/presets/presets.presets";
@@ -19,8 +13,10 @@ import GameApi from "@/api/games.api";
 import PresetSettings from "../components/presets/list.presets";
 import NewGameLibrary from "../components/library/newGame.library";
 import PresetsWheel from "../components/presets/wheel.presets";
+
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
+
 const gameApi = new GameApi();
 
 function PresetsTab() {
@@ -61,9 +57,7 @@ function PresetsTab() {
 
     const buttonMap = {
       presetWheel: <PresetsWheel id={currentPreset.id} />,
-      presetList: (
-        <PresetSettings id={currentPreset.id} searchTerms={debouncedSearch} />
-      ),
+      presetList: <PresetSettings id={currentPreset.id} searchTerms={debouncedSearch} />,
       addPresetGame: (
         <NewGameLibrary
           setCurrentGame={setCurrentTab as (gameId: string) => void}
@@ -94,9 +88,7 @@ function PresetsTab() {
             variant="link"
             className="border border-text text-text active:translate-x-0 active:translate-y-0 w-10 h-10"
             onClick={() =>
-              openUrl(
-                "https://store.steampowered.com/pointssummary/ajaxgetasyncconfig",
-              )
+              openUrl("https://store.steampowered.com/pointssummary/ajaxgetasyncconfig")
             }
           >
             <ExternalLink />
@@ -140,10 +132,8 @@ function PresetsTab() {
           variant="success"
           className="w-10 h-10"
           hidden={
-            (!isAdmin &&
-              !currentPreset?.label?.includes(String(user?.username))) ||
-            currentTab === "addPresetGame" ||
-            currentTab === "presetWheel"
+            (!isAdmin && !currentPreset?.label?.includes(String(user?.username))) ||
+            currentTab !== "presetList"
           }
           onClick={() => setCurrentTab("addPresetGame")}
         >
@@ -170,9 +160,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex flex-1 bg-background overflow-auto">
-        {getComponent()}
-      </section>
+      <section className="flex flex-1 bg-background overflow-auto">{getComponent()}</section>
     </main>
   );
 }

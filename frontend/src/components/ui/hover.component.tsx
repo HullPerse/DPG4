@@ -1,5 +1,5 @@
 import { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {
   return <PreviewCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
@@ -22,7 +22,8 @@ function HoverCardContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
-        className="isolate z-10000">
+        className="isolate z-10000"
+      >
         <PreviewCardPrimitive.Popup
           data-slot="hover-card-content"
           className={cn(

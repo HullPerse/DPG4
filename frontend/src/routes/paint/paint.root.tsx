@@ -1,8 +1,10 @@
-import { useCallback, useState } from "react";
-import HomePaint from "./tabs/home.paint";
-import DrawPaint from "./tabs/draw.paint";
-import ProfilePaint from "./tabs/profile.paint";
-import ListPaint from "./tabs/list.paint";
+import { Suspense, lazy, useCallback, useState } from "react";
+import { WindowLoader } from "@/components/shared/loader.component";
+
+const HomePaint = lazy(() => import("./tabs/home.paint"));
+const DrawPaint = lazy(() => import("./tabs/draw.paint"));
+const ProfilePaint = lazy(() => import("./tabs/profile.paint"));
+const ListPaint = lazy(() => import("./tabs/list.paint"));
 
 function PaintRoot() {
   const [tab, setTab] = useState<"home" | "draw" | "list" | "profile">("home");
@@ -21,7 +23,7 @@ function PaintRoot() {
   return (
     <main className="flex h-full w-full flex-col">
       <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
-        {getComponent()}
+        <Suspense fallback={<WindowLoader />}>{getComponent()}</Suspense>
       </section>
     </main>
   );

@@ -1,16 +1,21 @@
 import { Elysia } from "elysia";
-import { logger } from "../lib/logger";
+import Logger from "@/lib/logger.utils";
 
-export const errorPlugin = new Elysia({ name: "error-handler" })
-  .onError({ as: "global" }, ({ error, set }) => {
-    const msg = error instanceof Error ? error.message : String(error);
+const logger = new Logger("SYSTEM");
 
-    if (msg === "Unauthorized" || msg === "Not found") {
+const errorPlugin = new Elysia({ name: "error-handler" }).onError(
+  { as: "global" },
+  ({ error, set }) => {
+    if (set.status && Number(set.status) < 500) {
       return;
     }
 
-    logger.error("SYSTEM", "Unhandled error", msg);
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`Unhandled error: ${message}`);
 
     set.status = 500;
     return { error: "Internal server error" };
-  });
+  },
+);
+
+export default errorPlugin;

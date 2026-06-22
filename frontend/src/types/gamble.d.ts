@@ -141,6 +141,33 @@ export interface PachinkoState {
   kickAvailable: boolean;
 }
 
+export interface PachinkoSessionStats {
+  streak: number;
+  bestStreak: number;
+  totalDrops: number;
+  totalWins: number;
+  totalNet: number;
+  history: PachinkoHistoryEntry[];
+}
+
+export interface PachinkoHistoryEntry {
+  net: number;
+  label: string;
+  tone: "jackpot" | "win" | "lose" | "chance" | "";
+  timestamp: number;
+  riskGate: boolean;
+}
+
+export type RiskGateChoice = "left" | "right" | null;
+
+export interface RiskGateState {
+  active: boolean;
+  choice: RiskGateChoice;
+  trapSlot: number;
+  boostSide: "left" | "right";
+  timer: number;
+}
+
 export interface JackpotStatus {
   pool: number;
   lastWinnerId: string | null;

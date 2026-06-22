@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useState } from "react";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon } from "lucide-react";
@@ -15,7 +15,7 @@ const gameApi = new GameApi();
 function PresetsWheel() {
   const queryClient = useQueryClient();
 
-  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["presetsWheel"],
@@ -37,7 +37,7 @@ function PresetsWheel() {
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -50,22 +50,20 @@ function PresetsWheel() {
       />
     );
 
-  const visibleItems =
-    data?.filter((item) => !hiddenItems.includes(String(item.id))) ?? [];
+  const visibleItems = data?.filter((item) => !hiddenItems.has(String(item.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenItems.join(",")}
+          key={[...hiddenItems].join(",")}
           list={visibleItems.map((preset) => ({
             id: String(preset.id),
             label: preset.label,
             image:
-              preset.games[
-                Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)
-              ].capsuleImage,
+              preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
+                .capsuleImage,
             type: "image",
           }))}
           onResult={() => {}}
@@ -79,19 +77,15 @@ function PresetsWheel() {
             key={preset.id}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center"
             style={{
-              opacity:
-                hiddenItems.find((h) => h === String(preset.id)) && "50%",
+              opacity: hiddenItems.has(String(preset.id)) ? "50%" : undefined,
             }}
           >
             <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
               {preset.games?.length > 0 && (
                 <ImageComponent
                   src={
-                    preset.games[
-                      Math.floor(
-                        Math.random() * (preset.games?.length ?? 0) * 1,
-                      )
-                    ].capsuleImage
+                    preset.games[Math.floor(Math.random() * (preset.games?.length ?? 0) * 1)]
+                      .capsuleImage
                   }
                   alt={preset.label}
                 />
@@ -105,19 +99,14 @@ function PresetsWheel() {
               <Button
                 size="icon"
                 onClick={() => {
-                  const existingGame =
-                    hiddenItems.filter((h) => h === String(preset.id)).length >
-                    0;
-
-                  if (!existingGame)
-                    return setHiddenItems([...hiddenItems, String(preset.id)]);
-
-                  return setHiddenItems(
-                    hiddenItems.filter((h) => h !== String(preset.id)),
-                  );
+                  const next = new Set(hiddenItems);
+                  const id = String(preset.id);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  setHiddenItems(next);
                 }}
               >
-                {hiddenItems.find((h) => h === String(preset.id)) ? (
+                {hiddenItems.has(String(preset.id)) ? (
                   <EyeIcon size={20} />
                 ) : (
                   <EyeOffIcon size={20} />

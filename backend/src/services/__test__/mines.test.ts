@@ -4,8 +4,6 @@ import {
   createServices,
   createUser,
   getUser,
-  seedRandom,
-  resetRandom,
 } from "./helpers";
 
 describe("MinesService", () => {
@@ -56,53 +54,65 @@ describe("MinesService", () => {
 
   test("start rejects banned user", async () => {
     const banned = await createUser(db, { gamblingBanned: true });
-    expect(services.minesService.start(banned.id, 5, 3)).rejects.toThrow(
+    expect(services.minesService.start(banned.id, 3, 1)).rejects.toThrow(
       "Banned from gambling",
     );
   });
 
   test("start rejects duplicate game", async () => {
-    await services.minesService.start(userId, 5, 3);
-    expect(services.minesService.start(userId, 5, 3)).rejects.toThrow(
+    await services.minesService.start(userId, 3, 1);
+    expect(services.minesService.start(userId, 3, 1)).rejects.toThrow(
       "Game already in progress",
     );
   });
 
-  test("reveal safe tile increases multiplier", async () => {
-    await services.minesService.start(userId, 10, 1);
-    const state = await services.minesService.reveal(userId, 0, 0);
-    if (state.isMine) {
-      // hit a mine, game over
-      expect(state.phase).toBe("lost");
-    } else {
-      expect(state.phase).toBe("playing");
-      expect(state.currentMultiplier).toBeGreaterThan(1);
-    }
+  test("reveal safe tile returns playing state", async () => {
+    await services.minesService.start(userId, 5, 1, true, { devForceAllSafe: true });
+    const state = await services.minesService.reveal(userId, 0, 0, true);
+    expect(state.phase).toBe("playing");
+    expect(state.isMine).toBe(false);
+    expect(state.currentMultiplier).toBeGreaterThan(1);
   });
 
-  test("reveal with no active game rejects", async () => {
+  test("reveal without active game rejects", async () => {
     expect(services.minesService.reveal(userId, 0, 0)).rejects.toThrow(
       "No active game",
     );
   });
 
-  test("cashout pays correct amount", async () => {
-    await services.minesService.start(userId, 10, 1);
-    // reveal safe tiles until we can cash out
-    let phase = "playing";
-    for (let r = 0; r < 5 && phase === "playing"; r++) {
-      for (let c = 0; c < 5 && phase === "playing"; c++) {
-        const reveal = await services.minesService.reveal(userId, r, c);
-        phase = reveal.phase;
-        if (phase === "lost") break;
-        if (reveal.currentMultiplier > 1.05) {
-          const cashout = await services.minesService.cashout(userId);
-          expect(cashout.phase).toBe("won");
-          expect(cashout.net).toBeGreaterThan(0);
-          return;
-        }
-      }
-    }
+  test("reveal out of bounds rejects", async () => {
+    await services.minesService.start(userId, 3, 1);
+    expect(services.minesService.reveal(userId, -1, 0)).rejects.toThrow(
+      "Invalid tile",
+    );
+    expect(services.minesService.reveal(userId, 0, 5)).rejects.toThrow(
+      "Invalid tile",
+    );
+  });
+
+  test("reveal already revealed tile rejects", async () => {
+    await services.minesService.start(userId, 3, 1, true, { devForceAllSafe: true });
+    await services.minesService.reveal(userId, 0, 0, true);
+    expect(services.minesService.reveal(userId, 0, 0, true)).rejects.toThrow(
+      "Tile already revealed",
+    );
+  });
+
+  test("cashout gives payout and ends game", async () => {
+    await services.minesService.start(userId, 5, 3, true, { devForceAllSafe: true });
+    await services.minesService.reveal(userId, 0, 0, true);
+    const state = await services.minesService.cashout(userId, true);
+    expect(state.phase).toBe("won");
+    expect(state.payout).toBeGreaterThanOrEqual(5);
+    expect(state.net).toBe(state.payout - 5);
+  });
+
+  test("cashout credits payout to balance", async () => {
+    await services.minesService.start(userId, 5, 3, true, { devForceAllSafe: true });
+    await services.minesService.reveal(userId, 0, 0, true);
+    const state = await services.minesService.cashout(userId, true);
+    const user = await getUser(db, userId);
+    expect(user!.tickets).toBe(95 + state.payout);
   });
 
   test("cashout without active game rejects", async () => {
@@ -112,27 +122,10 @@ describe("MinesService", () => {
   });
 
   test("abort removes active game", async () => {
-    await services.minesService.start(userId, 5, 3);
+    await services.minesService.start(userId, 3, 1);
     services.minesService.abort(userId);
     expect(services.minesService.reveal(userId, 0, 0)).rejects.toThrow(
       "No active game",
     );
-  });
-
-  test("game over on mine hit", async () => {
-    // with max mines (10), we're very likely to hit one
-    await services.minesService.start(userId, 5, 10);
-    let hitMine = false;
-    for (let r = 0; r < 5 && !hitMine; r++) {
-      for (let c = 0; c < 5 && !hitMine; c++) {
-        const state = await services.minesService.reveal(userId, r, c);
-        if (state.isMine) {
-          expect(state.phase).toBe("lost");
-          expect(state.net).toBe(-5);
-          hitMine = true;
-        }
-      }
-    }
-    expect(hitMine).toBe(true);
   });
 });

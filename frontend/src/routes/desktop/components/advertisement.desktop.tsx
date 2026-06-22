@@ -1,23 +1,13 @@
 import { Ads } from "@/types/ads";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  startTransition,
-  useCallback,
-  useRef,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import AdsApi, {
-  SUBSCRIPTION_CONTINUE,
-  SUBSCRIPTION_COST,
-} from "@/api/ads.api";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { startTransition, useCallback, useRef, useEffect, useMemo, useState } from "react";
+import AdsApi, { SUBSCRIPTION_CONTINUE, SUBSCRIPTION_COST } from "@/api/ads.api";
+import { useSubscription } from "@/hooks/index.hook";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
-import { cn, getAdPosition, getAdPositionIcon } from "@/lib/utils";
+import { cn, getAdPosition, getAdPositionIcon } from "@/lib/index.utils";
 import {
   Dialog,
   DialogContent,
@@ -61,7 +51,7 @@ function AdvertisementApp() {
     });
   }, [queryClient]);
 
-  useSubscription("ads", "*", invalidateQuery);
+  useSubscription("ads", invalidateQuery);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -159,11 +149,7 @@ function AdvertisementApp() {
               toggleMute();
             }}
           >
-            {isMuted ? (
-              <VolumeX className="size-4" />
-            ) : (
-              <Volume2 className="size-4" />
-            )}
+            {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
           </Button>
         )}
         <ImageViewer
@@ -181,19 +167,11 @@ function AdvertisementApp() {
         />
 
         {randomAd.audio && (
-          <audio
-            ref={audioRef}
-            src={`${getFileUrl(randomAd, "audio")}`}
-            className="hidden"
-          />
+          <audio ref={audioRef} src={`${getFileUrl(randomAd, "audio")}`} className="hidden" />
         )}
 
-        <span className="mt-2 line-clamp-2 text-center text-xs text-text">
-          {randomAd.text}
-        </span>
-        <span className="mt-1 text-[10px] text-muted">
-          от {randomAd.owner.username}
-        </span>
+        <span className="mt-2 line-clamp-2 text-center text-xs text-text">{randomAd.text}</span>
+        <span className="mt-1 text-[10px] text-muted">от {randomAd.owner.username}</span>
       </section>
 
       <section className="flex flex-col border-t-2 border-highlight-high">
@@ -207,12 +185,7 @@ function AdvertisementApp() {
           />
         </div>
         <div className="flex items-center justify-center px-2 py-1">
-          <span
-            className={cn(
-              "text-xs font-bold",
-              canClose ? "text-primary" : "text-muted",
-            )}
-          >
+          <span className={cn("text-xs font-bold", canClose ? "text-primary" : "text-muted")}>
             {!canClose && `${remaining}с`}
           </span>
         </div>
@@ -223,21 +196,16 @@ function AdvertisementApp() {
           <DialogHeader>
             <DialogTitle>Купить подписку</DialogTitle>
             <DialogDescription>
-              Купите подписку за {SUBSCRIPTION_COST} чубрика. Подписка
-              продливается после каждого прохождния игры за половину стоимости
-              подписки ({SUBSCRIPTION_CONTINUE}). !ПОДПИСКУ НЕЛЬЗЯ БУДЕТ
-              ОТМЕНИТЬ САМОСТОЯТЕЛЬНО (для этого необходимо обратиться в
-              поддержку ЛИБО не иметь средств для продления подписки, в связи с
-              чем она будет отменена автоматически)!
+              Купите подписку за {SUBSCRIPTION_COST} чубрика. Подписка продливается после каждого
+              прохождния игры за половину стоимости подписки ({SUBSCRIPTION_CONTINUE}). !ПОДПИСКУ
+              НЕЛЬЗЯ БУДЕТ ОТМЕНИТЬ САМОСТОЯТЕЛЬНО (для этого необходимо обратиться в поддержку ЛИБО
+              не иметь средств для продления подписки, в связи с чем она будет отменена
+              автоматически)!
             </DialogDescription>
           </DialogHeader>
 
           <section className="mt-auto flex flex-row gap-2 w-full">
-            <Button
-              variant="error"
-              className="flex-1"
-              onClick={() => setOpen(false)}
-            >
+            <Button variant="error" className="flex-1" onClick={() => setOpen(false)}>
               Отмена
             </Button>
             <Button
@@ -246,9 +214,7 @@ function AdvertisementApp() {
               onClick={async () => {
                 if (!user?.money || user?.money < SUBSCRIPTION_COST) return;
 
-                await adsApi
-                  .subscribeAd(String(user?.id))
-                  .then(() => setOpen(false));
+                await adsApi.subscribeAd(String(user?.id)).then(() => setOpen(false));
               }}
               disabled={!user?.money || user?.money < SUBSCRIPTION_COST}
             >

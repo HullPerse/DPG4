@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button.component";
 import { Gamepad2, Pen, Swords, Users, Gamepad, Brain } from "lucide-react";
 import { memo, ReactNode } from "react";
 
-export const TABS = [
+const TABS = [
   "users",
   "userGames",
   "userItems",

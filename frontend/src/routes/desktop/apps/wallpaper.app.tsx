@@ -1,11 +1,11 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper";
+import { wallpaperAssetUrl } from "@/lib/tauri/wallpaper.utils";
 import { Button } from "@/components/ui/button.component";
 import { Slider } from "@/components/ui/slider.component";
 import { Switch } from "@/components/ui/switch.component";
 import { Plus, SlidersHorizontal, RotateCcw } from "lucide-react";
-import { readFileAsDataUrl } from "@/lib/readFileAsDataUrl";
+import { readFileAsDataUrl } from "@/lib/index.utils";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { WallpaperProps } from "@/types/desktop";
 import WallpaperComponent from "../components/wallpaper.component";
@@ -73,16 +73,10 @@ const FILTER_PRESETS = [
   },
 ];
 
-export default function WallpaperApp({
-  setWallpaper,
-}: {
-  setWallpaper: (path: string) => void;
-}) {
+export default function WallpaperApp({ setWallpaper }: { setWallpaper: (path: string) => void }) {
   const setData = useDataStore((state) => state.setWallpaper);
   const wallpaperFilters = useDataStore((state) => state.wallpaperFilters);
-  const setWallpaperFilters = useDataStore(
-    (state) => state.setWallpaperFilters,
-  );
+  const setWallpaperFilters = useDataStore((state) => state.setWallpaperFilters);
 
   const [wallpapers, setWallpapers] = useState<WallpaperProps[]>([]);
   const [wallUrls, setWallUrls] = useState<{ [key: string]: string }>({});
@@ -118,11 +112,7 @@ export default function WallpaperApp({
   };
 
   const convertImage = useCallback(
-    (
-      dataUrl: string,
-      format: "jpeg" | "webp",
-      quality: number,
-    ): Promise<string> => {
+    (dataUrl: string, format: "jpeg" | "webp", quality: number): Promise<string> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -191,9 +181,7 @@ export default function WallpaperApp({
       "image/webp",
     ];
     if (!validTypes.includes(file.type)) {
-      alert(
-        "Пожалуйста, выберите файл изображения (JPEG, PNG, GIF, BMP или WebP)",
-      );
+      alert("Пожалуйста, выберите файл изображения (JPEG, PNG, GIF, BMP или WebP)");
       input.value = "";
       return;
     }
@@ -337,9 +325,7 @@ export default function WallpaperApp({
             <div className="flex flex-col gap-1">
               <div className="flex justify-between text-sm">
                 <label className="font-semibold">Яркость</label>
-                <span className="text-muted">
-                  {wallpaperFilters.brightness}%
-                </span>
+                <span className="text-muted">{wallpaperFilters.brightness}%</span>
               </div>
               <Slider
                 min={0}
@@ -407,9 +393,7 @@ export default function WallpaperApp({
             <div className="flex flex-col gap-1">
               <div className="flex justify-between text-sm">
                 <label className="font-semibold">Оттенок</label>
-                <span className="text-muted">
-                  {wallpaperFilters.hueRotate}°
-                </span>
+                <span className="text-muted">{wallpaperFilters.hueRotate}°</span>
               </div>
               <Slider
                 min={0}
@@ -431,9 +415,7 @@ export default function WallpaperApp({
                 <select
                   className="rounded border bg-background p-1 text-sm"
                   value={wallpaperFilters.backgroundSize}
-                  onChange={(e) =>
-                    setWallpaperFilters({ backgroundSize: e.target.value })
-                  }
+                  onChange={(e) => setWallpaperFilters({ backgroundSize: e.target.value })}
                 >
                   <option value="cover">Заполнить</option>
                   <option value="contain">Вместить</option>
@@ -447,9 +429,7 @@ export default function WallpaperApp({
                 <select
                   className="rounded border bg-background p-1 text-sm"
                   value={wallpaperFilters.backgroundPosition}
-                  onChange={(e) =>
-                    setWallpaperFilters({ backgroundPosition: e.target.value })
-                  }
+                  onChange={(e) => setWallpaperFilters({ backgroundPosition: e.target.value })}
                 >
                   <option value="center">Центр</option>
                   <option value="top">Сверху</option>
@@ -492,10 +472,7 @@ export default function WallpaperApp({
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm">Включить сжатие</label>
-                <Switch
-                  checked={compressEnabled}
-                  onCheckedChange={setCompressEnabled}
-                />
+                <Switch checked={compressEnabled} onCheckedChange={setCompressEnabled} />
               </div>
               {compressEnabled && (
                 <div className="flex flex-col gap-1">
@@ -507,18 +484,13 @@ export default function WallpaperApp({
                     min={1}
                     max={100}
                     value={[compressQuality]}
-                    onValueChange={(val) =>
-                      setCompressQuality(Array.isArray(val) ? val[0] : val)
-                    }
+                    onValueChange={(val) => setCompressQuality(Array.isArray(val) ? val[0] : val)}
                   />
                 </div>
               )}
               <div className="flex items-center justify-between pt-2 border-t border-highlight-high">
                 <label className="text-sm">Конвертировать в WebP</label>
-                <Switch
-                  checked={webpEnabled}
-                  onCheckedChange={setWebpEnabled}
-                />
+                <Switch checked={webpEnabled} onCheckedChange={setWebpEnabled} />
               </div>
             </div>
           </div>

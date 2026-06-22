@@ -1,6 +1,6 @@
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { Game, GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
@@ -15,7 +15,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { openWindow } from "@/lib/utils";
+import { openWindow } from "@/lib/index.utils";
 const gameApi = new GameApi();
 const STEAM_PRESET_ID = "steamPreset";
 
@@ -27,7 +27,7 @@ export default function PresetsWheel({ id }: { id: string }) {
   const isSteamPreset = id === STEAM_PRESET_ID;
   const listRef = useRef<HTMLDivElement>(null);
 
-  const [hiddenGames, setHiddenGames] = useState<string[]>([]);
+  const [hiddenGames, setHiddenGames] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<GameData | null>(null);
 
   const [time, setTime] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   }, [queryClient]);
 
-  useSubscription("presets", "*", invalidateQuery);
+  useSubscription("presets", invalidateQuery);
 
   const filteredGames = useMemo(() => {
     if (!data?.games) return [];
@@ -137,15 +137,14 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
-  const visibleGames =
-    data?.games.filter((game) => !hiddenGames.includes(String(game.id))) ?? [];
+  const visibleGames = data?.games.filter((game) => !hiddenGames.has(String(game.id))) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
       {/* WHEEL */}
       <section className="flex flex-col w-full gap-2 p-2 items-center justify-center">
         <Wheel
-          key={hiddenGames.join(",")}
+          key={[...hiddenGames].join(",")}
           list={visibleGames.map((game) => ({
             id: String(game.id),
             label: game.name,
@@ -154,9 +153,7 @@ export default function PresetsWheel({ id }: { id: string }) {
           }))}
           onResult={(item) => {
             return setResult(
-              data?.games.find(
-                (game) => Number(game.id) === Number(item?.id),
-              ) as GameData,
+              data?.games.find((game) => Number(game.id) === Number(item?.id)) as GameData,
             );
           }}
           free
@@ -189,11 +186,7 @@ export default function PresetsWheel({ id }: { id: string }) {
 
                   if (!link) return;
 
-                  openWindow(
-                    `steam-${result.id}`,
-                    link,
-                    `Страница ${String(result.name)}`,
-                  );
+                  openWindow(`steam-${result.id}`, link, `Страница ${String(result.name)}`);
                 }}
               >
                 {result?.name}[{result?.time ?? "?"} ч.]
@@ -202,18 +195,16 @@ export default function PresetsWheel({ id }: { id: string }) {
 
             {/* BUTTONS */}
             <section className="flex flex-row items-center gap-1">
-              {input.enabled &&
-                input.type === "result" &&
-                input.id === String(result?.id) && (
-                  <Input
-                    autoFocus
-                    type="text"
-                    placeholder="Введите время"
-                    value={time ?? ""}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="h-9 w-36 ml-2 shadow-sharp-sm"
-                  />
-                )}
+              {input.enabled && input.type === "result" && input.id === String(result?.id) && (
+                <Input
+                  autoFocus
+                  type="text"
+                  placeholder="Введите время"
+                  value={time ?? ""}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="h-9 w-36 ml-2 shadow-sharp-sm"
+                />
+              )}
               <Button
                 title="Добавить в библиотеку"
                 variant="success"
@@ -245,8 +236,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                 position: "absolute",
                 transform: `translateY(${virtualItem.start}px)`,
                 width: "99%",
-                opacity:
-                  hiddenGames.find((h) => h === String(item.id)) && "50%",
+                opacity: hiddenGames.has(String(item.id)) ? "50%" : undefined,
               }}
               data-index={virtualItem.index}
               ref={virtualizer.measureElement}
@@ -255,10 +245,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               {/* LABEL */}
               <section className="flex flex-row w-full h-full items-center gap-2">
                 <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
-                  <Image
-                    src={item.capsuleImage ?? "https://placehold.co/16x10"}
-                    alt={item.name}
-                  />
+                  <Image src={item.capsuleImage ?? "https://placehold.co/16x10"} alt={item.name} />
                 </div>
 
                 <span
@@ -272,11 +259,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                   onClick={() => {
                     if (!item.steamLink) return;
 
-                    openWindow(
-                      `steam-${item.id}`,
-                      item.steamLink,
-                      `Страница ${String(item.name)}`,
-                    );
+                    openWindow(`steam-${item.id}`, item.steamLink, `Страница ${String(item.name)}`);
                   }}
                 >
                   {item?.name}[{item?.time ?? "?"} ч.]
@@ -288,35 +271,28 @@ export default function PresetsWheel({ id }: { id: string }) {
                 <Button
                   size="icon"
                   onClick={() => {
-                    const existingGame =
-                      hiddenGames.filter((h) => h === String(item.id)).length >
-                      0;
-
-                    if (!existingGame)
-                      return setHiddenGames([...hiddenGames, String(item.id)]);
-
-                    return setHiddenGames(
-                      hiddenGames.filter((h) => h !== String(item.id)),
-                    );
+                    const next = new Set(hiddenGames);
+                    const id = String(item.id);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    setHiddenGames(next);
                   }}
                 >
-                  {hiddenGames.find((h) => h === String(item.id)) ? (
+                  {hiddenGames.has(String(item.id)) ? (
                     <EyeIcon size={20} />
                   ) : (
                     <EyeOffIcon size={20} />
                   )}
                 </Button>
-                {input.enabled &&
-                  input.type === "list" &&
-                  input.id === String(item?.id) && (
-                    <Input
-                      type="text"
-                      placeholder="Введите время"
-                      value={time ?? ""}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="h-9 w-36 ml-2 shadow-sharp-sm"
-                    />
-                  )}
+                {input.enabled && input.type === "list" && input.id === String(item?.id) && (
+                  <Input
+                    type="text"
+                    placeholder="Введите время"
+                    value={time ?? ""}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="h-9 w-36 ml-2 shadow-sharp-sm"
+                  />
+                )}
                 <Button
                   title="Добавить в библиотеку"
                   variant="success"

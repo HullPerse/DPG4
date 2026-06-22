@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { compressSquare, compressWebp } from "../src/lib/images";
+import { compressSquare, compressWebp } from "../src/lib/images.utils";
 
 const db = new Database("data/db.sqlite");
 
@@ -21,7 +21,9 @@ const TABLES: TableDef[] = [
 
 async function processTable(table: TableDef) {
   const rows = db
-    .query(`SELECT id, image, ${table.mimeField} as mime FROM ${table.name} WHERE image IS NOT NULL`)
+    .query(
+      `SELECT id, image, ${table.mimeField} as mime FROM ${table.name} WHERE image IS NOT NULL`,
+    )
     .all() as { id: string; image: Buffer | null; mime: string | null }[];
 
   if (rows.length === 0) {
@@ -29,17 +31,25 @@ async function processTable(table: TableDef) {
     return;
   }
 
-  const modeLabel = table.process === "square" ? "215x215 WebP q80" : "WebP q90";
-  const update = db.prepare(`UPDATE ${table.name} SET image = ?, ${table.mimeField} = 'image/webp' WHERE id = ?`);
+  const modeLabel =
+    table.process === "square" ? "215x215 WebP q80" : "WebP q90";
+  const update = db.prepare(
+    `UPDATE ${table.name} SET image = ?, ${table.mimeField} = 'image/webp' WHERE id = ?`,
+  );
 
   let ok = 0;
   let skip = 0;
   let err = 0;
 
   for (const row of rows) {
-    if (!row.image) { skip++; continue; }
+    if (!row.image) {
+      skip++;
+      continue;
+    }
     try {
-      const compressed = await (table.process === "square" ? compressSquare(row.image) : compressWebp(row.image));
+      const compressed = await (table.process === "square"
+        ? compressSquare(row.image)
+        : compressWebp(row.image));
       update.run(compressed, row.id);
       ok++;
       if (ok % 10 === 0) process.stdout.write(".");
@@ -49,7 +59,9 @@ async function processTable(table: TableDef) {
     }
   }
 
-  console.log(`  ${table.name}: ${ok} compressed (${modeLabel}), ${skip} skipped, ${err} errors`);
+  console.log(
+    `  ${table.name}: ${ok} compressed (${modeLabel}), ${skip} skipped, ${err} errors`,
+  );
 }
 
 console.log("Compressing all images...");

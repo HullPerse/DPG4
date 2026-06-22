@@ -2,7 +2,7 @@ import { getFileUrl } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import { SmallLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
-import { highlightText, translateItemType } from "@/lib/utils";
+import { highlightText, translateItemType } from "@/lib/index.utils";
 import { useUserStore } from "@/store/user.store";
 import { Inventory } from "@/types/items";
 import { UseMutationResult } from "@tanstack/react-query";
@@ -48,10 +48,7 @@ function ItemInventory({
     },
     unknown
   >;
-  itemLoading: (
-    itemId: string,
-    type?: ItemLoadingType | "charge" | undefined,
-  ) => boolean;
+  itemLoading: (itemId: string, type?: ItemLoadingType | "charge" | undefined) => boolean;
   currentId: string;
   index: number;
   setPrice: (value: string) => void;

@@ -1,17 +1,18 @@
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
-import * as schema from "../../db/schema";
-import { UserService } from "@/services/user.service";
-import { DiceService } from "../gambling/dice.service";
-import { BlackjackService } from "../gambling/blackjack.service";
-import { RocketService } from "../gambling/rocket.service";
-import { PachinkoService } from "../gambling/pachinko.service";
-import { MinesService } from "../gambling/mines.service";
-import { ActivityService } from "../activity.service";
-import { newId } from "../../lib/ids";
-
-type Db = BunSQLiteDatabase<typeof schema>;
+import * as schema from "@/db/schema.db";
+import { newId } from "@/lib/index.utils";
+import ActivityService from "@/services/activity.service";
+import UserService from "@/services/user.service";
+import LogService from "@/services/log.service";
+import EconomyService from "@/services/economy.service";
+import DiceService from "@/services/gambling/dice.service";
+import BlackjackService from "@/services/gambling/blackjack.service";
+import RocketService from "@/services/gambling/rocket.service";
+import PachinkoService from "@/services/gambling/pachinko.service";
+import MinesService from "@/services/gambling/mines.service";
+import JackpotService from "@/services/gambling/jackpot.service";
+import type { Db } from "@/types/server";
 
 const CREATE_USERS = `CREATE TABLE users (
   id TEXT PRIMARY KEY,
@@ -74,6 +75,77 @@ const CREATE_INVENTORY = `CREATE TABLE inventory (
   updated TEXT NOT NULL
 )`;
 
+const CREATE_INVENTORY_LOG = `CREATE TABLE inventory_log (
+  id TEXT PRIMARY KEY,
+  inventory_id TEXT NOT NULL,
+  item_label TEXT NOT NULL,
+  item_type TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  action TEXT NOT NULL,
+  actor TEXT,
+  details TEXT,
+  created TEXT NOT NULL
+)`;
+
+const CREATE_ITEMS = `CREATE TABLE items (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  charge INTEGER NOT NULL DEFAULT 0,
+  rollable INTEGER NOT NULL DEFAULT 0,
+  status TEXT,
+  image BLOB,
+  image_mime TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
+const CREATE_GAMES = `CREATE TABLE games (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  user TEXT,
+  data TEXT DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'PLAYING',
+  playtime TEXT,
+  score INTEGER NOT NULL DEFAULT 0,
+  review TEXT,
+  image BLOB,
+  image_mime TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
+const CREATE_MARKET = `CREATE TABLE market (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  original_id TEXT,
+  owner TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  charge INTEGER NOT NULL DEFAULT 0,
+  price INTEGER NOT NULL DEFAULT 0,
+  discount INTEGER,
+  per_ticket_price INTEGER,
+  image BLOB,
+  image_mime TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
+const CREATE_JACKPOT = `CREATE TABLE jackpot (
+  id TEXT PRIMARY KEY,
+  pool INTEGER NOT NULL DEFAULT 0,
+  winning_number INTEGER NOT NULL DEFAULT 0,
+  winning_number_date TEXT,
+  last_winner_id TEXT,
+  last_winner_username TEXT,
+  last_win_amount INTEGER,
+  last_win_date TEXT,
+  created TEXT NOT NULL,
+  updated TEXT NOT NULL
+)`;
+
 export function createTestDb(): { sqlite: Database; db: Db } {
   const sqlite = new Database(":memory:");
   const db = drizzle(sqlite, { schema });
@@ -81,35 +153,58 @@ export function createTestDb(): { sqlite: Database; db: Db } {
   sqlite.run(CREATE_ACTIVITY);
   sqlite.run(CREATE_HISTORY);
   sqlite.run(CREATE_INVENTORY);
+  sqlite.run(CREATE_INVENTORY_LOG);
+  sqlite.run(CREATE_ITEMS);
+  sqlite.run(CREATE_GAMES);
+  sqlite.run(CREATE_MARKET);
+  sqlite.run(CREATE_JACKPOT);
   return { sqlite, db };
 }
 
 export interface TestServices {
   activityService: ActivityService;
   userService: UserService;
+  logService: LogService;
+  economyService: EconomyService;
   diceService: DiceService;
   blackjackService: BlackjackService;
   rocketService: RocketService;
   pachinkoService: PachinkoService;
   minesService: MinesService;
+  jackpotService: JackpotService;
 }
 
 export function createServices(db: Db): TestServices {
   const activityService = new ActivityService(db);
   const userService = new UserService(db, activityService);
-  const diceService = new DiceService(db, userService);
-  const blackjackService = new BlackjackService(db, userService);
-  const rocketService = new RocketService(db, userService);
-  const pachinkoService = new PachinkoService(db, userService);
-  const minesService = new MinesService(db, userService);
+  const logService = new LogService(db);
+  const economyService = new EconomyService(
+    db,
+    userService,
+    activityService,
+    logService,
+  );
+  const diceService = new DiceService(db, userService, economyService);
+  const blackjackService = new BlackjackService(
+    db,
+    userService,
+    economyService,
+  );
+  const rocketService = new RocketService(db, userService, economyService);
+  const pachinkoService = new PachinkoService(db, userService, economyService);
+  const minesService = new MinesService(db, userService, economyService);
+  const jackpotService = new JackpotService(db);
   return {
     activityService,
     userService,
+    logService,
+    economyService,
     diceService,
     blackjackService,
     rocketService,
     pachinkoService,
     minesService,
+    jackpotService,
   };
 }
 
@@ -139,6 +234,7 @@ export async function createUser(
     place: "0",
     gamblingWinnings: 0,
     gamblingBanned: false,
+    hangman: false,
     created: ts,
     updated: ts,
   };

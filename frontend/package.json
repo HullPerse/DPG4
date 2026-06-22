@@ -8,6 +8,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "verify": "npm run typecheck && npm run lint && npm run frontend:test",
+    "ci": "npm run build && npm run verify",
     "frontend:test": "vitest run",
     "test:watch": "vitest"
   },

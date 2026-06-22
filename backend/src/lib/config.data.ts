@@ -102,9 +102,9 @@ export const WINDOW_META = [
   },
 ];
 
-export type LinkEntry = { description: string; link: string };
+import type { LinkEntry } from "@/types/config";
 
-export const BROWSER_GAMES: LinkEntry[] = [
+const BROWSER_GAMES: LinkEntry[] = [
   {
     description: "Набрать 5 из 7 правильных ответов",
     link: "https://encyklop.com/games/time-zones/",
@@ -862,7 +862,7 @@ export const BROWSER_GAMES: LinkEntry[] = [
   },
 ];
 
-export const LOGICAL_GAMES: LinkEntry[] = [
+const LOGICAL_GAMES: LinkEntry[] = [
   {
     description: "Набрать 6000 очков в поле 6х6",
     link: "https://mozgotren.com/trening/trenagor/matrica",
@@ -1717,7 +1717,7 @@ export const LOGICAL_GAMES: LinkEntry[] = [
   },
 ];
 
-export const FLASH_GAMES: LinkEntry[] = [
+const FLASH_GAMES: LinkEntry[] = [
   {
     description: "Пройти 6 уровней",
     link: "https://games.rgg.land/flash/?game=Super%20Mario:%20Time%20Attack%20Remix",

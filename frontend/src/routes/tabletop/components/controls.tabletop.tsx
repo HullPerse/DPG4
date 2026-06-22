@@ -2,7 +2,7 @@ import CellApi from "@/api/cell.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { cellsConfig } from "@/config/cells.config";
-import useLoading from "@/hooks/loader.hook";
+import { useLoading } from "@/hooks/index.hook";
 import { translateCell } from "@/lib/cell.utils";
 import { Cell } from "@/types/cell";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,18 +23,17 @@ export default function Controls({
 }) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, refetch, isRefetching, isRefetchError } =
-    useQuery<{
-      cell: Cell;
-    }>({
-      queryKey: ["cellCard", cell],
-      queryFn: async () => {
-        return {
-          cell: (await cellApi.getCellById(String(cell))) as unknown as Cell,
-        };
-      },
-      enabled: !!cell,
-    });
+  const { data, isLoading, isError, refetch, isRefetching, isRefetchError } = useQuery<{
+    cell: Cell;
+  }>({
+    queryKey: ["cellCard", cell],
+    queryFn: async () => {
+      return {
+        cell: (await cellApi.getCellById(String(cell))) as unknown as Cell,
+      };
+    },
+    enabled: !!cell,
+  });
 
   const userHistory = useMemo(() => {
     if (!data || !data.cell.captured) return [];
@@ -79,7 +78,7 @@ export default function Controls({
 
   const cellId = () => {
     if (!cell) return "Действия";
-    if (["start", "finish"].includes(String(data?.cell.type)))
+    if (data?.cell.type === "start" || data?.cell.type === "finish")
       return translateCell(String(data?.cell.type));
     return `Клетка: ${data?.cell.number}`;
   };
@@ -106,10 +105,7 @@ export default function Controls({
             if (!value) return;
 
             return (
-              <div
-                key={key}
-                className="flex min-w-0 items-start justify-between gap-3"
-              >
+              <div key={key} className="flex min-w-0 items-start justify-between gap-3">
                 <span className="text-md shrink-0 font-mono">{key}:</span>
                 <span
                   className="text-md min-w-0 flex-1 text-right font-mono wrap-break-word text-muted"
@@ -133,8 +129,7 @@ export default function Controls({
             );
 
             return Object.entries(statusCounts).map(([status, count]) => {
-              const statusData =
-                cellsConfig.status.find((item) => item.name === status) ?? null;
+              const statusData = cellsConfig.status.find((item) => item.name === status) ?? null;
 
               return (
                 <div
@@ -142,9 +137,7 @@ export default function Controls({
                   className="flex min-w-0 flex-row items-start justify-between gap-1"
                 >
                   <div className="flex w-18 flex-row items-center gap-1">
-                    <div className="w-6">
-                      {statusData?.icon ?? <CircleQuestionMark />}
-                    </div>
+                    <div className="w-6">{statusData?.icon ?? <CircleQuestionMark />}</div>
                     <span className="text-xs text-text">x{count}</span>
                   </div>
                   <span className="text-md min-w-0 flex-1 text-right font-mono wrap-break-word text-muted">
@@ -159,10 +152,7 @@ export default function Controls({
             <div>
               <span className="font-bold">Захват:</span>
               {Object.entries(userHistory).map(([user, count]) => (
-                <div
-                  key={user}
-                  className="flex min-w-0 flex-row items-start justify-between gap-1"
-                >
+                <div key={user} className="flex min-w-0 flex-row items-start justify-between gap-1">
                   <span className="text-xs text-text">• {user}</span>
                   <span className="text-xs text-text">x{count}</span>
                 </div>

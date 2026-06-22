@@ -1,186 +1,34 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { eq, inArray } from "drizzle-orm";
-import * as schema from "../db/schema";
+import * as schema from "@/db/schema.db";
 import { config } from "../server.config";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import {
-  ADMIN_BLOB_FIELDS,
-  ADMIN_JSON_FIELDS,
-  getAdminSchemaPayload,
-} from "../lib/adminSchema";
+import databasePlugin from "@/plugins/database.plugin";
+import servicesPlugin from "../services.server";
+import { newId, nowIso } from "@/lib/index.utils";
+import { getAdminSchemaPayload } from "../lib/admin/schema.admin";
 import {
   getAdminStats,
   invalidateAdminStatsCache,
   listAdminRows,
-} from "../lib/adminQuery";
-import { adminTableColumn, getAdminTable } from "../lib/adminTables";
-import { broadcast, broadcastAdminReload } from "../lib/ws";
-import { logger, LOG_FILE } from "../lib/logger";
+} from "../lib/admin/query.admin";
+import { adminTableColumn, getAdminTable } from "../lib/admin/tables.admin";
+import {
+  maybeBroadcast,
+  hasTimestamps,
+  cleanBody,
+  sanitizePath,
+  mimeType,
+  replaceBuffers,
+  verifyAdmin,
+} from "../lib/admin/admin.utils";
+import { broadcastAdminReload } from "../lib/websocket.utils";
+import Logger, { LOG_FILE } from "../lib/logger.utils";
 
-const BROADCAST_TABLES = new Set([
-  "users",
-  "games",
-  "presets",
-  "items",
-  "inventory",
-  "market",
-  "activity",
-  "chats",
-  "rules",
-  "ads",
-  "drawings",
-  "cells",
-  "hangman",
-  "pets",
-  "inventoryLog",
-]);
+const logger = new Logger("ADMIN");
 
-function isBlobPlaceholder(val: unknown): boolean {
-  return typeof val === "string" && val.includes("[buffer");
-}
-
-function maybeBroadcast(table: string, action: string, id: string) {
-  if (BROADCAST_TABLES.has(table)) broadcast(table, action, id);
-}
-
-const hasTimestamps = new Set([
-  "users",
-  "games",
-  "presets",
-  "items",
-  "inventory",
-  "market",
-  "chats",
-  "rules",
-  "ads",
-  "drawings",
-  "cells",
-  "hangman",
-  "pets",
-  "inventoryLog",
-]);
-
-function tryParseJson(v: unknown): unknown {
-  if (typeof v !== "string") return v;
-  const trimmed = v.trim();
-  if (
-    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
-    (trimmed.startsWith("[") && trimmed.endsWith("]"))
-  ) {
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return v;
-    }
-  }
-  return v;
-}
-
-function parseDataUrl(value: string): { buffer: Buffer; mime: string } | null {
-  const match = value.match(/^data:(.+?);base64,(.+)$/);
-  if (!match) return null;
-  return { mime: match[1], buffer: Buffer.from(match[2], "base64") };
-}
-
-async function cleanBody(
-  body: Record<string, unknown>,
-  tbl: string,
-): Promise<Record<string, unknown>> {
-  const jf = ADMIN_JSON_FIELDS[tbl] ?? [];
-  const bf = ADMIN_BLOB_FIELDS[tbl] ?? [];
-  const out: Record<string, unknown> = {};
-  let plainPassword: string | undefined;
-
-  for (const [k, v] of Object.entries(body)) {
-    if (k === "password") {
-      if (typeof v === "string" && v.trim()) plainPassword = v.trim();
-      continue;
-    }
-    if ((k === "id" || k === "passwordHash") && !v) continue;
-    if (k === "collectionId" || k === "collectionName") continue;
-    out[k] = jf.includes(k) ? tryParseJson(v) : v;
-  }
-
-  if (tbl === "users" && plainPassword) {
-    out.passwordHash = await Bun.password.hash(plainPassword);
-  }
-
-  for (const { field, mimeField } of bf) {
-    const val = out[field];
-    if (typeof val === "string" && val.startsWith("data:")) {
-      const parsed = parseDataUrl(val);
-      if (parsed) {
-        out[field] = parsed.buffer;
-        out[mimeField] = parsed.mime;
-      }
-    } else if (typeof val === "string" && val === "") {
-      delete out[field];
-      delete out[mimeField];
-    } else if (isBlobPlaceholder(val)) {
-      delete out[field];
-      delete out[mimeField];
-    }
-  }
-  return out;
-}
-
-function sanitizePath(p: string): string {
-  return p
-    .replace(/\.\.\//g, "")
-    .replace(/\.\.\\/g, "")
-    .replaceAll("\0", "");
-}
-
-function mimeType(fp: string): string {
-  if (fp.endsWith(".js")) return "application/javascript";
-  if (fp.endsWith(".css")) return "text/css";
-  if (fp.endsWith(".html")) return "text/html";
-  if (fp.endsWith(".json")) return "application/json";
-  if (fp.endsWith(".svg")) return "image/svg+xml";
-  if (fp.endsWith(".png")) return "image/png";
-  if (fp.endsWith(".jpg") || fp.endsWith(".jpeg")) return "image/jpeg";
-  if (fp.endsWith(".webp")) return "image/webp";
-  if (fp.endsWith(".ico")) return "image/x-icon";
-  if (fp.endsWith(".woff2")) return "font/woff2";
-  if (fp.endsWith(".woff")) return "font/woff";
-  if (fp.endsWith(".ttf")) return "font/ttf";
-  return "application/octet-stream";
-}
-
-function replaceBuffers(row: Record<string, unknown>): void {
-  for (const [k, v] of Object.entries(row)) {
-    if (Buffer.isBuffer(v)) {
-      (row as Record<string, string>)[k] = `[buffer ${v.length}b]`;
-    }
-  }
-}
-
-type AdminJwtPayload = { sub: string; role?: string };
-
-async function verifyAdmin(
-  headers: Record<string, string | undefined>,
-  adminJwt: { verify: (t: string) => Promise<false | AdminJwtPayload> },
-  db: any,
-): Promise<{ id: string; username: string } | null> {
-  const h = headers.authorization;
-  const token = h?.startsWith("Bearer ") ? h.slice(7) : null;
-  if (!token) return null;
-  const p = await adminJwt.verify(token);
-  if (!p || typeof p.sub !== "string") return null;
-  const [user] = await db
-    .select()
-    .from(schema.users)
-    .where(eq(schema.users.id, p.sub));
-  if (!user || !user.isAdmin) return null;
-  return { id: user.id, username: user.username };
-}
-
-export const adminRoute = new Elysia()
-  .use(dbPlugin)
+const adminRoute = new Elysia()
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(jwt({ name: "adminJwt", secret: config.jwtSecret, exp: "24h" }))
   .group("/api/admin", (app) =>
@@ -210,7 +58,7 @@ export const adminRoute = new Elysia()
             );
           }
           const token = await adminJwt.sign({ sub: user.id, role: "admin" });
-          logger.info(user.username, "admin logged in");
+          logger.setAuthor(user.username).info("Logged in as admin");
           return { token, user: { id: user.id, username: user.username } };
         },
         { body: t.Object({ username: t.String(), password: t.String() }) },
@@ -240,7 +88,7 @@ export const adminRoute = new Elysia()
           return { error: "Unauthorized" };
         }
         broadcastAdminReload();
-        logger.info(admin.username, "admin broadcast reload");
+        logger.info("Admin broadcast reloaded");
         return { ok: true };
       })
       .post(
@@ -260,12 +108,9 @@ export const adminRoute = new Elysia()
             set.status = 400;
             return { error: "User or item not found" };
           }
-          logger.info(
-            admin.username,
-            "admin granted item",
-            `user:${body.userId}`,
-            `item:${body.itemId}`,
-          );
+          logger
+            .setAuthor(admin.username)
+            .info(`Admin granted item: user: ${body.userId}/${body.itemId}`);
           return { ok: true };
         },
         { body: t.Object({ userId: t.String(), itemId: t.String() }) },
@@ -343,7 +188,7 @@ export const adminRoute = new Elysia()
           const stderr = await new Response(proc.stderr).text();
           const exitCode = await proc.exited;
           clearTimeout(timeout);
-          logger.info(admin.username, "exec command", body.command);
+          logger.setAuthor(admin.username).info(`exec command ${body.command}`);
           return { stdout, stderr, exitCode };
         },
         { body: t.Object({ command: t.String() }) },
@@ -433,11 +278,10 @@ export const adminRoute = new Elysia()
             replaceBuffers(row as Record<string, unknown>);
             invalidateAdminStatsCache();
             maybeBroadcast(params.table, "create", cleaned.id as string);
-            logger.info(
-              admin.username,
-              "admin created record",
-              `${params.table}:${cleaned.id}`,
-            );
+            logger
+              .setAuthor(admin.username)
+              .info(`admin created record ${params.table}:${cleaned.id}`);
+
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -483,11 +327,10 @@ export const adminRoute = new Elysia()
             replaceBuffers(row as Record<string, unknown>);
             invalidateAdminStatsCache();
             maybeBroadcast(params.table, "update", params.id);
-            logger.info(
-              admin.username,
-              "admin updated record",
-              `${params.table}:${params.id}`,
-            );
+            logger
+              .setAuthor(admin.username)
+              .info(`admin updated record ${params.table}:${params.id}`);
+
             return { data: row };
           } catch (err: unknown) {
             set.status = 400;
@@ -523,11 +366,10 @@ export const adminRoute = new Elysia()
           invalidateAdminStatsCache();
           replaceBuffers(row as Record<string, unknown>);
           maybeBroadcast(params.table, "delete", params.id);
-          logger.info(
-            admin.username,
-            "admin deleted record",
-            `${params.table}:${params.id}`,
-          );
+          logger
+            .setAuthor(admin.username)
+            .info(`admin deleted record ${params.table}:${params.id}`);
+
           return { data: row };
         },
       )
@@ -555,17 +397,17 @@ export const adminRoute = new Elysia()
           for (const id of ids) {
             maybeBroadcast(params.table, "delete", id);
           }
-          logger.info(
-            admin.username,
-            "admin batch deleted",
-            `${params.table}:${ids.length} records`,
-          );
+
+          logger
+            .setAuthor(admin.username)
+            .info(`admin batch deleted ${params.table}:${ids.length} records`);
+
           return { ok: true, deleted: ids.length };
         },
       )
       .get(
         "/data/:table/export",
-        async ({ params, query, db, headers, adminJwt, set }) => {
+        async ({ params, db, headers, adminJwt, set }) => {
           if (!(await verifyAdmin(headers, adminJwt, db))) {
             set.status = 401;
             return { error: "Unauthorized" };
@@ -576,32 +418,32 @@ export const adminRoute = new Elysia()
             return { error: "Table not found" };
           }
           const rows = await db.select().from(table);
-          rows.forEach((row) =>
-            replaceBuffers(row as Record<string, unknown>),
-          );
+          rows.forEach((row) => replaceBuffers(row as Record<string, unknown>));
           return rows;
         },
       ),
   )
   .get("/admin", async () => {
-    const file = Bun.file("admin-panel/dist/index.html");
+    const file = Bun.file("admin/dist/index.html");
     if (await file.exists()) {
       return new Response(file, { headers: { "Content-Type": "text/html" } });
     }
     return new Response(
-      "Admin panel not built. Run: cd admin-panel && bun run build",
+      "Admin panel not built. Run: cd admin && bun run build",
       { status: 500 },
     );
   })
   .get("/admin/*", async ({ params }) => {
     const fp = sanitizePath(params["*"] || "index.html");
-    const file = Bun.file(`admin-panel/dist/${fp}`);
+    const file = Bun.file(`admin/dist/${fp}`);
     if (await file.exists()) {
       return new Response(file, { headers: { "Content-Type": mimeType(fp) } });
     }
-    const idx = Bun.file("admin-panel/dist/index.html");
+    const idx = Bun.file("admin/dist/index.html");
     if (await idx.exists()) {
       return new Response(idx, { headers: { "Content-Type": "text/html" } });
     }
     return new Response("Admin panel not built", { status: 500 });
   });
+
+export default adminRoute;

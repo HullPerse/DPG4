@@ -1,48 +1,16 @@
 import { useRef, useCallback } from "react";
-import { WindowPosition } from "@/types/window";
+import { ResizeDirection, ResizeState, UseWindowResizeProps } from "@/types/window";
 import { lockCursor } from "@/lib/cursor.utils";
 
-export type ResizeDirection =
-  | "top"
-  | "bottom"
-  | "left"
-  | "right"
-  | "top-left"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-right";
-
-interface ResizeState {
-  startPos: { x: number; y: number };
-  startSize: { width: number; height: number };
-  startPosition: { x: number; y: number };
-  direction: ResizeDirection;
-}
-
-interface UseWindowResizeProps {
-  windowSize: { width: number; height: number };
-  position: WindowPosition;
-  isResizing: boolean;
-  minWidth?: number;
-  minHeight?: number;
-  onActive?: () => void;
-  windowRef: React.RefObject<HTMLDivElement | null>;
-  setIsResizing: React.Dispatch<React.SetStateAction<boolean>>;
-  setPosition: React.Dispatch<React.SetStateAction<WindowPosition>>;
-  setWindowSize: React.Dispatch<
-    React.SetStateAction<{ width: number; height: number }>
-  >;
-}
-
 const DIRECTION_CURSOR: Record<ResizeDirection, string> = {
-  top: 'n-resize',
-  bottom: 's-resize',
-  left: 'w-resize',
-  right: 'e-resize',
-  'top-left': 'nw-resize',
-  'top-right': 'ne-resize',
-  'bottom-left': 'sw-resize',
-  'bottom-right': 'se-resize',
+  top: "n-resize",
+  bottom: "s-resize",
+  left: "w-resize",
+  right: "e-resize",
+  "top-left": "nw-resize",
+  "top-right": "ne-resize",
+  "bottom-left": "sw-resize",
+  "bottom-right": "se-resize",
 };
 
 export const useWindowResize = ({
@@ -173,8 +141,7 @@ export const useWindowResize = ({
       className: "absolute bottom-0 right-0 w-4 h-4 cursor-se-resize",
       direction: "bottom-right" as const,
       style: {
-        background:
-          "linear-gradient(135deg, transparent 50%, var(--color-highlight-high) 50%)",
+        background: "linear-gradient(135deg, transparent 50%, var(--color-highlight-high) 50%)",
       },
     },
   ];

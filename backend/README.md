@@ -1,52 +1,51 @@
-# DPG API (Elysia + Bun + SQLite)
+# DPG Backend
 
-## Запуск
+Elysia/JIT backend for the DPG game platform.
+
+## Prerequisites
+
+- [Bun](https://bun.sh) v1.3+
+
+## Setup
 
 ```bash
+# Install dependencies
 bun install
-mkdir -p data
-bun run db:migrate
+
+# Copy environment file and edit as needed
+cp .env.example .env
+
+# Start dev server (auto-restarts on file changes)
 bun run dev
 ```
 
-- API: `http://localhost:3000`
-- Swagger: `http://localhost:3000/docs`
-- WebSocket: `ws://localhost:3000/ws`
+Open http://localhost:3000 with your browser to see the result.
 
-## Переменные окружения
+## Available Scripts
 
-| Переменная | По умолчанию | Описание |
-|------------|--------------|----------|
-| `PORT` | `3000` | Порт сервера |
-| `JWT_SECRET` | (dev secret) | Секрет JWT |
-| `DB_PATH` | `data/db.sqlite` | Путь к SQLite |
-| `CORS_ORIGIN` | `true` | CORS |
-| `STEAM_API_KEY` | - | Steam Web API (прокси `/steam/*`) |
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start dev server with watch mode |
+| `bun test` | Run test suite (177+ tests) |
+| `bun run typecheck` | TypeScript type checking |
+| `bun run lint` | Lint source code |
+| `bun run format` | Format source code with Prettier |
+| `bun run prod` | Build and start production server |
+| `bun run db:generate` | Generate Drizzle migrations |
+| `bun run db:migrate` | Run pending migrations |
+| `bun run db:studio` | Open Drizzle Studio (DB GUI) |
+| `bun run backup` | Create database backup |
+| `bun run admin:build` | Build admin frontend |
 
-## Резервная копия БД
+## Project Structure
 
-```bash
-bun run backup
 ```
-
-Копия сохраняется в `backups/db-<timestamp>.sqlite`.
-
-## Импорт из PocketBase
-
-Скопируйте `data.db` с сервера PocketBase и укажите путь:
-
-```bash
-PB_DB_PATH="D:/path/to/pb_data/data.db" bun run import:pb
+src/
+├── db/           # Database schema and migrations
+├── lib/          # Utility functions and constants
+├── plugins/      # Elysia plugins (auth, database, etc.)
+├── routes/       # API route handlers
+├── services/     # Business logic services
+├── types/        # TypeScript type definitions
+└── index.server.ts  # Entry point
 ```
-
-Файлы подтягиваются из `old backend/pb_data/storage` (если бинарники есть в репозитории).
-
-## Realtime
-
-Клиенты подключаются к `/ws`. При изменении данных сервер шлёт:
-
-```json
-{ "channel": "games", "action": "update", "id": "..." }
-```
-
-Встроенный WebSocket Elysia.

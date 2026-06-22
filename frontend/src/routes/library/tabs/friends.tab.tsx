@@ -2,13 +2,13 @@ import { memo, startTransition, useCallback, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/subscription.hook";
+import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
-import { getStatusColor } from "@/lib/utils";
+import { getStatusColor } from "@/lib/index.utils";
 import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { Chat } from "@/types/chat";
@@ -59,9 +59,9 @@ function FriendsTab() {
     });
   }, [queryClient]);
 
-  useSubscription("games", "*", invalidateQuery);
-  useSubscription("users", "*", invalidateQuery);
-  useSubscription("chats", "*", invalidateQuery);
+  useSubscription("games", invalidateQuery);
+  useSubscription("users", invalidateQuery);
+  useSubscription("chats", invalidateQuery);
 
   if (isLoading || isFetching) return <WindowLoader />;
   if (isError)
@@ -86,9 +86,7 @@ function FriendsTab() {
       <section className="flex flex-wrap gap-2 overflow-y-auto w-full pb-2 items-start justify-start">
         {data?.users.map((user) => {
           const game = data.games.find((g) => g.user.id === user.id);
-          const unread = data.chats?.filter(
-            (c) => c.data.sender.id === user.id,
-          );
+          const unread = data.chats?.filter((c) => c.data.sender.id === user.id);
 
           return (
             <button
@@ -115,13 +113,11 @@ function FriendsTab() {
                   borderColor: getStatusColor(game?.status ?? "PLAYING"),
                 }}
               >
-                  {user.avatar}
-                </section>
+                {user.avatar}
+              </section>
               <section className="flex flex-col p-1 h-full w-full leading-tight text-start overflow-hidden">
                 <span className="font-bold">{user.username}</span>
-                <span className="truncate font-light text-ellipsis">
-                  {game?.data.name}
-                </span>
+                <span className="truncate font-light text-ellipsis">{game?.data.name}</span>
               </section>
             </button>
           );

@@ -1,11 +1,9 @@
 import { Elysia, t } from "elysia";
-import * as schema from "../db/schema";
-import { newId } from "../lib/ids";
-import { nowIso } from "../lib/dates";
-import { SPIN_COST } from "../lib/gambling.constants";
-import { authPlugin } from "../plugins/auth.plugin";
-import { dbPlugin } from "../plugins/db.plugin";
-import { servicesPlugin } from "../services.server";
+import * as schema from "@/db/schema.db";
+import { newId, nowIso } from "@/lib/index.utils";
+import { SPIN_COST } from "@/lib/gambling.constants";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
+import servicesPlugin from "@/services.server";
 
 const WheelItemSchema = t.Object({
   id: t.String(),
@@ -31,18 +29,13 @@ function pickWinner(length: number): number {
   return buf[0] % length;
 }
 
-export const wheelRoute = new Elysia({ prefix: "/wheel" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/wheel" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
   .post(
     "/spin",
     async ({ body, user, set, db, userService }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
       const { items, free, listType } = body;
       if (!Array.isArray(items) || items.length === 0) {
         set.status = 400;
@@ -94,9 +87,6 @@ export const wheelRoute = new Elysia({ prefix: "/wheel" })
         free: t.Boolean(),
         listType: t.Optional(t.String()),
       }),
-      detail: {
-        tags: ["wheel"],
-        summary: "Spin the wheel - shuffles items, picks winner, deducts cost",
-      },
+      requireAuth: true,
     },
   );

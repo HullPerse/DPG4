@@ -35,17 +35,14 @@ const Gambling = lazy(() => import("@/routes/gambling/gambling.root"));
 const AdminApp = lazy(() => import("@/routes/desktop/apps/admin.app"));
 
 export const WIP_COMPONENT = (
-  <div className="flex h-full w-full items-center justify-center bg-background">
-    <p className="text-2xl font-bold text-muted tracking-widest select-none">
+  <main className="flex h-full w-full items-center justify-center bg-background">
+    <span className="text-2xl font-bold text-muted tracking-widest select-none">
       ПРИЛОЖЕНИЕ В РАЗРАБОТКЕ
-    </p>
-  </div>
+    </span>
+  </main>
 );
 
-export const APP_REGISTRY: Record<
-  string,
-  { icon: ReactNode; component?: ReactNode }
-> = {
+export const APP_REGISTRY: Record<string, { icon: ReactNode; component?: ReactNode }> = {
   tabletop: { icon: <Dices className="size-7" />, component: <Tabletop /> },
   library: { icon: <LibraryBig className="size-7" />, component: <Library /> },
   browser: { icon: <Globe className="size-7" />, component: <Browser /> },

@@ -1,52 +1,21 @@
 import { Elysia, t } from "elysia";
 import { desc, eq, sql, and } from "drizzle-orm";
-import * as schema from "../db/schema";
-import { rawDb } from "../db";
-import { authPlugin } from "../plugins/auth.plugin";
-import { dbPlugin } from "../plugins/db.plugin";
+import * as schema from "@/db/schema.db";
+import { rawDb } from "@/db/index.db";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
+import type {
+  StatsRow,
+  GameDistRow,
+  BetDistRow,
+  LeaderboardRow,
+} from "@/types/history";
 
-interface StatsRow {
-  date: string;
-  net: number;
-  gamesPlayed: number;
-}
-
-interface GameDistRow {
-  type: string;
-  count: number;
-  totalNet: number;
-}
-
-interface BetDistRow {
-  range: string;
-  count: number;
-}
-
-interface LeaderboardRow {
-  userId: string;
-  username: string;
-  avatar: string;
-  color: string;
-  currentMoney: number;
-  currentTickets: number;
-  totalNet: number;
-  gamesPlayed: number;
-  wins: number;
-  losses: number;
-  biggestWin: number;
-}
-
-export const historyRoute = new Elysia({ prefix: "/history" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/history" })
+  .use(databasePlugin)
   .use(authPlugin)
   .get(
     "/",
-    async ({ query, user, set, db }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
+    async ({ query, user, set: _set, db }) => {
       const page = Math.max(1, query.page ?? 1);
       const limit = Math.min(Math.max(1, query.limit ?? 50), 100);
       const offset = (page - 1) * limit;
@@ -87,20 +56,12 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           type: t.Optional(t.String()),
         }),
       ),
-      detail: {
-        tags: ["history"],
-        summary: "Get paginated history for current user, optionally filtered by type",
-      },
+      requireAuth: true,
     },
   )
   .get(
     "/stats",
-    async ({ user, set }) => {
-      if (!user) {
-        set.status = 401;
-        return { error: "Unauthorized" };
-      }
-
+    async ({ user, set: _set }) => {
       const dailyNet = rawDb
         .query<StatsRow, [string]>(
           `SELECT DATE(created) AS date, SUM(net) AS net, COUNT(*) AS gamesPlayed
@@ -118,9 +79,10 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         .all(user.sub);
 
       const allBets = rawDb
-        .query<{ bid: number }, [string]>(
-          `SELECT bid FROM history WHERE user_id = ? AND bid > 0`,
-        )
+        .query<
+          { bid: number },
+          [string]
+        >(`SELECT bid FROM history WHERE user_id = ? AND bid > 0`)
         .all(user.sub);
 
       const betRanges = [
@@ -136,14 +98,17 @@ export const historyRoute = new Elysia({ prefix: "/history" })
       }));
 
       const [summary] = rawDb
-        .query<{
-          totalPlayed: number;
-          totalWagered: number;
-          totalNet: number;
-          winRate: number;
-          biggestWin: number;
-          avgBet: number;
-        }, [string]>(
+        .query<
+          {
+            totalPlayed: number;
+            totalWagered: number;
+            totalNet: number;
+            winRate: number;
+            biggestWin: number;
+            avgBet: number;
+          },
+          [string]
+        >(
           `SELECT
             COUNT(*) AS totalPlayed,
             COALESCE(SUM(bid), 0) AS totalWagered,
@@ -170,10 +135,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
       };
     },
     {
-      detail: {
-        tags: ["history"],
-        summary: "Get gambling stats and charts data for current user",
-      },
+      requireAuth: true,
     },
   )
   .get(
@@ -209,9 +171,7 @@ export const historyRoute = new Elysia({ prefix: "/history" })
         LIMIT ?
       `;
 
-      const rows = rawDb
-        .query<LeaderboardRow, [number]>(sql_query)
-        .all(limit);
+      const rows = rawDb.query<LeaderboardRow, [number]>(sql_query).all(limit);
 
       return { data: rows };
     },
@@ -233,9 +193,5 @@ export const historyRoute = new Elysia({ prefix: "/history" })
           limit: t.Optional(t.Numeric()),
         }),
       ),
-      detail: {
-        tags: ["history"],
-        summary: "Get gambling leaderboard - ranked by total net profit",
-      },
     },
   );

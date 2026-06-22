@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/index.utils";
 import { ReactNode, useEffect, useState, memo } from "react";
 import { Button } from "../ui/button.component";
 import { X } from "lucide-react";
@@ -32,8 +32,7 @@ const ImageViewer = memo(function ImageViewer({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
-      if (e.key === "ArrowRight")
-        setIndex((i) => Math.min(i + 1, (src?.length ?? 1) - 1));
+      if (e.key === "ArrowRight") setIndex((i) => Math.min(i + 1, (src?.length ?? 1) - 1));
       if (e.key === "ArrowLeft") setIndex((i) => Math.max(i - 1, 0));
     };
     globalThis.addEventListener("keydown", onKey);
@@ -49,17 +48,12 @@ const ImageViewer = memo(function ImageViewer({
     <main
       className={cn(
         "fixed inset-0 z-99999 flex flex-col items-center justify-center p-2 transition-all duration-300",
-        open
-          ? "scale-100 opacity-100"
-          : "pointer-events-none scale-95 opacity-0",
+        open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
       )}
       data-image-viewer="true"
     >
       {/* BACKDROP */}
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur"
-        onClick={() => setOpen(false)}
-      />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur" onClick={() => setOpen(false)} />
 
       <div
         className={cn(
@@ -80,11 +74,7 @@ const ImageViewer = memo(function ImageViewer({
             {multi ? `Изображение [${index + 1} / ${src.length}]` : "Просмотр"}
           </span>
 
-          <Button
-            variant="ghost"
-            title="Закрыть"
-            onClick={() => setOpen(false)}
-          >
+          <Button variant="ghost" title="Закрыть" onClick={() => setOpen(false)}>
             <X />
           </Button>
         </section>
@@ -153,11 +143,7 @@ const ImageViewer = memo(function ImageViewer({
                 )}
                 disabled={i === index}
               >
-                <ImageComponent
-                  src={s}
-                  className="h-full w-full object-cover"
-                  alt=""
-                />
+                <ImageComponent src={s} className="h-full w-full object-cover" alt="" />
               </Button>
             ))}
           </section>
@@ -172,10 +158,7 @@ const ImageViewer = memo(function ImageViewer({
         <div
           role="button"
           onClick={() => setOpen(true)}
-          className={cn(
-            "flex w-full h-full opacity-85 hover:opacity-100",
-            triggerClassName,
-          )}
+          className={cn("flex w-full h-full opacity-85 hover:opacity-100", triggerClassName)}
         >
           {trigger}
         </div>

@@ -1,32 +1,35 @@
 import { Elysia, t } from "elysia";
-import { authPlugin } from "../plugins/auth.plugin";
-import { servicesPlugin } from "../services.server";
-import { dbPlugin } from "../plugins/db.plugin";
+import servicesPlugin from "@/services.server";
+import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 
-export const jackpotRoute = new Elysia({ prefix: "/utils/jackpot" })
-  .use(dbPlugin)
+export default new Elysia({ prefix: "/utils/jackpot" })
+  .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
 
-  .get(
-    "/",
-    async ({ jackpotService }) => {
-      return await jackpotService.getStatus();
-    },
-    {
-      detail: { tags: ["jackpot"], summary: "Get jackpot status" },
-    },
-  )
+  .get("/", async ({ jackpotService }) => {
+    return await jackpotService.getStatus();
+  })
 
   .post(
     "/play",
     async ({ body, headers, user, jackpotService }) => {
-      if (!user?.sub) return { error: "Unauthorized" };
-      const devMode = headers["x-dev-mode"] === "1" || (body as any)?.devMode;
-      return await jackpotService.play(user.sub, devMode, (body ?? {}) as any);
+      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true;
+      return await jackpotService.play(
+        user.sub,
+        devMode,
+        body.devForceWin !== undefined ||
+          body.devShowWinningNumber !== undefined
+          ? body
+          : undefined,
+      );
     },
     {
-      body: t.Object({}, { additionalProperties: true }),
-      detail: { tags: ["jackpot"], summary: "Play the jackpot game" },
+      requireAuth: true,
+      body: t.Object({
+        devMode: t.Optional(t.Boolean()),
+        devForceWin: t.Optional(t.Boolean()),
+        devShowWinningNumber: t.Optional(t.Boolean()),
+      }),
     },
   );

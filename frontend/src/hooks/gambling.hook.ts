@@ -1,18 +1,18 @@
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { fetchGamblingConfig } from "@/api/gambling.api";
 
 const FALLBACK_BID_OPTIONS = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50];
 
 export function useBidOptions() {
-  const [bidOptions, setBidOptions] = useState<number[]>(FALLBACK_BID_OPTIONS);
+  const { data } = useQuery({
+    queryKey: ["gamblingConfig"],
+    queryFn: () => fetchGamblingConfig(),
+    staleTime: Infinity,
+  });
 
-  useEffect(() => {
-    fetchGamblingConfig().then((c) => setBidOptions(c.bidOptions));
-  }, []);
-
-  return bidOptions;
+  return data?.bidOptions ?? FALLBACK_BID_OPTIONS;
 }
 
 export function useGamblingStore() {
