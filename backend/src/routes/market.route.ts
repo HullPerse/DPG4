@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, like, or, type SQL } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { withRecordMeta } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
@@ -18,10 +18,26 @@ export default new Elysia({ prefix: "/market" })
     async ({ db, query }) => {
       const limit = query.limit ? Math.min(Number(query.limit), 500) : 100;
       const offset = query.offset ? Number(query.offset) : 0;
+      const conditions: SQL[] = [];
 
-      const rows = await db
-        .select()
-        .from(schema.market)
+      if (query.search) {
+        conditions.push(
+          or(
+            like(schema.market.label, `%${query.search}%`),
+            like(schema.market.description, `%${query.search}%`),
+          )!,
+        );
+      }
+
+      const q =
+        conditions.length > 0
+          ? db
+              .select()
+              .from(schema.market)
+              .where(and(...conditions))
+          : db.select().from(schema.market);
+
+      const rows = await q
         .orderBy(desc(schema.market.created))
         .limit(limit)
         .offset(offset);

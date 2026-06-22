@@ -24,7 +24,7 @@ export interface Game extends RecordMeta {
 }
 
 export type GameData = {
-  id: number;
+  id: string;
   name: string;
   image: string;
   capsuleImage: string;

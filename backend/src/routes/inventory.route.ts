@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, desc, eq, not, type SQL } from "drizzle-orm";
+import { and, desc, eq, like, not, type SQL } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { nowIso, withRecordMeta } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
@@ -45,9 +45,9 @@ export default new Elysia({ prefix: "/inventory" })
         conditions.push(eq(schema.inventory.type, query.type));
       }
 
-      if (query.search) {
-        conditions.push(eq(schema.inventory.label, query.search));
-      }
+  if (query.search) {
+    conditions.push(like(schema.inventory.label, `%${query.search}%`));
+  }
 
       const q =
         conditions.length > 0

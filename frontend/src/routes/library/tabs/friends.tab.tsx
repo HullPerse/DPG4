@@ -28,7 +28,7 @@ function FriendsTab() {
   const [searchTerms, setSearchTerms] = useState<string>("");
 
   const { data, isLoading, isError, isFetching, refetch } = useQuery({
-    queryKey: ["friendsTab"],
+    queryKey: ["friendsTab", searchTerms],
     queryFn: async (): Promise<{
       users: User[];
       games: Game[];

@@ -15,11 +15,7 @@ export const useToastStore = create<ToastState>()((set) => ({
 
   addToast: (toast) =>
     set((state) => {
-      if (
-        toast &&
-        toast.id === "update" &&
-        state.toasts.some((t) => t.id === toast.id)
-      )
+      if (toast && state.toasts.some((t) => t.id === toast.id))
         return state;
 
       return {

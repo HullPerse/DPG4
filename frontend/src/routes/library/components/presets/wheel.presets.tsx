@@ -96,7 +96,7 @@ export default function PresetsWheel({ id }: { id: string }) {
       />
     );
 
-  const handleAddGame = async (id: number, type: "list" | "result") => {
+  const handleAddGame = async (id: string, type: "list" | "result") => {
     if (!time && isSteamPreset) {
       return setInput({
         enabled: true,
@@ -105,7 +105,7 @@ export default function PresetsWheel({ id }: { id: string }) {
       });
     }
 
-    const game = data?.games.find((game) => String(game.id) === String(id));
+    const game = data?.games.find((game) => game.id === id);
     if (!game) return;
 
     const gameData = {
@@ -137,7 +137,7 @@ export default function PresetsWheel({ id }: { id: string }) {
     });
   };
 
-  const visibleGames = data?.games.filter((game) => !hiddenGames.has(String(game.id))) ?? [];
+  const visibleGames = data?.games.filter((game) => !hiddenGames.has(game.id)) ?? [];
 
   return (
     <main className="flex flex-col gap-2 w-full h-full">
@@ -146,14 +146,14 @@ export default function PresetsWheel({ id }: { id: string }) {
         <Wheel
           key={[...hiddenGames].join(",")}
           list={visibleGames.map((game) => ({
-            id: String(game.id),
+            id: game.id,
             label: game.name,
             image: game.capsuleImage ?? "https://placehold.co/16x10",
             type: "image",
           }))}
           onResult={(item) => {
             return setResult(
-              data?.games.find((game) => Number(game.id) === Number(item?.id)) as GameData,
+              data?.games.find((game) => game.id === item?.id) as GameData,
             );
           }}
           free
@@ -272,19 +272,19 @@ export default function PresetsWheel({ id }: { id: string }) {
                   size="icon"
                   onClick={() => {
                     const next = new Set(hiddenGames);
-                    const id = String(item.id);
+                    const id = item.id;
                     if (next.has(id)) next.delete(id);
                     else next.add(id);
                     setHiddenGames(next);
                   }}
                 >
-                  {hiddenGames.has(String(item.id)) ? (
+                  {hiddenGames.has(item.id) ? (
                     <EyeIcon size={20} />
                   ) : (
                     <EyeOffIcon size={20} />
                   )}
                 </Button>
-                {input.enabled && input.type === "list" && input.id === String(item?.id) && (
+                {input.enabled && input.type === "list" && input.id === item?.id && (
                   <Input
                     type="text"
                     placeholder="Введите время"
