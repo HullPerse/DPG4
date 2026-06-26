@@ -310,7 +310,11 @@ export default new Elysia({ prefix: "/games" })
         .where(eq(schema.games.id, params.id))
 
       broadcast("games", "update", params.id)
-      logger.info(`voted on game ${params.id} user:${body.userId}`)
+      const [voter] = await db
+        .select({ username: schema.users.username })
+        .from(schema.users)
+        .where(eq(schema.users.id, body.userId))
+      logger.info(`voted on game ${params.id} user:${voter?.username ?? body.userId}`)
       return { ok: true }
     },
     { body: gameVoteBody },

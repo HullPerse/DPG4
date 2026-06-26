@@ -90,15 +90,19 @@ export default new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/add",
-    async ({ body, user, economyService }) => {
+    async ({ body, db, user, economyService }) => {
       const result = await economyService.addInventory(
         body.userId,
         body.itemId,
       );
+      const [targetUser] = await db
+        .select({ username: schema.users.username })
+        .from(schema.users)
+        .where(eq(schema.users.id, body.userId));
       logger
         .setAuthor(user?.username ?? "SYSTEM")
         .info(
-          `added item to inventory user:${body.userId} item:${body.itemId}`,
+          `added item to inventory user:${targetUser?.username ?? body.userId} item:${body.itemId}`,
         );
       return result;
     },
@@ -117,9 +121,15 @@ export default new Elysia({ prefix: "/inventory" })
         .set({ owner: body.newOwner, updated: nowIso() })
         .where(eq(schema.inventory.id, params.id));
       broadcast("inventory", "update", params.id);
+      const [newOwner] = await db
+        .select({ username: schema.users.username })
+        .from(schema.users)
+        .where(eq(schema.users.id, body.newOwner));
       logger
         .setAuthor(user?.username ?? "SYSTEM")
-        .info(`transferred inventory item ${params.id} to:${body.newOwner}`);
+        .info(
+          `transferred inventory item ${params.id} to:${newOwner?.username ?? body.newOwner}`,
+        );
       return { ok: true };
     },
     {

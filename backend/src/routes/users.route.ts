@@ -106,10 +106,11 @@ const usersRoute = new Elysia({ prefix: "/users" })
         >)
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
+      const updatedUser = await userService.getById(params.id);
       logger
         .setAuthor(String(user?.username))
-        .info(`updated profile ${params.id}`);
-      return userService.getById(params.id);
+        .info(`updated profile ${updatedUser?.username ?? params.id}`);
+      return updatedUser;
     },
     {
       body: t.Record(t.String(), t.Any()),
@@ -125,7 +126,9 @@ const usersRoute = new Elysia({ prefix: "/users" })
       );
       logger
         .setAuthor(String(user?.username))
-        .info(`changed status ${params.id} ${body.type}:${body.status}`);
+        .info(
+          `changed status ${result?.username ?? params.id} ${body.type}:${body.status}`,
+        );
       return result;
     },
     {
@@ -142,7 +145,7 @@ const usersRoute = new Elysia({ prefix: "/users" })
       logger
         .setAuthor(String(user?.username))
         .info(
-          `changed score ${params.id} ${body.score > 0 ? `+${body.score}` : String(body.score)}`,
+          `changed score ${result?.username ?? params.id} ${body.score > 0 ? `+${body.score}` : String(body.score)}`,
         );
       return result;
     },
@@ -163,7 +166,9 @@ const usersRoute = new Elysia({ prefix: "/users" })
       );
       logger
         .setAuthor(String(user?.username))
-        .info(`changed dice ${params.id} ${body.action}`);
+        .info(
+          `changed dice ${result?.username ?? params.id} ${body.action}`,
+        );
       return result;
     },
     {
@@ -180,16 +185,22 @@ const usersRoute = new Elysia({ prefix: "/users" })
     const result = await userService.updatePlace(params.id);
     logger
       .setAuthor(String(user?.username))
-      .info(`assigned place ${params.id}`);
+      .info(`assigned place ${result?.username ?? params.id}`);
     return result;
   })
   .delete("/:id/place", async ({ params, db, user, userService }) => {
+    const [targetUser] = await db
+      .select({ username: schema.users.username })
+      .from(schema.users)
+      .where(eq(schema.users.id, params.id));
     await db
       .update(schema.users)
       .set({ place: "0", updated: nowIso() })
       .where(eq(schema.users.id, params.id));
     broadcast("users", "update", params.id);
-    logger.setAuthor(String(user?.username)).info(`cleared place ${params.id}`);
+    logger
+      .setAuthor(String(user?.username))
+      .info(`cleared place ${targetUser?.username ?? params.id}`);
     return userService.getById(params.id);
   });
 

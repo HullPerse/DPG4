@@ -130,7 +130,7 @@ export default new Elysia({ prefix: "/quests" })
         .where(eq(schema.quests.id, params.id));
       if (!quest) return { error: "Quest not found" };
       const claimed = quest.claimed as string[];
-      if (claimed.includes(String(user.id)))
+      if (claimed.includes(String(user.sub)))
         return { error: "Already claimed" };
       const rewards = quest.reward as {
         type: string;
@@ -138,21 +138,21 @@ export default new Elysia({ prefix: "/quests" })
       }[];
       for (const reward of rewards) {
         if (reward.type === "money") {
-          await userService.score(String(user.id), Number(reward.value));
+          await userService.score(String(user.sub), Number(reward.value));
         } else if (reward.type === "item") {
           await economyService.addInventory(
-            String(user.id),
+            String(user.sub),
             String(reward.value),
           );
         }
       }
       await db
         .update(schema.quests)
-        .set({ claimed: [...claimed, String(user.id)], updated: nowIso() })
+        .set({ claimed: [...claimed, String(user.sub)], updated: nowIso() })
         .where(eq(schema.quests.id, params.id));
       broadcast("quests", "claim", params.id);
-      broadcast("users", "update", user.id);
-      broadcast("inventory", "add", user.id);
+      broadcast("users", "update", user.sub);
+      broadcast("inventory", "add", user.sub);
       logger
         .setAuthor(String(user.username))
         .info(`claimed quest ${params.id}`);

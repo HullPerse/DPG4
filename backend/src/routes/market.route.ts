@@ -101,7 +101,7 @@ export default new Elysia({ prefix: "/market" })
   )
   .post(
     "/:id/buy",
-    async ({ params, body, economyService, user, set }) => {
+    async ({ params, body, db, economyService, user, set }) => {
       if (user.sub !== body.newOwnerId) {
         set.status = 403;
         return { error: "Cannot buy on behalf of another user" };
@@ -111,7 +111,13 @@ export default new Elysia({ prefix: "/market" })
         body.newOwnerId,
         body.oldOwnerId,
       );
-      logger.info(`bought market item ${params.id} buyer:${body.newOwnerId}`);
+      const [buyer] = await db
+        .select({ username: schema.users.username })
+        .from(schema.users)
+        .where(eq(schema.users.id, body.newOwnerId));
+      logger.info(
+        `bought market item ${params.id} buyer:${buyer?.username ?? body.newOwnerId}`,
+      );
       return result;
     },
     {

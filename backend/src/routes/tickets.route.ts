@@ -336,7 +336,9 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
       broadcast("market", "delete", params.id);
       logger
         .setAuthor(String(user?.username))
-        .info(`bought ${quantity} tickets from ${sellerId}`);
+        .info(
+          `bought ${quantity} tickets from ${sellerRow?.username ?? sellerId}`,
+        );
 
       return {
         ok: true,

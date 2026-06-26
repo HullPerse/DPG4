@@ -9,7 +9,7 @@ export default new Elysia({ prefix: "/trade" })
   .use(authPlugin)
   .post(
     "/",
-    async ({ body, economyService, user, set }) => {
+    async ({ body, economyService, user, userService, set }) => {
       if (user.sub !== body.currentUser.id) {
         set.status = 403;
         return { error: "Unauthorized" };
@@ -18,8 +18,12 @@ export default new Elysia({ prefix: "/trade" })
         body.currentUser,
         body.otherUser,
       );
+      const [currentUser, otherUser] = await Promise.all([
+        userService.getById(body.currentUser.id),
+        userService.getById(body.otherUser.id),
+      ]);
       logger.info(
-        `trade completed ${body.currentUser.id} <-> ${body.otherUser.id}`,
+        `trade completed ${currentUser?.username ?? body.currentUser.id} <-> ${otherUser?.username ?? body.otherUser.id}`,
       );
       return result;
     },
