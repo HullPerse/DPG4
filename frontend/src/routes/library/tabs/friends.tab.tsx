@@ -28,7 +28,7 @@ function FriendsTab() {
   const [searchTerms, setSearchTerms] = useState<string>("");
 
   const { data, isLoading, isError, isFetching, refetch } = useQuery({
-    queryKey: ["friendsTab", searchTerms],
+    queryKey: ["friendsTab"],
     queryFn: async (): Promise<{
       users: User[];
       games: Game[];
@@ -37,7 +37,7 @@ function FriendsTab() {
       const allIds = await userApi.getAllIds();
 
       const [users, games, chats] = await Promise.all([
-        userApi.getUsers({ search: searchTerms || undefined }),
+        userApi.getUsers(),
         gameApi.getLastGame(allIds.map((player) => player.id)),
         chatApi.getUnreadByReceiver(String(currentUser?.id)),
       ]);
@@ -84,9 +84,15 @@ function FriendsTab() {
         onChange={(e) => setSearchTerms(e.target.value)}
       />
       <section className="flex flex-wrap gap-2 overflow-y-auto w-full pb-2 items-start justify-start">
-        {data?.users.map((user) => {
-          const game = data.games.find((g) => g.user.id === user.id);
-          const unread = data.chats?.filter((c) => c.data.sender.id === user.id);
+        {(data?.users ?? [])
+          .filter(
+            (user) =>
+              !searchTerms ||
+              user.username.toUpperCase().includes(searchTerms.toUpperCase()),
+          )
+          .map((user) => {
+          const game = (data?.games ?? []).find((g) => g.user.id === user.id);
+          const unread = (data?.chats ?? []).filter((c) => c.data.sender.id === user.id);
 
           return (
             <button
