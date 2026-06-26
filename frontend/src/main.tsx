@@ -11,11 +11,24 @@ import { QueryConfig } from "@/config/query.config";
 import { ToastContainer } from "./components/ui/toast.component";
 import { ADMIN_RELOAD_EVENT } from "@/lib/reload.utils";
 import { ErrorBoundary } from "./components/ui/boundary.error";
+import { useToastStore } from "./store/toast.store";
 
 const queryClient = new QueryClient(QueryConfig);
 
 window.addEventListener(ADMIN_RELOAD_EVENT, () => {
   void queryClient.invalidateQueries();
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  const msg = e.reason?.message ?? String(e.reason);
+  useToastStore.getState().addToast({
+    id: crypto.randomUUID(),
+    author: "Ошибка",
+    text: msg,
+    type: "emoji",
+    image: "⚠️",
+    created: new Date().toISOString(),
+  } as any);
 });
 
 await initializeAuthStore();

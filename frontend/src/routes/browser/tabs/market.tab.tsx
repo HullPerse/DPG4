@@ -25,9 +25,9 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   const [inputDiscount, setInputDiscount] = useState<string>("");
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["marketTab", searchTerms],
+    queryKey: ["marketTab"],
     queryFn: async (): Promise<Market[]> => {
-      return await itemsApi.getMarket(searchTerms || undefined);
+      return await itemsApi.getMarket();
     },
   });
 
@@ -95,7 +95,13 @@ function MarketBrowser({ searchTerms }: { searchTerms: string }) {
       />
     );
 
-  const filteredItems = data ?? [];
+  const filteredItems = (data ?? []).filter(
+    (item) =>
+      !searchTerms ||
+      item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
+      item.description.toUpperCase().includes(searchTerms.toUpperCase()) ||
+      item.owner.username.toUpperCase().includes(searchTerms.toUpperCase()),
+  );
 
   const isLoadingIndex = (index: number) =>
     marketMutation.isPending && marketMutation.variables?.index === index;

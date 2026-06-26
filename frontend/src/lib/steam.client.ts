@@ -11,7 +11,7 @@ type SteamAppPayload = {
 
 export function mapFamilyApps(apps: FamilyGame[]): GameData[] {
   return apps.map((g) => ({
-    id: g.appid,
+    id: String(g.appid),
     name: g.name,
     image: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,
     capsuleImage: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/header.jpg`,

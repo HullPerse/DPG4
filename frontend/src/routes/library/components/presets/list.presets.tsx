@@ -72,7 +72,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
         (item) =>
           !searchTerms ||
           item.name.toUpperCase().includes(searchTerms.toUpperCase()) ||
-          item.id.toString().includes(searchTerms),
+          item.id.includes(searchTerms),
       )
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [data?.games, searchTerms]);
@@ -99,7 +99,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
       />
     );
 
-  const handleAddGame = async (id: number) => {
+  const handleAddGame = async (id: string) => {
     if (!time && isSteamPreset) {
       return setInput({
         enabled: true,
@@ -107,7 +107,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
       });
     }
 
-    const game = data?.games.find((game) => String(game.id) === String(id));
+    const game = data?.games.find((game) => game.id === id);
     if (!game) return;
 
     const gameData = {
@@ -212,7 +212,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
                 title="Добавить в библиотеку"
                 variant="success"
                 size="icon"
-                onClick={async () => await handleAddGame(Number(item?.id))}
+                onClick={async () => await handleAddGame(item.id)}
                 disabled={input.enabled && input.id === String(item?.id) && !time}
               >
                 <Plus />
@@ -225,7 +225,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
                   (!isAdmin && !data?.label?.includes(String(user?.username))) || isSteamPreset
                 }
                 onClick={async () => {
-                  await gameApi.removePresetGame(String(data?.id), Number(item?.id));
+                  await gameApi.removePresetGame(String(data?.id), item.id);
                 }}
               >
                 <Trash />

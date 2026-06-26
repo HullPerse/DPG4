@@ -83,7 +83,7 @@ export default function SteamLibrary({
         score,
         status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
         data: {
-          id: Number(appId),
+          id: appId,
           name: game.game.name,
           image: game.library_image,
           capsuleImage: game.game.capsule_image,

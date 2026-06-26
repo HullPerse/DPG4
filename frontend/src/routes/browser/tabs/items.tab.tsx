@@ -46,11 +46,10 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["itemsWheel", searchTerms],
+    queryKey: ["itemsWheel"],
     queryFn: async (): Promise<{ items: Item[]; users: User[] }> => {
       const items = await itemsApi.getItems({
         rollable: true,
-        search: searchTerms || undefined,
       });
       const users = await userApi.getAllUsers();
 
@@ -76,13 +75,20 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
 
   const listRef = useRef<HTMLDivElement>(null);
 
+  const listItems = (data?.items ?? []).filter(
+    (item) =>
+      !searchTerms ||
+      item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
+      item.description.toUpperCase().includes(searchTerms.toUpperCase()),
+  );
+
   const virtualizer = useVirtualizer({
-    count: data?.items.length ?? 0,
+    count: listItems.length,
     getScrollElement: () => listRef.current,
     estimateSize: () => 128,
     overscan: 8,
     gap: 8,
-    getItemKey: (index) => data?.items[index]?.id ?? index,
+    getItemKey: (index) => listItems[index]?.id ?? index,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -260,7 +266,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       >
         <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualItem) => {
-            const item = data.items[virtualItem.index];
+            const item = listItems[virtualItem.index];
             if (!item) return null;
 
             return (

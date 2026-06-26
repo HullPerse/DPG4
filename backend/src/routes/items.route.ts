@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { and, asc, desc, eq, inArray, not, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, not, sql, type SQL } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
 import { newId, nowIso, withRecordMeta } from "@/lib/index.utils";
 import { parseFileInput } from "@/lib/files.utils";
@@ -68,7 +68,7 @@ function buildItemConditions(query: Record<string, string | undefined>): SQL[] {
   }
 
   if (query.search) {
-    conditions.push(eq(schema.items.label, query.search));
+    conditions.push(like(schema.items.label, `%${query.search}%`));
   }
 
   return conditions;

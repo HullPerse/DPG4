@@ -77,7 +77,7 @@ export default function CustomLibrary({
         status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
         score,
         data: {
-          id: Number(`${Date.now()}-${name}`),
+          id: `${Date.now()}-${name}`,
           name: name,
           image: headerImage,
           capsuleImage: headerImage,

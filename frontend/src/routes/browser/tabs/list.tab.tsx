@@ -61,16 +61,15 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
   };
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["listTab", searchTerms, sortMethod, sortDirection],
+    queryKey: ["listTab", sortMethod, sortDirection],
     queryFn: async ({ signal }): Promise<{ items: Item[]; users: User[] }> => {
       const [items, users] = await Promise.all([
         itemsApi.getItems({
-          search: searchTerms || undefined,
           sort: sortFieldMap[sortMethod] as "label" | "created" | "charge" | "type",
           order: sortDirection,
           signal,
         }),
-        usersApi.getUsers({ search: searchTerms || undefined, signal }),
+        usersApi.getUsers({ signal }),
       ]);
       return { items, users };
     },
@@ -79,15 +78,26 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
 
   const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: ["listTab", searchTerms, sortMethod, sortDirection],
+      queryKey: ["listTab", sortMethod, sortDirection],
       refetchType: "active",
     });
-  }, [queryClient, searchTerms, sortMethod, sortDirection]);
+  }, [queryClient, sortMethod, sortDirection]);
 
   useSubscription("items", invalidateQuery);
   useSubscription("users", invalidateQuery);
 
-  const filteredItems = data?.items ?? [];
+  const filteredItems = (data?.items ?? []).filter(
+    (item) =>
+      !searchTerms ||
+      item.label.toUpperCase().includes(searchTerms.toUpperCase()) ||
+      item.description.toUpperCase().includes(searchTerms.toUpperCase()),
+  );
+
+  const filteredUsers = (data?.users ?? []).filter(
+    (user) =>
+      !searchTerms ||
+      user.username.toUpperCase().includes(searchTerms.toUpperCase()),
+  );
 
   const listRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -140,7 +150,7 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {data?.users?.map((item, index) => (
+                      {filteredUsers.map((item, index) => (
                         <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}

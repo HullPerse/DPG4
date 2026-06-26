@@ -31,7 +31,7 @@ function WordleTab() {
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ["wordleTab", user?.id],
     queryFn: async (): Promise<WordleType> => {
       if (!user) return { streak: 0, word: null };
@@ -39,7 +39,7 @@ function WordleTab() {
       return {
         streak: await getStreak(user?.id),
         word: user?.hangman
-          ? await getHangman(user.id)
+          ? (await getHangman(user.id)) ?? (await joinHangman(user.id))
           : await joinHangman(user.id),
       };
     },
@@ -104,7 +104,7 @@ function WordleTab() {
 
       await playHangman(uid, won, [...guessedRef.current], [...wrongRef.current]);
       if (won) await userApi.scoreUser(uid, 5);
-      await userApi.changeHangman(uid, true);
+      await userApi.changeHangman(uid, false);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hangmanStreak", user?.id] });
@@ -192,7 +192,7 @@ function WordleTab() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [status, wordUpper, handleGuess]);
 
-  if (isLoading) return <WindowLoader />;
+  if (isLoading || isFetching) return <WindowLoader />;
   if (isError) {
     return (
       <WindowError
