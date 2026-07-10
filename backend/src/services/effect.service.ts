@@ -465,7 +465,7 @@ export default class EffectService {
             inv.charge,
             -1,
           );
-        return `${user.username} потреля ${finalItem.label}, но получил доп. кубик`;
+        return `${user.username} петерял ${finalItem.label}, но получил доп. кубик`;
       },
       "Крыса гой": async ({ userId }) => {
         const user = await this.getUser(userId);

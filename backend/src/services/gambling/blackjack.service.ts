@@ -115,7 +115,7 @@ export default class BlackjackService {
       payout,
       net: -game.bid + payout,
       label,
-      tone,
+      tone: tone as "win" | "lose" | "jackpot" | "chance",
       banned,
     });
   }

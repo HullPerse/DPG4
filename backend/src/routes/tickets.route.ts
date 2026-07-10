@@ -11,7 +11,7 @@ import JackpotService from "@/services/gambling/jackpot.service";
 
 const logger = new Logger("TICKETS");
 
-const MAX_TICKETS_PER_DAY = 100;
+const MAX_TICKETS_PER_DAY = 250;
 const TICKET_PRICE = 1;
 const MIN_TICKETS_PER_SALE = 5;
 const TICKET_ITEM_LABEL = "Тикет";
@@ -70,7 +70,13 @@ export default new Elysia({ prefix: "/utils" })
 
   .post(
     "/tickets/buy",
-    async ({ body, user, db, economyService: _economyService, userService: _userService }) => {
+    async ({
+      body,
+      user,
+      db,
+      economyService: _economyService,
+      userService: _userService,
+    }) => {
       const [userRow] = await db
         .select()
         .from(schema.users)
