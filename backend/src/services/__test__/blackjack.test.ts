@@ -292,7 +292,7 @@ describe("BlackjackService", () => {
   test("gambling ban triggers on big win", async () => {
     const lowUser = await createUser(db, {
       money: 100,
-      gamblingWinnings: 95,
+      gamblingWinnings: 995,
       gamblingBanned: false,
     });
     let state = await services.blackjackService.deal(lowUser.id, 10);

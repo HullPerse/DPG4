@@ -26,13 +26,12 @@ export default function MenuTabletop() {
           {user.currentAction === "MOVE_POSITIVE" && user.position === 101 ? (
             <Button
               variant="success"
-              onClick={async () => {
-                //remove crown
-                await usersApi.removePlace(String(user.id));
-                //give money
-                await usersApi.scoreUser(String(user.id), 33);
-                //move user
-                await usersApi.moveUser(String(user.id), 0);
+                onClick={async () => {
+                  await usersApi.removePlace(String(user.id));
+                  const keptMoney = 10 + Math.floor(Math.random() * 11);
+                  await usersApi.scoreUser(String(user.id), keptMoney);
+                  await usersApi.restart(String(user.id));
+                  await usersApi.moveUser(String(user.id), 0);
               }}
             >
               К началу

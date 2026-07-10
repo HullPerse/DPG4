@@ -9,7 +9,6 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   height?: number;
   quality?: number;
   type?: "cover" | "contain";
-  placeholder?: string | false;
 }
 
 const Image = ({
@@ -20,12 +19,10 @@ const Image = ({
   height,
   type = "cover",
   quality = 80,
-  placeholder = "https://placehold.co/400x600",
   ...props
 }: ImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageSrc, setImageSrc] = useState(src);
-  const [usedFallback, setUsedFallback] = useState(false);
 
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -45,7 +42,6 @@ const Image = ({
 
   useEffect(() => {
     setImageSrc(src);
-    setUsedFallback(false);
     setIsLoaded(false);
   }, [src]);
 
@@ -56,12 +52,6 @@ const Image = ({
   }, [imageSrc]);
 
   const handleError = () => {
-    if (!usedFallback && placeholder !== false) {
-      setUsedFallback(true);
-      setImageSrc(placeholder || "https://placehold.co/400x600");
-      setIsLoaded(false);
-      return;
-    }
     setImageSrc("");
   };
 

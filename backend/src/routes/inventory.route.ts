@@ -99,10 +99,14 @@ export default new Elysia({ prefix: "/inventory" })
         .select({ username: schema.users.username })
         .from(schema.users)
         .where(eq(schema.users.id, body.userId));
+      const [addedItem] = await db
+        .select({ label: schema.items.label })
+        .from(schema.items)
+        .where(eq(schema.items.id, body.itemId));
       logger
         .setAuthor(user?.username ?? "SYSTEM")
         .info(
-          `added item to inventory user:${targetUser?.username ?? body.userId} item:${body.itemId}`,
+          `added item to inventory user:${targetUser?.username ?? body.userId} item:${addedItem?.label ?? body.itemId}`,
         );
       return result;
     },
@@ -116,6 +120,10 @@ export default new Elysia({ prefix: "/inventory" })
   .post(
     "/:id/transfer",
     async ({ params, body, db, user }) => {
+      const [transferred] = await db
+        .select({ label: schema.inventory.label })
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
       await db
         .update(schema.inventory)
         .set({ owner: body.newOwner, updated: nowIso() })
@@ -128,7 +136,7 @@ export default new Elysia({ prefix: "/inventory" })
       logger
         .setAuthor(user?.username ?? "SYSTEM")
         .info(
-          `transferred inventory item ${params.id} to:${newOwner?.username ?? body.newOwner}`,
+          `transferred inventory item ${transferred?.label ?? params.id} to:${newOwner?.username ?? body.newOwner}`,
         );
       return { ok: true };
     },
@@ -140,11 +148,15 @@ export default new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/use",
-    async ({ params, user, effectService }) => {
+    async ({ params, user, effectService, db }) => {
       const result = await effectService.executeUse(user.sub, params.id);
+      const [usedItem] = await db
+        .select({ label: schema.inventory.label })
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
       logger
         .setAuthor(String(user.username))
-        .info(`used inventory item ${params.id}`);
+        .info(`used inventory item ${usedItem?.label ?? params.id}`);
       return result;
     },
     {
@@ -153,16 +165,20 @@ export default new Elysia({ prefix: "/inventory" })
   )
   .post(
     "/:id/charge",
-    async ({ params, body, user, economyService }) => {
+    async ({ params, body, user, economyService, db }) => {
       const result = await economyService.chargeInventory(
         params.id,
         body.oldCharge,
         body.newCharge,
       );
+      const [chargedItem] = await db
+        .select({ label: schema.inventory.label })
+        .from(schema.inventory)
+        .where(eq(schema.inventory.id, params.id));
       logger
         .setAuthor(user?.username ?? "SYSTEM")
         .info(
-          `charged inventory item ${params.id} ${body.oldCharge}->${body.newCharge}`,
+          `charged inventory item ${chargedItem?.label ?? params.id} ${body.oldCharge}->${body.newCharge}`,
         );
       return result;
     },
@@ -210,7 +226,7 @@ export default new Elysia({ prefix: "/inventory" })
       });
       logger
         .setAuthor(String(user.username))
-        .info(`consumed inventory item ${params.id}`);
+        .info(`consumed inventory item ${inv.label}`);
       return { ok: true };
     },
     {
@@ -244,7 +260,7 @@ export default new Elysia({ prefix: "/inventory" })
       broadcast("inventory", "delete", params.id);
       logger
         .setAuthor(user?.username ?? "SYSTEM")
-        .info(`deleted inventory item ${params.id}`);
+        .info(`deleted inventory item ${inv?.label ?? params.id}`);
       return { ok: true };
     },
     { params: t.Object({ id: t.String() }) },

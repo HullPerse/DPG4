@@ -98,6 +98,67 @@ export default new Elysia({ prefix: "/steam" })
     },
   )
   .get(
+    "/search/:term",
+    async ({ params }) => {
+      const url = `https://store.steampowered.com/api/storesearch?term=${encodeURIComponent(params.term)}&l=english&cc=US`;
+      const res = await fetch(url);
+      const data = (await res.json()) as {
+        items?: { id: number; name: string; tiny_image: string }[];
+        total?: number;
+      };
+      return (data.items ?? []).slice(0, 10).map((item) => ({
+        appid: item.id,
+        name: item.name,
+        image: item.tiny_image
+          ? `https://steamcdn-a.akamaihd.net/steam/apps/${item.id}/header.jpg`
+          : "",
+      }));
+    },
+    {
+      params: t.Object({ term: t.String() }),
+    },
+  )
+  .get(
+    "/achievements/:appId/:steamId",
+    async ({ params, set }) => {
+      try {
+        const key = steamKey();
+        const url = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${params.appId}&steamid=${params.steamId}&key=${key}`;
+        const res = await fetch(url);
+        const data = (await res.json()) as {
+          playerstats?: {
+            gameName?: string;
+            achievements?: {
+              apiname: string;
+              achieved: number;
+              unlocktime: number;
+              name: string;
+              description: string;
+            }[];
+            success?: boolean;
+          };
+        };
+        if (!data.playerstats?.success || !data.playerstats?.achievements) {
+          set.status = 404;
+          return { error: "No achievements found" };
+        }
+        return {
+          gameName: data.playerstats.gameName,
+          achievements: data.playerstats.achievements,
+        };
+      } catch (e: unknown) {
+        set.status = 502;
+        return { error: e instanceof Error ? e.message : "Steam API error" };
+      }
+    },
+    {
+      params: t.Object({
+        appId: t.String(),
+        steamId: t.String(),
+      }),
+    },
+  )
+  .get(
     "/app/:appId",
     async ({ params, set }) => {
       try {

@@ -166,7 +166,6 @@ function Review({
                     alt={title}
                     loading="lazy"
                     type="contain"
-                    placeholder={false}
                   />
                 }
               />

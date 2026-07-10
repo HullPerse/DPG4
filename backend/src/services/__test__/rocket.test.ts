@@ -170,7 +170,7 @@ describe("RocketService", () => {
   test("gambling ban triggers on cashout with big winnings", async () => {
     const winUser = await createUser(db, {
       money: 100,
-      gamblingWinnings: 95,
+      gamblingWinnings: 995,
       gamblingBanned: false,
     });
     seedRandom([0.6]);

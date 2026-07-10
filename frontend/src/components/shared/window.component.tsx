@@ -107,22 +107,24 @@ const Window = memo(function Window(props: WindowProps) {
   }, [props.position, props.size]);
 
   //handle window resize to prevent overflow
+  const windowSizeRef = useRef(windowSize);
+  windowSizeRef.current = windowSize;
+
   useEffect(() => {
     const handleWindowResize = () => {
       setWindowSize((prevSize) => {
         const clampedWidth = Math.min(prevSize.width, window.innerWidth);
         const clampedHeight = Math.min(prevSize.height, window.innerHeight);
-
         if (clampedWidth !== prevSize.width || clampedHeight !== prevSize.height) {
           return { width: clampedWidth, height: clampedHeight };
         }
         return prevSize;
       });
 
-      // prevent window overflow
       setPosition((prevPos) => {
-        const maxX = Math.max(0, window.innerWidth - windowSize.width);
-        const maxY = Math.max(0, window.innerHeight - windowSize.height);
+        const currentSize = windowSizeRef.current;
+        const maxX = Math.max(0, window.innerWidth - currentSize.width);
+        const maxY = Math.max(0, window.innerHeight - currentSize.height);
         return {
           x: Math.min(Math.max(0, prevPos.x), maxX),
           y: Math.min(Math.max(0, prevPos.y), maxY),
@@ -132,7 +134,7 @@ const Window = memo(function Window(props: WindowProps) {
 
     window.addEventListener("resize", handleWindowResize);
     return () => window.removeEventListener("resize", handleWindowResize);
-  }, [windowSize.width, windowSize.height]);
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {

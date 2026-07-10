@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/select.component";
 import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
-import { Search } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Search, Gamepad2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import GameApi from "@/api/games.api";
 import UserApi from "@/api/user.api";
 import Image from "@/components/shared/image.component";
@@ -63,8 +63,35 @@ export default function SteamLibrary({
   const [realTime, setRealTime] = useState("");
 
   const [game, setGame] = useState<any>();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<{ appid: number; name: string; image: string }[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchTerm.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+      const results = await gameApi.searchSteam(searchTerm);
+      setSearchResults(results);
+      setShowResults(results.length > 0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const gameMutation = useMutation({
     mutationFn: async () => {
@@ -116,9 +143,42 @@ export default function SteamLibrary({
   return (
     <main className="flex h-full w-full flex-row items-center">
       <section className="flex h-full w-1/2 flex-col gap-2 px-1">
-        <div className="flex flex-row items-center justify-center gap-1">
+        <div className="relative" ref={searchRef}>
           <Input
             autoFocus
+            type="text"
+            placeholder="Поиск по названию"
+            className="h-12"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowResults(true);
+            }}
+          />
+          {showResults && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 z-50 mt-1 w-full max-h-60 overflow-y-auto rounded border border-highlight-medium bg-background shadow-sharp">
+              {searchResults.map((r) => (
+                <button
+                  key={r.appid}
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-highlight-low"
+                  onClick={() => {
+                    setAppId(String(r.appid));
+                    setSearchTerm(r.name);
+                    setShowResults(false);
+                    gameApi.getSteamGame(String(r.appid)).then((res) => {
+                      if (res) setGame(res as any);
+                    });
+                  }}
+                >
+                  <Gamepad2 className="size-4 shrink-0" />
+                  <span className="truncate">{r.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-row items-center justify-center gap-1">
+          <Input
             type="number"
             placeholder="ID игры"
             className="h-12"
@@ -134,7 +194,7 @@ export default function SteamLibrary({
                 const result = await gameApi.getSteamGame(appId);
                 if (result) setGame(result as any);
               } catch (e) {
-                console.log(e);
+                console.error("Steam search error:", e);
               } finally {
                 setSearchLoading(false);
               }

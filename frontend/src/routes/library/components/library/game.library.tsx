@@ -6,7 +6,9 @@ import { memo, RefObject, startTransition, useCallback, useEffect, useMemo, useS
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import {
+  Award,
   Calendar,
+  Gamepad2,
   NetworkIcon,
   NotebookPen,
   RussianRuble,
@@ -34,6 +36,7 @@ import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
+import { useUserStore } from "@/store/user.store";
 import { unbanDice } from "@/api/gambling.api";
 
 const gameApi = new GameApi();
@@ -46,10 +49,12 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
   const noAction = useDataStore((state) => state.noAction);
+  const currentUser = useUserStore((state) => state.user);
 
   const [content, setContent] = useState<"general" | "review">("general");
   const [time, setTime] = useState<string | null>(null);
   const [input, setInput] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   const clickAwayRef = useClickAway((e: Event) => {
     const target = e.target as HTMLElement;
@@ -74,6 +79,25 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       return { game, user };
     },
     staleTime: 0,
+  });
+
+  const appId = useMemo(() => {
+    const link = data?.game?.data.steamLink;
+    if (!link) return null;
+    const match = link.match(/\/app\/(\d+)/);
+    return match ? match[1] : null;
+  }, [data]);
+
+  const { data: achievements } = useQuery({
+    queryKey: ["steamAchievements", appId, currentUser?.steam],
+    queryFn: async () => {
+      if (!appId || !currentUser?.steam) return null;
+      const steamId = await gameApi.resolveVanityUrl(currentUser.steam);
+      if (!steamId) return null;
+      return gameApi.getSteamAchievements(appId, steamId);
+    },
+    enabled: !!appId && !!currentUser?.steam,
+    staleTime: 5 * 60 * 1000,
   });
 
   const invalidateQuery = useCallback(() => {
@@ -390,9 +414,21 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
                       src={`${data?.game?.data.websiteLink}/favicon.ico`}
                       alt={String(data?.game?.data.name)}
                       className="min-w-9 min-h-9 w-9 h-9"
-                      placeholder="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzgXzfBFgv7VWysFmLfdftxjY_Hh0MmlFXaA&s"
                     />
                   )}
+                </Button>
+              )}
+              {data?.game?.data.steamLink && (
+                <Button
+                  variant="ghost"
+                  title="Запустить через Steam"
+                  className="items-center justify-center w-10 h-10 border rounded self-center"
+                  onClick={() => {
+                    if (!appId) return;
+                    openUrl(`steam://run/${appId}`);
+                  }}
+                >
+                  <Gamepad2 className="size-5" />
                 </Button>
               )}
               {data?.game?.data.steamLink && (
@@ -426,6 +462,35 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       {/* BODY */}
       <section className="relative flex flex-col h-full w-full p-2 overflow-y-auto">
         {contentComponent}
+
+        {achievements && achievements.achievements.length > 0 && (
+          <div className="mt-2 border-t border-highlight-medium pt-2">
+            <Button
+              variant="link"
+              className="w-full justify-between text-text"
+              onClick={() => setShowAchievements(!showAchievements)}
+            >
+              <span className="flex items-center gap-2">
+                <Award className="size-4" />
+                Достижения Steam ({achievements.achievements.filter((a) => a.achieved).length}/{achievements.achievements.length})
+              </span>
+              <span>{showAchievements ? "▲" : "▼"}</span>
+            </Button>
+            {showAchievements && (
+              <div className="mt-1 grid grid-cols-2 gap-1">
+                {achievements.achievements.map((a) => (
+                  <div
+                    key={a.apiname}
+                    className={`flex flex-col gap-0.5 rounded border p-1.5 text-xs ${a.achieved ? "border-highlight-medium" : "border-highlight-low opacity-50"}`}
+                  >
+                    <span className="font-bold">{a.name}</span>
+                    {a.description && <span className="text-text/60">{a.description}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </main>
   );

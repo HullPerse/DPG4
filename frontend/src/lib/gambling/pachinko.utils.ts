@@ -64,25 +64,3 @@ export function randomDropOffsetX(): number {
 }
 
 export const RISK_GATE_THRESHOLD = 3;
-
-let zaInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startZawa(callback: (text: string) => void) {
-  const chars = ["ザ", "ワ", "ゾ", "ズ", "ド", "バ", "ギ"];
-  stopZawa();
-  zaInterval = setInterval(() => {
-    const len = 4 + Math.floor(Math.random() * 6);
-    let t = "";
-    for (let i = 0; i < len; i++) {
-      t += chars[Math.floor(Math.random() * chars.length)];
-    }
-    callback(t);
-  }, 120);
-}
-
-export function stopZawa() {
-  if (zaInterval) {
-    clearInterval(zaInterval);
-    zaInterval = null;
-  }
-}

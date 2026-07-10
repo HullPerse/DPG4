@@ -17,8 +17,6 @@ import {
   getSlotWidths,
   randomDropOffsetX,
   slotColor,
-  startZawa,
-  stopZawa,
   RISK_GATE_THRESHOLD,
   type PachinkoUiResult,
 } from "@/lib/gambling/pachinko.utils";
@@ -63,9 +61,7 @@ function PachinkoTab() {
   const [showKickButton, setShowKickButton] = useState(false);
   const kickPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Kaiji additions
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [zawaText, setZawaText] = useState("");
   const [shakeIntensity, setShakeIntensity] = useState(0);
   const [settleTrigger, setSettleTrigger] = useState(0);
   const [riskGateActive, setRiskGateActive] = useState(false);
@@ -92,7 +88,6 @@ function PachinkoTab() {
       setGameState(state);
       setDropKey((k) => k + 1);
       useUserStore.setState({ user: { ...useUserStore.getState().user!, tickets: state.balance } });
-      startZawa(setZawaText);
     },
     onError: () => {
       setGameState(IDLE_STATE);
@@ -120,7 +115,6 @@ function PachinkoTab() {
           setDropKey((k) => k + 1);
           setStartX(randomDropOffsetX());
           settlingRef.current = false;
-          startZawa(setZawaText);
         }
       })
       .catch(() => {});
@@ -168,8 +162,6 @@ function PachinkoTab() {
     async (slotIndexes: number[]) => {
       if (!user || settlingRef.current || gameStateRef.current.phase !== "dropping") return;
       settlingRef.current = true;
-      stopZawa();
-      setZawaText("");
 
       const clamped = slotIndexes.map((raw) =>
         Math.max(0, Math.min(PACHINKO_SLOT_MULTIPLIERS.length - 1, Math.floor(raw))),
@@ -318,8 +310,7 @@ function PachinkoTab() {
               ratAmount={ratAmount}
               countdown={countdown}
               onCountdownEnd={handleCountdownEnd}
-              zawaText={zawaText}
-              showRiskGate={riskGateActive || (showRiskGatePrompt && riskGateChoice === null)}
+               showRiskGate={riskGateActive || (showRiskGatePrompt && riskGateChoice === null)}
               riskGateChoice={riskGateChoice}
               settleTrigger={settleTrigger}
               shakeIntensity={shakeIntensity}

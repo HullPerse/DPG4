@@ -28,11 +28,9 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
 function DiceHalf({
-  value,
   isTop,
   innerTexture,
 }: {
-  value: number;
   isTop: boolean;
   innerTexture: CanvasTexture;
 }) {
@@ -56,7 +54,7 @@ function DiceHalf({
       normalMats[4] = innerMat;
     }
     return normalMats;
-  }, [value, isTop, innerTexture]);
+  }, [isTop, innerTexture]);
 
   return (
     <mesh castShadow receiveShadow>
@@ -151,6 +149,13 @@ function DiceMesh({
       splitStartedRef.current = false;
       freezeDoneRef.current = false;
       halfOffset.current = 0;
+
+      if (!isBrokenDie) {
+        for (const mat of materials) {
+          mat.emissive = { r: 0, g: 0, b: 0 } as any;
+          mat.emissiveIntensity = 0;
+        }
+      }
 
       if (fullCubeRef.current) fullCubeRef.current.visible = true;
       if (topHalfRef.current) topHalfRef.current.visible = false;
@@ -354,19 +359,11 @@ function DiceMesh({
       </mesh>
 
       <group ref={topHalfRef} visible={false}>
-        <DiceHalf
-          value={targetValue}
-          isTop={true}
-          innerTexture={innerTexture}
-        />
+        <DiceHalf isTop={true} innerTexture={innerTexture} />
       </group>
 
       <group ref={bottomHalfRef} visible={false}>
-        <DiceHalf
-          value={7 - targetValue}
-          isTop={false}
-          innerTexture={innerTexture}
-        />
+        <DiceHalf isTop={false} innerTexture={innerTexture} />
       </group>
     </group>
   );

@@ -82,7 +82,7 @@ describe("PachinkoService", () => {
     const state = await services.pachinkoService.settle(userId, [0, 3, 5]);
     expect(state.phase).toBe("done");
     expect(state.payout).toBeGreaterThanOrEqual(0);
-    const expectedPayout = Math.floor(5 * 2) + Math.floor(5 * 5);
+    const expectedPayout = Math.floor(5 * 5) + Math.floor(5 * 1.5) + Math.floor(5 * 0.5);
     expect(state.payout).toBe(expectedPayout);
     expect(state.net).toBe(expectedPayout - 15);
   });

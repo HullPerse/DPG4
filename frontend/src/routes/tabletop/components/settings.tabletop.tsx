@@ -33,7 +33,7 @@ export default function Settings({
 
   const saveMutation = useMutation({
     mutationFn: (data: Cell) => cellApi.editCell(cell.id, data),
-    onError: (error) => console.log(error),
+    onError: (error) => console.error(error),
     onSettled: () => setOpen(false),
   });
 

@@ -27,6 +27,33 @@ export default class GameApi {
     return mapFamilyApps(data.response?.apps ?? []);
   };
 
+  searchSteam = async (term: string) => {
+    try {
+      return await apiFetch<{ appid: number; name: string; image: string }[]>(
+        `/steam/search/${encodeURIComponent(term)}`,
+      );
+    } catch {
+      return [];
+    }
+  };
+
+  getSteamAchievements = async (appId: string, steamId: string) => {
+    try {
+      return await apiFetch<{
+        gameName: string;
+        achievements: {
+          apiname: string;
+          achieved: number;
+          unlocktime: number;
+          name: string;
+          description: string;
+        }[];
+      }>(`/steam/achievements/${appId}/${steamId}`);
+    } catch {
+      return null;
+    }
+  };
+
   getSteamGame = async (appId: string) => {
     const id = appId.trim();
     if (!id) return;

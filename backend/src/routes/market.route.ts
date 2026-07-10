@@ -86,7 +86,7 @@ export default new Elysia({ prefix: "/market" })
         body.price,
       );
       logger.info(
-        `listed item on market item:${body.inventoryId} price:${body.price}`,
+        `listed item on market item:${inv.label} price:${body.price}`,
       );
       return result;
     },

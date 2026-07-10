@@ -45,7 +45,6 @@ export default function HomeLibrary({
                 src={game.data.capsuleImage}
                 alt={game.data.name}
                 className="h-full w-full object-cover"
-                placeholder="https://placehold.co/600x400"
               />
             </div>
             <div className="mt-1 flex flex-col">

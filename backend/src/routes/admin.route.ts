@@ -108,9 +108,13 @@ const adminRoute = new Elysia()
             set.status = 400;
             return { error: "User or item not found" };
           }
+          const [grantedItem] = await db
+            .select({ label: schema.items.label })
+            .from(schema.items)
+            .where(eq(schema.items.id, body.itemId));
           logger
             .setAuthor(admin.username)
-            .info(`Admin granted item: user: ${body.userId}/${body.itemId}`);
+            .info(`Admin granted item: user: ${body.userId} item: ${grantedItem?.label ?? body.itemId}`);
           return { ok: true };
         },
         { body: t.Object({ userId: t.String(), itemId: t.String() }) },

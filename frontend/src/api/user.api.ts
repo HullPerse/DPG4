@@ -163,4 +163,8 @@ export default class UserApi {
       body: { hangman: state },
     });
   };
+
+  restart = async (userId: string) => {
+    return apiFetch(`/users/${userId}/restart`, { method: "POST" });
+  };
 }

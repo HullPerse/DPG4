@@ -21,19 +21,7 @@ export default new Elysia({ prefix: "/hangman" })
         .orderBy(sql`${schema.hangman.created} DESC`)
         .get();
 
-      // ponytail: daily reset — if from previous day, return null for new game
-      if (record) {
-        const today = new Date().toISOString().slice(0, 10);
-        if (record.created.slice(0, 10) !== today) {
-          if (record.state === "current") {
-            await db
-              .update(schema.hangman)
-              .set({ state: "lost", updated: nowIso() })
-              .where(eq(schema.hangman.id, record.id));
-          }
-          return null;
-        }
-      }
+      if (record && (record.state === "won" || record.state === "lost")) return null;
 
       return record ?? null;
     },
@@ -72,20 +60,11 @@ export default new Elysia({ prefix: "/hangman" })
         .orderBy(sql`${schema.hangman.created} DESC`)
         .get();
 
-      const today = new Date().toISOString().slice(0, 10);
-
       if (latest) {
-        const gameDay = latest.created.slice(0, 10);
-
-        // ponytail: daily reset — same day → resume or return finished
-        if (gameDay === today) return latest;
-
-        // Previous day and still "current" → expire
-        if (latest.state === "current") {
-          await db
-            .update(schema.hangman)
-            .set({ state: "lost", updated: nowIso() })
-            .where(eq(schema.hangman.id, latest.id));
+        if (latest.state === "won" || latest.state === "lost") {
+          // game finished, start a new one below
+        } else {
+          return latest;
         }
       }
 

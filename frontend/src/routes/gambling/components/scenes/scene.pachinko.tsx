@@ -587,7 +587,7 @@ function RatBall({
   const initialVel = useMemo(
     (): [number, number, number] => [
       (Math.random() - 0.5) * 0.55,
-      -0.35 - Math.random() * 0.2,
+      -2.5 - Math.random() * 1.5,
       0,
     ],
     [],
@@ -797,7 +797,6 @@ function SceneContent({
   ratAmount,
   countdown,
   onCountdownEnd,
-  zawaText,
   showRiskGate,
   riskGateChoice,
   settleTrigger,
@@ -814,7 +813,6 @@ function SceneContent({
   ratAmount: number;
   countdown: number | null;
   onCountdownEnd: () => void;
-  zawaText: string;
   showRiskGate: boolean;
   riskGateChoice: RiskGateChoice;
   settleTrigger: number;
@@ -855,29 +853,6 @@ function SceneContent({
         glowIntensity={glowIntensity}
       />
 
-      {zawaText && (
-        <Html
-          position={[0, 18, 0]}
-          center
-          distanceFactor={20}
-          style={{ pointerEvents: "none" }}
-        >
-          <span
-            style={{
-              color: "#eb6f9244",
-              fontSize: "14px",
-              fontWeight: 700,
-              fontFamily: "monospace",
-              letterSpacing: "8px",
-              whiteSpace: "nowrap",
-              textShadow: "0 0 20px #eb6f9233",
-            }}
-          >
-            {zawaText}
-          </span>
-        </Html>
-      )}
-
       <Suspense fallback={null}>
         <Physics gravity={[0, -11, 0]} timeStep={1 / 60}>
           <PachinkoWorld
@@ -913,7 +888,6 @@ function PachinkoScene({
   ratAmount,
   countdown,
   onCountdownEnd,
-  zawaText,
   showRiskGate,
   riskGateChoice,
   settleTrigger,
@@ -930,7 +904,6 @@ function PachinkoScene({
   ratAmount: number;
   countdown: number | null;
   onCountdownEnd: () => void;
-  zawaText: string;
   showRiskGate: boolean;
   riskGateChoice: RiskGateChoice;
   settleTrigger: number;
@@ -961,7 +934,6 @@ function PachinkoScene({
         ratAmount={ratAmount}
         countdown={countdown}
         onCountdownEnd={onCountdownEnd}
-        zawaText={zawaText}
         showRiskGate={showRiskGate}
         riskGateChoice={riskGateChoice}
         settleTrigger={settleTrigger}

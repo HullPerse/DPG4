@@ -4,7 +4,6 @@ import * as schema from "@/db/schema.db";
 import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
-import { updateTicketItem } from "@/lib/ticket.helpers";
 import servicesPlugin from "@/services.server";
 import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 import JackpotService from "@/services/gambling/jackpot.service";
@@ -123,8 +122,6 @@ export default new Elysia({ prefix: "/utils" })
         })
         .where(eq(schema.users.id, user.sub));
 
-      await updateTicketItem(db, user.sub, newTickets);
-
       const jp = new JackpotService(db);
       await jp.addToPool(amount);
 
@@ -176,8 +173,6 @@ export default new Elysia({ prefix: "/utils" })
         })
         .where(eq(schema.users.id, user.sub));
 
-      await updateTicketItem(db, user.sub, newTickets);
-
       broadcast("users", "update", user.sub);
       logger
         .setAuthor(String(user?.username))
@@ -227,8 +222,6 @@ export default new Elysia({ prefix: "/utils" })
         .update(schema.users)
         .set({ tickets: newTickets, updated: ts })
         .where(eq(schema.users.id, user.sub));
-
-      await updateTicketItem(db, user.sub, newTickets);
 
       await db.insert(schema.market).values({
         id,
@@ -321,7 +314,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
             updated: ts,
           })
           .where(eq(schema.users.id, sellerId));
-        await updateTicketItem(db, sellerId, sellerRow.tickets - quantity);
       }
 
       if (buyerRow) {
@@ -332,7 +324,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
             updated: ts,
           })
           .where(eq(schema.users.id, user.sub));
-        await updateTicketItem(db, user.sub, buyerRow.tickets + quantity);
       }
 
       await db.delete(schema.market).where(eq(schema.market.id, params.id));
@@ -389,7 +380,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
           .update(schema.users)
           .set({ tickets: newTickets, updated: ts })
           .where(eq(schema.users.id, user.sub));
-        await updateTicketItem(db, user.sub, newTickets);
       }
 
       await db.delete(schema.market).where(eq(schema.market.id, params.id));

@@ -145,11 +145,12 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
 
   return (
     <main
-      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto pb-2"
+      className="relative flex flex-col gap-2 p-2 w-full overflow-y-auto"
       ref={listRef}
       style={{
         scrollBehavior: "smooth",
         willChange: "transform",
+        scrollbarGutter: "stable",
       }}
     >
       <label className="text-2xl underline font-bold">
@@ -165,7 +166,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
             style={{
               position: "absolute",
               transform: `translateY(${virtualItem.start}px)`,
-              width: "99%",
+              width: "100%",
             }}
             data-index={virtualItem.index}
             className="flex flex-row min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"

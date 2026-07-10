@@ -150,13 +150,7 @@ export default class EffectService {
             currentItem.charge,
             -1,
           );
-        await this.activityService.create({
-          author: userId,
-          image: firstPosition.avatar,
-          type: "emoji",
-          text: `У ${firstPosition.username} пропало ${itemAmount} предмета из-за странной магии...`,
-        });
-        return null;
+        return `У ${firstPosition.username} пропало ${itemAmount} предмета из-за странной магии...`;
       },
       Арбуз: async ({ userId }) => {
         const user = await this.getUser(userId);
@@ -561,6 +555,44 @@ export default class EffectService {
         await this.userService.score(userId, rats.length);
         return `${user.username} получил ${rats.length} чубриков из-за крыс`;
       },
+      "Нищая крыса": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const [richest] = await this.db
+          .select()
+          .from(schema.users)
+          .orderBy(desc(schema.users.money))
+          .limit(1);
+        if (!richest || richest.id === userId) return null;
+
+        let totalItems = 0;
+        let totalMoney = 0;
+
+        for (let i = 0; i < 3; i++) {
+          if (Math.random() < 0.5 && richest.money > 40) {
+            const amount = 4 + Math.floor(Math.random() * 9);
+            await this.userService.score(richest.id, -amount);
+            await this.userService.score(userId, amount);
+            totalMoney += amount;
+          } else {
+            const [item] = await this.db
+              .select()
+              .from(schema.inventory)
+              .where(eq(schema.inventory.owner, richest.id))
+              .orderBy(sql`RANDOM()`)
+              .limit(1);
+            if (!item) continue;
+            await this.economyService.transferInventoryOwner(item.id, userId);
+            totalItems++;
+          }
+        }
+
+        if (totalItems === 0 && totalMoney === 0) return null;
+
+        const parts: string[] = [];
+        if (totalMoney > 0) parts.push(`${totalMoney} чубриков`);
+        if (totalItems > 0) parts.push(`${totalItems} предметов`);
+        return `${user.username} выпросил у ${richest.username} ${parts.join(" и ")}`;
+      },
       Свинство: async ({ userId }) => {
         const user = await this.getUser(userId);
         const inventory = await this.db
@@ -688,6 +720,89 @@ export default class EffectService {
           await this.economyService.addInventory(userId, ratItem.id);
         }
         return `${user.username} заменил ${ids.length} предметов на случайных крыс`;
+      },
+      "Деловая Крыса": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const [richest] = await this.db
+          .select()
+          .from(schema.users)
+          .orderBy(desc(schema.users.money))
+          .limit(1);
+        if (!richest || richest.id === userId) return null;
+        const [targetInv] = await this.db
+          .select()
+          .from(schema.inventory)
+          .where(
+            and(
+              eq(schema.inventory.owner, richest.id),
+              ne(schema.inventory.label, "Деловая Крыса"),
+            ),
+          )
+          .orderBy(sql`RANDOM()`)
+          .limit(1);
+        if (!targetInv) return null;
+        const [ratItem] = await this.db
+          .select()
+          .from(schema.items)
+          .where(
+            and(
+              inArray(schema.items.label, RAT_IDS),
+              ne(schema.items.label, "Деловая Крыса"),
+            ),
+          )
+          .orderBy(sql`RANDOM()`)
+          .limit(1);
+        if (!ratItem) return null;
+        await this.economyService.transferInventoryOwner(targetInv.id, userId);
+        await this.economyService.addInventory(richest.id, ratItem.id);
+        return `${user.username} провернул сделку с ${richest.username}: забрал ${targetInv.label}, отдал ${ratItem.label}`;
+      },
+      "Крысиный Король": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const ratItems = await this.db
+          .select()
+          .from(schema.items)
+          .where(
+            and(
+              inArray(schema.items.label, RAT_IDS),
+              ne(schema.items.label, "Крысиный Король"),
+            ),
+          );
+        if (ratItems.length === 0) return null;
+        const count = 1 + Math.floor(Math.random() * 3);
+        const shuffled = [...ratItems].sort(() => Math.random() - 0.5);
+        const chosen = shuffled.slice(0, count);
+        const names: string[] = [];
+        for (const item of chosen) {
+          await this.economyService.addInventory(userId, item.id);
+          names.push(item.label);
+        }
+        return `${user.username} созвал Крысиного Короля и получил ${names.join(", ")}`;
+      },
+      "Гигантская Крыса": async ({ userId }) => {
+        const user = await this.getUser(userId);
+        const allUsers = await this.db
+          .select()
+          .from(schema.users)
+          .where(ne(schema.users.id, userId));
+        let hitCount = 0;
+        for (const target of allUsers) {
+          const items = await this.db
+            .select()
+            .from(schema.inventory)
+            .where(
+              and(
+                eq(schema.inventory.owner, target.id),
+                ne(schema.inventory.label, "Гигантская Крыса"),
+              ),
+            );
+          if (items.length < 3) continue;
+          const [victim] = items.sort(() => Math.random() - 0.5);
+          await this.economyService.removeInventoryById(victim.id);
+          hitCount++;
+        }
+        if (hitCount === 0) return null;
+        return `${user.username} выпустил гигантскую крысу! ${hitCount} игроков лишились предметов`;
       },
       Квас: async ({ userId }) => {
         const user = await this.getUser(userId);

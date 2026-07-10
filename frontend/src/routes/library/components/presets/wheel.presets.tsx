@@ -224,6 +224,7 @@ export default function PresetsWheel({ id }: { id: string }) {
         style={{
           scrollBehavior: "smooth",
           willChange: "transform",
+          scrollbarGutter: "stable",
         }}
       >
         {virtualItems.map((virtualItem) => {
@@ -235,7 +236,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               style={{
                 position: "absolute",
                 transform: `translateY(${virtualItem.start}px)`,
-                width: "99%",
+                width: "100%",
                 opacity: hiddenGames.has(String(item.id)) ? "50%" : undefined,
               }}
               data-index={virtualItem.index}
@@ -243,8 +244,8 @@ export default function PresetsWheel({ id }: { id: string }) {
               className="flex flex-row min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
             >
               {/* LABEL */}
-              <section className="flex flex-row w-full h-full items-center gap-2">
-                <div className="flex h-full w-40 aspect-video border-2 border-highlight-high overflow-hidden">
+              <section className="flex flex-row w-full line-clamp-1 h-full items-center gap-2">
+                <div className="flex h-full min-w-40 w-40 max-w-40 aspect-video border-2 border-highlight-high overflow-hidden">
                   <Image src={item.capsuleImage ?? "https://placehold.co/16x10"} alt={item.name} />
                 </div>
 
@@ -267,7 +268,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               </section>
 
               {/* BUTTONS */}
-              <section className="flex flex-row items-center gap-1">
+              <section className="flex flex-row items-center gap-1 ml-auto">
                 <Button
                   size="icon"
                   onClick={() => {

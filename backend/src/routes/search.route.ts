@@ -16,7 +16,7 @@ export default new Elysia({ prefix: "/search" }).get(
 
     const ftsQuery = q
       .split(/\s+/)
-      .map((w) => `"${w.replace(/['"]/g, "")}"*`)
+      .map((w) => `"${w.replace(/[^a-zа-яё0-9_-]/gi, "")}"*`)
       .join(" ");
 
     const users = rawDb

@@ -100,7 +100,7 @@ export default function Profile({ user, games }: { user: User; games: Game[] }) 
             <section className="flex w-full h-10 bg-highlight-low border-x-2 border-t-2 border-highlight-high p-1 font-bold text-xl items-center justify-between">
               Последние игры:
               <span className="text-sm opacity-75">
-                {games.reduce((acc, game) => acc + (game.playtime.user ?? 0), 0)} ч. всего
+                {Math.floor(games.reduce((acc, game) => acc + (game.playtime.user ?? 0), 0))} ч. всего
               </span>
             </section>
             <section className="flex flex-col border-2 border-highlight-high">

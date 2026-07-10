@@ -7,7 +7,7 @@ import { useUserStore } from "@/store/user.store";
 import { Item } from "@/types/items";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
-import { memo, startTransition, useCallback, useRef, useState } from "react";
+import { memo, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import Wheel from "@/components/shared/wheel.component";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
@@ -44,6 +44,10 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
   const [input, setInput] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (itemData && user) setSelected(user);
+  }, [itemData, user]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["itemsWheel"],
@@ -130,7 +134,13 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {data?.users?.map((item, index) => (
+                      {[...(data?.users ?? [])]
+                        .sort((a, b) => {
+                          if (a.id === user?.id) return -1;
+                          if (b.id === user?.id) return 1;
+                          return a.username.localeCompare(b.username);
+                        })
+                        .map((item, index) => (
                         <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}
@@ -175,7 +185,6 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                       await activityApi.createActivity(activityData);
                     }
 
-                    setSelected(null);
                     setInput("");
                     return setItemData(null);
                   }}
@@ -262,7 +271,7 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       <section
         ref={listRef}
         className="relative flex h-full w-full overflow-y-auto p-2 border-t-2 border-highlight-high"
-        style={{ contain: "strict" }}
+        style={{ contain: "layout paint", scrollbarGutter: "stable", willChange: "transform", scrollBehavior: "smooth" }}
       >
         <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualItem) => {
@@ -272,6 +281,8 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
             return (
               <section
                 key={virtualItem.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
                 className="absolute top-0 left-0 flex flex-row w-full h-32 max-h-32 min-h-32 p-2 border-2 border-highlight-high items-center bg-card"
                 style={{
                   transform: `translateY(${virtualItem.start}px)`,

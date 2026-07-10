@@ -44,6 +44,7 @@ const gameApi = new GameApi();
 const itemsApi = new ItemsApi();
 
 const ratIds = new Set([
+  "Нищая крыса",
   "Восьмибитная Крыса",
   "Добрая крыса",
   "Запаянный Крысиный Сундук",
@@ -76,6 +77,11 @@ const ratIds = new Set([
   "Крысиный анус",
   "Квакающая Крыса",
   "Крысиный потоп",
+  "Гигантская Крыса",
+  "Деловая Крыса",
+  "Крыса-Гадалка",
+  "Крысиный Король",
+  "Радиоактивная Крыса",
 ]);
 
 const pigIds = new Set([
@@ -3899,6 +3905,267 @@ export const itemEffect: effectInterface[] = [
                 Применить
               </Button>
             </section>
+          </main>
+        );
+      },
+  ),
+
+  ItemFramework.modal(
+    "Крыса-Гадалка",
+    () =>
+      function (ctx: ModalType) {
+        type Fate =
+          | { type: "money"; amount: number }
+          | { type: "stealMoney"; amount: number }
+          | { type: "ratItem"; label: string }
+          | { type: "loseMoney"; amount: number }
+          | { type: "stealItem"; label: string }
+          | { type: "rareItem"; label: string };
+
+        const emojis = ["🔮", "🌟", "🃏"];
+        const [picked, setPicked] = useState<number | null>(null);
+        const [fate, setFate] = useState<Fate | null>(null);
+        const [loading, setLoading] = useState(false);
+
+        const rollFate = async (): Promise<Fate> => {
+          const roll = Math.random() * 100;
+          if (roll < 40) {
+            const amount = 3 + Math.floor(Math.random() * 6);
+            return { type: "money", amount };
+          }
+          if (roll < 60) {
+            const amount = 3 + Math.floor(Math.random() * 4);
+            return { type: "stealMoney", amount };
+          }
+          if (roll < 75) {
+            const allItems = await itemsApi.getAllItems();
+            const ratPool = allItems.filter(
+              (i) => ratIds.has(i.label) && i.label !== "Крыса-Гадалка",
+            );
+            const item = ratPool[Math.floor(Math.random() * ratPool.length)];
+            return { type: "ratItem", label: item?.label ?? "Крыса" };
+          }
+          if (roll < 85) {
+            const amount = 3 + Math.floor(Math.random() * 4);
+            return { type: "loseMoney", amount };
+          }
+          if (roll < 95) {
+            const others = await itemsApi.getInventory(ctx.user.id).then((res) =>
+              res.filter((i) => i.label !== "Крыса-Гадалка"),
+            );
+            const item = others.length > 0
+              ? others[Math.floor(Math.random() * others.length)]
+              : null;
+            return { type: "stealItem", label: item?.label ?? "ничего" };
+          }
+          return { type: "rareItem", label: "Крысиный Король" };
+        };
+
+        const pickCard = async (index: number) => {
+          setPicked(index);
+          setLoading(true);
+          const result = await rollFate();
+          setFate(result);
+          setLoading(false);
+        };
+
+        const applyFate = async () => {
+          if (!fate) return;
+          switch (fate.type) {
+            case "money":
+              await userApi.scoreUser(String(ctx.user.id), fate.amount);
+              break;
+            case "stealMoney": {
+              const allUsers = await userApi.getAllUsers();
+              const others = allUsers.filter((u) => u.id !== ctx.user.id);
+              if (others.length > 0) {
+                const target = others[Math.floor(Math.random() * others.length)];
+                await userApi.scoreUser(target.id!, -fate.amount);
+                await userApi.scoreUser(String(ctx.user.id), fate.amount);
+              }
+              break;
+            }
+            case "ratItem": {
+              const allItems = await itemsApi.getAllItems();
+              const ratPool = allItems.filter(
+                (i) => ratIds.has(i.label) && i.label !== "Крыса-Гадалка",
+              );
+              const item = ratPool[Math.floor(Math.random() * ratPool.length)];
+              if (item) await itemsApi.addInventory(String(ctx.user.id), String(item.id));
+              break;
+            }
+            case "loseMoney":
+              await userApi.scoreUser(String(ctx.user.id), -fate.amount);
+              break;
+            case "stealItem": {
+              const allUsers = await userApi.getAllUsers();
+              const others = allUsers.filter((u) => u.id !== ctx.user.id);
+              if (others.length > 0) {
+                const target = others[Math.floor(Math.random() * others.length)];
+                const [targetItem] = (await itemsApi.getInventory(target.id!)).filter(
+                  (i) => i.label !== "Крыса-Гадалка",
+                );
+                if (targetItem) {
+                  await itemsApi.sendInventory(targetItem.id, ctx.user.id);
+                }
+              }
+              break;
+            }
+            case "rareItem": {
+              const allItems = await itemsApi.getAllItems();
+              const rare = allItems.find((i) => i.label === fate.label);
+              if (rare) await itemsApi.addInventory(String(ctx.user.id), String(rare.id));
+              break;
+            }
+          }
+          await ctx.consume(`${ctx.user.username} заглянул в судьбу и получил ${fate.type === "money" ? `${fate.amount} чубриков` : fate.type === "stealMoney" ? `${fate.amount} украденных чубриков` : fate.type === "ratItem" ? "крысу" : fate.type === "loseMoney" ? "потерю" : fate.type === "stealItem" ? "чужой предмет" : "редкую награду"}`);
+          ctx.close();
+        };
+
+        const fateDescription = (f: Fate) => {
+          switch (f.type) {
+            case "money": return `💰 +${f.amount} чубриков`;
+            case "stealMoney": return `😈 +${f.amount} украденных чубриков`;
+            case "ratItem": return `🐀 +${f.label}`;
+            case "loseMoney": return `💸 -${f.amount} чубриков`;
+            case "stealItem": return `🕵️ +${f.label}`;
+            case "rareItem": return `👑 +${f.label}`;
+          }
+        };
+
+        return (
+          <main className="flex flex-col gap-3 items-center p-2">
+            <span className="text-lg font-bold">🔮 Выбери свою судьбу</span>
+            <div className="flex flex-row gap-3">
+              {[0, 1, 2].map((i) => (
+                <button
+                  key={i}
+                  disabled={picked !== null || loading}
+                  onClick={() => pickCard(i)}
+                  className={`flex h-28 w-20 items-center justify-center rounded-lg border-2 text-3xl font-bold transition-all duration-500 ${
+                    picked === null
+                      ? "cursor-pointer border-highlight-medium bg-highlight-low hover:scale-105 hover:border-primary"
+                      : picked === i
+                        ? "scale-110 border-primary bg-highlight-low"
+                        : "scale-90 opacity-40 border-highlight-low"
+                  }`}
+                >
+                  {picked === i && fate ? fateDescription(fate) : loading ? "..." : emojis[i]}
+                </button>
+              ))}
+            </div>
+            {fate && (
+              <Button variant="success" onClick={applyFate}>
+                Получить
+              </Button>
+            )}
+          </main>
+        );
+      },
+  ),
+
+  ItemFramework.modal(
+    "Радиоактивная Крыса",
+    () =>
+      function (ctx: ModalType) {
+        const { data, isLoading } = useQuery({
+          queryKey: ["modalData", ctx.user.id, "radioactive"],
+          queryFn: async () => {
+            const inv = await itemsApi.getInventory(ctx.user.id);
+            return inv.filter(
+              (i) => i.label !== "Радиоактивная Крыса",
+            );
+          },
+        });
+
+        const [selected, setSelected] = useState<Inventory[]>([]);
+        const [mutated, setMutated] = useState<{ old: string; new: string }[] | null>(null);
+        const [applying, setApplying] = useState(false);
+
+        if (isLoading) return <WindowLoader />;
+
+        const toggleItem = (item: Inventory) => {
+          setSelected((prev) =>
+            prev.find((i) => i.id === item.id)
+              ? prev.filter((i) => i.id !== item.id)
+              : prev.length < 2
+                ? [...prev, item]
+                : prev,
+          );
+        };
+
+        const mutate = async () => {
+          if (selected.length !== 2) return;
+          setApplying(true);
+          const allItems = await itemsApi.getAllItems();
+          const results: { old: string; new: string }[] = [];
+
+          for (const item of selected) {
+            const pool = allItems.filter((i) => i.label !== item.label);
+            const replacement = pool[Math.floor(Math.random() * pool.length)];
+            await itemsApi.removeInventory(item.id);
+            if (replacement) {
+              await itemsApi.addInventory(String(ctx.user.id), String(replacement.id));
+              results.push({ old: item.label, new: replacement.label });
+            }
+          }
+
+          setMutated(results);
+          setApplying(false);
+        };
+
+        const confirm = async () => {
+          await ctx.consume(
+            `${ctx.user.username} подставил ${mutated?.map((m) => m.old).join(" и ")} под радиацию → получил ${mutated?.map((m) => m.new).join(" и ")}`,
+          );
+          ctx.close();
+        };
+
+        if (mutated) {
+          return (
+            <main className="flex flex-col gap-2 p-2">
+              <span className="text-lg font-bold text-center text-green-400">⚡ РАДИАЦИЯ ⚡</span>
+              {mutated.map((m, i) => (
+                <div key={i} className="flex flex-row items-center justify-between border border-highlight-medium rounded p-2">
+                  <span className="line-through text-text/60">{m.old}</span>
+                  <span className="text-green-400">→</span>
+                  <span className="font-bold text-green-400">{m.new}</span>
+                </div>
+              ))}
+              <Button variant="success" onClick={confirm}>
+                Забрать мутантов
+              </Button>
+            </main>
+          );
+        }
+
+        return (
+          <main className="flex flex-col gap-2 p-2">
+            <span className="text-sm text-text/60">Выберите 2 предмета для мутации</span>
+            <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
+              {data?.map((item) => {
+                const isSelected = selected.some((s) => s.id === item.id);
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => toggleItem(item)}
+                    className={`flex items-center gap-2 rounded border px-2 py-1 text-left text-sm ${
+                      isSelected
+                        ? "border-green-500 bg-green-500/10"
+                        : "border-highlight-medium hover:bg-highlight-low"
+                    }`}
+                  >
+                    <span className={`size-3 rounded-full ${isSelected ? "bg-green-500" : "bg-highlight-medium"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selected.length === 2 && (
+              <Button variant="success" onClick={mutate} loading={applying}>
+                Мутировать
+              </Button>
+            )}
           </main>
         );
       },

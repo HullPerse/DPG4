@@ -160,7 +160,7 @@ function PresetsTab() {
       </section>
 
       {/* TABS */}
-      <section className="flex flex-1 bg-background overflow-auto">{getComponent()}</section>
+      <section className="flex flex-1 bg-background overflow-auto pb-2">{getComponent()}</section>
     </main>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
+import { RAT_IDS } from "@/lib/items/constants";
 
 const logger = new Logger("USERS");
 
@@ -47,7 +48,7 @@ const usersRoute = new Elysia({ prefix: "/users" })
               .where(and(...conditions))
           : db.select().from(schema.users);
 
-      const rows = await q.limit(limit).offset(offset);
+      const rows = await q.orderBy(schema.users.username).limit(limit).offset(offset);
       let list = rows.map((row) => withRecordMeta(omitPassword(row), "users"));
 
       if (query.fields) {
@@ -88,22 +89,29 @@ const usersRoute = new Elysia({ prefix: "/users" })
     {
       params: t.Object({ id: t.String() }),
     },
-  )
+)
+
   .patch(
     "/:id",
-    async ({ params, body, db, user, userService }) => {
-      const {
-        password: _pw,
-        passwordHash: _ph,
-        id: _id,
-        created: _cr,
-        ...rest
-      } = body;
+    async ({ params, body, db, user, userService, set }) => {
+      if (!user || user.sub !== params.id) {
+        set.status = 403;
+        return { error: "Нельзя редактировать чужой профиль" };
+      }
+      const allowedFields: Record<string, unknown> = {};
+      if (body.username !== undefined) allowedFields.username = body.username;
+      if (body.email !== undefined) allowedFields.email = body.email;
+      if (body.avatar !== undefined) allowedFields.avatar = body.avatar;
+      if (body.color !== undefined) allowedFields.color = body.color;
+      if (body.steam !== undefined) allowedFields.steam = body.steam;
+      if (body.hangman !== undefined) allowedFields.hangman = body.hangman;
+      if (Object.keys(allowedFields).length === 0) {
+        set.status = 400;
+        return { error: "Нет полей для обновления" };
+      }
       await db
         .update(schema.users)
-        .set({ ...rest, updated: nowIso() } as Partial<
-          typeof schema.users.$inferInsert
-        >)
+        .set({ ...allowedFields, updated: nowIso() })
         .where(eq(schema.users.id, params.id));
       broadcast("users", "update", params.id);
       const updatedUser = await userService.getById(params.id);
@@ -113,9 +121,30 @@ const usersRoute = new Elysia({ prefix: "/users" })
       return updatedUser;
     },
     {
-      body: t.Record(t.String(), t.Any()),
+      body: t.Object({
+        username: t.Optional(t.String()),
+        email: t.Optional(t.String()),
+        avatar: t.Optional(t.String()),
+        color: t.Optional(t.String()),
+        steam: t.Optional(t.String()),
+        hangman: t.Optional(t.Boolean())
+      }),
+      requireAuth: true,
     },
-  )
+)
+.post("/:id/restart", async ({ params, db }) => {
+  const inventory = await db
+    .select()
+    .from(schema.inventory)
+    .where(eq(schema.inventory.owner, params.id));
+  const toRemove = inventory
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.floor(inventory.length / 2));
+  for (const item of toRemove) {
+    await db.delete(schema.inventory).where(eq(schema.inventory.id, item.id));
+  }
+  return { ok: true };
+})
   .post(
     "/:id/status",
     async ({ params, body, user, userService }) => {
@@ -138,6 +167,7 @@ const usersRoute = new Elysia({ prefix: "/users" })
       }),
     },
   )
+
   .post(
     "/:id/score",
     async ({ params, body, user, userService }) => {

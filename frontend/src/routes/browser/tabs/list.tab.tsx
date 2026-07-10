@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -52,6 +52,10 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
   const [loading, setLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<User | null>(user ? user : null);
   const [input, setInput] = useState<string>("");
+
+  useEffect(() => {
+    if (itemData && user) setSelected(user);
+  }, [itemData, user]);
 
   const sortFieldMap: Record<string, string> = {
     name: "label",
@@ -127,6 +131,7 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
     <main
       ref={listRef}
       className="relative flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center pb-10"
+      style={{ scrollbarGutter: "stable", willChange: "transform", scrollBehavior: "smooth" }}
     >
       {itemData && (
         <CreateModal
@@ -150,7 +155,13 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {filteredUsers.map((item, index) => (
+                      {[...filteredUsers]
+                        .sort((a, b) => {
+                          if (a.id === user?.id) return -1;
+                          if (b.id === user?.id) return 1;
+                          return a.username.localeCompare(b.username);
+                        })
+                        .map((item, index) => (
                         <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
                           {`${index + 1}: `}
                           {item.username}
@@ -195,7 +206,6 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
                       await activityApi.createActivity(activityData);
                     }
 
-                    setSelected(null);
                     setInput("");
                     return setItemData(null);
                   }}
@@ -243,7 +253,7 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
             style={{
               position: "absolute",
               transform: `translateY(${virtualItem.start}px)`,
-              width: "99%",
+              width: "100%",
             }}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center bg-card mt-10"
           >

@@ -4,7 +4,6 @@ import { newId, nowIso } from "@/lib/index.utils";
 import { broadcast } from "@/lib/websocket.utils";
 import type { Db } from "@/types/server";
 import { GAMBLING_BAN_THRESHOLD } from "@/lib/gambling.constants";
-import { updateTicketItem } from "@/lib/ticket.helpers";
 import Logger from "@/lib/logger.utils";
 import type { JackpotDevOverrides } from "@/types/gambling";
 
@@ -75,13 +74,11 @@ export default class JackpotService {
       const [userRow] = await this.db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
       const newTickets = userRow!.tickets - JACKPOT_COST;
       await this.db.update(schema.users).set({ tickets: newTickets, updated: ts }).where(eq(schema.users.id, userId));
-      await updateTicketItem(this.db, userId, newTickets);
 
       if (isWin) {
         const winAmount = refreshed.pool;
         const totalTickets = newTickets + winAmount;
         await this.db.update(schema.users).set({ tickets: totalTickets, gamblingWinnings: userRow!.gamblingWinnings + winAmount, updated: ts }).where(eq(schema.users.id, userId));
-        await updateTicketItem(this.db, userId, totalTickets);
         const newWinningNumber = generateWinningNumber();
         const today = todayDateString();
         await this.db.update(schema.jackpot).set({ pool: 0, winningNumber: newWinningNumber, winningNumberDate: today, lastWinnerId: userId, lastWinnerUsername: userRow!.username, lastWinAmount: winAmount, lastWinDate: ts, updated: ts }).where(eq(schema.jackpot.id, refreshed.id));

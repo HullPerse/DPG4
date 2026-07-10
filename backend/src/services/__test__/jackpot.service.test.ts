@@ -134,7 +134,7 @@ describe("JackpotService", () => {
   test("jackpot win triggers gambling ban when threshold exceeded", async () => {
     const nearUser = await createUser(db, {
       tickets: 200,
-      gamblingWinnings: 95,
+      gamblingWinnings: 995,
       gamblingBanned: false,
     });
     const ts = new Date().toISOString();

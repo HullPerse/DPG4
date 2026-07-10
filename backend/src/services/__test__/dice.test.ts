@@ -174,7 +174,7 @@ describe("DiceService", () => {
   test("gambling ban triggers at 100+ winnings from pair win", async () => {
     const nearUser = await createUser(db, {
       money: 100,
-      gamblingWinnings: 95,
+      gamblingWinnings: 995,
       gamblingBanned: false,
     });
     seedRandom([...d(2, 2, 5), ...no()]);
