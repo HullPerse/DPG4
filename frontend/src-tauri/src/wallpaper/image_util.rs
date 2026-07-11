@@ -103,8 +103,7 @@ fn process_as_webp(bytes: &[u8], stem: &str, quality: u8) -> CmdResult<Processed
         }
     }
 
-    let img = image::load_from_memory(bytes)
-        .map_err(|e| AppError::Image(e.to_string()))?;
+    let img = image::load_from_memory(bytes).map_err(|e| AppError::Image(e.to_string()))?;
     let encoded = encode_as_webp(img, quality)?;
     Ok(ProcessedImage {
         file_name: format!("{stem}.webp"),
@@ -117,8 +116,7 @@ fn process_as_default(bytes: &[u8], stem: &str, quality: u8) -> CmdResult<Proces
         return Ok(fast);
     }
 
-    let img = image::load_from_memory(bytes)
-        .map_err(|e| AppError::Image(e.to_string()))?;
+    let img = image::load_from_memory(bytes).map_err(|e| AppError::Image(e.to_string()))?;
     let jpeg = encode_as_jpeg(img, quality)?;
     Ok(ProcessedImage {
         file_name: format!("{stem}.jpg"),

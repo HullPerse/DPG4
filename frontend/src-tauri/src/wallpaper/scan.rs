@@ -4,9 +4,7 @@ use std::path::Path;
 use serde::Serialize;
 use tauri::AppHandle;
 
-use super::{
-    bundled_wallpapers_dir, custom_wallpapers_dir, is_image_path, CmdResult,
-};
+use super::{bundled_wallpapers_dir, custom_wallpapers_dir, is_image_path, CmdResult};
 use crate::error::AppError;
 
 #[derive(Debug, Clone, Serialize)]

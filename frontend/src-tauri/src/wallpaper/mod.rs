@@ -10,8 +10,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::error::{AppError, CmdResult};
 
-pub const IMAGE_EXTENSIONS: &[&str] =
-    &["jpg", "jpeg", "png", "gif", "bmp", "webp"];
+pub const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "bmp", "webp"];
 
 pub const MAX_WALLPAPER_BYTES: usize = 10 * 1024 * 1024;
 
@@ -72,10 +71,7 @@ pub fn decode_data_url(data: &str) -> CmdResult<Vec<u8>> {
     use base64::{engine::general_purpose, Engine as _};
     let decoded = general_purpose::STANDARD.decode(base64_data)?;
     if decoded.len() > MAX_WALLPAPER_BYTES {
-        return Err(AppError::FileTooLarge(
-            decoded.len(),
-            MAX_WALLPAPER_BYTES,
-        ));
+        return Err(AppError::FileTooLarge(decoded.len(), MAX_WALLPAPER_BYTES));
     }
     Ok(decoded)
 }
