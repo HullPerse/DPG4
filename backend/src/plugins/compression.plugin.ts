@@ -1,11 +1,10 @@
 import { Elysia } from "elysia";
-import { gzipSync, brotliCompressSync } from "node:zlib";
 
 const MIN_COMPRESS_SIZE = 1024;
 
 const compressionPlugin = new Elysia({
   name: "compression",
-}).mapResponse({ as: "global" }, ({ responseValue, request }) => {
+}).mapResponse("global", ({ responseValue, request }) => {
   const body = responseValue instanceof Response ? null : responseValue;
   if (!body) return;
 
@@ -21,18 +20,8 @@ const compressionPlugin = new Elysia({
 
   if (!raw || raw.length < MIN_COMPRESS_SIZE) return;
 
-  if (accept.includes("br")) {
-    return new Response(brotliCompressSync(Buffer.from(raw)), {
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Encoding": "br",
-        Vary: "Accept-Encoding",
-      },
-    });
-  }
-
   if (accept.includes("gzip")) {
-    return new Response(gzipSync(Buffer.from(raw)), {
+    return new Response(Bun.gzipSync(raw), {
       headers: {
         "Content-Type": "application/json",
         "Content-Encoding": "gzip",
