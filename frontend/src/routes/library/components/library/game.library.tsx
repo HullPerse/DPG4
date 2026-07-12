@@ -38,6 +38,7 @@ import { User } from "@/types/user";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
 import { unbanDice } from "@/api/gambling.api";
+import ImageComponent from "@/components/shared/image.component";
 
 const gameApi = new GameApi();
 const userApi = new UserApi();
@@ -83,6 +84,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
           unlocktime: number;
           name: string;
           description: string;
+          icon: string;
         }[];
       } | null;
     }> => {
@@ -245,6 +247,8 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
     return (
       <WindowError error={new Error("Произошла ошибка при загрузке игры")} icon={<NetworkIcon />} />
     );
+
+  console.log("data", data?.achievements);
 
   return (
     <main className="relative flex flex-col w-full h-full">
@@ -497,19 +501,28 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
                 Достижения Steam ({data?.achievements.achievements.filter((a) => a.achieved).length}
                 /{data?.achievements.achievements.length})
               </span>
-              <span>{showAchievements ? "▲" : "▼"}</span>
+              <span>{showAchievements ? <ChevronUp /> : <ChevronDown />}</span>
             </Button>
             {showAchievements && (
               <div className="mt-1 grid grid-cols-2 gap-1">
-                {data?.achievements.achievements.map((a) => (
-                  <div
-                    key={a.apiname}
-                    className={`flex flex-col gap-0.5 rounded border p-1.5 text-xs ${a.achieved ? "border-highlight-medium" : "border-highlight-low opacity-50"}`}
-                  >
-                    <span className="font-bold">{a.name}</span>
-                    {a.description && <span className="text-text/60">{a.description}</span>}
-                  </div>
-                ))}
+                {data?.achievements.achievements
+                  .filter((a) => a.achieved)
+                  .map((a) => (
+                    <section
+                      key={a.apiname}
+                      className={`flex flex-row gap-1 border p-1.5 text-xs ${a.achieved ? "border-highlight-medium" : "border-highlight-low opacity-50"} items-center`}
+                    >
+                      <ImageComponent
+                        src={a.icon}
+                        alt="achievement image"
+                        className="size-12 border-2 border-highlight-high"
+                      />
+                      <div className={`flex flex-col gap-0.5 `}>
+                        <span className="font-bold">{a.name}</span>
+                        {a.description && <span className="text-text/60">{a.description}</span>}
+                      </div>
+                    </section>
+                  ))}
               </div>
             )}
           </div>

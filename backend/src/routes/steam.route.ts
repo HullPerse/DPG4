@@ -20,6 +20,38 @@ function makeGameData(appid: number, name: string) {
   }
 }
 
+type PlayerAchievement = {
+  apiname: string;
+  achieved: number;
+  unlocktime?: number;
+};
+
+type SchemaAchievement = {
+  name: string;
+  displayName?: string;
+  description?: string;
+  icon?: string;
+  icongray?: string;
+  hidden?: number;
+  defaultvalue?: number;
+};
+
+type PlayerAchievementsResponse = {
+  playerstats?: {
+    success?: boolean;
+    gameName?: string;
+    achievements?: PlayerAchievement[];
+  };
+};
+
+type SchemaForGameResponse = {
+  game?: {
+    availableGameStats?: {
+      achievements?: SchemaAchievement[];
+    };
+  };
+};
+
 export default new Elysia({ prefix: "/steam" })
   .get(
     "/resolve-vanity",
@@ -125,32 +157,51 @@ export default new Elysia({ prefix: "/steam" })
     async ({ params, set }) => {
       try {
         const key = steamKey();
-        const url = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${params.appId}&steamid=${params.steamId}&key=${key}`;
-        const res = await fetch(url);
-        const data = await res.json() as {
-          playerstats?: {
-            gameName?: string;
-            achievements?: {
-              apiname: string;
-              achieved: number;
-              unlocktime: number;
-              name: string;
-              description: string;
-            }[];
-            success?: boolean;
-            error?: string;
-          };
-        };
 
-        const stats = data.playerstats;
+        const playerUrl =
+          `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/` +
+          `?appid=${params.appId}&steamid=${params.steamId}&key=${key}&l=english`;
 
-        if (!stats?.success || !Array.isArray(stats.achievements)) {
+        const schemaUrl =
+          `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v0002/` +
+          `?appid=${params.appId}&key=${key}&l=english`;
+
+        const [playerRes, schemaRes] = await Promise.all([
+          fetch(playerUrl),
+          fetch(schemaUrl),
+        ]);
+
+        const playerData = (await playerRes.json()) as PlayerAchievementsResponse;
+        const schemaData = (await schemaRes.json()) as SchemaForGameResponse;
+
+        const playerStats = playerData.playerstats;
+        const schemaAchievements = schemaData.game?.availableGameStats?.achievements ?? [];
+
+        if (!playerStats?.success || !Array.isArray(playerStats.achievements)) {
           return null;
         }
 
+        const schemaByName = new Map<string, SchemaAchievement>(
+          schemaAchievements.map((a) => [a.name, a])
+        );
+
+        const achievements = playerStats.achievements.map((a) => {
+          const meta = schemaByName.get(a.apiname);
+
+          return {
+            ...a,
+            title: meta?.displayName ?? null,
+            description: meta?.description ?? null,
+            icon: meta?.icon ?? null,
+            iconGray: meta?.icongray ?? null,
+            hidden: meta?.hidden ?? null,
+            defaultValue: meta?.defaultvalue ?? null,
+          };
+        });
+
         return {
-          gameName: stats.gameName ?? null,
-          achievements: stats.achievements,
+          gameName: playerStats.gameName ?? null,
+          achievements,
         };
       } catch (e: unknown) {
         set.status = 502;

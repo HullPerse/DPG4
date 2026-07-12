@@ -47,6 +47,7 @@ export default class GameApi {
           unlocktime: number;
           name: string;
           description: string;
+          icon: string;
         }[];
       }>(`/steam/achievements/${appId}/${steamId}`);
     } catch {
