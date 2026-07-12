@@ -50,9 +50,7 @@ const logger = new Logger("SYSTEM");
 migrate();
 logger.info("Database migrations applied");
 
-new Elysia({
-  aot: false
-})
+new Elysia()
   .get("/health", () => ({ ok: true }))
   .ws("/ws", {
     open(ws) {
@@ -105,7 +103,7 @@ new Elysia({
   .use(rulesRoute)
 
   .get("/", () => "DPG SERVER")
-  .listen(Bun.env.PORT ?? 3001, (e) => {
+  .listen(Bun.env.PORT ?? 200, (e) => {
     const URL = `http://${e.hostname}:${e.port}`;
     logger.info(iluhaAscii);
     logger.info(`🐀 DPG API -> ${URL}`);

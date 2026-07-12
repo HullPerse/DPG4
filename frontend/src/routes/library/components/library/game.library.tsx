@@ -485,7 +485,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
           </div>
         )}
 
-        {/*{data?.achievements && data?.achievements.achievements.length > 0 && (
+        {data?.achievements && data?.achievements.achievements.length > 0 && (
           <div className="mt-2 border-t border-highlight-medium pt-2">
             <Button
               variant="link"
@@ -513,7 +513,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
               </div>
             )}
           </div>
-        )}*/}
+        )}
       </section>
     </main>
   );
