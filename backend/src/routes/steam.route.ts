@@ -28,9 +28,11 @@ export default new Elysia({ prefix: "/steam" })
         const key = steamKey()
         const url = `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${key}&vanityurl=${encodeURIComponent(query.vanityUrl)}`
         const res = await fetch(url)
+
         const data = (await res.json()) as {
           response: { success: number; steamid?: string; message?: string }
         }
+
         if (data.response.success !== 1 || !data.response.steamid) {
           set.status = 404
           return {
@@ -125,7 +127,7 @@ export default new Elysia({ prefix: "/steam" })
         const key = steamKey();
         const url = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${params.appId}&steamid=${params.steamId}&key=${key}`;
         const res = await fetch(url);
-        const data = (await res.json()) as {
+        const data = await res.json() as {
           playerstats?: {
             gameName?: string;
             achievements?: {
@@ -136,15 +138,19 @@ export default new Elysia({ prefix: "/steam" })
               description: string;
             }[];
             success?: boolean;
+            error?: string;
           };
         };
-        if (!data.playerstats?.success || !data.playerstats?.achievements) {
-          set.status = 404;
-          return { error: "No achievements found" };
+
+        const stats = data.playerstats;
+
+        if (!stats?.success || !Array.isArray(stats.achievements)) {
+          return null;
         }
+
         return {
-          gameName: data.playerstats.gameName,
-          achievements: data.playerstats.achievements,
+          gameName: stats.gameName ?? null,
+          achievements: stats.achievements,
         };
       } catch (e: unknown) {
         set.status = 502;

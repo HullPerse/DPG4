@@ -11,7 +11,6 @@ import {
 import { broadcast } from "@/lib/websocket.utils";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
-import { RAT_IDS } from "@/lib/items/constants";
 
 const logger = new Logger("USERS");
 

@@ -25,8 +25,11 @@ class PetService {
           .from(schema.pets)
           .where(eq(schema.pets.isAlive, true));
 
+        const nowMs = new Date(now).getTime();
+        const updates: { id: string; userId: string; hunger: number; happiness: number; energy: number }[] = [];
+
         for (const pet of pets) {
-          const elapsedMs = new Date(now).getTime() - new Date(pet.lastUpdated).getTime();
+          const elapsedMs = nowMs - new Date(pet.lastUpdated).getTime();
           if (elapsedMs < DECAY_INTERVAL_MS) continue;
 
           const elapsedHours = elapsedMs / (1000 * 60 * 60);
@@ -36,12 +39,18 @@ class PetService {
 
           if (hunger === pet.hunger && happiness === pet.happiness && energy === pet.energy) continue;
 
+          updates.push({ id: pet.id, userId: pet.userId, hunger, happiness, energy });
+        }
+
+        if (updates.length === 0) return;
+
+        for (const u of updates) {
           await db
             .update(schema.pets)
-            .set({ hunger, happiness, energy, lastUpdated: now, updated: now })
-            .where(eq(schema.pets.id, pet.id));
+            .set({ hunger: u.hunger, happiness: u.happiness, energy: u.energy, lastUpdated: now, updated: now })
+            .where(eq(schema.pets.id, u.id));
 
-          broadcast("pets", "update", pet.userId);
+          broadcast("pets", "update", u.userId);
         }
       } catch (err: unknown) {
         this.logger.error(`decay loop error ${err}`);

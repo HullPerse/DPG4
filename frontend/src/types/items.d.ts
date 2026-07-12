@@ -57,8 +57,6 @@ export interface effectInterface {
   label: ItemLabel;
   type: "modal" | "effect";
   effect?: () => void;
-  /** @deprecated use Modal */
-  body?: (close: () => void) => React.ReactNode;
   Modal?: FC<ModalType>;
 }
 

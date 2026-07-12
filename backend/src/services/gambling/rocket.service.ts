@@ -13,15 +13,15 @@ export default class RocketService {
   private lastEndedGames = new Map<string, RocketState>();
   private crashHistory: { crashPoint: number; timestamp: number }[] = [];
   private MAX_HISTORY = 50;
-  private HOUSE_EDGE = 0.9;
   private logger = new Logger("ROCKET");
 
   constructor(private db: Db, private userService: UserService, private economyService: EconomyService) {}
 
   private generateCrashPoint(bid: number): number {
+    const LAMBDA = 2 + (bid - 1) * 0.05;
     const e = Math.random();
-    const edge = Math.max(0.8, this.HOUSE_EDGE - (bid - 1) * 0.01);
-    return Math.max(1, Math.floor((edge / (1 - e)) * 100) / 100);
+    const crashPoint = 1 - Math.log(1 - e) / LAMBDA;
+    return Math.max(1, Math.floor(crashPoint * 100) / 100);
   }
 
   private computeMultiplier(elapsedMs: number): number {

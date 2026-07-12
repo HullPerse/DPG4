@@ -14,7 +14,7 @@ export default new Elysia({ prefix: "/hangman" })
   .get(
     "/:userId",
     async ({ params, db }) => {
-      const record = await db
+      const record =  db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
@@ -53,7 +53,7 @@ export default new Elysia({ prefix: "/hangman" })
   .post(
     "/:userId",
     async ({ params, db }) => {
-      const latest = await db
+      const latest =  db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.userId, params.userId))
@@ -87,7 +87,7 @@ export default new Elysia({ prefix: "/hangman" })
         updated: now,
       });
 
-      return await db
+      return  db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, id))
@@ -102,7 +102,7 @@ export default new Elysia({ prefix: "/hangman" })
     "/:userId/state",
     async ({ params, body, db }) => {
       const now = nowIso();
-      const record = await db
+      const record =  db
         .select()
         .from(schema.hangman)
         .where(
@@ -124,7 +124,7 @@ export default new Elysia({ prefix: "/hangman" })
         })
         .where(eq(schema.hangman.id, record.id));
 
-      return await db
+      return  db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, record.id))
@@ -143,7 +143,7 @@ export default new Elysia({ prefix: "/hangman" })
     "/:userId/play",
     async ({ params, body, db }) => {
       const now = nowIso();
-      const record = await db
+      const record =  db
         .select()
         .from(schema.hangman)
         .where(
@@ -172,7 +172,7 @@ export default new Elysia({ prefix: "/hangman" })
         .setAuthor(hUser?.username ?? "SYSTEM")
         .info(`user played ${body.won}`);
 
-      return await db
+      return  db
         .select()
         .from(schema.hangman)
         .where(eq(schema.hangman.id, record.id))

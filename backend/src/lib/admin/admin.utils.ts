@@ -83,7 +83,7 @@ function tryParseJson(value: unknown): unknown {
   }
 }
 
-export function parseDataUrl(
+function parseDataUrl(
   value: string,
 ): { buffer: Buffer; mime: string } | null {
   const match = value.match(/^data:(.+?);base64,(.+)$/);
@@ -98,7 +98,7 @@ export async function cleanBody(
   const jfSet = new Set(ADMIN_JSON_FIELDS[table] ?? []);
   const bfSet = new Set(ADMIN_BLOB_FIELDS[table] ?? []);
 
-  const out: Record<string, unknown> = {};
+const out: Record<string, unknown> = {};
   let plainPassword: string | undefined;
 
   for (const [key, value] of Object.entries(body)) {

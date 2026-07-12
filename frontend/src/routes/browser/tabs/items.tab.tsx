@@ -141,11 +141,11 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
                           return a.username.localeCompare(b.username);
                         })
                         .map((item, index) => (
-                        <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
-                          {`${index + 1}: `}
-                          {item.username}
-                        </SelectItem>
-                      ))}
+                          <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
+                            {`${index + 1}: `}
+                            {item.username}
+                          </SelectItem>
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -271,7 +271,12 @@ function ItemsTab({ searchTerms }: { searchTerms: string }) {
       <section
         ref={listRef}
         className="relative flex h-full w-full overflow-y-auto p-2 border-t-2 border-highlight-high"
-        style={{ contain: "layout paint", scrollbarGutter: "stable", willChange: "transform", scrollBehavior: "smooth" }}
+        style={{
+          contain: "layout paint",
+          scrollbarGutter: "stable",
+          willChange: "transform",
+          scrollBehavior: "smooth",
+        }}
       >
         <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualItem) => {

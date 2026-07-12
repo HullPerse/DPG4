@@ -18,9 +18,6 @@ export default class PaintApi {
   getDrawingsByAuthor = async (userId: string): Promise<PaintType[]> =>
     apiFetch<PaintType[]>(`/drawings?authorId=${userId}`);
 
-  /** @deprecated use getDrawingsByAuthor */
-  getDrawinsByAuthor = this.getDrawingsByAuthor;
-
   updateDraw = async (id: string, data: Partial<PaintType>) => {
     const image =
       data.image instanceof File ? await filePayload(data.image) : data.image;

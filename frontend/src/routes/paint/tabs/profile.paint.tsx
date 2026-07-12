@@ -25,7 +25,7 @@ function ProfilePaint({
     queryFn: async (): Promise<PaintType[]> => {
       if (!user) return [];
 
-      const allData = await paintApi.getDrawinsByAuthor(String(user.id));
+      const allData = await paintApi.getDrawingsByAuthor(String(user.id));
       return allData;
     },
   });

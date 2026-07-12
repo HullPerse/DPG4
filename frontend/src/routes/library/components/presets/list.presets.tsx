@@ -166,7 +166,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
             style={{
               position: "absolute",
               transform: `translateY(${virtualItem.start}px)`,
-              width: "100%",
+              width: "99%",
             }}
             data-index={virtualItem.index}
             className="flex flex-row min-h-24 h-24 border-2 border-highlight-high p-2 items-center justify-between bg-card shadow-sharp-sm"
@@ -180,7 +180,7 @@ function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }
                 />
               </div>
               <span
-                className={`font-bold line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
+                className={`font-bold truncate line-clamp-1 ${item.steamLink ? "hover:cursor-pointer hover:underline" : ""}`}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (!item.steamLink) return;

@@ -202,3 +202,5 @@ backend/server
 backend/data/backup-tracker.json
 backend/data
 _backend
+
+server.exe

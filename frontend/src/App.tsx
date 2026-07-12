@@ -281,7 +281,7 @@ function App() {
         {/* WINDOWS */}
         {activeApps.map((app, index) => (
           <DesktopAppWindow
-            key={app.id}
+            key={`${app.id}-${app.refreshKey ?? 0}`}
             app={app}
             index={index}
             setActiveApps={setActiveApps}

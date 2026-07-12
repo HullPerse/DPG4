@@ -67,7 +67,7 @@ function DrawPaint({ setTab }: { setTab: (value: "home" | "draw" | "list" | "pro
     queryFn: async (): Promise<PaintType[]> => {
       if (!user) return [];
 
-      return await paintApi.getDrawinsByAuthor(String(user.id));
+      return await paintApi.getDrawingsByAuthor(String(user.id));
     },
     enabled: !!user,
   });

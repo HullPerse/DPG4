@@ -4,7 +4,7 @@ const MIN_COMPRESS_SIZE = 1024;
 
 const compressionPlugin = new Elysia({
   name: "compression",
-}).mapResponse("global", ({ responseValue, request }) => {
+}).mapResponse({ as: "global" }, ({ responseValue, request }) => {
   const body = responseValue instanceof Response ? null : responseValue;
   if (!body) return;
 
@@ -19,6 +19,16 @@ const compressionPlugin = new Elysia({
         : null;
 
   if (!raw || raw.length < MIN_COMPRESS_SIZE) return;
+
+  if (accept.includes("br")) {
+    return new Response((Bun as any).brotliCompressSync(raw), {
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Encoding": "br",
+        Vary: "Accept-Encoding",
+      },
+    });
+  }
 
   if (accept.includes("gzip")) {
     return new Response(Bun.gzipSync(raw), {

@@ -119,7 +119,7 @@ export default class EffectService {
         const name = (game?.data as { name?: string })?.name ?? "игру";
         return `${user.username} подтер ж̶о̶п̶у̶ ${name}`;
       },
-      "Erection - NPC": async ({ userId, inventoryId }) => {
+      "Erection - NPC": async ({ inventoryId }) => {
         const [firstPosition] = await this.db
           .select()
           .from(schema.users)
@@ -547,7 +547,7 @@ export default class EffectService {
           .select()
           .from(schema.inventory)
           .where(eq(schema.inventory.owner, userId));
-        const rats = inventory.filter((i) => RAT_IDS.includes(i.label));
+        const rats = inventory.filter((i) => RAT_IDS.filter((id) => id !== "Крысавчик").includes(i.label));
         if (rats.length === 0) {
           await this.userService.score(userId, -2);
           return `${user.username} потерял 2 чубрика из-за отсутствия крыс`;

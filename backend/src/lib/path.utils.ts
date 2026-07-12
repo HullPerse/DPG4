@@ -2,9 +2,11 @@
 
 /**
  * Backend project root (package.json, data/, logs/, backups/).
- * Walks up from import.meta.dir until it finds a directory with package.json.
+ * First checks BACKEND_ROOT env var, then walks up from import.meta.dir,
+ * and finally falls back to process.cwd() for production (compiled binary).
  */
  const BACKEND_ROOT = (() => {
+   if (Bun.env.BACKEND_ROOT) return Bun.env.BACKEND_ROOT;
    let dir = import.meta.dir;
    while (dir) {
      try {
@@ -14,7 +16,7 @@
      if (parent === dir) break;
      dir = parent;
    }
-   return import.meta.dir;
+   return process.cwd();
  })();
 
  export function resolveBackendPath(...segments: string[]): string {

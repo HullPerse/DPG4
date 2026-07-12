@@ -45,7 +45,7 @@ function EditReview({
     queryFn: async () => {
       const game = await gameApi.getReview(String(id));
       const userData = await userApi.getUserById(String(game.user.id));
-      const drawings = await paintApi.getDrawinsByAuthor(String(game.user.id));
+      const drawings = await paintApi.getDrawingsByAuthor(String(game.user.id));
 
       return { game, user: userData, drawings };
     },
@@ -75,16 +75,6 @@ function EditReview({
     }
   }, [data, reviewText, setReviewText, setRating]);
 
-  if (isLoading || !data) return <WindowLoader />;
-  if (isError)
-    return (
-      <WindowError
-        error={new Error("Произошла ошибка при загрузке отзыва")}
-        icon={<NetworkIcon />}
-        className="relative"
-      />
-    );
-
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
@@ -105,12 +95,22 @@ function EditReview({
         image = null;
       }
 
-      return gameApi.saveReview(String(data.game.user.id), id, review, image);
+      return gameApi.saveReview(String(data?.game.user.id), id, review, image);
     },
     onSuccess: () => invalidateQuery(),
     onError: (error) => console.error("Failed to save review:", error),
     onSettled: () => setContent("general"),
   });
+
+  if (isLoading || !data) return <WindowLoader />;
+  if (isError)
+    return (
+      <WindowError
+        error={new Error("Произошла ошибка при загрузке отзыва")}
+        icon={<NetworkIcon />}
+        className="relative"
+      />
+    );
 
   return (
     <main className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto pb-5">

@@ -39,7 +39,7 @@ function WordleTab() {
       return {
         streak: await getStreak(user?.id),
         word: user?.hangman
-          ? (await getHangman(user.id)) ?? (await joinHangman(user.id))
+          ? ((await getHangman(user.id)) ?? (await joinHangman(user.id)))
           : await joinHangman(user.id),
       };
     },
@@ -57,7 +57,7 @@ function WordleTab() {
   const word = data?.word?.word ?? "";
   const wordUpper = word.toUpperCase();
 
-  const maxErrors = 6 + Math.max(0, Math.ceil((word.length - 6) / 2));
+  const maxErrors = Math.min(7, 6 + Math.max(0, Math.ceil((word.length - 6) / 2)));
 
   const guessedRef = useRef(letters);
   const wrongRef = useRef<string[]>([]);
@@ -93,8 +93,8 @@ function WordleTab() {
 
   const displayWord = wordUpper
     .split("")
-    .map((i) => (letters.has(i) ? i : "_"))
-    .join(" ");
+    .map((i) => (letters.has(i) ? i : "＿"))
+    .join("‎");
 
   const playMutation = useMutation({
     mutationFn: async ({ won }: { won: boolean }) => {
@@ -118,11 +118,7 @@ function WordleTab() {
 
       const upperCase = letter.toUpperCase();
 
-      if (
-        guessedRef.current.has(upperCase) ||
-        errors.has(upperCase)
-      )
-        return;
+      if (guessedRef.current.has(upperCase) || errors.has(upperCase)) return;
 
       const isWin = wordUpper.includes(upperCase);
 
@@ -132,11 +128,7 @@ function WordleTab() {
         guessedRef.current = next;
         setLetters(next);
 
-        const updated = await saveHangmanState(
-          user!.id,
-          [...next],
-          wrongRef.current,
-        );
+        const updated = await saveHangmanState(user!.id, [...next], wrongRef.current);
 
         queryClient.setQueryData(["hangman", user!.id], updated);
 
@@ -150,11 +142,7 @@ function WordleTab() {
         wrongRef.current = [...next];
         setErrors(next);
 
-        const updated = await saveHangmanState(
-          user!.id,
-          [...guessedRef.current],
-          [...next],
-        );
+        const updated = await saveHangmanState(user!.id, [...guessedRef.current], [...next]);
         queryClient.setQueryData(["hangman", user!.id], updated);
 
         if (next.size >= maxErrors) {
@@ -204,9 +192,7 @@ function WordleTab() {
 
   const finishedComponent = () => {
     if (status === "won")
-      return (
-        <span className="text-green-400 text-lg font-bold">ПОБЕДА! +5</span>
-      );
+      return <span className="text-green-400 text-lg font-bold">ПОБЕДА! +5</span>;
     else if (status === "lost")
       return (
         <div className="flex flex-col items-center gap-1">
@@ -230,9 +216,7 @@ function WordleTab() {
         <HangMan wrongLetters={[...errors]} />
       </section>
       {/* WORD */}
-      <section className="text-center text-2xl font-bold tracking-widest">
-        {displayWord}
-      </section>
+      <section className="text-center text-2xl font-bold tracking-widest">{displayWord}</section>
       {/* KEYBOARD */}
       <section className="relative">
         {isFinished ? (
@@ -247,9 +231,7 @@ function WordleTab() {
                 return (
                   <Button
                     key={digit}
-                    variant={
-                      isCorrect ? "success" : isWrong ? "error" : "default"
-                    }
+                    variant={isCorrect ? "success" : isWrong ? "error" : "default"}
                     disabled={isUsed}
                     onClick={() => handleGuess(digit)}
                     className="font-bold border-2 text-xl border-highlight-high h-14 w-14"
@@ -268,9 +250,7 @@ function WordleTab() {
                 return (
                   <Button
                     key={letter}
-                    variant={
-                      isCorrect ? "success" : isWrong ? "error" : "default"
-                    }
+                    variant={isCorrect ? "success" : isWrong ? "error" : "default"}
                     disabled={isUsed}
                     onClick={() => handleGuess(letter)}
                     className="font-bold border-2 text-xl border-highlight-high h-14 w-14"

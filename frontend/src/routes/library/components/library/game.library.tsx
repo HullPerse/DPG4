@@ -8,7 +8,8 @@ import { WindowLoader } from "@/components/shared/loader.component";
 import {
   Award,
   Calendar,
-  Gamepad2,
+  ChevronDown,
+  ChevronUp,
   NetworkIcon,
   NotebookPen,
   RussianRuble,
@@ -21,7 +22,7 @@ import { Button, buttonVariants } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import { gameButtons } from "@/config/library.config";
 import { useSubscription } from "@/hooks/index.hook";
-import { calculateScore, getStatusColor, openWindow } from "@/lib/index.utils";
+import { calculateScore, checkImage, getStatusColor, openWindow } from "@/lib/index.utils";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useClickAway } from "@uidotdev/usehooks";
 import { VariantProps } from "class-variance-authority";
@@ -36,7 +37,6 @@ import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
 import ImageViewer from "@/components/shared/viewer.component";
 import { useDataStore } from "@/store/data.store";
-import { useUserStore } from "@/store/user.store";
 import { unbanDice } from "@/api/gambling.api";
 
 const gameApi = new GameApi();
@@ -49,12 +49,12 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
   const setStoreItems = useDataStore((state) => state.setStoreItems);
   const setRerollPrice = useDataStore((state) => state.setRerollPrice);
   const noAction = useDataStore((state) => state.noAction);
-  const currentUser = useUserStore((state) => state.user);
 
   const [content, setContent] = useState<"general" | "review">("general");
   const [time, setTime] = useState<string | null>(null);
   const [input, setInput] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [websiteExists, setWebsiteExists] = useState(false);
 
   const clickAwayRef = useClickAway((e: Event) => {
     const target = e.target as HTMLElement;
@@ -72,32 +72,34 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["gameInstance", id],
-    queryFn: async (): Promise<{ game: Game; user: User }> => {
+    queryFn: async (): Promise<{
+      game: Game;
+      user: User;
+      achievements: {
+        gameName: string;
+        achievements: {
+          apiname: string;
+          achieved: number;
+          unlocktime: number;
+          name: string;
+          description: string;
+        }[];
+      } | null;
+    }> => {
       const game = await gameApi.getGameInfo(id);
       const user = await userApi.getUserById(String(game.user.id));
 
-      return { game, user };
+      const steamId = await gameApi.resolveVanityUrl(user.steam);
+      const appId = game?.data.steamLink.match(/\/app\/(\d+)/)?.[1];
+
+      let achievements = null;
+
+      if (!appId) achievements = null;
+      else achievements = await gameApi.getSteamAchievements(appId, steamId);
+
+      return { game, user, achievements };
     },
     staleTime: 0,
-  });
-
-  const appId = useMemo(() => {
-    const link = data?.game?.data.steamLink;
-    if (!link) return null;
-    const match = link.match(/\/app\/(\d+)/);
-    return match ? match[1] : null;
-  }, [data]);
-
-  const { data: achievements } = useQuery({
-    queryKey: ["steamAchievements", appId, currentUser?.steam],
-    queryFn: async () => {
-      if (!appId || !currentUser?.steam) return null;
-      const steamId = await gameApi.resolveVanityUrl(currentUser.steam);
-      if (!steamId) return null;
-      return gameApi.getSteamAchievements(appId, steamId);
-    },
-    enabled: !!appId && !!currentUser?.steam,
-    staleTime: 5 * 60 * 1000,
   });
 
   const invalidateQuery = useCallback(() => {
@@ -217,6 +219,26 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
     },
     [data, time, statusMutation],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if (!data?.game?.data.websiteLink) {
+        if (!cancelled) setWebsiteExists(false);
+        return;
+      }
+
+      const ok = await checkImage(`${data.game.data.websiteLink}/favicon.ico`);
+      if (!cancelled) setWebsiteExists(ok);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.game?.data.websiteLink]);
 
   if (isLoading) return <WindowLoader />;
   if (isError)
@@ -348,32 +370,36 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
               {/* USER TIME */}
               {data?.game?.playtime.user != null && Number(data?.game.playtime.user) > 0 && (
                 <div
-                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
+                  className="flex flex-row gap-1 border p-1 w-fit items-center justify-between border-highlight-high opacity-75 text-sm"
                   title="Время Игрока"
                 >
-                  <UserStar /> <span>{data?.game?.playtime.user} ч.</span>
+                  <UserStar className="size-4" /> <span>{data?.game?.playtime.user} ч.</span>
                 </div>
               )}
 
               {/* HLTB TIME */}
-              {data?.game?.playtime.hltb && (
+
+              {data?.game?.playtime.hltb != null && Number(data?.game?.playtime.hltb) > 0 && (
                 <div
-                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
+                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75 text-sm"
                   title="Время HLTB"
                 >
-                  <Timer /> <span>{data?.game.playtime.hltb} ч.</span>
+                  <Timer className="size-4" /> <span>{data?.game.playtime.hltb} ч.</span>
                 </div>
               )}
               {/* SCORE */}
-              {data?.game.playtime.user && data?.game?.score && (
-                <div
-                  className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75"
-                  title="Чубрики"
-                >
-                  <RussianRuble />
-                  <span>{data?.game.score}</span>
-                </div>
-              )}
+
+              {data?.game?.playtime.user != null &&
+                Number(data?.game.playtime.user) > 0 &&
+                data?.game.score != null &&
+                Number(data?.game.score) > 0 && (
+                  <div
+                    className="flex flex-row gap-1 border p-1 w-fit min-w-14 items-center justify-between border-highlight-high opacity-75 text-sm"
+                    title="Чубрики"
+                  >
+                    <RussianRuble className="size-4" /> <span>{data?.game.score}</span>
+                  </div>
+                )}
 
               {data?.game.created && (
                 <div
@@ -411,26 +437,16 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
                   {/*<ExternalLink />*/}
                   {data?.game?.data.websiteLink && (
                     <Image
-                      src={`${data?.game?.data.websiteLink}/favicon.ico`}
+                      src={
+                        websiteExists ? `${data?.game?.data.websiteLink}/favicon.ico` : "box.png"
+                      }
                       alt={String(data?.game?.data.name)}
                       className="min-w-9 min-h-9 w-9 h-9"
                     />
                   )}
                 </Button>
               )}
-              {data?.game?.data.steamLink && (
-                <Button
-                  variant="ghost"
-                  title="Запустить через Steam"
-                  className="items-center justify-center w-10 h-10 border rounded self-center"
-                  onClick={() => {
-                    if (!appId) return;
-                    openUrl(`steam://run/${appId}`);
-                  }}
-                >
-                  <Gamepad2 className="size-5" />
-                </Button>
-              )}
+
               {data?.game?.data.steamLink && (
                 <Button
                   variant="ghost"
@@ -463,7 +479,13 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       <section className="relative flex flex-col h-full w-full p-2 overflow-y-auto">
         {contentComponent}
 
-        {achievements && achievements.achievements.length > 0 && (
+        {data?.achievements && data.achievements.achievements.length > 0 && (
+          <div className="flex flex-col border-t border-highlight-high pt-2">
+            <Button>{showAchievements ? <ChevronUp /> : <ChevronDown />}</Button>
+          </div>
+        )}
+
+        {/*{data?.achievements && data?.achievements.achievements.length > 0 && (
           <div className="mt-2 border-t border-highlight-medium pt-2">
             <Button
               variant="link"
@@ -472,13 +494,14 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
             >
               <span className="flex items-center gap-2">
                 <Award className="size-4" />
-                Достижения Steam ({achievements.achievements.filter((a) => a.achieved).length}/{achievements.achievements.length})
+                Достижения Steam ({data?.achievements.achievements.filter((a) => a.achieved).length}
+                /{data?.achievements.achievements.length})
               </span>
               <span>{showAchievements ? "▲" : "▼"}</span>
             </Button>
             {showAchievements && (
               <div className="mt-1 grid grid-cols-2 gap-1">
-                {achievements.achievements.map((a) => (
+                {data?.achievements.achievements.map((a) => (
                   <div
                     key={a.apiname}
                     className={`flex flex-col gap-0.5 rounded border p-1.5 text-xs ${a.achieved ? "border-highlight-medium" : "border-highlight-low opacity-50"}`}
@@ -490,7 +513,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
               </div>
             )}
           </div>
-        )}
+        )}*/}
       </section>
     </main>
   );

@@ -261,14 +261,14 @@ export default new Elysia({ prefix: "/games" })
 
       broadcast("games", "update", params.id)
       logger.setAuthor(gameUser.username).info(`changed game status ${gameData.name} ${GAME_STATUS_LABELS[body.status] ?? body.status}`)
-      return mapGame(
-        (
-          await db
-            .select()
-            .from(schema.games)
-            .where(eq(schema.games.id, params.id))
-        )[0]!,
-      )
+
+      const row = (
+        await db
+          .select()
+          .from(schema.games)
+          .where(eq(schema.games.id, params.id)))[0]
+
+      return mapGame(row)
     },
     { body: gameStatusBody },
   )

@@ -98,16 +98,14 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
   );
 
   const filteredUsers = (data?.users ?? []).filter(
-    (user) =>
-      !searchTerms ||
-      user.username.toUpperCase().includes(searchTerms.toUpperCase()),
+    (user) => !searchTerms || user.username.toUpperCase().includes(searchTerms.toUpperCase()),
   );
 
   const listRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: filteredItems.length,
     getScrollElement: () => listRef.current,
-    estimateSize: () => 96,
+    estimateSize: () => 128,
     overscan: 8,
     gap: 8,
     getItemKey: (index) => filteredItems[index]?.id ?? index,
@@ -131,7 +129,13 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
     <main
       ref={listRef}
       className="relative flex h-full w-full flex-col gap-2 overflow-y-auto p-2 items-center pb-10"
-      style={{ scrollbarGutter: "stable", willChange: "transform", scrollBehavior: "smooth" }}
+      style={{
+        scrollbarGutter: "stable",
+        willChange: "transform",
+        scrollBehavior: "smooth",
+        height: `${virtualizer.getTotalSize()}px`,
+        contain: "layout paint",
+      }}
     >
       {itemData && (
         <CreateModal
@@ -162,11 +166,11 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
                           return a.username.localeCompare(b.username);
                         })
                         .map((item, index) => (
-                        <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
-                          {`${index + 1}: `}
-                          {item.username}
-                        </SelectItem>
-                      ))}
+                          <SelectItem key={item.id} value={item.id!} style={{ color: item.color }}>
+                            {`${index + 1}: `}
+                            {item.username}
+                          </SelectItem>
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -247,13 +251,15 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
 
         return (
           <section
-            key={item.id}
+            key={virtualItem.key}
             ref={virtualizer.measureElement}
             data-index={virtualItem.index}
             style={{
               position: "absolute",
-              transform: `translateY(${virtualItem.start}px)`,
+              top: 0,
+              left: 0,
               width: "100%",
+              transform: `translateY(${virtualItem.start}px)`,
             }}
             className="relative p-2 flex flex-row w-full min-h-fit h-22 border-2 border-highlight-high items-center bg-card mt-10"
           >

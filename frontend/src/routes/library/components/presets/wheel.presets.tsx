@@ -152,9 +152,7 @@ export default function PresetsWheel({ id }: { id: string }) {
             type: "image",
           }))}
           onResult={(item) => {
-            return setResult(
-              data?.games.find((game) => game.id === item?.id) as GameData,
-            );
+            return setResult(data?.games.find((game) => game.id === item?.id) as GameData);
           }}
           free
         />
@@ -236,7 +234,7 @@ export default function PresetsWheel({ id }: { id: string }) {
               style={{
                 position: "absolute",
                 transform: `translateY(${virtualItem.start}px)`,
-                width: "100%",
+                width: "99%",
                 opacity: hiddenGames.has(String(item.id)) ? "50%" : undefined,
               }}
               data-index={virtualItem.index}
@@ -279,11 +277,7 @@ export default function PresetsWheel({ id }: { id: string }) {
                     setHiddenGames(next);
                   }}
                 >
-                  {hiddenGames.has(item.id) ? (
-                    <EyeIcon size={20} />
-                  ) : (
-                    <EyeOffIcon size={20} />
-                  )}
+                  {hiddenGames.has(item.id) ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
                 </Button>
                 {input.enabled && input.type === "list" && input.id === item?.id && (
                   <Input

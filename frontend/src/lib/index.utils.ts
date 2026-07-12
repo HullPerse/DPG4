@@ -289,3 +289,23 @@ export function readFileAsDataUrl(
     reader.readAsDataURL(file);
   });
 }
+
+
+export function checkImage(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+
+export function getMood(hunger: number, happiness: number, energy: number, isAlive: boolean): string {
+  if (!isAlive) return "Мертва";
+  if (hunger < 30) return "Голоден";
+  if (energy < 30) return "Хочет спать";
+  if (happiness < 30) return "Грустный";
+  if (happiness > 70 && hunger > 70 && energy > 70) return "Счастлив";
+  return "Нормально";
+}

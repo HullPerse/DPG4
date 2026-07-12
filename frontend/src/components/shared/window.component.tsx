@@ -106,6 +106,8 @@ const Window = memo(function Window(props: WindowProps) {
     });
   }, [props.position, props.size]);
 
+
+
   //handle window resize to prevent overflow
   const windowSizeRef = useRef(windowSize);
   windowSizeRef.current = windowSize;

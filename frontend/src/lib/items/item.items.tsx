@@ -2902,10 +2902,7 @@ export const itemEffect: effectInterface[] = [
               items: allItems
                 .filter((i) => i.label !== "Волшебный Крысиный Дождь")
                 .filter(
-                  (i) =>
-                    ratIds.has(i.label) ||
-                    pigIds.has(i.label) ||
-                    gremlinIds.has(i.label),
+                  (i) => ratIds.has(i.label) || pigIds.has(i.label) || gremlinIds.has(i.label),
                 ),
               users: allUsers,
             };
@@ -3414,7 +3411,7 @@ export const itemEffect: effectInterface[] = [
                     : "не поел, но зато получил 5 чубриков";
                   const textAdd = food ? "ОН ПОЕЛ ОЧЕНЬ КРУТУЮ ЕДУ и получил чубрик" : "";
 
-                  await ctx.consume(`${ctx.user.usernname} ${text}. ${textAdd}`);
+                  await ctx.consume(`${ctx.user.username} ${text}. ${textAdd}`);
 
                   ctx.close();
                 }}
@@ -3455,7 +3452,10 @@ export const itemEffect: effectInterface[] = [
               тёмными и блестящими, словно угольки. А изо рта капала густая чёрная жидкость. С тех
               пор в деревне больше никто не подходил к хлеву. Но по ночам из него до сих пор
               доносится шёпот. И если вы окажетесь там, не смотрите в глаза свинье. Иначе вы станете
-              частью стада.
+              частью стада. → 5 чубриков, если прочитал вслух от начала и до конца. +2 чубрика, если
+              при этом была атмосферная музыка. +2 чубрика, если во время чтения пункта кто-нибудь в
+              Дискорде жестко хрюкнул. -5 чубриков, если промотал сразу в конец пункта, все испортил
+              бля!
             </section>
 
             <label className="flex flex-row gap-1">
@@ -3528,7 +3528,7 @@ export const itemEffect: effectInterface[] = [
                   await userApi.scoreUser(String(ctx.user.id), finalScore);
 
                   await ctx.consume(
-                    `${ctx.user.usernname} прочитал страшную свиную историю и изменил свои чубрики на ${finalScore}`,
+                    `${ctx.user.username} прочитал страшную свиную историю и изменил свои чубрики на ${finalScore}`,
                   );
 
                   ctx.close();
@@ -3950,12 +3950,11 @@ export const itemEffect: effectInterface[] = [
             return { type: "loseMoney", amount };
           }
           if (roll < 95) {
-            const others = await itemsApi.getInventory(ctx.user.id).then((res) =>
-              res.filter((i) => i.label !== "Крыса-Гадалка"),
-            );
-            const item = others.length > 0
-              ? others[Math.floor(Math.random() * others.length)]
-              : null;
+            const others = await itemsApi
+              .getInventory(ctx.user.id)
+              .then((res) => res.filter((i) => i.label !== "Крыса-Гадалка"));
+            const item =
+              others.length > 0 ? others[Math.floor(Math.random() * others.length)] : null;
             return { type: "stealItem", label: item?.label ?? "ничего" };
           }
           return { type: "rareItem", label: "Крысиный Король" };
@@ -4018,18 +4017,26 @@ export const itemEffect: effectInterface[] = [
               break;
             }
           }
-          await ctx.consume(`${ctx.user.username} заглянул в судьбу и получил ${fate.type === "money" ? `${fate.amount} чубриков` : fate.type === "stealMoney" ? `${fate.amount} украденных чубриков` : fate.type === "ratItem" ? "крысу" : fate.type === "loseMoney" ? "потерю" : fate.type === "stealItem" ? "чужой предмет" : "редкую награду"}`);
+          await ctx.consume(
+            `${ctx.user.username} заглянул в судьбу и получил ${fate.type === "money" ? `${fate.amount} чубриков` : fate.type === "stealMoney" ? `${fate.amount} украденных чубриков` : fate.type === "ratItem" ? "крысу" : fate.type === "loseMoney" ? "потерю" : fate.type === "stealItem" ? "чужой предмет" : "редкую награду"}`,
+          );
           ctx.close();
         };
 
         const fateDescription = (f: Fate) => {
           switch (f.type) {
-            case "money": return `💰 +${f.amount} чубриков`;
-            case "stealMoney": return `😈 +${f.amount} украденных чубриков`;
-            case "ratItem": return `🐀 +${f.label}`;
-            case "loseMoney": return `💸 -${f.amount} чубриков`;
-            case "stealItem": return `🕵️ +${f.label}`;
-            case "rareItem": return `👑 +${f.label}`;
+            case "money":
+              return `💰 +${f.amount} чубриков`;
+            case "stealMoney":
+              return `😈 +${f.amount} украденных чубриков`;
+            case "ratItem":
+              return `🐀 +${f.label}`;
+            case "loseMoney":
+              return `💸 -${f.amount} чубриков`;
+            case "stealItem":
+              return `🕵️ +${f.label}`;
+            case "rareItem":
+              return `👑 +${f.label}`;
           }
         };
 
@@ -4072,9 +4079,7 @@ export const itemEffect: effectInterface[] = [
           queryKey: ["modalData", ctx.user.id, "radioactive"],
           queryFn: async () => {
             const inv = await itemsApi.getInventory(ctx.user.id);
-            return inv.filter(
-              (i) => i.label !== "Радиоактивная Крыса",
-            );
+            return inv.filter((i) => i.label !== "Радиоактивная Крыса");
           },
         });
 
@@ -4126,7 +4131,10 @@ export const itemEffect: effectInterface[] = [
             <main className="flex flex-col gap-2 p-2">
               <span className="text-lg font-bold text-center text-green-400">⚡ РАДИАЦИЯ ⚡</span>
               {mutated.map((m, i) => (
-                <div key={i} className="flex flex-row items-center justify-between border border-highlight-medium rounded p-2">
+                <div
+                  key={i}
+                  className="flex flex-row items-center justify-between border border-highlight-medium rounded p-2"
+                >
                   <span className="line-through text-text/60">{m.old}</span>
                   <span className="text-green-400">→</span>
                   <span className="font-bold text-green-400">{m.new}</span>
@@ -4155,7 +4163,9 @@ export const itemEffect: effectInterface[] = [
                         : "border-highlight-medium hover:bg-highlight-low"
                     }`}
                   >
-                    <span className={`size-3 rounded-full ${isSelected ? "bg-green-500" : "bg-highlight-medium"}`} />
+                    <span
+                      className={`size-3 rounded-full ${isSelected ? "bg-green-500" : "bg-highlight-medium"}`}
+                    />
                     <span className="truncate">{item.label}</span>
                   </button>
                 );

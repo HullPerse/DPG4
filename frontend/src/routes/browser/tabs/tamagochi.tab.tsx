@@ -1,7 +1,7 @@
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as THREE from "three";
+import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getPet,
@@ -33,246 +33,15 @@ import {
   Skull,
 } from "lucide-react";
 import type { Inventory } from "@/types/items";
-import { ModelConfigEntry } from "@/types/config";
+import SceneContent from "../components/tamagochi/scene.tamagochi";
+import StatBar from "../components/tamagochi/stat.tamagochi";
+import { PALETTE, REWARD_THRESHOLD } from "@/config/tamagochi.config";
+import { getMood } from "@/lib/index.utils";
 
 const itemsApi = new ItemsApi();
 
 useGLTF.preload("/models/rat.glb");
 useGLTF.preload("/models/dingus.glb");
-
-const REWARD_THRESHOLD = 80;
-const PALETTE = [
-  "#8B7355",
-  "#2D2D2D",
-  "#FFFFFF",
-  "#FF69B4",
-  "#4A90D9",
-  "#50C878",
-  "#E74C3C",
-  "#9B59B6",
-  "#FF8C00",
-  "#00BCD4",
-  "#FFD700",
-  "#A9A9A9",
-];
-
-function getMood(hunger: number, happiness: number, energy: number, isAlive: boolean): string {
-  if (!isAlive) return "Мертва";
-  if (hunger < 30) return "Голоден";
-  if (energy < 30) return "Хочет спать";
-  if (happiness < 30) return "Грустный";
-  if (happiness > 70 && hunger > 70 && energy > 70) return "Счастлив";
-  return "Нормально";
-}
-
-function RatModel({
-  reaction,
-  spinning,
-  isAlive,
-  color,
-  modelCfg,
-}: {
-  reaction: string | null;
-  spinning: boolean;
-  isAlive: boolean;
-  color: string;
-  modelCfg: ModelConfigEntry;
-}) {
-  const { scene } = useGLTF(modelCfg.file);
-  const groupRef = useRef<THREE.Group>(null);
-  const cloned = useMemo(() => {
-    const c = scene.clone();
-    c.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.material = child.material.clone();
-      }
-    });
-    return c;
-  }, [scene]);
-  const animRef = useRef<{ type: string; elapsed: number } | null>(null);
-  const prevReaction = useRef<string | null>(null);
-  const deadColor = useRef(new THREE.Color(0x666666));
-  const targetColor = useRef(new THREE.Color(color));
-
-  useEffect(() => {
-    targetColor.current.set(color);
-  }, [color]);
-
-  if (reaction && reaction !== prevReaction.current) {
-    animRef.current = { type: reaction, elapsed: 0 };
-    prevReaction.current = reaction;
-  }
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-
-    if (!isAlive) {
-      groupRef.current.rotation.x = modelCfg.dead.rotation[0];
-      groupRef.current.rotation.z = modelCfg.dead.rotation[2];
-      groupRef.current.rotation.y = modelCfg.dead.rotation[1];
-      groupRef.current.scale.setScalar(modelCfg.dead.scale);
-      groupRef.current.position.set(
-        modelCfg.dead.position[0],
-        modelCfg.dead.position[1],
-        modelCfg.dead.position[2],
-      );
-      cloned.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          (child.material as THREE.MeshStandardMaterial).color.lerp(deadColor.current, 0.05);
-        }
-      });
-      return;
-    }
-
-    cloned.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        (child.material as THREE.MeshStandardMaterial).color.lerp(targetColor.current, 0.08);
-      }
-    });
-
-    const cfgScale = modelCfg.model.scale;
-    const cfgPosY = modelCfg.model.position[1];
-
-    const anim = animRef.current;
-    if (!anim) {
-      if (spinning) {
-        groupRef.current.rotation.y += delta * 1.5;
-      } else {
-        groupRef.current.rotation.y = modelCfg.model.rotation[1];
-      }
-      groupRef.current.rotation.x = modelCfg.model.rotation[0];
-      groupRef.current.rotation.z = modelCfg.model.rotation[2];
-      groupRef.current.scale.setScalar(cfgScale);
-      groupRef.current.position.set(
-        modelCfg.model.position[0],
-        cfgPosY,
-        modelCfg.model.position[2],
-      );
-      return;
-    }
-
-    anim.elapsed += delta;
-    const progress = Math.min(anim.elapsed / 0.8, 1);
-
-    if (anim.type === "feed") {
-      const bounce = 1 + Math.sin(progress * Math.PI * 3) * 0.12 * (1 - progress);
-      groupRef.current.scale.setScalar(cfgScale * bounce);
-    } else if (anim.type === "pet") {
-      groupRef.current.rotation.z = Math.sin(progress * Math.PI * 4) * 0.1 * (1 - progress);
-    } else if (anim.type === "sleep") {
-      groupRef.current.position.y = cfgPosY - Math.sin(progress * Math.PI) * 0.3;
-    }
-
-    if (progress >= 1) {
-      animRef.current = null;
-    }
-  });
-
-  return (
-    <group
-      ref={groupRef}
-      scale={modelCfg.model.scale}
-      position={[
-        modelCfg.model.position[0],
-        modelCfg.model.position[1],
-        modelCfg.model.position[2],
-      ]}
-      rotation={[
-        modelCfg.model.rotation[0],
-        modelCfg.model.rotation[1],
-        modelCfg.model.rotation[2],
-      ]}
-    >
-      <primitive object={cloned} />
-    </group>
-  );
-}
-
-function CameraController({ modelCfg }: { modelCfg: ModelConfigEntry }) {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    camera.position.set(
-      modelCfg.camera.position[0],
-      modelCfg.camera.position[1],
-      modelCfg.camera.position[2],
-    );
-    if (camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = modelCfg.camera.fov;
-      camera.updateProjectionMatrix();
-    }
-  }, [modelCfg, camera]);
-
-  return null;
-}
-
-function SceneContent({
-  reaction,
-  spinning,
-  isAlive,
-  color,
-  modelCfg,
-}: {
-  reaction: string | null;
-  spinning: boolean;
-  isAlive: boolean;
-  color: string;
-  modelCfg: ModelConfigEntry;
-}) {
-  return (
-    <>
-      <CameraController modelCfg={modelCfg} />
-      <OrbitControls enablePan={true} />
-      <Environment preset="city" />
-      <color attach="background" args={["#232136"]} />
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[5, 6, 4]} intensity={1.6} color="#f6c177" />
-      <directionalLight position={[-4, 3, -3]} intensity={0.6} color="#c4a7e7" />
-      <directionalLight position={[-2, -1, 6]} intensity={0.4} color="#eb6f92" />
-      <directionalLight position={[0, -4, -4]} intensity={0.25} color="#31748f" />
-      <Suspense fallback={null}>
-        <RatModel
-          reaction={reaction}
-          spinning={spinning}
-          isAlive={isAlive}
-          color={color}
-          modelCfg={modelCfg}
-        />
-      </Suspense>
-    </>
-  );
-}
-
-function StatBar({
-  label,
-  value,
-  color,
-  dead,
-}: {
-  label: string;
-  value: number;
-  color: string;
-  dead?: boolean;
-}) {
-  const clamped = Math.max(0, Math.min(100, value));
-  return (
-    <div className={`flex flex-col gap-0.5 flex-1 ${dead ? "opacity-40" : ""}`}>
-      <div className="flex justify-between text-xs">
-        <span className="font-medium">{label}</span>
-        <span className="tabular-nums text-muted">{Math.round(clamped)}</span>
-      </div>
-      <div className="h-1.5 w-full bg-highlight-high rounded-full overflow-hidden">
-        <div
-          className="h-full transition-all duration-500 ease-linear rounded-full"
-          style={{
-            width: `${clamped}%`,
-            backgroundColor: dead ? "#555" : color,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
@@ -281,8 +50,8 @@ function TamagotchiTab() {
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
   const [ratItems, setRatItems] = useState<Inventory[]>([]);
-  const rewardCheckedRef = useRef(false);
   const actionTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const wasEligibleRef = useRef(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["pet", user?.id],
@@ -311,12 +80,17 @@ function TamagotchiTab() {
   }, [user?.id, rewardMessage]);
 
   useEffect(() => {
-    if (!data || !user || rewardCheckedRef.current || petIsDead) return;
-    if (
+    if (!data || !user || petIsDead) {
+      wasEligibleRef.current = false;
+      return;
+    }
+
+    const isEligible =
       data.hunger > REWARD_THRESHOLD &&
       data.happiness > REWARD_THRESHOLD &&
-      data.energy > REWARD_THRESHOLD
-    ) {
+      data.energy > REWARD_THRESHOLD;
+
+    if (isEligible && !wasEligibleRef.current) {
       claimDailyReward(user.id).then((result) => {
         if (result.claimed) {
           if (result.reward === "money") {
@@ -328,7 +102,8 @@ function TamagotchiTab() {
         }
       });
     }
-    rewardCheckedRef.current = true;
+
+    wasEligibleRef.current = isEligible;
   }, [data, user, petIsDead]);
 
   const handleAction = useCallback((action: "feed" | "pet" | "sleep") => {
