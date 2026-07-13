@@ -27,8 +27,8 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useClickAway } from "@uidotdev/usehooks";
 import { VariantProps } from "class-variance-authority";
 
-import GameApi from "@/api/games.api";
-import UserApi from "@/api/user.api";
+import { gameApi } from "@/api/games.api";
+import { userApi } from "@/api/user.api";
 import CellApi from "@/api/cell.api";
 
 import ReviewComponent from "@/components/shared/review.component";
@@ -40,8 +40,7 @@ import { useDataStore } from "@/store/data.store";
 import { unbanDice } from "@/api/gambling.api";
 import ImageComponent from "@/components/shared/image.component";
 
-const gameApi = new GameApi();
-const userApi = new UserApi();
+
 const cellApi = new CellApi();
 
 function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void }) {
@@ -73,35 +72,24 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["gameInstance", id],
-    queryFn: async (): Promise<{
-      game: Game;
-      user: User;
-      achievements: {
-        gameName: string;
-        achievements: {
-          apiname: string;
-          achieved: number;
-          unlocktime: number;
-          name: string;
-          description: string;
-          icon: string;
-        }[];
-      } | null;
-    }> => {
+    queryFn: async (): Promise<{ game: Game; user: User }> => {
       const game = await gameApi.getGameInfo(id);
       const user = await userApi.getUserById(String(game.user.id));
-
-      const steamId = await gameApi.resolveVanityUrl(user.steam);
-      const appId = game?.data.steamLink.match(/\/app\/(\d+)/)?.[1];
-
-      let achievements = null;
-
-      if (!appId) achievements = null;
-      else achievements = await gameApi.getSteamAchievements(appId, steamId);
-
-      return { game, user, achievements };
+      return { game, user };
     },
-    staleTime: 0,
+  });
+
+  const achievementsQuery = useQuery({
+    queryKey: ["steamAchievements", data?.game?.data.steamLink, data?.user?.steam],
+    queryFn: async () => {
+      if (!data?.game?.data.steamLink || !data?.user?.steam) return null;
+      const steamId = await gameApi.resolveVanityUrl(data.user.steam);
+      const appId = data.game.data.steamLink.match(/\/app\/(\d+)/)?.[1];
+      if (!appId) return null;
+      return await gameApi.getSteamAchievements(appId, steamId);
+    },
+    enabled: !!data?.game?.data.steamLink && !!data?.user?.steam,
+    staleTime: 300_000,
   });
 
   const invalidateQuery = useCallback(() => {
@@ -248,7 +236,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       <WindowError error={new Error("Произошла ошибка при загрузке игры")} icon={<NetworkIcon />} />
     );
 
-  console.log("data", data?.achievements);
+
 
   return (
     <main className="relative flex flex-col w-full h-full">
@@ -483,13 +471,7 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
       <section className="relative flex flex-col h-full w-full p-2 overflow-y-auto">
         {contentComponent}
 
-        {data?.achievements && data.achievements.achievements.length > 0 && (
-          <div className="flex flex-col border-t border-highlight-high pt-2">
-            <Button>{showAchievements ? <ChevronUp /> : <ChevronDown />}</Button>
-          </div>
-        )}
-
-        {data?.achievements && data?.achievements.achievements.length > 0 && (
+        {achievementsQuery.data?.achievements && achievementsQuery.data.achievements.length > 0 && (
           <div className="mt-2 border-t border-highlight-medium pt-2">
             <Button
               variant="link"
@@ -498,26 +480,27 @@ function GameLibrary({ id, switchGame }: { id: string; switchGame: () => void })
             >
               <span className="flex items-center gap-2">
                 <Award className="size-4" />
-                Достижения Steam ({data?.achievements.achievements.filter((a) => a.achieved).length}
-                /{data?.achievements.achievements.length})
+                Достижения Steam (
+                {achievementsQuery.data.achievements.filter((a) => a.achieved).length}
+                /{achievementsQuery.data.achievements.length})
               </span>
               <span>{showAchievements ? <ChevronUp /> : <ChevronDown />}</span>
             </Button>
             {showAchievements && (
               <div className="mt-1 grid grid-cols-2 gap-1">
-                {data?.achievements.achievements
+                {achievementsQuery.data.achievements
                   .filter((a) => a.achieved)
                   .map((a) => (
                     <section
                       key={a.apiname}
-                      className={`flex flex-row gap-1 border p-1.5 text-xs ${a.achieved ? "border-highlight-medium" : "border-highlight-low opacity-50"} items-center`}
+                      className="flex flex-row gap-1 border p-1.5 text-xs border-highlight-medium items-center"
                     >
                       <ImageComponent
                         src={a.icon}
                         alt="achievement image"
                         className="size-12 border-2 border-highlight-high"
                       />
-                      <div className={`flex flex-col gap-0.5 `}>
+                      <div className="flex flex-col gap-0.5">
                         <span className="font-bold">{a.name}</span>
                         {a.description && <span className="text-text/60">{a.description}</span>}
                       </div>

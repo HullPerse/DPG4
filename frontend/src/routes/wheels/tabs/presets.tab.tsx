@@ -6,11 +6,11 @@ import { WindowError } from "@/components/shared/error.component";
 import { EyeIcon, EyeOffIcon, NetworkIcon } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
 import { Button } from "@/components/ui/button.component";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import { Preset } from "@/types/games";
 import ImageComponent from "@/components/shared/image.component";
 
-const gameApi = new GameApi();
+
 
 function PresetsWheel() {
   const queryClient = useQueryClient();

@@ -31,11 +31,11 @@ export default new Elysia({ prefix: "/files" })
       const config = tables[params.entity as EntityKey]
       if (!config) {
         set.status = 404
-        return "Not found"
+        return { error: "Not found" }
       }
       if (!isAllowedField(config.fields, params.field)) {
         set.status = 404
-        return "Not found"
+        return { error: "Not found" }
       }
 
       const [row] = await db
@@ -45,7 +45,7 @@ export default new Elysia({ prefix: "/files" })
 
       if (!row) {
         set.status = 404
-        return "Not found"
+        return { error: "Not found" }
       }
 
       const record = row as Record<string, unknown>
@@ -56,11 +56,14 @@ export default new Elysia({ prefix: "/files" })
 
       if (!(buffer instanceof Buffer)) {
         set.status = 404
-        return "Not found"
+        return { error: "Not found" }
       }
 
       return new Response(new Uint8Array(buffer), {
-        headers: { "Content-Type": mime },
+        headers: {
+          "Content-Type": mime,
+          "Cache-Control": "public, max-age=86400",
+        },
       })
     },
     {

@@ -291,6 +291,58 @@ export const migrations: Record<string, Migration> = {
       "CREATE INDEX IF NOT EXISTS idx_users_position ON users (position);",
     ],
   },
+  "0015_events_table": {
+    description: "Add events audit table",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS events (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        actor_id TEXT,
+        target_id TEXT,
+        payload TEXT NOT NULL DEFAULT '{}',
+        created TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_events_type ON events (type);",
+      "CREATE INDEX IF NOT EXISTS idx_events_actor ON events (actor_id);",
+      "CREATE INDEX IF NOT EXISTS idx_events_target ON events (target_id);",
+      "CREATE INDEX IF NOT EXISTS idx_events_created ON events (created DESC);",
+    ],
+  },
+  "0017_gambling_sessions": {
+    description: "Add gambling sessions table for DB-backed game state",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS gambling_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        game_type TEXT NOT NULL,
+        state TEXT NOT NULL,
+        bid INTEGER NOT NULL DEFAULT 0,
+        phase TEXT NOT NULL DEFAULT 'active',
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      );`,
+      "CREATE INDEX IF NOT EXISTS idx_gambling_sessions_user ON gambling_sessions (user_id);",
+      "CREATE INDEX IF NOT EXISTS idx_gambling_sessions_user_game ON gambling_sessions (user_id, game_type);",
+    ],
+  },
+  "0018_composite_indexes": {
+    description: "Add composite indexes for common query patterns",
+    sql: [
+      "CREATE INDEX IF NOT EXISTS idx_games_user_status ON games (user_id, status, created DESC);",
+      "CREATE INDEX IF NOT EXISTS idx_inventory_owner_item ON inventory (owner, item_id);",
+      "CREATE INDEX IF NOT EXISTS idx_history_user_type ON history (user_id, type, created DESC);",
+    ],
+  },
+  "0019_rocket_crash_history": {
+    description: "Rocket crash history table",
+    sql: [
+      `CREATE TABLE IF NOT EXISTS rocket_crash_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        crash_point REAL NOT NULL,
+        created TEXT NOT NULL
+      );`,
+    ],
+  },
 };
 
 export function getAppliedMigrations(): Set<string> {

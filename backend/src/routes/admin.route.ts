@@ -22,7 +22,7 @@ import {
   replaceBuffers,
   verifyAdmin,
 } from "../lib/admin/admin.utils";
-import { broadcastAdminReload } from "../lib/websocket.utils";
+import { broadcastAdminReload, broadcastAdminLogout } from "../lib/websocket.utils";
 import Logger, { LOG_FILE } from "../lib/logger.utils";
 
 const logger = new Logger("ADMIN");
@@ -89,6 +89,16 @@ const adminRoute = new Elysia()
         }
         broadcastAdminReload();
         logger.info("Admin broadcast reloaded");
+        return { ok: true };
+      })
+      .post("/broadcast-logout", async ({ headers, adminJwt, db, set }) => {
+        const admin = await verifyAdmin(headers, adminJwt, db);
+        if (!admin) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+        broadcastAdminLogout();
+        logger.info("Admin broadcast logout");
         return { ok: true };
       })
       .post(

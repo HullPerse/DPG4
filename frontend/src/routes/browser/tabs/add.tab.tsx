@@ -1,4 +1,4 @@
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
@@ -15,7 +15,7 @@ import { Item, ItemType } from "@/types/items";
 import { X } from "lucide-react";
 import { useCallback, useState } from "react";
 
-const itemsApi = new ItemsApi();
+
 
 function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
   const [label, setLabel] = useState<string>("");
@@ -93,7 +93,7 @@ function AddItem({ setAddItem }: { setAddItem: (value: boolean) => void }) {
             }}
           >
             <SelectTrigger className="w-full py-5">
-              <SelectValue placeholder="Сложность" />
+              <SelectValue placeholder="Тип предмета" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>

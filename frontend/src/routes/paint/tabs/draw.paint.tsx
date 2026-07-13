@@ -294,7 +294,7 @@ function DrawPaint({ setTab }: { setTab: (value: "home" | "draw" | "list" | "pro
             type="range"
             min={0.05}
             max={1}
-            step={0.05}
+            step={0.01}
             value={alpha}
             onChange={(e) => setAlpha(Number(e.currentTarget.value))}
             className="w-full accent-iris"
@@ -384,6 +384,8 @@ function DrawPaint({ setTab }: { setTab: (value: "home" | "draw" | "list" | "pro
             allowMiddleClickPan: false,
             allowRightClickPan: true,
           }}
+          smooth={false}
+          zoomAnimation={{ disabled: true }}
           wheel={{ step: 0.1 }}
         >
           <TransformComponent

@@ -33,13 +33,14 @@ function GameArea({
   useEffect(() => {
     if (zoomed.current) return;
     if (!user?.id || !users.length) return;
-    if (!instance.wrapperComponent || !instance.contentComponent) return;
 
-    const element = document.getElementById(`user-${user.id}`);
-    if (element) {
-      instance.getContext().zoomToElement(element, 1, 600);
-      zoomed.current = true;
-    }
+    requestAnimationFrame(() => {
+      const element = document.getElementById(`user-${user.id}`);
+      if (element) {
+        instance.getContext().zoomToElement(element, 1, 600);
+        zoomed.current = true;
+      }
+    });
   }, [user?.id, users, instance]);
 
   return (

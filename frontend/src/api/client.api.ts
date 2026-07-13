@@ -16,7 +16,9 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
 
 async function fetchWithTimeout(
   url: string,
@@ -35,6 +37,34 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  retries = MAX_RETRIES,
+): Promise<Response> {
+  const method = options.method ?? "GET";
+  const isGet = method === "GET";
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchWithTimeout(url, options, timeoutMs);
+    } catch (err) {
+      const isNetworkError =
+        err instanceof TypeError ||
+        (err instanceof DOMException && err.name === "AbortError");
+
+      if (attempt < retries && isNetworkError && isGet) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * 2 ** attempt));
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw new Error("Request failed");
 }
 
 export async function checkConnection(): Promise<boolean> {
@@ -71,11 +101,11 @@ export async function apiFetch<T>(
 
   const method = options.method ?? (options.body ? "POST" : "GET");
 
-  const res = await fetchWithTimeout(
+  const res = await fetchWithRetry(
     `${URL}${path}`,
     {
       method,
-      cache: method === "GET" ? "no-store" : undefined,
+      cache: undefined,
       headers,
       signal: options.signal,
       body:

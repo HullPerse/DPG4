@@ -9,7 +9,7 @@ import { useUserStore } from "@/store/user.store";
 
 import PresetsList from "../components/presets/presets.presets";
 
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import PresetSettings from "../components/presets/list.presets";
 import NewGameLibrary from "../components/library/newGame.library";
 import PresetsWheel from "../components/presets/wheel.presets";
@@ -17,7 +17,7 @@ import PresetsWheel from "../components/presets/wheel.presets";
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-const gameApi = new GameApi();
+
 
 function PresetsTab() {
   const isAdmin = useUserStore((state) => state.isAdmin);

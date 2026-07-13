@@ -2,7 +2,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { getFileUrl } from "@/api/client.api";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
@@ -10,7 +10,7 @@ import { useUserStore } from "@/store/user.store";
 import type { Inventory, Item } from "@/types/items";
 import { useMutation } from "@tanstack/react-query";
 
-const itemsApi = new ItemsApi();
+
 
 useGLTF.preload("/models/rat.glb");
 

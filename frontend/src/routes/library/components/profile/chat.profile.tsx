@@ -20,10 +20,10 @@ import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
 import ChatBubble from "@/components/shared/bubble.component";
 import ImageComponent from "@/components/shared/image.component";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 
 const chatApi = new ChatApi();
-const userApi = new UserApi();
+
 
 export default function ChatProfile({ id }: { id: string }) {
   const queryClient = useQueryClient();

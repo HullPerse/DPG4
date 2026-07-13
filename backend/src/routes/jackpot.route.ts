@@ -13,21 +13,18 @@ export default new Elysia({ prefix: "/utils/jackpot" })
 
   .post(
     "/play",
-    async ({ body, headers, user, jackpotService }) => {
-      const devMode = headers["x-dev-mode"] === "1" || body.devMode === true;
+    async ({ body, user, jackpotService }) => {
+      const devMode = user.isAdmin &&
+        (body.devForceWin !== undefined || body.devShowWinningNumber !== undefined);
       return await jackpotService.play(
         user.sub,
         devMode,
-        body.devForceWin !== undefined ||
-          body.devShowWinningNumber !== undefined
-          ? body
-          : undefined,
+        devMode ? body : undefined,
       );
     },
     {
       requireAuth: true,
       body: t.Object({
-        devMode: t.Optional(t.Boolean()),
         devForceWin: t.Optional(t.Boolean()),
         devShowWinningNumber: t.Optional(t.Boolean()),
       }),

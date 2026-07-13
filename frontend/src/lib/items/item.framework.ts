@@ -2,21 +2,20 @@ import type { FC } from "react";
 import type { ConsumeType, ModalType } from "@/types/effect";
 import type { effectInterface, ItemLabel } from "@/types/items";
 import { apiFetch } from "@/api/client.api";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
 
-const itemsApi = new ItemsApi();
-
 export default class ItemFramework {
-  constructor(private label: ItemLabel) {}
+  constructor(
+    private label: ItemLabel,
+    private userId?: string,
+  ) {}
 
   consume: ConsumeType = async (activityText) => {
-    const user = useUserStore.getState().user;
-
-    if (!user) return;
+    if (!this.userId) return;
 
     const inventory = await itemsApi
-      .getInventory(String(user.id))
+      .getInventory(this.userId)
       .then((r) => r.find((i) => i.label === this.label));
 
     if (!inventory) return;
@@ -36,17 +35,14 @@ export default class ItemFramework {
       type: "effect",
       effect: async () => {
         const user = useUserStore.getState().user;
-
         if (!user) return;
 
-        const framework = new ItemFramework(label);
-
+        const framework = new ItemFramework(label, user.id);
         await handler({ user, consume: framework.consume });
       },
     };
   }
 
-  /** Factory returns a real FC so hooks inside the modal are valid. */
   static modal(
     label: ItemLabel,
     create: () => FC<ModalType>,

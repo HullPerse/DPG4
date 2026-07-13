@@ -2,8 +2,8 @@ import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Save, StepBack, X } from "lucide-react";
-import GameApi from "@/api/games.api";
-import UserApi from "@/api/user.api";
+import { gameApi } from "@/api/games.api";
+import { userApi } from "@/api/user.api";
 import { Button } from "@/components/ui/button.component";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
 import { useSubscription } from "@/hooks/index.hook";
@@ -18,8 +18,7 @@ import ImageComponent from "@/components/shared/image.component";
 import ImageViewer from "@/components/shared/viewer.component";
 import { fileFromUrl } from "@/lib/index.utils";
 
-const gameApi = new GameApi();
-const userApi = new UserApi();
+
 const paintApi = new PaintApi();
 
 function EditReview({

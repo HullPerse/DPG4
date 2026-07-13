@@ -35,6 +35,17 @@ export const config = {
   _dbPath: undefined as string | undefined,
 };
 
+export function validateConfig(): string[] {
+  const errors: string[] = [];
+
+  if (!Bun.env.JWT_SECRET) errors.push("JWT_SECRET is required");
+  if (Bun.env.PORT && isNaN(Number(Bun.env.PORT))) errors.push("PORT must be a number");
+  if (Bun.env.DB_CACHE_SIZE && isNaN(Number(Bun.env.DB_CACHE_SIZE))) errors.push("DB_CACHE_SIZE must be a number");
+  if (Bun.env.DB_MMAP_SIZE && isNaN(Number(Bun.env.DB_MMAP_SIZE))) errors.push("DB_MMAP_SIZE must be a number");
+
+  return errors;
+}
+
 export const COLLECTION_IDS: Record<string, string> = {
   users: "users",
   games: "games",

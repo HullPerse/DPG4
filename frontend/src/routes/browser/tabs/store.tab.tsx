@@ -1,7 +1,7 @@
 import ActivityApi from "@/api/activity.api";
 import { apiFetch, getFileUrl } from "@/api/client.api";
-import ItemsApi from "@/api/items.api";
-import UserApi from "@/api/user.api";
+import { itemsApi } from "@/api/items.api";
+import { userApi } from "@/api/user.api";
 import ImageComponent from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useDataStore } from "@/store/data.store";
@@ -13,8 +13,7 @@ import { useEffect, useState } from "react";
 import { fetchGamblingConfig } from "@/api/gambling.api";
 import { useMutation } from "@tanstack/react-query";
 
-const itemsApi = new ItemsApi();
-const userApi = new UserApi();
+
 const activityApi = new ActivityApi();
 
 const ITEMS_AMOUNT = 6;

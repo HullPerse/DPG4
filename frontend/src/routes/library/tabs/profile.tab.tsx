@@ -13,10 +13,10 @@ import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
 import { useSubscription } from "@/hooks/index.hook";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { User } from "@/types/user";
 import { Game } from "@/types/games";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import Games from "../components/profile/games.profile";
 import ReviewsProfile from "../components/profile/reviews.profile";
 import ChatProfile from "../components/profile/chat.profile";
@@ -28,8 +28,7 @@ import ActivityApi from "@/api/activity.api";
 import { useDataStore } from "@/store/data.store";
 import { CreateModal } from "@/components/shared/items.modal";
 import UserStats from "../components/stats/profile.stats";
-const userApi = new UserApi();
-const gameApi = new GameApi();
+
 const activityApi = new ActivityApi();
 
 function ProfileTab({ id }: { id?: string }) {

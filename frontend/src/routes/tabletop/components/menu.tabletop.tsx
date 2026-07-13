@@ -1,21 +1,42 @@
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { useUserStore } from "@/store/user.store";
+import { useToastStore } from "@/store/toast.store";
 import DiceComponent from "@/components/shared/dice.component";
 import { useState } from "react";
 import { Input } from "@/components/ui/input.component";
 import { Button } from "@/components/ui/button.component";
 
-const usersApi = new UserApi();
+
 
 export default function MenuTabletop() {
   const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
 
   const [additional, setAdditional] = useState<string>("");
 
   const handleMove = async (dice: number) => {
     if (!user?.id) return;
-    const newPosition = (user.position ?? 0) + dice;
-    await usersApi.moveUserAnimated(user.id, newPosition);
+    const oldPosition = user.position ?? 0;
+    const newPosition = oldPosition + dice;
+
+    setUser({ ...user, position: newPosition });
+
+    try {
+      await userApi.moveUserAnimated(user.id, newPosition);
+    } catch {
+      setUser({ ...user, position: oldPosition });
+      useToastStore.getState().addToast({
+        id: crypto.randomUUID(),
+        author: "Ошибка",
+        text: "Не удалось переместиться",
+        image: "⚠️",
+        type: "emoji",
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        collectionId: "",
+        collectionName: "",
+      } as any);
+    }
   };
 
   return (
@@ -27,11 +48,11 @@ export default function MenuTabletop() {
             <Button
               variant="success"
                 onClick={async () => {
-                  await usersApi.removePlace(String(user.id));
+                  await userApi.removePlace(String(user.id));
                   const keptMoney = 10 + Math.floor(Math.random() * 11);
-                  await usersApi.scoreUser(String(user.id), keptMoney);
-                  await usersApi.restart(String(user.id));
-                  await usersApi.moveUser(String(user.id), 0);
+                  await userApi.scoreUser(String(user.id), keptMoney);
+                  await userApi.restart(String(user.id));
+                  await userApi.moveUser(String(user.id), 0);
               }}
             >
               К началу

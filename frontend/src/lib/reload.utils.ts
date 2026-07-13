@@ -15,12 +15,26 @@ async function applyAdminReload() {
   useDataStore.getState().resetSessionCaches();
 }
 
+function applyAdminLogout() {
+  localStorage.clear();
+  sessionStorage.clear();
+  document.cookie.split(";").forEach((c) => {
+    document.cookie =
+      c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+  });
+  useDataStore.getState().clear();
+  useUserStore.getState().logout();
+}
+
 export function initAdminReloadListener() {
   if (adminUnsub) return;
 
   adminUnsub = subscribeWsChannel("admin", (msg) => {
     if (msg.action === "reload") {
       void applyAdminReload();
+    } else if (msg.action === "force-logout") {
+      applyAdminLogout();
+      window.location.reload();
     }
   });
 }

@@ -17,6 +17,7 @@ import {
   GAMBLING_MAX_BET,
 } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
+import { loadSession, saveSession, closeSession } from "@/lib/gambling/session.utils";
 
 const MAX_VOID_REROLLS = 2;
 const DICE_BROKEN_CHANCE = 0.1;
@@ -159,7 +160,6 @@ function compareHands(
 }
 
 export default class DiceService {
-  private games = new Map<string, ActiveDiceGame>();
   private logger = new Logger("DICE");
 
   constructor(
@@ -168,33 +168,30 @@ export default class DiceService {
     private economyService: EconomyService,
   ) {}
 
-  getActiveGame(userId: string): ActiveDiceGame | undefined {
-    return this.games.get(userId);
+  async getActiveGame(userId: string): Promise<ActiveDiceGame | null> {
+    const session = await loadSession(this.db, userId, "dice");
+    if (!session) return null;
+    return session.state as unknown as ActiveDiceGame;
   }
 
   async rollDealer(
     userId: string,
     bid: number,
-    devMode?: boolean,
-    devOverrides?: DiceDevOverrides,
   ): Promise<DiceRollPhaseResult> {
-    if (!devMode) {
-      if (
-        bid < GAMBLING_MIN_BET ||
-        bid > GAMBLING_MAX_BET ||
-        !Number.isInteger(bid)
-      )
-        throw new Error("Invalid bid");
-    }
-    const user = devMode ? null : await this.userService.getById(userId);
-    if (!devMode && !user) throw new Error("User not found");
-    if (!devMode && user!.tickets < bid)
-      throw new Error("Insufficient balance");
-    if (!devMode && user!.gamblingBanned)
-      throw new Error("Banned from gambling");
+    if (
+      bid < GAMBLING_MIN_BET ||
+      bid > GAMBLING_MAX_BET ||
+      !Number.isInteger(bid)
+    )
+      throw new Error("Invalid bid");
 
-    const values = devOverrides?.devForceDealerValues ?? getRandomDice();
-    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
+    const user = await this.userService.getById(userId);
+    if (!user) throw new Error("User not found");
+    if (user.tickets < bid) throw new Error("Insufficient balance");
+    if (user.gamblingBanned) throw new Error("Banned from gambling");
+
+    const values = getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values);
 
     const game: ActiveDiceGame = {
       dealerValues: values,
@@ -207,7 +204,8 @@ export default class DiceService {
       broken: broken || undefined,
       brokenDieIndex: broken ? brokenDieIndex : undefined,
     };
-    this.games.set(userId, game);
+
+    await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, bid);
 
     this.logger.info(
       `dealer rolled ${values.join(", ")}${broken ? " (BROKEN)" : ""}`,
@@ -215,6 +213,7 @@ export default class DiceService {
 
     if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
+      await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, bid);
       return {
         phase: "dealer",
         values,
@@ -226,6 +225,7 @@ export default class DiceService {
     }
 
     game.phase = "player";
+    await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, bid);
     return {
       phase: "dealer",
       values,
@@ -238,17 +238,17 @@ export default class DiceService {
 
   async rerollDealer(
     userId: string,
-    devMode?: boolean,
-    devOverrides?: DiceDevOverrides,
   ): Promise<DiceRollPhaseResult> {
-    const game = this.games.get(userId);
+    const session = await loadSession(this.db, userId, "dice");
+    const game = session?.state as unknown as ActiveDiceGame | undefined;
     if (!game || game.phase !== "dealer")
       throw new Error("No active dealer roll");
-    const user = devMode ? null : await this.userService.getById(userId);
-    if (!devMode && !user) throw new Error("User not found");
 
-    const values = devOverrides?.devForceDealerValues ?? getRandomDice();
-    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
+    const user = await this.userService.getById(userId);
+    if (!user) throw new Error("User not found");
+
+    const values = getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values);
     game.dealerValues = values;
     game.dealerHandInfo = hand;
     game.broken = broken || undefined;
@@ -260,6 +260,7 @@ export default class DiceService {
 
     if (hand.rank === 0 && game.dealerRerolls < MAX_VOID_REROLLS) {
       game.dealerRerolls++;
+      await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, game.bid);
       return {
         phase: "dealer",
         values,
@@ -271,6 +272,7 @@ export default class DiceService {
     }
 
     game.phase = "player";
+    await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, game.bid);
     return {
       phase: "dealer",
       values,
@@ -283,17 +285,17 @@ export default class DiceService {
 
   async rollPlayer(
     userId: string,
-    devMode?: boolean,
-    devOverrides?: DiceDevOverrides,
   ): Promise<DiceGameResult> {
-    const game = this.games.get(userId);
+    const session = await loadSession(this.db, userId, "dice");
+    const game = session?.state as unknown as ActiveDiceGame | undefined;
     if (!game || game.phase !== "player")
       throw new Error("No active dice game");
-    const user = devMode ? null : await this.userService.getById(userId);
-    if (!devMode && !user) throw new Error("User not found");
 
-    const values = devOverrides?.devForcePlayerValues ?? getRandomDice();
-    const { hand, broken, brokenDieIndex } = tryRollBreak(values, devOverrides);
+    const user = await this.userService.getById(userId);
+    if (!user) throw new Error("User not found");
+
+    const values = getRandomDice();
+    const { hand, broken, brokenDieIndex } = tryRollBreak(values);
 
     this.logger.info(
       `player rolled ${values.join(", ")}${broken ? " (BROKEN)" : ""}`,
@@ -301,13 +303,14 @@ export default class DiceService {
 
     if (hand.rank === 0 && game.playerRerolls < MAX_VOID_REROLLS) {
       game.playerRerolls++;
+      await saveSession(this.db, userId, "dice", game as unknown as Record<string, unknown>, game.bid);
       return {
         playerValues: values,
         payout: 0,
         net: 0,
         label: "Нет комбинации - переброс",
         tone: "reroll",
-        balance: user?.tickets ?? 0,
+        balance: user.tickets ?? 0,
         banned: false,
         reroll: true,
         broken: broken || undefined,
@@ -315,58 +318,54 @@ export default class DiceService {
       };
     }
 
-    this.games.delete(userId);
+    await closeSession(this.db, userId, "dice");
     const comparison = compareHands(game.dealerHandInfo, hand, game.bid);
 
-    if (!devMode && user) {
-      await this.db.insert(schema.history).values({
-        id: newId(),
-        userId,
-        owner: { id: user.id, username: user.username },
-        type: "dice",
-        label: comparison.label,
-        image: "",
-        bid: game.bid,
-        payout: comparison.payout,
-        net: comparison.net,
-        data: {
-          dealerValues: game.dealerValues,
-          playerValues: values,
-          dealerRerolls: game.dealerRerolls,
-          playerRerolls: game.playerRerolls,
-          dealerBroken: game.broken,
-          dealerBrokenDieIndex: game.brokenDieIndex,
-          playerBroken: broken || undefined,
-          playerBrokenDieIndex: broken ? brokenDieIndex : undefined,
-        },
-        created: nowIso(),
-      });
-    }
+    await this.db.insert(schema.history).values({
+      id: newId(),
+      userId,
+      owner: { id: user.id, username: user.username },
+      type: "dice",
+      label: comparison.label,
+      image: "",
+      bid: game.bid,
+      payout: comparison.payout,
+      net: comparison.net,
+      data: {
+        dealerValues: game.dealerValues,
+        playerValues: values,
+        dealerRerolls: game.dealerRerolls,
+        playerRerolls: game.playerRerolls,
+        dealerBroken: game.broken,
+        dealerBrokenDieIndex: game.brokenDieIndex,
+        playerBroken: broken || undefined,
+        playerBrokenDieIndex: broken ? brokenDieIndex : undefined,
+      },
+      created: nowIso(),
+    });
 
     const net = comparison.net;
-    let gamblingWinnings = user?.gamblingWinnings ?? 0;
-    let gamblingBanned = user?.gamblingBanned ?? false;
-    if (!devMode && net > 0) {
+    let gamblingWinnings = user.gamblingWinnings ?? 0;
+    let gamblingBanned = user.gamblingBanned ?? false;
+    if (net > 0) {
       gamblingWinnings += net;
       if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned)
         gamblingBanned = true;
     }
 
-    if (!devMode) {
-      if (comparison.net > 0)
-        await this.economyService.addTickets(userId, game.bid + comparison.net);
-      else if (comparison.net < 0)
-        await this.economyService.deductTickets(
-          userId,
-          Math.abs(comparison.net),
-        );
-      await this.db
-        .update(schema.users)
-        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
-        .where(eq(schema.users.id, userId));
-    }
+    if (comparison.net > 0)
+      await this.economyService.addTickets(userId, game.bid + comparison.net);
+    else if (comparison.net < 0)
+      await this.economyService.deductTickets(
+        userId,
+        Math.abs(comparison.net),
+      );
+    await this.db
+      .update(schema.users)
+      .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
+      .where(eq(schema.users.id, userId));
 
-    const updatedUser = devMode ? null : await this.userService.getById(userId);
+    const updatedUser = await this.userService.getById(userId);
     return {
       playerValues: values,
       payout: comparison.payout,
@@ -381,7 +380,7 @@ export default class DiceService {
   }
 
   async abort(userId: string): Promise<{ refunded: number; balance: number }> {
-    this.games.delete(userId);
+    await closeSession(this.db, userId, "dice");
     const user = await this.userService.getById(userId);
     return { refunded: 0, balance: user?.tickets ?? 0 };
   }

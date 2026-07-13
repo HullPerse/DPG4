@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import QuestsApi from "@/api/quests.api";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/index.utils";
 import CreateQuest from "../components/create.quest";
 
 const questsApi = new QuestsApi();
-const itemsApi = new ItemsApi();
+
 
 function getItemLabel(items: Item[], id: string): string {
   return items.find((i) => i.id === id)?.label ?? id;

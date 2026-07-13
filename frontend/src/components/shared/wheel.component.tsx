@@ -177,13 +177,33 @@ function Wheel({
   }, [list, rolling.isRolling, rolling.hasRolled]);
 
   useEffect(() => {
+    if (list.length === 0) return;
+    const preloaded: HTMLImageElement[] = [];
+    for (const item of list) {
+      if (item.type === "image" && item.image) {
+        const img = new Image();
+        img.src = item.image;
+        preloaded.push(img);
+      }
+    }
+  }, [list]);
+
+  useEffect(() => {
     const onResize = () => {
       if (!rolling.isRolling && !rolling.hasRolled) updateCenterHighlight();
     };
 
     window.addEventListener("resize", onResize);
+
+    let observer: ResizeObserver | null = null;
+    if (containerRef.current?.parentElement) {
+      observer = new ResizeObserver(onResize);
+      observer.observe(containerRef.current.parentElement);
+    }
+
     return () => {
       window.removeEventListener("resize", onResize);
+      observer?.disconnect();
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }

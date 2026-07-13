@@ -12,6 +12,7 @@ import { GrantItemPage } from "@/pages/GrantItem";
 import { HealthPage } from "@/pages/Health";
 import { LogsPage } from "@/pages/Logs";
 import { SearchPage } from "@/pages/Search";
+import { ApiDocsPage } from "@/pages/ApiDocs";
 import { LoginPage } from "@/pages/Login";
 import { ResourceFormPage } from "@/pages/ResourceForm";
 import { ResourceListPage } from "@/pages/ResourceList";
@@ -61,6 +62,7 @@ export function App() {
               <Route path="console" element={<ConsolePage />} />
               <Route path="logs" element={<LogsPage />} />
               <Route path="search" element={<SearchPage />} />
+              <Route path="api-docs" element={<ApiDocsPage />} />
               <Route path=":resource/create" element={<ResourceFormPage mode="create" />} />
               <Route
                 path=":resource/:id/edit"

@@ -1,4 +1,4 @@
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import {
   SmallLoader,
   WindowLoader,
@@ -17,7 +17,7 @@ import { type ZodIssue } from "zod";
 import { useDataStore } from "@/store/data.store";
 import Image from "@/components/shared/image.component";
 
-const userApi = new UserApi();
+
 
 export default function Signup({
   setRegister,

@@ -1,6 +1,3 @@
-import { eq } from "drizzle-orm";
-import * as schema from "@/db/schema.db";
-import { nowIso, newId } from "@/lib/index.utils";
 import type {
   BlackjackResult,
   BlackjackState,
@@ -20,15 +17,12 @@ import {
 import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
-import {
-  GAMBLING_BAN_THRESHOLD,
-  GAMBLING_MIN_BET,
-  GAMBLING_MAX_BET,
-} from "@/lib/gambling.constants";
+import { GAMBLING_MIN_BET, GAMBLING_MAX_BET } from "@/lib/gambling.constants";
 import Logger from "@/lib/logger.utils";
+import { processPayout, recordHistory } from "@/lib/gambling/payout.utils";
+import { loadSession, saveSession, closeSession } from "@/lib/gambling/session.utils";
 
 export default class BlackjackService {
-  private games = new Map<string, ActiveGame>();
   private logger = new Logger("BLACKJACK");
 
   constructor(
@@ -36,33 +30,6 @@ export default class BlackjackService {
     private userService: UserService,
     private economyService: EconomyService,
   ) {}
-
-  private async applyGamblingPayout(
-    userId: string,
-    bid: number,
-    payout: number,
-    devMode?: boolean,
-  ): Promise<{ banned: boolean; balance: number }> {
-    const user = devMode ? null : await this.userService.getById(userId);
-    if (!devMode && !user) throw new Error("User not found");
-    let gamblingWinnings = user?.gamblingWinnings ?? 0;
-    let gamblingBanned = user?.gamblingBanned ?? false;
-    if (!devMode && payout > 0) {
-      const profit = Math.max(0, payout - bid);
-      gamblingWinnings += profit;
-      if (gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned)
-        gamblingBanned = true;
-      await this.economyService.addTickets(userId, payout);
-    }
-    if (!devMode) {
-      await this.db
-        .update(schema.users)
-        .set({ gamblingWinnings, gamblingBanned, updated: nowIso() })
-        .where(eq(schema.users.id, userId));
-    }
-    const updated = devMode ? null : await this.userService.getById(userId);
-    return { banned: gamblingBanned, balance: updated?.tickets ?? 0 };
-  }
 
   private async finishGame(
     game: ActiveGame,
@@ -77,37 +44,32 @@ export default class BlackjackService {
     const pv = handValue(game.playerHand);
     const dv = handValue(game.dealerHand);
     const { label, tone } = resolveLabels(outcome, pv, dv);
-    const { banned, balance } = await this.applyGamblingPayout(
-      game.userId,
-      game.bid,
-      payout,
-      devMode,
-    );
-    this.games.delete(game.userId);
+
+    let banned = false;
+    let balance = 0;
+    if (!devMode) {
+      const result = await processPayout(
+        this.db,
+        this.economyService,
+        game.userId,
+        game.bid,
+        payout,
+      );
+      banned = result.banned;
+      balance = result.balance;
+    }
+
+    await closeSession(this.db, game.userId, 'blackjack');
 
     if (!devMode) {
-      const user = await this.userService.getById(game.userId);
-      if (user) {
-        await this.db.insert(schema.history).values({
-          id: newId(),
-          userId: game.userId,
-          owner: { id: user.id, username: user.username },
-          type: "blackjack",
-          label,
-          image: "",
-          bid: game.bid,
-          payout,
-          net: -game.bid + payout,
-          data: {
-            outcome,
-            playerHand: game.playerHand,
-            dealerHand: game.dealerHand,
-            playerValue: handValue(game.playerHand),
-            dealerValue: handValue(game.dealerHand),
-          },
-          created: nowIso(),
-        });
-      }
+      await recordHistory(this.db, game.userId, "blackjack", label, "",
+        game.bid, payout, -game.bid + payout, {
+        outcome,
+        playerHand: game.playerHand,
+        dealerHand: game.dealerHand,
+        playerValue: handValue(game.playerHand),
+        dealerValue: handValue(game.dealerHand),
+      });
       this.logger.info(`blackjack ${outcome} net:${-game.bid + payout}`);
     }
     return this.toState(game, balance, {
@@ -155,6 +117,7 @@ export default class BlackjackService {
     devMode?: boolean,
     devOverrides?: BlackjackDevOverrides,
   ): Promise<BlackjackState> {
+    let balance = 0;
     if (!devMode) {
       if (
         bid < GAMBLING_MIN_BET ||
@@ -162,12 +125,14 @@ export default class BlackjackService {
         !Number.isInteger(bid)
       )
         throw new Error("Invalid bid");
+      const existing = await loadSession(this.db, userId, 'blackjack'); if (existing) throw new Error("Game already in progress");
       const user = await this.userService.getById(userId);
       if (!user) throw new Error("User not found");
       if (user.tickets < bid) throw new Error("Insufficient balance");
       if (user.gamblingBanned) throw new Error("Banned from gambling");
-      if (this.games.has(userId)) throw new Error("Game already in progress");
       await this.economyService.deductTickets(userId, bid);
+      const updated = await this.userService.getById(userId);
+      balance = updated?.tickets ?? 0;
     }
 
     const game: ActiveGame = {
@@ -199,9 +164,7 @@ export default class BlackjackService {
       game.dealerHand.push(draw(game.deck));
     }
 
-    this.games.set(userId, game);
-    const updated = devMode ? null : await this.userService.getById(userId);
-    const balance = updated?.tickets ?? 0;
+    await saveSession(this.db, userId, 'blackjack', game as unknown as Record<string, unknown>, bid);
 
     const instant = await this.maybeResolveAfterDeal(game);
     if (instant) return instant;
@@ -214,37 +177,45 @@ export default class BlackjackService {
     devMode?: boolean,
     devOverrides?: BlackjackDevOverrides,
   ): Promise<BlackjackState> {
-    const game = this.games.get(userId);
-    if (!game || game.phase !== "player") throw new Error("No active game");
+    const session = await loadSession(this.db, userId, 'blackjack');
+    if (!session) throw new Error("No active game");
+    const game = session.state as unknown as ActiveGame;
+    if (game.phase !== "player") throw new Error("No active game");
     const card = devOverrides?.devForceHitCard
       ? devOverrides.devForceHitCard[0]
       : draw(game.deck);
     game.playerHand.push(card);
     const updated = devMode ? null : await this.userService.getById(userId);
     const balance = updated?.tickets ?? 0;
-    if (handValue(game.playerHand) > 21) return this.finishGame(game, devMode);
+    if (handValue(game.playerHand) > 21) { await closeSession(this.db, userId, 'blackjack'); return this.finishGame(game, devMode); }
     if (handValue(game.playerHand) === 21) {
       dealerPlay(game.dealerHand, game.deck);
+      await closeSession(this.db, userId, 'blackjack');
       return this.finishGame(game, devMode);
     }
+    await saveSession(this.db, userId, 'blackjack', game as unknown as Record<string, unknown>, game.bid);
     return this.toState(game, balance);
   }
 
   async stand(userId: string, devMode?: boolean): Promise<BlackjackState> {
-    const game = this.games.get(userId);
-    if (!game || game.phase !== "player") throw new Error("No active game");
+    const session = await loadSession(this.db, userId, 'blackjack');
+    if (!session) throw new Error("No active game");
+    const game = session.state as unknown as ActiveGame;
+    if (game.phase !== "player") throw new Error("No active game");
     dealerPlay(game.dealerHand, game.deck);
+    await closeSession(this.db, userId, 'blackjack');
     return this.finishGame(game, devMode);
   }
 
   async getState(userId: string): Promise<BlackjackState | null> {
-    const game = this.games.get(userId);
-    if (!game || game.phase !== "player") return null;
+    const session = await loadSession(this.db, userId, 'blackjack');
+    if (!session || session.phase !== "active") return null;
+    const game = session.state as unknown as ActiveGame;
     const user = await this.userService.getById(userId);
     return this.toState(game, user?.tickets ?? 0);
   }
 
-  abandon(userId: string): boolean {
-    return this.games.delete(userId);
+  async abandon(userId: string): Promise<void> {
+    await closeSession(this.db, userId, 'blackjack');
   }
 }

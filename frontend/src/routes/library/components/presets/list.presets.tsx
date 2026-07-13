@@ -5,7 +5,7 @@ import { Game, GameData, GameStatus, Preset } from "@/types/games";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon, Plus, Trash } from "lucide-react";
 import { startTransition, useCallback, useMemo, useRef, useState } from "react";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import Image from "@/components/shared/image.component";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-const gameApi = new GameApi();
+
 const STEAM_PRESET_ID = "steamPreset";
 
 function PresetSettings({ id, searchTerms }: { id: string; searchTerms: string }) {

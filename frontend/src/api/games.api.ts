@@ -1,11 +1,9 @@
 import { Preset, Game, GameReview, GameStatus, GameData, FamilyGame } from "@/types/games";
 import { apiFetch } from "./client.api";
-import ItemsApi from "./items.api";
+import { itemsApi } from "./items.api";
 import { User } from "@/types/user";
 import { filePayload } from "@/lib/fileBlob";
 import { mapFamilyApps, mapSteamAppPayload } from "@/lib/steam.client";
-
-const itemsApi = new ItemsApi();
 
 export default class GameApi {
   resolveVanityUrl = async (username: string): Promise<string> => {
@@ -53,6 +51,12 @@ export default class GameApi {
     } catch {
       return null;
     }
+  };
+
+  searchHltb = async (title: string) => {
+    return apiFetch<{ results: { title: string; mainStory: number }[] }>(
+      `/hltb/search?q=${encodeURIComponent(title)}`,
+    );
   };
 
   getSteamGame = async (appId: string) => {
@@ -246,3 +250,6 @@ export default class GameApi {
     });
   };
 }
+
+const gameApi = new GameApi();
+export { gameApi };

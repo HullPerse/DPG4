@@ -10,18 +10,17 @@ import {
 } from "@/components/ui/select.component";
 import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
-import { Search, Gamepad2 } from "lucide-react";
+import { Search, Gamepad2, Timer } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import GameApi from "@/api/games.api";
-import UserApi from "@/api/user.api";
+import { gameApi } from "@/api/games.api";
+import { userApi } from "@/api/user.api";
 import Image from "@/components/shared/image.component";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDataStore } from "@/store/data.store";
 
-const gameApi = new GameApi();
-const userApi = new UserApi();
+
 
 const STATUSES = [
   {
@@ -64,11 +63,20 @@ export default function SteamLibrary({
 
   const [game, setGame] = useState<any>();
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<{ appid: number; name: string; image: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    { appid: number; name: string; image: string }[]
+  >([]);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
+
+  const [hltbResults, setHltbResults] = useState<
+    { title: string; mainStory: number }[]
+  >([]);
+  const [showHltbDropdown, setShowHltbDropdown] = useState(false);
+  const hltbRef = useRef<HTMLDivElement>(null);
+  const [hltbLoading, setHltbLoading] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -88,6 +96,9 @@ export default function SteamLibrary({
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowResults(false);
       }
+      if (hltbRef.current && !hltbRef.current.contains(e.target as Node)) {
+        setShowHltbDropdown(false);
+      }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -97,15 +108,18 @@ export default function SteamLibrary({
     mutationFn: async () => {
       if (!user || !game) throw new Error("Missing data");
 
-      const score = await calculateScore(Number(realTime), Number(time));
+      const parsedTime = Number(time);
+      const parsedReal = Number(realTime);
+      if (isNaN(parsedTime)) throw new Error("Invalid time value");
+      const score = await calculateScore(isNaN(parsedReal) ? 0 : parsedReal, parsedTime);
       const gameData = {
         user: {
           id: String(user?.id),
           username: String(user?.username),
         },
         playtime: {
-          hltb: Number(time),
-          user: status == "ПРОЙДЕНО" ? Number(realTime) : undefined,
+          hltb: parsedTime,
+          user: status == "ПРОЙДЕНО" ? (isNaN(parsedReal) ? 0 : parsedReal) : undefined,
         },
         score,
         status: STATUSES.find((s) => s.label === status)?.name as GameStatus,
@@ -203,7 +217,7 @@ export default function SteamLibrary({
             <Search className="h-4 w-4 border-text text-text" />
           </Button>
         </div>
-        <div className="leading-tight">
+        <div className="leading-tight relative" ref={hltbRef}>
           <span>Время на HLTB</span>
           <Input
             type="number"
@@ -211,7 +225,35 @@ export default function SteamLibrary({
             className="h-12"
             value={time}
             onChange={(e) => setTime(e.target.value)}
+            onFocus={async () => {
+              if (!searchTerm || hltbLoading) return;
+              setHltbLoading(true);
+              const res = await gameApi.searchHltb(searchTerm);
+              setHltbResults(res.results);
+              setShowHltbDropdown(res.results.length > 0);
+              setHltbLoading(false);
+            }}
           />
+          {showHltbDropdown && hltbResults.length > 0 && (
+            <div className="absolute top-full left-0 z-50 mt-1 w-full max-h-48 overflow-y-auto rounded border border-highlight-medium bg-background shadow-sharp">
+              {hltbResults.map((r) => (
+                <button
+                  key={r.title}
+                  className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-highlight-low"
+                  onClick={() => {
+                    setTime(String(r.mainStory));
+                    setShowHltbDropdown(false);
+                  }}
+                >
+                  <Timer className="size-4 shrink-0" />
+                  <span className="truncate">{r.title}</span>
+                  <span className="ml-auto shrink-0 font-mono text-xs text-muted">
+                    {r.mainStory > 0 ? `${r.mainStory} ч.` : "—"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {status === "ПРОЙДЕНО" && (
           <div className="leading-tight">
@@ -227,10 +269,10 @@ export default function SteamLibrary({
         )}
         {currentType === "library" && (
           <div className="leading-tight">
-            <span>Сложность</span>
+            <span>Статус</span>
             <Select value={status} onValueChange={(e) => setStatus(e as GameStatus)}>
               <SelectTrigger className="w-full py-5">
-                <SelectValue placeholder="Сложность" />
+                <SelectValue placeholder="Статус" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>

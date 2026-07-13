@@ -6,6 +6,7 @@ import { broadcast } from "@/lib/websocket.utils"
 import Logger from "@/lib/logger.utils"
 import databasePlugin from "@/plugins/database.plugin"
 import servicesPlugin from "@/services.server"
+import { authPlugin } from "@/plugins/index.plugin"
 
 const logger = new Logger("CELLS")
 
@@ -25,9 +26,11 @@ const cellPatchBody = t.Object({
 export default new Elysia({ prefix: "/cells" })
   .use(databasePlugin)
   .use(servicesPlugin)
+  .use(authPlugin)
   .get(
     "/",
-    async ({ db, query }) => {
+    async ({ db, query, set }) => {
+      set.headers["Cache-Control"] = "max-age=60, s-maxage=60"
       let q = db.select().from(schema.cells)
       const conditions: SQL[] = []
 
@@ -137,13 +140,19 @@ export default new Elysia({ prefix: "/cells" })
   )
   .post(
     "/:id/capture",
-    async ({ params, body, activityService }) => {
-      const { db } = await import("@/db/index.db")
+    async ({ params, body, db, activityService, user, set }) => {
+      if (!user || user.sub !== body.userId) {
+        set.status = 403;
+        return { error: "Нельзя захватывать клетку от чужого имени" };
+      }
       const [cell] = await db
         .select()
         .from(schema.cells)
         .where(eq(schema.cells.id, params.id))
-      if (!cell) return { error: "Not found" }
+      if (!cell) {
+        set.status = 404
+        return { error: "Not found" }
+      }
 
       const captured = [...(cell.captured ?? []), body.username]
       await db
@@ -167,5 +176,6 @@ export default new Elysia({ prefix: "/cells" })
         username: t.String(),
         userId: t.String(),
       }),
+      requireAuth: true,
     },
   )

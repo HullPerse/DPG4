@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia"
 import { config } from "@/server.config"
+import { cacheGet, cacheSet } from "@/lib/cache.utils"
 
 function steamKey() {
   const key = config.steamApiKey
@@ -84,6 +85,10 @@ export default new Elysia({ prefix: "/steam" })
   .get(
     "/library/:steamId",
     async ({ params, set }) => {
+      const cacheKey = `steam:library:${params.steamId}`
+      const cached = await cacheGet(cacheKey)
+      if (cached) return cached
+
       try {
         const key = steamKey()
         const url = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${key}&include_played_free_games=1&include_appinfo=1&steamid=${params.steamId}`
@@ -94,6 +99,7 @@ export default new Elysia({ prefix: "/steam" })
         const games = (data.response.games ?? []).map((g) =>
           makeGameData(g.appid, g.name),
         )
+        await cacheSet(cacheKey, games, 60 * 60 * 1000)
         return games
       } catch (e: unknown) {
         set.status = 502
@@ -134,19 +140,25 @@ export default new Elysia({ prefix: "/steam" })
   .get(
     "/search/:term",
     async ({ params }) => {
+      const cacheKey = `steam:search:${params.term.toLowerCase()}`
+      const cached = await cacheGet(cacheKey)
+      if (cached) return cached
+
       const url = `https://store.steampowered.com/api/storesearch?term=${encodeURIComponent(params.term)}&l=english&cc=US`;
       const res = await fetch(url);
       const data = (await res.json()) as {
         items?: { id: number; name: string; tiny_image: string }[];
         total?: number;
       };
-      return (data.items ?? []).slice(0, 10).map((item) => ({
+      const results = (data.items ?? []).slice(0, 10).map((item) => ({
         appid: item.id,
         name: item.name,
         image: item.tiny_image
           ? `https://steamcdn-a.akamaihd.net/steam/apps/${item.id}/header.jpg`
           : "",
       }));
+      await cacheSet(cacheKey, results, 60 * 60 * 1000)
+      return results;
     },
     {
       params: t.Object({ term: t.String() }),

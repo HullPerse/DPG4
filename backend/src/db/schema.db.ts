@@ -254,3 +254,29 @@ export const cells = sqliteTable("cells", {
   captured: text("captured", { mode: "json" }).$type<string[] | null>(),
   ...timestamps,
 });
+
+export const events = sqliteTable("events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  actorId: text("actor_id"),
+  targetId: text("target_id"),
+  payload: text("payload").notNull().default("{}"),
+  created: text("created").notNull(),
+});
+
+export const gamblingSessions = sqliteTable("gambling_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  gameType: text("game_type").notNull(),
+  state: text("state").notNull(),
+  bid: integer("bid").notNull().default(0),
+  phase: text("phase").notNull().default("active"),
+  created: text("created").notNull(),
+  updated: text("updated").notNull(),
+});
+
+export const rocketCrashHistory = sqliteTable("rocket_crash_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  crashPoint: integer("crash_point").notNull(),
+  created: text("created").notNull(),
+});

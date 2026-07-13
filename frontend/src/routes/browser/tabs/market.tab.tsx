@@ -1,6 +1,6 @@
 import { memo, startTransition, useCallback, useState } from "react";
 
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { buyMarketTicket, removeMarketTicket } from "@/api/tickets.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user.store";
@@ -15,7 +15,7 @@ import ImageComponent from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
 import { Input } from "@/components/ui/input.component";
 
-const itemsApi = new ItemsApi();
+
 
 function MarketBrowser({ searchTerms }: { searchTerms: string }) {
   const queryClient = useQueryClient();

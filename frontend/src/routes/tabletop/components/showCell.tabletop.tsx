@@ -1,5 +1,5 @@
 import CellApi from "@/api/cell.api";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { Button } from "@/components/ui/button.component";
@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, CircleX, X } from "lucide-react";
 import { startTransition, useEffect, useCallback, useState } from "react";
 
 const cellApi = new CellApi();
-const itemsApi = new ItemsApi();
+
 
 export default function ShowCell({ setShowCell }: { setShowCell: (value: boolean) => void }) {
   const queryClient = useQueryClient();

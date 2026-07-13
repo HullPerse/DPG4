@@ -4,13 +4,13 @@ import { useSubscription } from "@/hooks/index.hook";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { NetworkIcon } from "lucide-react";
 import { startTransition, useCallback } from "react";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import ReviewComponent from "@/components/shared/review.component";
 import { getFileUrl } from "@/api/client.api";
 import { User } from "@/types/user";
 import { Game, GameReview } from "@/types/games";
 
-const gameApi = new GameApi();
+
 
 export default function ReviewsProfile({ id }: { id: string }) {
   const queryClient = useQueryClient();

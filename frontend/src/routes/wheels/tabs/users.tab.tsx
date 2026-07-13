@@ -1,7 +1,7 @@
 import { User } from "@/types/user";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useState } from "react";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -9,7 +9,7 @@ import { EyeIcon, EyeOffIcon, NetworkIcon } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
 import { Button } from "@/components/ui/button.component";
 
-const userApi = new UserApi();
+
 
 function UsersWheel() {
   const queryClient = useQueryClient();

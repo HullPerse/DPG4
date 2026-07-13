@@ -1,5 +1,5 @@
 import ItemFramework from "./item.framework";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button.component";
@@ -17,7 +17,7 @@ import { WindowError } from "@/components/shared/error.component";
 import { effectInterface, Inventory } from "@/types/items";
 import type { ModalType } from "@/types/effect";
 
-const itemsApi = new ItemsApi();
+
 
 export const otherEffect: effectInterface[] = [
   //MODALS (эффекты - на сервере, POST /inventory/:id/use)

@@ -1,5 +1,5 @@
-import ItemsApi from "@/api/items.api";
-import UsersApi from "@/api/user.api";
+import { itemsApi } from "@/api/items.api";
+import { userApi } from "@/api/user.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/index.hook";
@@ -24,8 +24,7 @@ import ImageComponent from "@/components/shared/image.component";
 import { getFileUrl } from "@/api/client.api";
 import { Button } from "@/components/ui/button.component";
 
-const itemsApi = new ItemsApi();
-const userApi = new UsersApi();
+
 
 function TradeTab({ id }: { id: string }) {
   const queryClient = useQueryClient();

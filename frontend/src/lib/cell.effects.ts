@@ -1,23 +1,17 @@
 import { Cell } from "@/types/cell";
 import CellApi from "@/api/cell.api";
 import { removeFirst } from "./index.utils";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 
 let cellApiInstance: InstanceType<typeof CellApi> | null = null;
-let userApiInstance: InstanceType<typeof UserApi> | null = null;
 
 const getCellApi = () => {
   if (!cellApiInstance) cellApiInstance = new CellApi();
   return cellApiInstance;
 };
-const getUserApi = () => {
-  if (!userApiInstance) userApiInstance = new UserApi();
-  return userApiInstance;
-};
 
 export async function usableCell(cell: Cell, userId: string) {
   const cellApi = getCellApi();
-  const userApi = getUserApi();
 
   //PIG
   if (cell?.status?.includes("pig")) {

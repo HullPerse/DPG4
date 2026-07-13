@@ -1,6 +1,14 @@
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Component,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,7 +23,7 @@ import {
   setPetModel,
 } from "@/api/pet.api";
 import { fetchModelConfigs } from "@/api/config.api";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { useUserStore } from "@/store/user.store";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -38,10 +46,47 @@ import StatBar from "../components/tamagochi/stat.tamagochi";
 import { PALETTE, REWARD_THRESHOLD } from "@/config/tamagochi.config";
 import { getMood } from "@/lib/index.utils";
 
-const itemsApi = new ItemsApi();
+const DEFAULT_MODEL = {
+  id: "rat",
+  label: "Крыса",
+  url: "/models/rat.glb",
+} as const;
 
-useGLTF.preload("/models/rat.glb");
-useGLTF.preload("/models/dingus.glb");
+
+
+async function preloadModel(url: string, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      useGLTF.preload(url);
+      return;
+    } catch {
+      if (i === retries) throw new Error(`Failed to load model: ${url}`);
+      await new Promise((r) => setTimeout(r, 1000 * 2 ** i));
+    }
+  }
+}
+
+preloadModel("/models/rat.glb").catch(() => {});
+preloadModel("/models/dingus.glb").catch(() => {});
+
+class SceneErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
 
 function TamagotchiTab() {
   const user = useUserStore((state) => state.user);
@@ -57,7 +102,7 @@ function TamagotchiTab() {
     queryKey: ["pet", user?.id],
     queryFn: () => getPet(user!.id),
     enabled: !!user?.id,
-    refetchOnMount: "always",
+    staleTime: 30000,
   });
 
   const refetchPet = useCallback(() => {
@@ -161,7 +206,7 @@ function TamagotchiTab() {
 
   const currentModel = data?.model ?? "rat";
   const currentColor = data?.color ?? "#8B7355";
-  const currentModelCfg = modelConfigs.find((m) => m.id === currentModel) ?? modelConfigs[0];
+  const currentModelCfg = modelConfigs.find((m) => m.id === currentModel) ?? modelConfigs[0] ?? DEFAULT_MODEL;
 
   const resurrectMutation = useMutation({
     mutationFn: () => resurrectPet(user!.id),
@@ -225,17 +270,32 @@ function TamagotchiTab() {
           </div>
         )}
 
-        <Canvas className="h-full w-full" gl={{ antialias: true, alpha: true }}>
-          <Suspense fallback={null}>
-            <SceneContent
-              reaction={lastAction}
-              spinning={brodeforActive}
-              isAlive={data?.isAlive ?? true}
-              color={data?.color ?? "#8B7355"}
-              modelCfg={currentModelCfg ?? modelConfigs[0]!}
-            />
-          </Suspense>
-        </Canvas>
+        <SceneErrorBoundary
+          fallback={
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3">
+              <span className="text-sm text-muted">Ошибка загрузки модели</span>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                Перезагрузить
+              </Button>
+            </div>
+          }
+        >
+          <Canvas className="h-full w-full" gl={{ antialias: true, alpha: true }}>
+            <Suspense fallback={null}>
+              <SceneContent
+                reaction={lastAction}
+                spinning={brodeforActive}
+                isAlive={data?.isAlive ?? true}
+                color={data?.color ?? "#8B7355"}
+                modelCfg={currentModelCfg}
+              />
+            </Suspense>
+          </Canvas>
+        </SceneErrorBoundary>
 
         {petIsDead && <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />}
 

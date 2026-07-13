@@ -7,7 +7,7 @@ import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
 import { startTransition, useCallback, useMemo, useRef, useState } from "react";
 import Image from "@/components/shared/image.component";
 
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
 import Wheel from "@/components/shared/wheel.component";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input.component";
 import { useDataStore } from "@/store/data.store";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { openWindow } from "@/lib/index.utils";
-const gameApi = new GameApi();
+
 const STEAM_PRESET_ID = "steamPreset";
 
 export default function PresetsWheel({ id }: { id: string }) {

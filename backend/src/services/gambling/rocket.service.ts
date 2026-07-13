@@ -1,18 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import * as schema from "@/db/schema.db";
-import { nowIso, newId } from "@/lib/index.utils";
 import type { ActiveRocketGame, RocketState, RocketDevOverrides } from "@/types/gambling";
 import type { Db } from "@/types/server";
 import UserService from "@/services/user.service";
 import EconomyService from "@/services/economy.service";
-import { GAMBLING_BAN_THRESHOLD, GAMBLING_MIN_BET, GAMBLING_MAX_BET, ROCKET_START_MULT } from "@/lib/gambling.constants";
+import { GAMBLING_MIN_BET, GAMBLING_MAX_BET, ROCKET_START_MULT } from "@/lib/gambling.constants";
+import { nowIso } from "@/lib/index.utils";
 import Logger from "@/lib/logger.utils";
+import { processPayout, recordHistory } from "@/lib/gambling/payout.utils";
+import { loadSession, saveSession, closeSession } from "@/lib/gambling/session.utils";
 
 export default class RocketService {
-  private activeGames = new Map<string, ActiveRocketGame>();
-  private lastEndedGames = new Map<string, RocketState>();
-  private crashHistory: { crashPoint: number; timestamp: number }[] = [];
-  private MAX_HISTORY = 50;
   private logger = new Logger("ROCKET");
 
   constructor(private db: Db, private userService: UserService, private economyService: EconomyService) {}
@@ -34,35 +32,52 @@ export default class RocketService {
   }
 
   private async processCrash(userId: string, game: ActiveRocketGame, devMode?: boolean): Promise<RocketState> {
-    this.crashHistory.push({ crashPoint: game.crashPoint, timestamp: Date.now() });
-    if (this.crashHistory.length > this.MAX_HISTORY) this.crashHistory.shift();
-    if (!devMode) await this.economyService.deductTickets(userId, game.bid);
-    const user = devMode ? null : await this.userService.getById(userId);
-    this.activeGames.delete(userId);
-
-    if (!devMode && user) {
-      await this.db.insert(schema.history).values({
-        id: newId(), userId, owner: { id: user.id, username: user.username },
-        type: "rocket", label: `Крах на ${game.crashPoint.toFixed(2)}x`, image: "",
-        bid: game.bid, payout: 0, net: -game.bid,
-        data: { crashPoint: game.crashPoint, phase: "crashed" }, created: nowIso(),
+    if (!devMode) {
+      await this.db.insert(schema.rocketCrashHistory).values({
+        crashPoint: Math.round(game.crashPoint * 100),
+        created: nowIso(),
       });
+      const rows = await this.db
+        .select({ id: schema.rocketCrashHistory.id })
+        .from(schema.rocketCrashHistory)
+        .orderBy(schema.rocketCrashHistory.created)
+        .offset(50)
+        .limit(1000);
+      if (rows.length > 0) {
+        const ids = rows.map((r) => r.id);
+        await this.db.delete(schema.rocketCrashHistory).where(inArray(schema.rocketCrashHistory.id, ids));
+      }
+    }
+
+    let balance = 0;
+    let banned = false;
+    if (!devMode) {
+      await this.economyService.deductTickets(userId, game.bid);
+      const result = await processPayout(this.db, this.economyService, userId, game.bid, 0);
+      balance = result.balance;
+      banned = result.banned;
+    }
+
+    await closeSession(this.db, userId, "rocket");
+
+    if (!devMode) {
+      await recordHistory(this.db, userId, "rocket", `Крах на ${game.crashPoint.toFixed(2)}x`, "",
+        game.bid, 0, -game.bid,
+        { crashPoint: game.crashPoint, phase: "crashed" });
     }
 
     const label = `Крах на ${game.crashPoint.toFixed(2)}x - проигрыш -${game.bid}`;
     this.logger.info(`rocket crash user:${userId} bid:${game.bid} crash:${game.crashPoint}x`);
 
-    const state: RocketState = { phase: "crashed", multiplier: game.crashPoint, crashPoint: game.crashPoint, bid: game.bid, balance: user?.tickets ?? 0, net: -game.bid, label, tone: "lose", banned: user?.gamblingBanned ?? false };
-    this.lastEndedGames.set(userId, state);
-    return state;
+    return { phase: "crashed", multiplier: game.crashPoint, crashPoint: game.crashPoint, bid: game.bid, balance, net: -game.bid, label, tone: "lose", banned };
   }
 
   async launch(userId: string, bid: number, devMode?: boolean, devOverrides?: RocketDevOverrides): Promise<RocketState> {
     if (!devMode) {
       if (bid < GAMBLING_MIN_BET || bid > GAMBLING_MAX_BET || !Number.isInteger(bid)) throw new Error("Invalid bid");
-      if (this.activeGames.has(userId)) throw new Error("Game already in progress");
+      const existing = await loadSession(this.db, userId, "rocket");
+      if (existing) throw new Error("Game already in progress");
     }
-    this.lastEndedGames.delete(userId);
     const user = devMode ? null : await this.userService.getById(userId);
     if (!devMode && !user) throw new Error("User not found");
     if (!devMode && user!.tickets < bid) throw new Error("Insufficient balance");
@@ -70,15 +85,17 @@ export default class RocketService {
 
     const crashPoint = devOverrides?.devForceCrashPoint ?? this.generateCrashPoint(bid);
     const now = Date.now();
-    this.activeGames.set(userId, { userId, bid, crashPoint, launchedAt: now, cashedOut: false, cashoutMultiplier: null });
+    const game: ActiveRocketGame = { userId, bid, crashPoint, launchedAt: now, cashedOut: false, cashoutMultiplier: null };
+    await saveSession(this.db, userId, "rocket", game as unknown as Record<string, unknown>, bid);
     this.logger.info(`launched rocket bid:${bid} crash:${crashPoint}x`);
 
     return { phase: "launching", multiplier: 1, crashPoint: devOverrides?.devShowCrashPoint ? crashPoint : crashPoint, bid, balance: user?.tickets ?? 0, net: 0, label: "", tone: "", banned: false };
   }
 
   async cashout(userId: string, devMode?: boolean): Promise<RocketState> {
-    const game = this.activeGames.get(userId);
-    if (!game) throw new Error("No active game");
+    const session = await loadSession(this.db, userId, "rocket");
+    if (!session) throw new Error("No active game");
+    const game = session.state as unknown as ActiveRocketGame;
     if (game.cashedOut) throw new Error("Already cashed out");
 
     const elapsed = Date.now() - game.launchedAt;
@@ -90,43 +107,47 @@ export default class RocketService {
     const payout = Math.floor(game.bid * currentMultiplier);
     const net = payout - game.bid;
 
-    if (!devMode) { await this.economyService.deductTickets(userId, game.bid); await this.economyService.addTickets(userId, payout); }
-
-    const user = devMode ? null : await this.userService.getById(userId);
-    let gamblingWinnings = (user?.gamblingWinnings ?? 0) + Math.max(0, net);
-    let gamblingBanned = user?.gamblingBanned ?? false;
-    if (!devMode && gamblingWinnings >= GAMBLING_BAN_THRESHOLD && !gamblingBanned) gamblingBanned = true;
-    if (!devMode) await this.db.update(schema.users).set({ gamblingWinnings, gamblingBanned, updated: nowIso() }).where(eq(schema.users.id, userId));
+    let balance = 0;
+    let banned = false;
+    if (!devMode) {
+      await this.economyService.deductTickets(userId, game.bid);
+      const result = await processPayout(this.db, this.economyService, userId, game.bid, payout);
+      balance = result.balance;
+      banned = result.banned;
+    }
 
     const label = `Результат ${currentMultiplier.toFixed(2)}x - выигрыш +${net}`;
     const tone: "jackpot" | "win" | "chance" = net >= game.bid * 5 ? "jackpot" : net >= game.bid * 2 ? "win" : "chance";
-    this.activeGames.delete(userId);
+    await closeSession(this.db, userId, "rocket");
 
-    if (!devMode && user) {
-      await this.db.insert(schema.history).values({
-        id: newId(), userId, owner: { id: user.id, username: user.username },
-        type: "rocket", label: `Выигрыш ${currentMultiplier.toFixed(2)}x`, image: "",
-        bid: game.bid, payout, net,
-        data: { crashPoint: game.crashPoint, cashoutMultiplier: currentMultiplier, phase: "cashed" }, created: nowIso(),
-      });
+    if (!devMode) {
+      await recordHistory(this.db, userId, "rocket", `Выигрыш ${currentMultiplier.toFixed(2)}x`, "",
+        game.bid, payout, net,
+        { crashPoint: game.crashPoint, cashoutMultiplier: currentMultiplier, phase: "cashed" });
     }
 
     this.logger.info(`rocket cashout mult:${currentMultiplier}x net:${net}`);
-    const state: RocketState = { phase: "cashed", multiplier: currentMultiplier, crashPoint: game.crashPoint, bid: game.bid, balance: user?.tickets ?? 0, net, label, tone, banned: gamblingBanned };
-    this.lastEndedGames.set(userId, state);
-    return state;
+    return { phase: "cashed", multiplier: currentMultiplier, crashPoint: game.crashPoint, bid: game.bid, balance, net, label, tone, banned };
   }
 
   async poll(userId: string, devMode?: boolean): Promise<RocketState> {
-    const game = this.activeGames.get(userId);
-    if (!game) { const ended = this.lastEndedGames.get(userId); if (ended) return ended; return this.idleState(); }
+    const session = await loadSession(this.db, userId, "rocket");
+    if (!session) return this.idleState();
+    const game = session.state as unknown as ActiveRocketGame;
     const elapsed = Date.now() - game.launchedAt;
     const currentMultiplier = this.computeMultiplier(elapsed);
     if (currentMultiplier >= game.crashPoint) return this.processCrash(userId, game, devMode);
     return { phase: "flying", multiplier: currentMultiplier, crashPoint: game.crashPoint, bid: game.bid, balance: 0, net: 0, label: "", tone: "", banned: false };
   }
 
-  abandon(userId: string): void { this.activeGames.delete(userId); this.lastEndedGames.delete(userId); }
-  dismiss(userId: string): void { this.lastEndedGames.delete(userId); }
-  getHistory(): { crashPoint: number; timestamp: number }[] { return [...this.crashHistory]; }
+  async abandon(userId: string): Promise<void> { await closeSession(this.db, userId, "rocket"); }
+
+  async getHistory(): Promise<{ crashPoint: number; created: string }[]> {
+    const rows = await this.db
+      .select({ crashPoint: schema.rocketCrashHistory.crashPoint, created: schema.rocketCrashHistory.created })
+      .from(schema.rocketCrashHistory)
+      .orderBy(schema.rocketCrashHistory.created)
+      .limit(50);
+    return rows.map((r) => ({ crashPoint: r.crashPoint / 100, created: r.created }));
+  }
 }

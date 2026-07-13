@@ -50,7 +50,7 @@ function WheelItemButton({
         <Image
           src={item.image}
           alt={item.label}
-          loading="lazy"
+          loading="eager"
           className="w-10 h-10 object-contain mb-1"
         />
       )}

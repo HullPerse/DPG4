@@ -13,6 +13,7 @@ export interface UserStore {
   refresh: () => Promise<void>;
   clear: () => void;
   setLoggedIn: (loggedIn: boolean) => void;
+  setUser: (user: User | null) => void;
   subscribeToUserUpdates: () => void;
   unsubscribeFromUserUpdates: () => void;
 }

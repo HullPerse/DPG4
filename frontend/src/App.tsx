@@ -22,10 +22,8 @@ import { PhoneCall } from "lucide-react";
 import { CreateModal } from "./components/shared/items.modal";
 import ImageComponent from "./components/shared/image.component";
 import { Button } from "./components/ui/button.component";
-import UserApi from "./api/user.api";
+import { userApi } from "./api/user.api";
 import { cleanupRealtimeServices, initRealtimeServices } from "./lib/activity.utils";
-
-const userApi = new UserApi();
 
 const DesktopAppWindow = memo(function DesktopAppWindow({
   app,

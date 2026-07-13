@@ -85,9 +85,9 @@ export default class UserApi {
   ) => {
     if (noAction) return;
 
-    return apiFetch(`/users/${userId}`, {
-      method: "PATCH",
-      body: { currentAction: action },
+    return apiFetch(`/users/${userId}/action`, {
+      method: "POST",
+      body: { action },
     });
   };
 
@@ -103,8 +103,8 @@ export default class UserApi {
   };
 
   moveUser = async (userId: string, newPosition: number) => {
-    return apiFetch(`/users/${userId}`, {
-      method: "PATCH",
+    return apiFetch(`/users/${userId}/position`, {
+      method: "POST",
       body: { position: newPosition },
     });
   };
@@ -118,13 +118,12 @@ export default class UserApi {
     const { path, finalPosition } = await apiFetch<{
       path: number[];
       finalPosition: number;
-    }>("/utils/calculate-move-path", {
+    }>(`/users/${userId}/move`, {
       method: "POST",
-      body: { startingPosition: fromPosition, diceRoll },
+      body: { diceRoll },
     });
 
     startMoving(userId, fromPosition, newPosition, finalPosition, path);
-    await this.moveUser(userId, finalPosition);
 
     const cells = await cellApi.getCells();
     const targetCell = cells.find((c) => c.number === finalPosition);
@@ -168,3 +167,6 @@ export default class UserApi {
     return apiFetch(`/users/${userId}/restart`, { method: "POST" });
   };
 }
+
+const userApi = new UserApi();
+export { userApi };

@@ -8,7 +8,7 @@ import GameArea from "./components/game.tabletop";
 import { Cell } from "@/types/cell";
 import { useSubscription } from "@/hooks/index.hook";
 import { startTransition, useCallback, useState } from "react";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { User } from "@/types/user";
 import Controls from "./components/controls.tabletop";
 import ShowCell from "./components/showCell.tabletop";
@@ -17,7 +17,6 @@ import { useShallow } from "zustand/react/shallow";
 import ToolsTaletop from "./components/tools.taletop";
 
 const cellApi = new CellApi();
-const userApi = new UserApi();
 
 export default function Tabletop() {
   const queryClient = useQueryClient();
@@ -153,6 +152,7 @@ export default function Tabletop() {
           allowRightClickPan: true,
         }}
         smooth={false}
+        zoomAnimation={{ disabled: true }}
         wheel={{ step: 0.1 }}
       >
         <TransformComponent

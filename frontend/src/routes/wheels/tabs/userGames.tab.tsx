@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -8,13 +8,12 @@ import { EyeIcon, EyeOffIcon, NetworkIcon, Plus } from "lucide-react";
 import Wheel from "@/components/shared/wheel.component";
 import { Button } from "@/components/ui/button.component";
 import { Game } from "@/types/games";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import ImageComponent from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { User } from "@/types/user";
 
-const userApi = new UserApi();
-const gameApi = new GameApi();
+
 
 const STATUSES = [
   {

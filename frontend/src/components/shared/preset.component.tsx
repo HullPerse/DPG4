@@ -5,8 +5,8 @@ import { Button } from "../ui/button.component";
 import { List, LoaderPinwheel, Trash } from "lucide-react";
 import { highlightText } from "@/lib/index.utils";
 import { useUserStore } from "@/store/user.store";
-import GameApi from "@/api/games.api";
-const gameApi = new GameApi();
+import { gameApi } from "@/api/games.api";
+
 
 function PresetComponent({
   preset,

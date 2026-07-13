@@ -99,6 +99,8 @@ const ImageViewer = memo(function ImageViewer({
               allowMiddleClickPan: false,
               allowRightClickPan: true,
             }}
+            smooth={false}
+            zoomAnimation={{ disabled: true }}
             wheel={{ disabled: !zoomable, step: 0.1 }}
           >
             <TransformComponent

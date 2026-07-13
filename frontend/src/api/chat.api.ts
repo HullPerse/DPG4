@@ -1,10 +1,8 @@
 import { Chat } from "@/types/chat";
 import { apiFetch } from "./client.api";
 import { User } from "@/types/user";
-import UserApi from "./user.api";
+import { userApi } from "./user.api";
 import { filePayload } from "@/lib/fileBlob";
-
-const userApi = new UserApi();
 
 export default class ChatApi {
   getChatByUser = async (

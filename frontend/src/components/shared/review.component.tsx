@@ -7,14 +7,14 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import Rating from "./rating.component";
 import Image from "./image.component";
 
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import { parseReviewText } from "@/lib/review.utils";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import ImageViewer from "./viewer.component";
 
-const gameApi = new GameApi();
+
 
 function Review({
   id,

@@ -5,6 +5,7 @@ import type { Db } from "@/types/server";
 import ActivityService from "./activity.service";
 import UserService from "./user.service";
 import LogService from "./log.service";
+import EventService from "./event.service";
 import {
   ACTIVITY_TYPES,
   newId,
@@ -20,6 +21,7 @@ export default class EconomyService {
     private userService: UserService,
     private activityService: ActivityService,
     private inventoryLogService: LogService,
+    private eventService: EventService,
   ) {}
 
   private mapInventory(row: typeof schema.inventory.$inferSelect) {
@@ -67,35 +69,42 @@ export default class EconomyService {
     const user = await this.userService.getById(userId);
     if (!user) return null;
 
-    if (item.type === "effect") {
-      await this.userService.changeStatus(userId, item.label, "add");
-      await this.inventoryLogService.logFromData(
-        action,
-        "",
-        item.label,
-        item.type,
-        userId,
-        userId,
-        { fromItem: itemId, isEffect: true },
-      );
-    } else {
-      const invId = await this.copyInventoryFromItem(item, userId);
-      await this.inventoryLogService.logFromData(
-        action,
-        invId,
-        item.label,
-        item.type,
-        userId,
-        userId,
-        { fromItem: itemId },
-      );
-    }
+    await this.db.transaction(async (tx) => {
+      if (item.type === "effect") {
+        await this.userService.changeStatus(userId, item.label, "add");
+        await this.inventoryLogService.logFromData(
+          action,
+          "",
+          item.label,
+          item.type,
+          userId,
+          userId,
+          { fromItem: itemId, isEffect: true },
+        );
+      } else {
+        const invId = await this.copyInventoryFromItem(item, userId);
+        await this.inventoryLogService.logFromData(
+          action,
+          invId,
+          item.label,
+          item.type,
+          userId,
+          userId,
+          { fromItem: itemId },
+        );
+      }
 
-    await this.activityService.create({
-      author: userId,
-      image: user.avatar,
-      type: ACTIVITY_TYPES.EMOJI,
-      text: `${user.username} получил предмет ${item.label}`,
+      await this.eventService.write("inventory_add", userId, userId, {
+        itemLabel: item.label,
+        itemId,
+      });
+
+      await this.activityService.create({
+        author: userId,
+        image: user.avatar,
+        type: ACTIVITY_TYPES.EMOJI,
+        text: `${user.username} получил предмет ${item.label}`,
+      });
     });
 
     return true;
@@ -111,53 +120,59 @@ export default class EconomyService {
     const user = await this.userService.getById(ownerId);
     if (!itemData || !user) return null;
 
-    const id = newId();
-    const ts = nowIso();
-    await this.db.insert(schema.market).values({
-      id,
-      type: itemData.type,
-      originalId: itemData.id,
-      owner: { id: user.id, username: user.username, avatar: user.avatar },
-      label: itemData.label,
-      description: itemData.description,
-      charge: itemData.charge,
-      image: itemData.image,
-      imageMime: itemData.imageMime,
-      price,
-      discount: null,
-      created: ts,
-      updated: ts,
+    let result: typeof schema.market.$inferSelect | undefined;
+
+    await this.db.transaction(async (tx) => {
+      const id = newId();
+      const ts = nowIso();
+      await tx.insert(schema.market).values({
+        id,
+        type: itemData.type,
+        originalId: itemData.id,
+        owner: { id: user.id, username: user.username, avatar: user.avatar },
+        label: itemData.label,
+        description: itemData.description,
+        charge: itemData.charge,
+        image: itemData.image,
+        imageMime: itemData.imageMime,
+        price,
+        discount: null,
+        created: ts,
+        updated: ts,
+      });
+
+      await this.inventoryLogService.log(
+        "market_list",
+        inventoryId,
+        ownerId,
+        ownerId,
+        { price },
+      );
+
+      await tx.delete(schema.inventory).where(eq(schema.inventory.id, inventoryId));
+
+      await this.eventService.write("market_list", ownerId, undefined, {
+        itemLabel: itemData.label,
+        price,
+        marketId: id,
+      });
+
+      await this.activityService.create({
+        author: ownerId,
+        image: user.avatar,
+        type: ACTIVITY_TYPES.EMOJI,
+        text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
+      });
+
+      result = (await tx
+        .select()
+        .from(schema.market)
+        .where(eq(schema.market.id, id)))[0];
     });
 
-    await this.inventoryLogService.log(
-      "market_list",
-      inventoryId,
-      ownerId,
-      ownerId,
-      { price },
-    );
-
-    await this.db
-      .delete(schema.inventory)
-      .where(eq(schema.inventory.id, inventoryId));
-
-    await this.activityService.create({
-      author: ownerId,
-      image: user.avatar,
-      type: ACTIVITY_TYPES.EMOJI,
-      text: `${user.username} выставил на продажу предмет ${itemData.label} за ${price}`,
-    });
-
-    broadcast("market", "create", id);
+    broadcast("market", "create", result!.id);
     broadcast("inventory", "delete", inventoryId);
-    return this.mapMarket(
-      (
-        await this.db
-          .select()
-          .from(schema.market)
-          .where(eq(schema.market.id, id))
-      )[0]!,
-    );
+    return this.mapMarket(result!);
   }
 
   async buyMarket(marketId: string, newOwnerId: string, oldOwnerId: string) {
@@ -482,6 +497,7 @@ export default class EconomyService {
       details: { amount, trade },
       created: ts,
     });
+    await this.eventService.write("score_add", "system", userId, { amount, trade });
   }
 
   async removeMoney(userId: string, amount: number, trade?: boolean): Promise<void> {
@@ -499,5 +515,6 @@ export default class EconomyService {
       details: { amount, trade },
       created: ts,
     });
+    await this.eventService.write("score_remove", "system", userId, { amount, trade });
   }
 }

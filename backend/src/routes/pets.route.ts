@@ -18,7 +18,6 @@ const MAX_STAT = 100;
 const REWARD_THRESHOLD = 80;
 
 const petService = new PetService();
-petService.startDecayLoop();
 
 export default new Elysia({ prefix: "/pets" })
   .use(databasePlugin)

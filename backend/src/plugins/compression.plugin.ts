@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 
-const MIN_COMPRESS_SIZE = 1024;
+const MIN_COMPRESS_SIZE = 200;
 
 const compressionPlugin = new Elysia({
   name: "compression",

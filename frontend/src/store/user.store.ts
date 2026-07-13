@@ -23,6 +23,10 @@ export const useUserStore = create<UserStore>()(
           set({ loggedIn });
         },
 
+        setUser: (user: User | null) => {
+          set({ user });
+        },
+
         subscribeToUserUpdates: () => {
           const { user } = get();
           if (!user?.id || userWsUnsub) return;

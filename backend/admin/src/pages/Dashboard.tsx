@@ -18,6 +18,7 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
     null,
   );
   const [broadcasting, setBroadcasting] = useState(false);
+  const [forceLogouting, setForceLogouting] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -55,6 +56,19 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
     }
   };
 
+  const handleForceLogout = async () => {
+    setForceLogouting(true);
+    setMessage("");
+    try {
+      await adminFetch("/api/admin/broadcast-logout", { method: "POST" });
+      setMessage("Все пользователи принудительно выходят. Локальные данные будут стерты.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Ошибка");
+    } finally {
+      setForceLogouting(false);
+    }
+  };
+
   return (
     <div className="p-6 md:p-8">
       <p className="text-muted text-[10px] font-bold tracking-widest uppercase">
@@ -75,6 +89,13 @@ export function Dashboard({ schema }: { schema: AdminSchema }) {
         >
           <RefreshCw className={broadcasting ? "animate-spin" : undefined} />
           {broadcasting ? "Отправка…" : "Обновить всех игроков"}
+        </Button>
+        <Button
+          variant="danger"
+          onClick={() => void handleForceLogout()}
+          disabled={forceLogouting}
+        >
+          {forceLogouting ? "Отправка…" : "Принудительный выход всех"}
         </Button>
         <Link
           to="/grant-item"

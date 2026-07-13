@@ -5,7 +5,7 @@ import {
   playHangman,
   saveHangmanState,
 } from "@/api/hangman.api";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import HangMan from "@/components/svg/handgman.component";
@@ -16,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const userApi = new UserApi();
+
 
 const RUSSIAN_LETTERS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 const ENGLISH_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

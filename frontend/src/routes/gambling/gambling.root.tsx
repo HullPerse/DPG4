@@ -84,7 +84,7 @@ export default function Gambling() {
           </Button>
         </section>
       )}
-      <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full">
+      <section className="flex flex-col gap-2 items-center overflow-y-auto w-full h-full min-h-0">
         <Suspense fallback={<WindowLoader />}>{getComponent()}</Suspense>
       </section>
       {isAdmin && isEditing && <DevPanel />}

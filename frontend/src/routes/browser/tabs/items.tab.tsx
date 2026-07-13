@@ -1,5 +1,5 @@
 import { getFileUrl } from "@/api/client.api";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { WindowError } from "@/components/shared/error.component";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { useSubscription } from "@/hooks/index.hook";
@@ -23,14 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select.component";
 import { User } from "@/types/user";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { Input } from "@/components/ui/input.component";
 import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-const itemsApi = new ItemsApi();
-const userApi = new UserApi();
+
 const activityApi = new ActivityApi();
 
 function ItemsTab({ searchTerms }: { searchTerms: string }) {

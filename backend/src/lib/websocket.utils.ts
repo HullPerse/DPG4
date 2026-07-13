@@ -53,3 +53,8 @@ export function broadcastAdminReload() {
   broadcast("admin", "reload");
   broadcastAll("update");
 }
+
+export function broadcastAdminLogout() {
+  broadcast("admin", "force-logout");
+  broadcastAll("update");
+}

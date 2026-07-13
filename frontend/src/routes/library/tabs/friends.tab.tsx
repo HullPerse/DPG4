@@ -1,6 +1,6 @@
 import { memo, startTransition, useCallback, useState } from "react";
-import GameApi from "@/api/games.api";
-import UserApi from "@/api/user.api";
+import { gameApi } from "@/api/games.api";
+import { userApi } from "@/api/user.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -15,8 +15,7 @@ import { Chat } from "@/types/chat";
 import ChatApi from "@/api/chat.api";
 import { useUserStore } from "@/store/user.store";
 
-const gameApi = new GameApi();
-const userApi = new UserApi();
+
 const chatApi = new ChatApi();
 
 function FriendsTab() {

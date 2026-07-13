@@ -9,6 +9,7 @@ import { broadcast } from "@/lib/websocket.utils"
 import Logger from "@/lib/logger.utils"
 import databasePlugin from "@/plugins/database.plugin"
 import servicesPlugin from "@/services.server"
+import { authPlugin } from "@/plugins/index.plugin"
 
 const logger = new Logger("GAMES")
 
@@ -49,9 +50,18 @@ function mapGame(row: typeof schema.games.$inferSelect) {
   return withRecordMeta(serializeRow(row, ["image"]), "games")
 }
 
+function mapGameList(row: typeof schema.games.$inferSelect) {
+  const gameData = row.data as Record<string, unknown> | null
+  const trimmed = gameData
+    ? { id: gameData.id, name: gameData.name, capsuleImage: gameData.capsuleImage }
+    : null
+  return withRecordMeta(serializeRow({ ...row, data: trimmed }, ["image"]), "games")
+}
+
 export default new Elysia({ prefix: "/games" })
   .use(databasePlugin)
   .use(servicesPlugin)
+  .use(authPlugin)
   .get(
     "/",
     async ({ db, query }) => {
@@ -82,7 +92,7 @@ export default new Elysia({ prefix: "/games" })
         : db.select().from(schema.games)
 
       const rows = await q.orderBy(desc(schema.games.created)).limit(limit).offset(offset)
-      return rows.map(mapGame)
+      return rows.map(mapGameList)
     },
     {
       query: t.Optional(
@@ -156,11 +166,22 @@ export default new Elysia({ prefix: "/games" })
       logger.setAuthor(user.username).info(`added game ${data.name}`)
       return mapGame(row as typeof schema.games.$inferSelect)
     },
-    { body: gameCreateBody },
+    { body: gameCreateBody, requireAuth: true },
   )
   .patch(
     "/:id",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, user, set }) => {
+      const [game] = await db
+        .select()
+        .from(schema.games)
+        .where(eq(schema.games.id, params.id))
+      if (game) {
+        const gameUser = game.user as { id?: string }
+        if (!user || gameUser.id !== user.sub) {
+          set.status = 403
+          return { error: "Нельзя редактировать чужую игру" }
+        }
+      }
       let imageFile = parseFileInput(body.image)
       if (imageFile && isImageMime(imageFile.mime)) {
         imageFile = {
@@ -191,23 +212,30 @@ export default new Elysia({ prefix: "/games" })
         .select()
         .from(schema.games)
         .where(eq(schema.games.id, params.id))
-      const gameUser = row?.user as { username?: string } | undefined
+      const rowUser = row?.user as { username?: string } | undefined
       const gameData = row?.data as { name?: string } | undefined
-      logger.setAuthor(gameUser?.username ?? "SYSTEM").info(`updated game ${gameData?.name ?? params.id}`)
+      logger.setAuthor(rowUser?.username ?? "SYSTEM").info(`updated game ${gameData?.name ?? params.id}`)
       return mapGame(row!)
     },
-    { body: gamePatchBody },
+    { body: gamePatchBody, requireAuth: true },
   )
   .post(
     "/:id/status",
-    async ({ params, body, db, activityService, userService }) => {
+    async ({ params, body, db, activityService, userService, user, set }) => {
       const [game] = await db
         .select()
         .from(schema.games)
         .where(eq(schema.games.id, params.id))
-      if (!game) return { error: "Not found" }
+      if (!game) {
+        set.status = 404
+        return { error: "Not found" }
+      }
 
       const gameUser = game.user as { id: string; username: string }
+      if (!user || gameUser.id !== user.sub) {
+        set.status = 403
+        return { error: "Нельзя менять статус чужой игры" }
+      }
       const gameData = game.data as { name: string; capsuleImage?: string }
       const newTime =
         body.status === "COMPLETED"
@@ -270,16 +298,23 @@ export default new Elysia({ prefix: "/games" })
 
       return mapGame(row)
     },
-    { body: gameStatusBody },
+    { body: gameStatusBody, requireAuth: true },
   )
   .post(
     "/:id/vote",
-    async ({ params, body, db }) => {
+    async ({ params, body, db, user, set }) => {
+      if (!user || user.sub !== body.userId) {
+        set.status = 403
+        return { error: "Нельзя голосовать от чужого имени" }
+      }
       const [game] = await db
         .select()
         .from(schema.games)
         .where(eq(schema.games.id, params.id))
-      if (!game) return { error: "Not found" }
+      if (!game) {
+        set.status = 404
+        return { error: "Not found" }
+      }
 
       const review = (game.review as {
         rating: number
@@ -317,15 +352,26 @@ export default new Elysia({ prefix: "/games" })
       logger.info(`voted on game ${params.id} user:${voter?.username ?? body.userId}`)
       return { ok: true }
     },
-    { body: gameVoteBody },
+    { body: gameVoteBody, requireAuth: true },
   )
   .delete(
     "/:id",
-    async ({ params, db }) => {
+    async ({ params, db, user, set }) => {
+      const [game] = await db
+        .select()
+        .from(schema.games)
+        .where(eq(schema.games.id, params.id))
+      if (game) {
+        const gameUser = game.user as { id?: string }
+        if (!user || gameUser.id !== user.sub) {
+          set.status = 403
+          return { error: "Нельзя удалять чужую игру" }
+        }
+      }
       await db.delete(schema.games).where(eq(schema.games.id, params.id))
       broadcast("games", "delete", params.id)
       logger.info(`deleted game ${params.id}`)
       return { ok: true }
     },
-    { params: t.Object({ id: t.String() }) },
+    { params: t.Object({ id: t.String() }), requireAuth: true },
   )

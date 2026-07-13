@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, Home, NetworkIcon, Plus } from "lucide-react";
 import { memo, startTransition, useCallback, useMemo, useState } from "react";
 
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import { Input } from "@/components/ui/input.component";
 import { useSubscription } from "@/hooks/index.hook";
 import { Button } from "@/components/ui/button.component";
@@ -14,7 +14,7 @@ import HomeLibrary from "../components/library/home.library";
 import { useUserStore } from "@/store/user.store";
 import { getStatusColor } from "@/lib/index.utils";
 
-const gameApi = new GameApi();
+
 
 function LibraryTab() {
   const queryClient = useQueryClient();
@@ -24,11 +24,12 @@ function LibraryTab() {
   const [currentGame, setCurrentGame] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["libraryGames"],
+    queryKey: ["libraryGames", user?.id],
     queryFn: async () => {
-      return await gameApi.getGames(String(user?.id));
+      return await gameApi.getGames(String(user!.id));
     },
-    staleTime: 0,
+    enabled: !!user?.id,
+    staleTime: 60_000,
   });
 
   const invalidateQuery = useCallback(() => {
@@ -73,8 +74,7 @@ function LibraryTab() {
     );
   }, [currentGame, data]);
 
-  if (isLoading) return <WindowLoader />;
-  if (isError)
+  if (isError && !data)
     return (
       <WindowError
         error={new Error("Произошла ошибка")}
@@ -140,15 +140,24 @@ function LibraryTab() {
                     </span>
                   </Button>
                 ))
-            : null}
+            : isLoading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-9 w-full animate-pulse rounded border border-highlight-medium bg-highlight-low"
+                  />
+                ))
+              : null}
         </div>
       </section>
       <section className="flex w-full">
-        {currentGame === "newGame"
-          ? getComponent
-          : data?.length && data?.length > 0
-            ? getComponent
-            : null}
+        {isLoading ? (
+          <WindowLoader />
+        ) : currentGame === "newGame" ? (
+          getComponent
+        ) : data?.length && data?.length > 0 ? (
+          getComponent
+        ) : null}
       </section>
     </main>
   );

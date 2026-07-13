@@ -4,6 +4,7 @@ import ActivityService from "@/services/activity.service";
 import UserService from "@/services/user.service";
 import LogService from "@/services/log.service";
 import EconomyService from "@/services/economy.service";
+import EventService from "@/services/event.service";
 import GameService from "@/services/game.service";
 import EffectService from "@/services/effect.service";
 import DiceService from "@/services/gambling/dice.service";
@@ -18,11 +19,13 @@ function createServices() {
   const userService = new UserService(db, activityService);
   const gameService = new GameService(db, activityService);
   const logService = new LogService(db);
+  const eventService = new EventService(db);
   const economyService = new EconomyService(
     db,
     userService,
     activityService,
     logService,
+    eventService,
   );
   const effectService = new EffectService(
     db,
@@ -47,6 +50,7 @@ function createServices() {
     userService,
     gameService,
     logService,
+    eventService,
     economyService,
     effectService,
     diceService,
@@ -73,6 +77,7 @@ const servicesPlugin = new Elysia({ name: "services" })
   .decorate("economyService", service.economyService)
   .decorate("effectService", service.effectService)
   .decorate("logService", service.logService)
+  .decorate("eventService", service.eventService)
   .decorate("diceService", service.diceService)
   .decorate("blackjackService", service.blackjackService)
   .decorate("rocketService", service.rocketService)

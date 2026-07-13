@@ -11,15 +11,14 @@ import {
 import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
 import { useCallback, useState } from "react";
-import GameApi from "@/api/games.api";
-import UserApi from "@/api/user.api";
+import { gameApi } from "@/api/games.api";
+import { userApi } from "@/api/user.api";
 import Image from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDataStore } from "@/store/data.store";
 
-const gameApi = new GameApi();
-const userApi = new UserApi();
+
 
 const STATUSES = [
   {
@@ -64,7 +63,10 @@ export default function CustomLibrary({
     mutationFn: async () => {
       if (!name || !headerImage || !time || !status) throw new Error("Missing fields");
 
-      const score = await calculateScore(Number(realTime), Number(time));
+      const parsedTime = Number(time);
+      const parsedReal = Number(realTime);
+      if (isNaN(parsedTime)) throw new Error("Invalid time value");
+      const score = await calculateScore(isNaN(parsedReal) ? 0 : parsedReal, parsedTime);
       const gameData = {
         user: {
           id: user?.id,
@@ -153,10 +155,10 @@ export default function CustomLibrary({
         )}
         {currentType === "library" && (
           <div className="leading-tight">
-            <span>Сложность</span>
+            <span>Статус</span>
             <Select value={status} onValueChange={(e) => setStatus(e as GameStatus)}>
               <SelectTrigger className="w-full py-5">
-                <SelectValue placeholder="Сложность" />
+                <SelectValue placeholder="Статус" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>

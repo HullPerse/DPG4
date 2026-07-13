@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import GameApi from "@/api/games.api";
+import { gameApi } from "@/api/games.api";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon } from "lucide-react";
@@ -10,7 +10,7 @@ import PresetComponent from "@/components/shared/preset.component";
 import { useUserStore } from "@/store/user.store";
 import { useDataStore } from "@/store/data.store";
 
-const gameApi = new GameApi();
+
 
 export default function PresetsList({
   searchTerms,

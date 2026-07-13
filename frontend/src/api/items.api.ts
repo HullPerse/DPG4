@@ -186,3 +186,6 @@ export default class ItemsApi {
     });
   };
 }
+
+const itemsApi = new ItemsApi();
+export { itemsApi };

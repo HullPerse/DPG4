@@ -53,6 +53,9 @@ export default new Elysia({ prefix: "/chats" })
       query.sort === "created" ? schema.chats.created : schema.chats.created
     const orderDir = query.sort === "created" ? "ASC" : "DESC"
 
+    const limit = query.limit ? Math.min(Number(query.limit), 100) : 50
+    const offset = query.offset ? Number(query.offset) : 0
+
     const rows = await db
       .select()
       .from(schema.chats)
@@ -60,12 +63,16 @@ export default new Elysia({ prefix: "/chats" })
       .orderBy(
         orderDir === "ASC" ? sql`${orderCol} ASC` : sql`${orderCol} DESC`,
       )
+      .limit(limit)
+      .offset(offset)
 
     return rows.map(mapChat)
   },
   {
     query: t.Optional(
       t.Object({
+        limit: t.Optional(t.String()),
+        offset: t.Optional(t.String()),
         senderId: t.Optional(t.String()),
         receiverId: t.Optional(t.String()),
         unreadFor: t.Optional(t.String()),

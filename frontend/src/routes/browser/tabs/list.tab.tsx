@@ -5,7 +5,7 @@ import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
 import { NetworkIcon, Plus } from "lucide-react";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { Item } from "@/types/items";
 import { Button } from "@/components/ui/button.component";
 import { useUserStore } from "@/store/user.store";
@@ -15,7 +15,7 @@ import { highlightText, translateItemType } from "@/lib/index.utils";
 import type { SortMethod, SortDirection } from "@/lib/sorting.utils";
 import AddItem from "./add.tab";
 import { User } from "@/types/user";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { CreateModal } from "@/components/shared/items.modal";
 import { Input } from "@/components/ui/input.component";
 import {
@@ -30,8 +30,7 @@ import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
 import ImageViewer from "@/components/shared/viewer.component";
 
-const itemsApi = new ItemsApi();
-const usersApi = new UserApi();
+
 const activityApi = new ActivityApi();
 
 interface ListBrowserProps {
@@ -73,7 +72,7 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
           order: sortDirection,
           signal,
         }),
-        usersApi.getUsers({ signal }),
+        userApi.getUsers({ signal }),
       ]);
       return { items, users };
     },

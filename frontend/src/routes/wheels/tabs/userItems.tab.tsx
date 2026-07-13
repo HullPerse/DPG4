@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, startTransition, useCallback, useEffect, useState } from "react";
-import UserApi from "@/api/user.api";
+import { userApi } from "@/api/user.api";
 import { useSubscription } from "@/hooks/index.hook";
 import { WindowLoader } from "@/components/shared/loader.component";
 import { WindowError } from "@/components/shared/error.component";
@@ -10,12 +10,11 @@ import { Button } from "@/components/ui/button.component";
 import ImageComponent from "@/components/shared/image.component";
 import { useUserStore } from "@/store/user.store";
 import { User } from "@/types/user";
-import ItemsApi from "@/api/items.api";
+import { itemsApi } from "@/api/items.api";
 import { Inventory } from "@/types/items";
 import { getFileUrl } from "@/api/client.api";
 
-const itemApi = new ItemsApi();
-const userApi = new UserApi();
+
 
 function UserItems({
   selected,
@@ -39,7 +38,7 @@ function UserItems({
 
       setValues(["ВСЕ", ...users.map((u) => u.username)]);
 
-      return { items: await itemApi.getInventories(), users };
+      return { items: await itemsApi.getInventories(), users };
     },
   });
 
@@ -76,7 +75,7 @@ function UserItems({
     const item = data?.items.find((Item) => Item.id === id);
     if (!item) return;
 
-    return await itemApi.sendInventory(String(item.id), String(user?.id));
+    return await itemsApi.sendInventory(String(item.id), String(user?.id));
   };
 
   const visibleItems = data?.items.filter((item) => !hiddenItems.has(String(item.id))) ?? [];

@@ -132,22 +132,12 @@ describe("RocketService", () => {
     );
   });
 
-  test("abandon cleans up active and ended games", async () => {
+  test("abandon cleans up active games", async () => {
     seedRandom([0.5]);
     await services.rocketService.launch(userId, 3);
     fakeNow += 100;
     await services.rocketService.cashout(userId);
-    services.rocketService.abandon(userId);
-    const idle = await services.rocketService.poll(userId);
-    expect(idle.phase).toBe("idle");
-  });
-
-  test("dismiss clears last ended game", async () => {
-    seedRandom([0.5]);
-    await services.rocketService.launch(userId, 3);
-    fakeNow += 100;
-    await services.rocketService.cashout(userId);
-    services.rocketService.dismiss(userId);
+    await services.rocketService.abandon(userId);
     const idle = await services.rocketService.poll(userId);
     expect(idle.phase).toBe("idle");
   });

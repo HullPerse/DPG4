@@ -10,8 +10,8 @@ import { Battery, Calendar, ChevronDown, Hash, NetworkIcon, Section } from "luci
 import { Input } from "@/components/ui/input.component";
 import { useUserStore } from "@/store/user.store";
 import { Inventory, Item } from "@/types/items";
-import ItemsApi from "@/api/items.api";
-import UserApi from "@/api/user.api";
+import { itemsApi } from "@/api/items.api";
+import { userApi } from "@/api/user.api";
 
 import { Button } from "@/components/ui/button.component";
 import { User } from "@/types/user";
@@ -24,8 +24,7 @@ import StatusInventory from "../components/inventory/status.inventory";
 import ItemInventory from "../components/inventory/item.inventory";
 import ActionInventory from "../components/inventory/action.inventory";
 
-const itemsApi = new ItemsApi();
-const userApi = new UserApi();
+
 
 type InventoryTabData = {
   inventory: Inventory[];
@@ -204,9 +203,9 @@ function InventoryTab({ id }: { id?: string }) {
   }, [modal]);
 
   const modalConsume = useMemo((): ModalType["consume"] | undefined => {
-    if (!modal) return undefined;
-    return new ItemFramework(modal as ItemLabel).consume;
-  }, [modal]);
+    if (!modal || !user) return undefined;
+    return new ItemFramework(modal as ItemLabel, user.id).consume;
+  }, [modal, user]);
 
   const itemLoading = (itemId: string, type?: ItemLoadingType | "charge") =>
     itemMutation.isPending &&
