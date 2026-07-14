@@ -53,12 +53,6 @@ export default class GameApi {
     }
   };
 
-  searchHltb = async (title: string) => {
-    return apiFetch<{ results: { title: string; mainStory: number }[] }>(
-      `/hltb/search?q=${encodeURIComponent(title)}`,
-    );
-  };
-
   getSteamGame = async (appId: string) => {
     const id = appId.trim();
     if (!id) return;

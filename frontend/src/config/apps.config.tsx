@@ -14,7 +14,6 @@ import {
   Globe,
   Volleyball,
   NotebookIcon,
-  Timer,
   Palette,
   History,
   PaintRoller,
@@ -58,7 +57,6 @@ export const APP_REGISTRY: Record<string, { icon: ReactNode; component?: ReactNo
     component: <WheelHistoryApp />,
   },
   theme: { icon: <Palette className="size-7" />, component: <ThemeApp /> },
-  howlongtobeat: { icon: <Timer className="size-7" /> },
   gamewheel: { icon: <Star className="size-7" /> },
   admin: { icon: <Shield className="size-7" />, component: <AdminApp /> },
 };

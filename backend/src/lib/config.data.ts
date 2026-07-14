@@ -15,13 +15,6 @@ export const APP_META = [
     adminOnly: true,
   },
   {
-    name: "howlongtobeat",
-    label: "HLTB",
-    priority: 12,
-    link: "https://howlongtobeat.com/",
-    type: "window",
-  },
-  {
     name: "gamewheel",
     label: "Колесо Игр",
     priority: 13,
@@ -329,10 +322,6 @@ const BROWSER_GAMES: LinkEntry[] = [
   {
     description: "Набрать 20000 очков",
     link: "https://poki.com/ru/g/sandtris",
-  },
-  {
-    description: "Набрать 200 очков",
-    link: "https://www.howlongtobeat.com/play",
   },
   { description: "Победить в игре", link: "https://www.geogridgame.com/" },
   {

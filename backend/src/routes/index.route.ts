@@ -28,5 +28,4 @@ export { default as searchRoute } from "./search.route";
 export { default as wheelRoute } from "./wheel.route";
 export { default as historyRoute } from "./history.route";
 export { default as rulesRoute } from "./rules.route";
-export { default as hltbRoute } from "./hltb.route";
 export { default as batchRoute } from "./batch.route";

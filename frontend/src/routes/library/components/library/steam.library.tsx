@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select.component";
 import { calculateScore, getStatusColor } from "@/lib/index.utils";
 import { Game, GameStatus } from "@/types/games";
-import { Search, Gamepad2, Timer } from "lucide-react";
+import { Search, Gamepad2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { gameApi } from "@/api/games.api";
 import { userApi } from "@/api/user.api";
@@ -71,13 +71,6 @@ export default function SteamLibrary({
 
   const [searchLoading, setSearchLoading] = useState<boolean>(false);
 
-  const [hltbResults, setHltbResults] = useState<
-    { title: string; mainStory: number }[]
-  >([]);
-  const [showHltbDropdown, setShowHltbDropdown] = useState(false);
-  const hltbRef = useRef<HTMLDivElement>(null);
-  const [hltbLoading, setHltbLoading] = useState(false);
-
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (searchTerm.length < 2) {
@@ -95,9 +88,6 @@ export default function SteamLibrary({
     const handleClick = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowResults(false);
-      }
-      if (hltbRef.current && !hltbRef.current.contains(e.target as Node)) {
-        setShowHltbDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -217,7 +207,7 @@ export default function SteamLibrary({
             <Search className="h-4 w-4 border-text text-text" />
           </Button>
         </div>
-        <div className="leading-tight relative" ref={hltbRef}>
+        <div className="leading-tight">
           <span>Время на HLTB</span>
           <Input
             type="number"
@@ -225,35 +215,7 @@ export default function SteamLibrary({
             className="h-12"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            onFocus={async () => {
-              if (!searchTerm || hltbLoading) return;
-              setHltbLoading(true);
-              const res = await gameApi.searchHltb(searchTerm);
-              setHltbResults(res.results);
-              setShowHltbDropdown(res.results.length > 0);
-              setHltbLoading(false);
-            }}
           />
-          {showHltbDropdown && hltbResults.length > 0 && (
-            <div className="absolute top-full left-0 z-50 mt-1 w-full max-h-48 overflow-y-auto rounded border border-highlight-medium bg-background shadow-sharp">
-              {hltbResults.map((r) => (
-                <button
-                  key={r.title}
-                  className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-highlight-low"
-                  onClick={() => {
-                    setTime(String(r.mainStory));
-                    setShowHltbDropdown(false);
-                  }}
-                >
-                  <Timer className="size-4 shrink-0" />
-                  <span className="truncate">{r.title}</span>
-                  <span className="ml-auto shrink-0 font-mono text-xs text-muted">
-                    {r.mainStory > 0 ? `${r.mainStory} ч.` : "—"}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
         {status === "ПРОЙДЕНО" && (
           <div className="leading-tight">

@@ -43,7 +43,6 @@ import {
   wheelRoute,
   historyRoute,
   adminRoute,
-  hltbRoute,
   batchRoute,
   rulesRoute,
 } from "./routes/index.route";
@@ -116,7 +115,6 @@ new Elysia()
   .use(ticketMarketRoute)
   .use(configRoute)
   .use(steamRoute)
-  .use(hltbRoute)
   .use(batchRoute)
   .use(searchRoute)
   .use(wheelRoute)
