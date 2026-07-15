@@ -13,6 +13,7 @@ import type {
 export default new Elysia({ prefix: "/history" })
   .use(databasePlugin)
   .use(authPlugin)
+
   .get(
     "/",
     async ({ query, user, set: _set, db }) => {

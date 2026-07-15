@@ -37,6 +37,7 @@ export const ratIds = new Set([
   "Крыса-Гадалка",
   "Крысиный Король",
   "Радиоактивная Крыса",
+  "Скрипка Страдивари",
 ]);
 
 export const pigIds = new Set([

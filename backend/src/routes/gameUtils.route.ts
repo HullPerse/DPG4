@@ -23,6 +23,7 @@ export default new Elysia({ prefix: "/utils" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/calculate-score",
     ({ query }) => ({

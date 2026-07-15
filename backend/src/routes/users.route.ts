@@ -20,6 +20,7 @@ const usersRoute = new Elysia({ prefix: "/users" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/",
     async ({ db, query }) => {

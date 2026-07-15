@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button.component";
 import { Input } from "@/components/ui/input.component";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.component";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
 import { CircleX, CircleQuestionMark } from "lucide-react";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -461,7 +468,7 @@ export const specialEffects: effectInterface[] = [
 
         return (
           <main className="flex flex-col gap-3 items-center p-2">
-            <span className="text-lg font-bold">🔮 Выбери свою судьбу</span>
+            <span className="text-lg font-bold">Выбери свою судьбу</span>
             <div className="flex flex-row gap-3">
               {[0, 1, 2].map((i) => (
                 <button
@@ -599,6 +606,58 @@ export const specialEffects: effectInterface[] = [
         );
       },
   ),
+
+  ItemFramework.modal(
+    "Скрипка Страдивари",
+    () =>
+      function (ctx: ModalType) {
+        const [text, setText] = useState("");
+        const [confirming, setConfirming] = useState(false);
+
+        const stats = useMemo(() => {
+          const words = text
+            .toLowerCase()
+            .replace(/[^\p{L}\s]/gu, "")
+            .split(/\s+/)
+            .filter((w) => w.length > 0);
+          const total = words.length;
+          const reward =
+            total >= 100 ? 20 : total >= 10 ? Math.floor(1 + ((total - 10) * 19) / 90) : 0;
+          return {
+            total,
+            unique: new Set(words).size,
+            reward,
+          };
+        }, [text]);
+
+        return (
+          <main className="flex flex-col gap-2 p-2">
+            <span className="text-sm text-text/60">
+              Напишите историю про крыс. 10 слов - 1 чубрик, 100 слов - 20 чубриков.
+              Пропорционально.
+            </span>
+            <textarea
+              className="h-40 w-full resize-none rounded border border-highlight-medium bg-background p-2 text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Жили-были крысы, и была у них скрипка..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+            <Button
+              variant="success"
+              loading={confirming}
+              onClick={async () => {
+                setConfirming(true);
+                await userApi.scoreUser(String(ctx.user.id), stats.reward);
+                await ctx.consume(
+                  `${ctx.user.username} сыграл на скрипке историю из ${stats.unique} уникальных слов и получил ${stats.reward} чубриков`,
+                );
+                ctx.close();
+              }}
+            >
+              Принять
+            </Button>
+          </main>
+        );
+      },
+  ),
 ];
-
-

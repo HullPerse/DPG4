@@ -13,6 +13,7 @@ export default new Elysia({ prefix: "/inventory" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/history/:userId",
     async ({ params, db }) => {

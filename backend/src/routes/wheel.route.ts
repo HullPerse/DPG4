@@ -58,6 +58,7 @@ export default new Elysia({ prefix: "/wheel" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .post(
     "/spin",
     async ({ body, user, set, db, userService }) => {

@@ -2,11 +2,13 @@ import { Elysia, t } from "elysia";
 import Logger from "@/lib/logger.utils";
 import servicesPlugin from "@/services.server";
 import { authPlugin } from "@/plugins/index.plugin";
+
 const logger = new Logger("TRADE");
 
 export default new Elysia({ prefix: "/trade" })
   .use(servicesPlugin)
   .use(authPlugin)
+
   .post(
     "/",
     async ({ body, economyService, user, userService, set }) => {

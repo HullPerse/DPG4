@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button.component";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.component";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.component";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover.component";
 import { CircleX, CircleQuestionMark, RefreshCcw } from "lucide-react";
 import { WindowLoader } from "@/components/shared/loader.component";
@@ -993,14 +1000,13 @@ export const inventoryEffects: effectInterface[] = [
         if (mutated) {
           return (
             <main className="flex flex-col gap-2 p-2">
-              <span className="text-lg font-bold text-center text-green-400">⚡ РАДИАЦИЯ ⚡</span>
               {mutated.map((m, i) => (
                 <div
                   key={i}
                   className="flex flex-row items-center justify-between border border-highlight-medium rounded p-2"
                 >
                   <span className="line-through text-text/60">{m.old}</span>
-                  <span className="text-green-400">→</span>
+
                   <span className="font-bold text-green-400">{m.new}</span>
                 </div>
               ))}
@@ -1045,5 +1051,3 @@ export const inventoryEffects: effectInterface[] = [
       },
   ),
 ];
-
-

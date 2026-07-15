@@ -30,7 +30,6 @@ import { Activity } from "@/types/activity";
 import ActivityApi from "@/api/activity.api";
 import ImageViewer from "@/components/shared/viewer.component";
 
-
 const activityApi = new ActivityApi();
 
 interface ListBrowserProps {
@@ -107,6 +106,7 @@ function ListBrowser({ searchTerms, sortMethod, sortDirection }: ListBrowserProp
     estimateSize: () => 128,
     overscan: 8,
     gap: 8,
+    paddingStart: 8,
     getItemKey: (index) => filteredItems[index]?.id ?? index,
   });
   const virtualItems = virtualizer.getVirtualItems();

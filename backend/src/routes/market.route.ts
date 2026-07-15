@@ -13,6 +13,7 @@ export default new Elysia({ prefix: "/market" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/",
     async ({ db, query }) => {

@@ -13,6 +13,7 @@ const logger = new Logger("QUESTS");
 export default new Elysia({ prefix: "/quests" })
   .use(databasePlugin)
   .use(servicesPlugin)
+  .use(authPlugin)
   .get("/", async ({ db }) => {
     const rows = await db
       .select()
@@ -120,7 +121,7 @@ export default new Elysia({ prefix: "/quests" })
     },
     { params: t.Object({ id: t.String() }) },
   )
-  .use(authPlugin)
+
   .post(
     "/:id/claim",
     async ({ params, user, db, userService, economyService }) => {

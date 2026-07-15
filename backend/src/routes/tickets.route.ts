@@ -38,7 +38,6 @@ export default new Elysia({ prefix: "/utils" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
-
   .get(
     "/tickets",
     async ({ user, db }) => {
@@ -262,7 +261,6 @@ export const ticketMarketRoute = new Elysia({ prefix: "/market/tickets" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
-
   .post(
     "/:id/buy",
     async ({ params, user, db, userService }) => {

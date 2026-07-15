@@ -4,6 +4,7 @@ import { authPlugin, databasePlugin } from "@/plugins/index.plugin";
 export default new Elysia({ prefix: "/batch" })
   .use(databasePlugin)
   .use(authPlugin)
+
   .post(
     "/",
     async ({ body, db }) => {

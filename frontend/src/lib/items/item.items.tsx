@@ -1,8 +1,8 @@
 import type { effectInterface } from "@/types/items";
-import { userSelectEffects } from "./effects/user-select.effect";
-import { itemSelectEffects } from "./effects/item-select.effect";
+import { userSelectEffects } from "./effects/user.effect";
+import { itemSelectEffects } from "./effects/item.effect";
 import { inventoryEffects } from "./effects/inventory.effect";
-import { gameSelectEffects } from "./effects/game-select.effect";
+import { gameSelectEffects } from "./effects/game.effect";
 import { wheelEffects } from "./effects/wheel.effect";
 import { quizEffects } from "./effects/quiz.effect";
 import { randomEffects } from "./effects/random.effect";

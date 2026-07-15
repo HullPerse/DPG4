@@ -27,6 +27,7 @@ export default new Elysia({ prefix: "/cells" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/",
     async ({ db, query, set }) => {

@@ -112,7 +112,6 @@ export default new Elysia({ prefix: "/hangman" })
           ),
         )
         .get();
-      // ponytail: no active game, nothing to save — skip silently
       if (!record) return null;
 
       await db

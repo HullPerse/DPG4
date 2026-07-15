@@ -5,6 +5,7 @@ import { MODEL_CONFIGS } from "@/lib/model.config"
 
 export default new Elysia({ prefix: "/utils" })
   .use(authPlugin)
+
   .get(
     "/config",
     ({ user }) => {

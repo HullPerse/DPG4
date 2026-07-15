@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia"
 import { and, desc, eq, sql, type SQL } from "drizzle-orm"
 import * as schema from "@/db/schema.db"
+import { authPlugin } from "@/plugins/index.plugin"
 import { newId, nowIso, withRecordMeta, GAME_STATUS_LABELS, SUBSCRIPTION_CONTINUE_COST, STATUS_EFFECTS } from "@/lib/index.utils"
 import { parseFileInput } from "@/lib/files.utils"
 import { compressWebp, isImageMime } from "@/lib/images.utils"
@@ -9,7 +10,7 @@ import { broadcast } from "@/lib/websocket.utils"
 import Logger from "@/lib/logger.utils"
 import databasePlugin from "@/plugins/database.plugin"
 import servicesPlugin from "@/services.server"
-import { authPlugin } from "@/plugins/index.plugin"
+
 
 const logger = new Logger("GAMES")
 
@@ -62,6 +63,7 @@ export default new Elysia({ prefix: "/games" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .get(
     "/",
     async ({ db, query }) => {

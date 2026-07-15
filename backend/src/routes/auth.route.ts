@@ -22,6 +22,7 @@ const authRoute = new Elysia({ prefix: "/auth" })
   .use(databasePlugin)
   .use(servicesPlugin)
   .use(authPlugin)
+
   .post(
     "/register",
     async ({ body, db, jwt, set, activityService }) => {

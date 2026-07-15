@@ -310,7 +310,7 @@ function PachinkoTab() {
               ratAmount={ratAmount}
               countdown={countdown}
               onCountdownEnd={handleCountdownEnd}
-               showRiskGate={riskGateActive || (showRiskGatePrompt && riskGateChoice === null)}
+              showRiskGate={riskGateActive || (showRiskGatePrompt && riskGateChoice === null)}
               riskGateChoice={riskGateChoice}
               settleTrigger={settleTrigger}
               shakeIntensity={shakeIntensity}
@@ -403,7 +403,7 @@ function PachinkoTab() {
                 </button>
               </div>
               <p className="text-[10px] text-muted mt-4 px-8 text-center">
-                Одна сторона получит усиление, другая — ловушку
+                Одна сторона получит усиление, другая - ловушку
               </p>
               <Button
                 onClick={handleSkipRiskGate}

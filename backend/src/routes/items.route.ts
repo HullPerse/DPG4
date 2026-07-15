@@ -8,6 +8,7 @@ import { broadcast } from "@/lib/websocket.utils";
 import { cacheGet, cacheSet, cacheDel } from "@/lib/cache.utils";
 import Logger from "@/lib/logger.utils";
 import databasePlugin from "@/plugins/database.plugin";
+import authPlugin from "@/plugins/auth.plugin";
 import type { Db, DbTimestamps } from "@/types/server";
 
 const logger = new Logger("ITEMS");
@@ -114,6 +115,7 @@ function queryItems(db: Db, query: Record<string, string | undefined>) {
 
 export default new Elysia({ prefix: "/items" })
   .use(databasePlugin)
+  .use(authPlugin)
   .get(
     "/",
     async ({ db, query, set }) => {
